@@ -155,7 +155,6 @@ export default {
 				_r["name"] = dataset;
 				let total = 0;
 				for (let [elem, _d] of Object.entries(d)) {
-					console.log(elem, _d);
 					const module_name = module_idx[dataset][elem];
 					if(include_modules.includes(module_name)) {
 						_r[module_idx[dataset][elem]] = _d[metric_type][info_type];
@@ -177,7 +176,9 @@ export default {
 				return second[1][metric_type][info_type] - first[1][metric_type][info_type];
 			});
 
-			items = items.slice(items.length - top_n);
+			if(top_n < items.length) {
+				items = items.slice(items.length - top_n);
+			}
 
 			callsites = items.reduce((lst, obj) => { lst.push(module_idx[obj[1]["name"]]); return lst; }, []);
 
@@ -187,19 +188,26 @@ export default {
 		setLocalVariables(data) {
 			// Render the tables in the view
 			this.profiles = utils.swapKeysToArray(data, "summary");
-			const top_10_modules = this.sortByAttribute(this.$store.data_mod["ensemble"], "time", "mean", 10, this.$store.modules["ensemble"]);
-			console.log(top_10_modules);
+
+
+			// Restrict to top n modules from the ensemble, if n < 10 then we would
+			// default to n modules.
+			const top_n_modules = this.sortByAttribute(this.$store.data_mod["ensemble"], "time", "mean", 10, this.$store.modules["ensemble"]);
+			
+			const objectMap = (obj, fn) => Object.fromEntries(Object.entries(obj).map(([k, v], i) => [k, fn(v, k, i)]));
+
+			const remove_ensemble = objectMap(this.$store.data_mod, (_, x) => { if(x != "ensemble") return _; else return {};});
+			delete remove_ensemble["ensemble"]; // Bring this back if we need to.
 
 			// Formulate the data for the module-wise summary information.
 			this.moduleCallsiteMap = this.setModuleWiseInfo(
-				this.$store.data_mod,
+				remove_ensemble,
 				this.$store.modules,
 				"time (inc)",
 				"mean",
 				"total",
-				top_10_modules
+				top_n_modules
 			);
-
 
 			this.$store.metricTimeMap = Object.keys(data).reduce((res, item, idx) => { 
 				if(item != "ensemble"){

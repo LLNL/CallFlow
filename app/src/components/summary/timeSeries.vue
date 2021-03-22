@@ -14,6 +14,7 @@
 
 <script>
 import * as d3 from "d3";
+import * as utils from "lib/utils";
 
 export default {
 	name: "TimeSeries",
@@ -43,7 +44,7 @@ export default {
 		cluster: [],
 		showCircleLabels: true,
 		padding: {
-			top: 30,
+			top: 20,
 			bottom: 30,
 			left: 100,
 			right: 0,
@@ -68,11 +69,15 @@ export default {
 	methods: {
 		init(data) {
 			this.width = this.$store.viewWidth;
-			this.height = this.$store.viewHeight / 2 - this.padding.bottom - this.padding.top;
+			this.height =
+        this.$store.viewHeight / 2 - this.padding.bottom - this.padding.top;
 
 			this.initSVG();
-			// this.initLine();
+			this.initLine();
 			this.renderAbsoluteStackedBarPlots(data);
+			this.axis();
+			this.label();
+			this.colorMap();
 		},
 
 		initSVG() {
@@ -109,77 +114,55 @@ export default {
 		},
 
 		renderAbsoluteStackedBarPlots(data) {
-			const keys = Object.keys(data[0]);
+			this.keys = Object.keys(data[0]);
+			this.keys = this.keys.filter( (e) => e != "total" && e != "name");
 
-			const series = d3.stack().keys(keys)(data)
-				.map(d => (d.forEach(v => v.key = d.key), d));
+			const self = this;
+			const series = d3
+				.stack()
+				.keys(self.keys)(data)
+				.map((d) => (d.forEach((v) => (v.key = d.key)), d));
 
 			this.x = d3
 				.scaleBand()
-				.domain(data.map(d => d.name))
-				.range([0, this.width - this.padding.right - this.padding.left])
-				.padding(0.1);
-		
+				.domain(data.map((d) => d.name))
+				.range([0, this.width - 2 * (this.padding.right + this.padding.left)])
+				.padding(0.5);
+
 			this.y = d3
 				.scaleLinear()
-				.domain([0, d3.max(series, d => d3.max(d, d => d[1]))])
-				.rangeRound([this.height - this.padding.bottom, this.padding.top]);
-				
-			this.color = d3.scaleOrdinal()
-				.domain(series.map(d => d.key))
-				.range(d3.schemeSpectral[11])
+				.domain([0, d3.max(series, (d) => d3.max(d, (d) => d[1]))])
+				.rangeRound([
+					this.height - 2 * this.padding.bottom,
+					2 * this.padding.top,
+				]);
+
+			this.color = d3
+				.scaleOrdinal()
+				.domain(series.map((d) => d.key))
+				.range(d3.schemeSpectral[series.length])
 				.unknown("#ccc");
 
-			const formatValue = x => isNaN(x) ? "N/A" : x.toLocaleString("en");
+			const formatValue = (x) => (isNaN(x) ? "N/A" : x.toLocaleString("en"));
 
-			this.mainSvg.append("g")
+			this.mainSvg
+				.append("g")
 				.selectAll("g")
 				.data(series)
 				.join("g")
-				.attr("fill", d => this.color(d.key))
+				.attr("fill", (d) => this.color(d.key))
 				.selectAll("rect")
-				.data(d => d)
+				.data((d) => d)
 				.join("rect")
 				.attr("x", (d, i) => this.x(d.data.name))
-				.attr("y", d => this.y(d[1]))
-				.attr("height", d => this.y(d[0]) - this.y(d[1]))
+				.attr("y", (d) => this.y(d[1]))
+				.attr("height", (d) => this.y(d[0]) - this.y(d[1]))
 				.attr("width", this.x.bandwidth())
 				.append("title")
-				.text(d => `${d.data.name} ${d.key}
-				${formatValue(d.data[d.key])}`);
-		},
-
-		preprocess() {
-			let ret = [];
-			
-			for (let [id, res] of Object.entries(this.data)) {
-				// console.log(id, res);
-				// console.log(this.$store)
-			
-
-			
-				// if (ret[id] == undefined) {
-				// 	ret[id] = [];
-				// }
-				// ret[id].push(res["time"]);
-				// ret[id].push(res["ts"]);
-				// ret[id].push(res["cluster"][0]);
-				// ret[id].push(id);
-
-				// let max = Math.max.apply(null, res["time"]);
-				// if (max > this.yMax) {
-				// 	this.yMax = max;
-				// }
-
-				// let min = Math.min.apply(null, res["time"]);
-				// if (min < this.yMin) {
-				// 	this.yMin = min;
-				// }
-			}
-
-			// series = d3.stack().keys(data.columns.slice(1))(data)
-			// 	.map(d => (d.forEach(v => v.key = d.key), d));
-			return ret;
+				.text(
+					(d) => `${d.data.name} ${d.key}
+				${formatValue(d.data[d.key])}`,
+				);
 		},
 
 		initLine() {
@@ -208,26 +191,22 @@ export default {
 				.axisBottom(this.x)
 				.tickPadding(10)
 				.tickFormat((d, i) => {
-					let value = Math.round(d);
-					return value;
+					return d;
 				});
 
-			const yFormat = d3.format("0.1s");
+			const yFormat = d3.format("0.01s");
 			this.yAxis = d3
 				.axisLeft(this.y)
 				.tickPadding(10)
 				.tickFormat((d, i) => {
-					if (i % 2 == 0) {
-						return `${yFormat(d)}`;
-					}
-					return "";
+					return `${utils.formatRuntimeWithoutUnits(d)}`;
 				});
 
 			this.xAxisSVG = this.mainSvg
 				.append("g")
 				.attrs({
 					transform: `translate(${0}, ${
-						this.height - 1.0 * this.padding.bottom
+						this.height - 2.0 * this.padding.bottom
 					})`,
 					class: "x-axis",
 					"stroke-width": "1.5px",
@@ -247,9 +226,6 @@ export default {
 			//     .attrs({
 			//         "clip-path": "url(#clip)",
 			//     })
-
-			this.yDom = [0, 0];
-			this.yNavDom = [0, 0];
 		},
 
 		// draw axis label
@@ -259,12 +235,12 @@ export default {
 				.append("text")
 				.attrs({
 					class: "axis-labels",
-					transform: `translate(${this.width / 2}, ${
-						this.height - this.padding.top
+					transform: `translate(${this.width - 0.5 * this.padding.left}, ${
+						this.height - this.padding.top * 1.5
 					})`,
 				})
 				.style("text-anchor", "middle")
-				.text((d, i) => this.$store.selectedMetric);
+				.text("t");
 
 			this.svg
 				.append("text")
@@ -273,21 +249,64 @@ export default {
 					transform: `translate(${0}, ${this.height / 2}) rotate(${90})`,
 				})
 				.style("text-anchor", "middle")
+				.text((d, i) => this.$store.selectedMetric);
+		},
+
+		colorMap() {
+			let width = this.width;
+			let n_colors = this.keys.length;
+			let x_offset = 20;
+			let y_offset = 12;
+			let radius = 10;
+			let padding = 10;
+			let height = 3 * radius + padding;
+			let gap = width / n_colors;
+
+			d3.select(".colorMapSVG").remove();
+
+			let svg = this.svg
+				.append("svg")
+				.attrs({
+					transform: `translate(${x_offset}, ${y_offset})`,
+					width: this.width,
+					height: height,
+					class: "colorMapSVG",
+				})
+				.append("g");
+
+			svg
+				.selectAll("circle")
+				.data(this.keys)
+				.enter()
+				.append("circle")
+				.style("stroke", "gray")
+				.style("fill", (d, i) => {
+					return this.color(this.keys[i]);
+				})
+				.attrs({
+					r: radius,
+					cx: (d, i) => {
+						return i * gap + radius;
+					},
+					cy: radius + y_offset,
+				});
+
+			svg
+				.selectAll("text")
+				.data(this.keys)
+				.enter()
+				.append("text")
 				.text((d, i) => {
-					if (this.$parent.panelId == "2") {
-						if (this.$store.plotMetric2 in this.nameMapper) {
-							return this.nameMapper[this.$store.plotMetric2];
-						} else {
-							return this.$store.plotMetric2;
-						}
-					}
-					if (this.$parent.panelId == "1") {
-						if (this.$store.plotMetric1 in this.nameMapper) {
-							return this.nameMapper[this.$store.plotMetric1];
-						} else {
-							return this.$store.plotMetric1;
-						}
-					}
+					return this.keys[i];
+				})
+				.attrs({
+					x: (d, i) => {
+						return i * gap + 2 * radius + padding;
+					},
+					y: 0.5 * radius + padding + y_offset,
+					"font-family": "sans-serif",
+					"font-size": 1.5* radius + "px",
+					fill: "black",
 				});
 		},
 
