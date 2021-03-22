@@ -73,9 +73,35 @@ class BaseProvider:
                 LOGGER.warning(f"Duplicating aux data for run {name}!")
                 self.supergraphs[name].modules = self.supergraphs["ensemble"].modules
                 self.supergraphs[name].aux_data = self.supergraphs["ensemble"].aux_data[name]
+                
+    def determine_process_datasets(self):
+        # TODO: This is a copy and also exists in supergraph.py. 
+        # Not quite sure where this should reside to avoid duplication.
+        _FILENAMES = {
+            "df": "df.pkl",
+            "nxg": "nxg.json",
+            # "aux": "aux-{}.npz",
+        }
+        ret = []
+        save_path = self.config["save_path"]
+
+        for dataset in self.config["runs"]:
+            _name = dataset["name"]
+            _path = os.path.join(save_path, _name)
+            for f_type, f_run in _FILENAMES.items():
+                # if f_type == "aux":
+                #     f_run = f_run.format(dataset["name"])
+
+                f_path = os.path.join(_path, f_run)
+                if not os.path.isfile(f_path):
+                    ret.append(dataset)
+
+        if len(ret) == 0:
+            raise Warning("All datasets have been processed already. To re-process, use --reset.")
+        return ret
 
     # --------------------------------------------------------------------------
-    def process(self):
+    def process(self, reset=False):
         """Process the datasets using a Pipeline of operations.
         1. Each dataset is processed individually into a SuperGraph. Each
         SuperGraph is then processed according the provided config
@@ -99,8 +125,15 @@ class BaseProvider:
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
         LOGGER.warning(f'-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n\n')
+        
+        # Do not process, if already processed. 
+        if(reset):
+            process_datasets = self.config["runs"]
+        else:
+            process_datasets = self.determine_process_datasets()
+        print("Processing datasets", len(process_datasets))
 
-        for dataset in self.config["runs"]:
+        for dataset in process_datasets:
             name = dataset["name"]
             _prop = run_props[name]
 
@@ -111,9 +144,10 @@ class BaseProvider:
             sg = SuperGraph(name)
             # TODO: Add a re-process mode.
             read_param = self.config["read_parameter"]
-            read_aux = False
-            if(not sg.check_load(os.path.join(save_path, name))):
+            read_aux = True
+            if(sg.check_load(os.path.join(save_path, name))):
                 LOGGER.info("Not creating new directories!!! Moving on.")
+                sg.load(os.path.join(save_path, name), read_parameter=read_param, read_aux=read_aux)
             else:
                 sg.create(
                         path=os.path.join(load_path, _prop[0]),
@@ -129,7 +163,7 @@ class BaseProvider:
                 Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
                 LOGGER.profile(f'Filtered supergraph {name}')
 
-                if (is_not_ensemble or indivdual_aux_for_ensemble) or True:
+                if (is_not_ensemble or indivdual_aux_for_ensemble):
                     Auxiliary(sg)
 
                 LOGGER.profile(f'Created Aux for {name}')
