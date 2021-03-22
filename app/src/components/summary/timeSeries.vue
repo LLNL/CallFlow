@@ -66,24 +66,13 @@ export default {
 	},
 
 	methods: {
-		init(moduleCallsiteMap) {
-			this.data = moduleCallsiteMap;
+		init(data) {
 			this.width = this.$store.viewWidth;
 			this.height = this.$store.viewHeight / 2 - this.padding.bottom - this.padding.top;
 
-			this.x = d3
-				.scaleLinear()
-				.range([0, this.width - this.padding.right - this.padding.left]);
-			this.y = d3
-				.scaleLinear()
-				.range([
-					this.height - this.padding.bottom - this.padding.top,
-					this.padding.top + this.padding.bottom,
-				]);
-
-			this.preprocess();
 			this.initSVG();
-			this.initLine();
+			// this.initLine();
+			this.renderAbsoluteStackedBarPlots(data);
 		},
 
 		initSVG() {
@@ -119,28 +108,83 @@ export default {
 				});
 		},
 
+		renderAbsoluteStackedBarPlots(data) {
+			const sortable = Object.entries(data["ensemble"])
+				.sort(([,a],[,b]) => a-b)
+				.reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
+
+			console.log(sortable);
+
+			const keys = Object.keys(data[0]);
+
+			const series = d3.stack().keys(keys)(data)
+				.map(d => (d.forEach(v => v.key = d.key), d));
+
+			this.x = d3
+				.scaleBand()
+				.domain(data.map(d => d.name))
+				.range([0, this.width - this.padding.right - this.padding.left])
+				.padding(0.1);
+		
+			this.y = d3
+				.scaleLinear()
+				.domain([0, d3.max(series, d => d3.max(d, d => d[1]))])
+				.rangeRound([this.height - this.padding.bottom, this.padding.top]);
+				
+			this.color = d3.scaleOrdinal()
+				.domain(series.map(d => d.key))
+				.range(d3.schemeSpectral[11])
+				.unknown("#ccc");
+
+			const formatValue = x => isNaN(x) ? "N/A" : x.toLocaleString("en");
+
+			this.mainSvg.append("g")
+				.selectAll("g")
+				.data(series)
+				.join("g")
+				.attr("fill", d => this.color(d.key))
+				.selectAll("rect")
+				.data(d => d)
+				.join("rect")
+				.attr("x", (d, i) => this.x(d.data.name))
+				.attr("y", d => this.y(d[1]))
+				.attr("height", d => this.y(d[0]) - this.y(d[1]))
+				.attr("width", this.x.bandwidth())
+				.append("title")
+				.text(d => `${d.data.name} ${d.key}
+				${formatValue(d.data[d.key])}`);
+		},
+
 		preprocess() {
 			let ret = [];
-		
+			
 			for (let [id, res] of Object.entries(this.data)) {
-				if (ret[id] == undefined) {
-					ret[id] = [];
-				}
-				ret[id].push(res["time"]);
-				ret[id].push(res["ts"]);
-				ret[id].push(res["cluster"][0]);
-				ret[id].push(id);
+				// console.log(id, res);
+				// console.log(this.$store)
+			
 
-				let max = Math.max.apply(null, res["time"]);
-				if (max > this.yMax) {
-					this.yMax = max;
-				}
+			
+				// if (ret[id] == undefined) {
+				// 	ret[id] = [];
+				// }
+				// ret[id].push(res["time"]);
+				// ret[id].push(res["ts"]);
+				// ret[id].push(res["cluster"][0]);
+				// ret[id].push(id);
 
-				let min = Math.min.apply(null, res["time"]);
-				if (min < this.yMin) {
-					this.yMin = min;
-				}
+				// let max = Math.max.apply(null, res["time"]);
+				// if (max > this.yMax) {
+				// 	this.yMax = max;
+				// }
+
+				// let min = Math.min.apply(null, res["time"]);
+				// if (min < this.yMin) {
+				// 	this.yMin = min;
+				// }
 			}
+
+			// series = d3.stack().keys(data.columns.slice(1))(data)
+			// 	.map(d => (d.forEach(v => v.key = d.key), d));
 			return ret;
 		},
 
@@ -154,13 +198,13 @@ export default {
 				})
 				.y((d) => this.y(d));
 
-			this.area = d3
-				.area()
-				.curve(d3.curveStepAfter)
-				.y0(this.y(0))
-				.y1(function (d) {
-					return this.y(d.value);
-				});
+			// this.area = d3
+			// 	.area()
+			// 	.curve(d3.curveStepAfter)
+			// 	.y0(this.y(0))
+			// 	.y1(function (d) {
+			// 		return this.y(d.value);
+			// 	});
 		},
 
 		// Axis for timeline view

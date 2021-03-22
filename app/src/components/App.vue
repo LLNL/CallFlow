@@ -145,13 +145,38 @@ export default {
 			this.$store.modules = utils.swapKeysToDict(data, "modules");
 		},
 
+		/**
+     	 * Per dataset information.
+     	 */
+		setModuleWiseInfo(data, module_idx, metric_type, info_type, sort_by) {
+			let ret = [];
+			for (let [dataset, d] of Object.entries(data)) {
+				let _r = {};
+				_r["name"] = dataset;
+				let total = 0;
+				for (let [elem, _d] of Object.entries(d)) {
+					_r[module_idx[dataset][elem]] = _d[metric_type][info_type];
+					total += _d[metric_type][info_type];
+				}
+				_r["total"] = total;
+				ret.push(_r);
+			}
+			return ret.sort((a, b) => b.total - a.total);
+		},
+
 		setLocalVariables(data) {
 			// Render the tables in the view
 			this.profiles = utils.swapKeysToArray(data, "summary");
-				
-			// TODO: Does not work as the format is weird.
-			this.moduleCallsiteMap = {"x": [333, 323]};
-			console.log("assigned", this.moduleCallsiteMap);
+
+			// Formulate the data for the module-wise summary information.
+			this.moduleCallsiteMap = this.setModuleWiseInfo(
+				this.$store.data_mod,
+				this.$store.modules,
+				"time (inc)",
+				"mean",
+				"total"
+			);
+
 
 			this.$store.metricTimeMap = Object.keys(data).reduce((res, item, idx) => { 
 				if(item != "ensemble"){
