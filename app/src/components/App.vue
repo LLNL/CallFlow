@@ -40,6 +40,7 @@ import * as utils from "lib/utils";
 import Color from "lib/color/";
 import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
+import moment from "moment";
 
 // Local components
 import Footer from "./general/footer";
@@ -161,6 +162,7 @@ export default {
 					}
 					total += _d[metric_type][info_type];
 				}
+				_r["time"] = moment(new Date(+(new Date()) - Math.floor(Math.random()*10000000000)));
 				_r["total"] = total;
 				ret.push(_r);
 			}
