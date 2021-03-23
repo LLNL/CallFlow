@@ -95,6 +95,7 @@ class SuperGraph(ht.GraphFrame):
         :param module_callsite_map: Module callsite mapping
         :return:
         """
+        self.profile_format = profile_format
         LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path}) "
                     f"using ({self.profile_format}) format")
 
@@ -322,15 +323,18 @@ class SuperGraph(ht.GraphFrame):
     # we need this
     def df_mod2callsite(self, modules = None):
 
+        if None in self.indexes:
+            LOGGER.error('Found None in indexes. Removing!')
+            self.indexes = [_ for _ in self.indexes if _ is not None]
+
         if modules is None:
             modules = self.df_unique("module")
         else:
             assert isinstance(modules, (list, np.ndarray))
 
-        # TODO: this is a hack for now to append a "rank" index. 
-        if len(self.indexes) == 0:
+        # TODO: this is a hack for now to append a "rank" index.
+        if len(self.indexes) == 0 and "rank" in self.dataframe.columns:
             self.indexes = ["rank"]
-            
         _indexes = ["module"] + self.indexes
         _df = self.dataframe.set_index(_indexes)
 
