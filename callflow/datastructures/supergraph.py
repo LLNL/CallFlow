@@ -167,7 +167,7 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_column("callers", apply_func=lambda _: self.callers[_])
         self.df_add_column("path", apply_func=lambda _: self.paths[_])
 
-        self.modules = np.array(self.df_factorize_column("module", sanitize=True))  # As expensive as 
+        self.modules = np.array(self.df_factorize_column("module", sanitize=True))
 
         self.profiler.stop()
         print(self.profiler.output_text(unicode=True, color=True))       
@@ -207,9 +207,9 @@ class SuperGraph(ht.GraphFrame):
             self.aux_data = UnpackAuxiliary(path, self.name).result
             # TODO: this should be handled better
             if "modules" in self.aux_data.keys():   # single case
-                self.modules = self.aux_data["modules"].tolist()
+                self.modules = self.aux_data["modules"]
             elif self.name in self.aux_data.keys():     # ensemble base
-                self.modules = self.aux_data[self.name]["modules"].tolist()
+                self.modules = self.aux_data[self.name]["modules"]
 
         # ----------------------------------------------------------------------
         self.add_time_proxies()
@@ -334,6 +334,10 @@ class SuperGraph(ht.GraphFrame):
         else:
             assert isinstance(modules, (list, np.ndarray))
 
+        # TODO: this is a hack for now to append a "rank" index. 
+        if len(self.indexes) == 0:
+            self.indexes = ["rank"]
+            
         _indexes = ["module"] + self.indexes
         _df = self.dataframe.set_index(_indexes)
 
@@ -347,6 +351,9 @@ class SuperGraph(ht.GraphFrame):
         else:
             assert isinstance(callsites, (list, np.ndarray))
 
+        # TODO: this is a hack for now to append a "rank" index. 
+        if len(self.indexes) == 0:
+            self.indexes = ["rank"]
         _indexes = ["name"] + self.indexes
         _df = self.dataframe.set_index(_indexes)
 
@@ -665,7 +672,6 @@ class SuperGraph(ht.GraphFrame):
 
         gf = None
         if profile_format == "hpctoolkit":
-            print(data_path)
             gf = ht.GraphFrame.from_hpctoolkit(data_path)
 
         elif profile_format == "caliper":
