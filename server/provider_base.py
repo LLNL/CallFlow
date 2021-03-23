@@ -72,7 +72,7 @@ class BaseProvider:
                 LOGGER.warning(f"Duplicating aux data for run {name}!")
                 self.supergraphs[name].modules = self.supergraphs["ensemble"].modules
                 self.supergraphs[name].aux_data = self.supergraphs["ensemble"].aux_data[name]
-                
+
     def _process_load(self):
         # TODO: This is a copy and also exists in supergraph.py. 
         # Not quite sure where this should reside to avoid duplication.
@@ -95,7 +95,7 @@ class BaseProvider:
                 f_path = os.path.join(_path, f_run)
                 if not os.path.isfile(f_path):
                     process = True
-                
+
             if (process):
                 ret.append(dataset)
             else:
@@ -113,7 +113,6 @@ class BaseProvider:
         variables, e.g., filter_perc, filter_by.
         2. EnsembleGraph is then constructed from the processed SuperGraphs.
         """
-
         save_path = self.config["save_path"]
         load_path = self.config["data_path"]
         group_by = self.config["group_by"]
@@ -136,6 +135,7 @@ class BaseProvider:
             process_datasets, load_datasets = self.config["runs"], []
         else:
             process_datasets, load_datasets = self._process_load()
+
         LOGGER.info(f"Processing {len(process_datasets)} datasets.")
         LOGGER.info(f"Loading {len(load_datasets)} datasets.")
 
@@ -146,9 +146,9 @@ class BaseProvider:
             name = dataset["name"]
             _prop = run_props[name]
 
-            LOGGER.profile(f'Starting supergraph {name}')
+            LOGGER.profile(f'Starting supergraph ({name})')
 
-            sg = SuperGraph(name)        
+            sg = SuperGraph(name)
             sg.create(
                     path=os.path.join(load_path, _prop[0]),
                     profile_format=_prop[1],
