@@ -39,10 +39,10 @@ export default {
 			xTitle: 20,
 			yTitle: 20,
 		},
-		// chartType: "STACKED_BAR_CHART",
-		chartType: "STACKED_AREA_CHART",
-		// chartXAttr: "total",
-		chartXAttr: "time",
+		chartType: "STACKED_BAR_CHART",
+		// chartType: "STACKED_AREA_CHART",
+		chartXAttr: "total",
+		// chartXAttr: "time",
 	}),
 
 	mounted() {
@@ -152,10 +152,10 @@ export default {
 					.text((d) => `[${d.data.name}] ${d.key} - ${utils.formatRuntimeWithoutUnits(d.data[d.key])}`);
 			}
 			else if (this.chartType == "STACKED_AREA_CHART") { // If stacked or not stacked....
-				const area = d3.line()
+				const area = d3.area()
 					.x(d => this.x(d.data.time))
-					// .y0(d => this.y(d[0]))
-					.y0(d => 0)
+					.y0(d => this.y(d[0]))
+					// .y0(0)
 					.y1(d => this.y(d[1]));
 
 				this.mainSvg.append("g")
@@ -253,7 +253,7 @@ export default {
 				.append("text")
 				.attrs({
 					class: "axis-labels",
-					transform: `translate(${0}, ${this.height / 2}) rotate(${90})`,
+					transform: `translate(${15}, ${this.height / 2}) rotate(${-90})`,
 				})
 				.style("text-anchor", "middle")
 				.text((d, i) => this.$store.selectedMetric);
@@ -322,125 +322,6 @@ export default {
 			d3.selectAll(".line" + this.id).remove();
 		},
 
-		// Draw Main timeline view.
-		drawMainView(data) {
-			// Reset the clusterMap every time we visualize.
-			this.clusterMap = {};
-			// Assign the number of processors.
-			this.numberOfProcs = Object.entries(data).length;
-
-			for (let [id, res] of Object.entries(data)) {
-				this.startTime = 0;
-
-				// let time = res['time']
-				// ts is the main data. (Data of the plot metric chosen.)
-				let ts = res["ts"];
-				// Add zero to the data array.
-				ts.unshift(0);
-
-				// Add zero to the time array.
-				let actualTime = res[this.plotMetric];
-				if (id == 0) {
-					actualTime.unshift(0);
-				}
-				// Actualtime corresponds to the x-axis data but store on the global props.
-				this.actualTime = actualTime;
-
-				// Assign a cluster Map.
-				let cluster = res["cluster"][0];
-				if (this.clusterMap[cluster] == undefined) {
-					this.clusterMap[cluster] = 0;
-				}
-				this.clusterMap[cluster] += 1;
-				this.cluster[id] = res["cluster"][0];
-
-				// Set the X domain for Line and navLine
-				let windowTs = [];
-				if (this.actualTime.length > this.timepointMoveThreshold) {
-					windowTs = ts.slice(
-						this.actualTime.length - this.timepointMoveThreshold,
-						this.actualTime.length,
-					);
-					this.windowActualTime = this.actualTime.slice(
-						this.actualTime.length - this.timepointMoveThreshold,
-						this.actualTime.length,
-					);
-					this.x.domain([
-						this.actualTime[
-							this.actualTime.length - this.timepointMoveThreshold
-						],
-						this.actualTime[this.actualTime.length - 1],
-					]);
-				} else {
-					windowTs = ts;
-					this.windowActualTime = this.actualTime;
-					this.x.domain([
-						this.startTime,
-						this.actualTime[this.actualTime.length - 1],
-					]);
-				}
-
-				// Set the Y domain for line.
-				let yDomTemp = d3.extent(windowTs);
-				if (yDomTemp[1] > this.yDom[1]) this.yDom[1] = yDomTemp[1];
-				this.y.domain(this.yDom);
-
-				// Draw Axis
-				this.xAxisSVG.call(this.xAxis);
-				this.yAxisSVG.call(this.yAxis);
-
-				// Draw line to main TimeLine.
-				this.path = this.mainSvg
-					.append("path")
-					.attr("class", "line line" + this.id);
-
-				// console.log("Current Data: ", windowTs)
-				this.path
-					.datum(windowTs)
-					.attrs({
-						id: "line" + id,
-						d: this.line,
-						stroke: this.$store.colorset[cluster],
-						"stroke-width": (d) => {
-							if (this.numberOfProcs < 16) return 2.0;
-							else return 1.0;
-						},
-						fill: "transparent",
-					})
-					.style("z-index", 0);
-
-				// Calculate the avg out of the data (ts).
-				if (this.movingAvgTs[this.plotMetric] == undefined) {
-					if (id == 0) {
-						this.currentMovingAvg = [];
-						// this.currentMovingAvg[id] = 0
-					}
-					for (let i = 0; i < ts.length; i += 1) {
-						if (this.currentMovingAvg[i] == undefined) {
-							this.currentMovingAvg[i] = 0;
-						}
-						this.currentMovingAvg[i] += ts[i] / this.numberOfProcs;
-					}
-				} else {
-					if (id == 0) {
-						this.currentMovingAvg = 0;
-					}
-					this.currentMovingAvg +=
-            ts[this.movingAvgTs[this.plotMetric].length - 1] /
-            this.numberOfProcs;
-				}
-			}
-			// Push the average values into the array.
-			if (this.movingAvgTs[this.plotMetric] == undefined) {
-				this.movingAvgTs[this.plotMetric] = [];
-				for (let i = 0; i < this.currentMovingAvg.length; i += 1) {
-					this.movingAvgTs[this.plotMetric].push(this.currentMovingAvg[i]);
-				}
-			} else {
-				console.log("Time series [Moving average] = ", this.currentMovingAvg);
-				this.movingAvgTs[this.plotMetric].push(this.currentMovingAvg);
-			}
-		},
 	},
 };
 </script>
