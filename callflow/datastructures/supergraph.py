@@ -21,7 +21,6 @@ from callflow.utils.utils import NumpyEncoder
 from callflow.utils.df import *
 from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
 from callflow.modules import UnpackAuxiliary
-from pyinstrument import Profiler
 
 LOGGER = get_logger(__name__)
 
@@ -70,7 +69,6 @@ class SuperGraph(ht.GraphFrame):
         self.callsite_module_map = {}
         self.module_callsite_map = {}
         self.roots = []
-        self.profiler = Profiler()
 
     # --------------------------------------------------------------------------
     def __str__(self):
@@ -97,8 +95,6 @@ class SuperGraph(ht.GraphFrame):
         :param module_callsite_map: Module callsite mapping
         :return:
         """
-        self.profiler.start()
-        self.profile_format = profile_format
         LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path}) "
                     f"using ({self.profile_format}) format")
 
@@ -169,10 +165,6 @@ class SuperGraph(ht.GraphFrame):
 
         self.modules = np.array(self.df_factorize_column("module", sanitize=True))
 
-        self.profiler.stop()
-        print(self.profiler.output_text(unicode=True, color=True))       
-
-
     # --------------------------------------------------------------------------
     def load(
         self, path, read_graph=False, read_parameter=False, read_aux=False
@@ -213,7 +205,8 @@ class SuperGraph(ht.GraphFrame):
 
         # ----------------------------------------------------------------------
         self.add_time_proxies()
-        self.df_reset_index()
+        # self.df_reset_index() # TODO: This might be cause a possible side
+        # effect. Beware!!
         self.roots = self.get_roots(self.nxg)
 
     # --------------------------------------------------------------------------
