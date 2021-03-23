@@ -122,7 +122,7 @@ export default {
 
 			this.y = d3
 				.scaleLinear()
-				.domain([0, d3.max(series, (d) => d3.max(d, (d) => d[1]))])
+				.domain([d3.min(series, (d) => d3.max(d, (d) => d[1])), d3.max(series, (d) => d3.max(d, (d) => d[1]))])
 				.rangeRound([
 					this.height - 2 * this.padding.bottom,
 					2 * this.padding.top,
