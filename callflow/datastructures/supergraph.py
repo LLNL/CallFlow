@@ -338,8 +338,11 @@ class SuperGraph(ht.GraphFrame):
         _indexes = ["module"] + self.indexes
         _df = self.dataframe.set_index(_indexes)
 
-        return {_: _df.xs(_, 0)["name"].unique()
-                for _ in modules}
+        if "rank" in self.indexes:
+            return {_: _df.xs(_, 0)["name"].unique()
+                    for _ in modules}
+        else:
+            return {_: _df.xs(_, 0)["name"] for _ in modules}
 
     def df_callsite2mod(self, callsites = None):
 
@@ -349,18 +352,19 @@ class SuperGraph(ht.GraphFrame):
             assert isinstance(callsites, (list, np.ndarray))
 
         # TODO: this is a hack for now to append a "rank" index. 
-        if len(self.indexes) == 0:
+        if len(self.indexes) == 0 and "rank" in self.dataframe.columns:
             self.indexes = ["rank"]
         _indexes = ["name"] + self.indexes
         _df = self.dataframe.set_index(_indexes)
 
         map = {}
         for _ in callsites:
-            __df =  _df.xs(_, 0)
-            mod_idx = __df["module"].unique()
-            # assert mod_idx.shape[0] in [0, 1]
-            if mod_idx.shape[0] == 1:
-                map[_] = mod_idx[0]
+            if "rank" in self.indexes:
+                __df =  _df.xs(_, 0)
+                mod_idx = __df["module"].unique()
+                # assert mod_idx.shape[0] in [0, 1]
+                if mod_idx.shape[0] == 1:
+                    map[_] = mod_idx[0]
         return map
 
     # --------------------------------------------------------------------------
