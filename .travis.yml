@@ -27,22 +27,22 @@ jobs:
     - stage: "tests"
       script:
         - echo -e "Running test (caliper-simple-json)"
-        - callflow --process --data_path ./data/caliper-simple-json --profile_format caliper_json
+        - callflow --process --reset --data_path ./data/caliper-simple-json --profile_format caliper_json
 
         - echo -e "Running test (caliper-lulesh-json)"
-        - callflow --process --data_path ./data/caliper-lulesh-json --profile_format caliper_json
+        - callflow --process --reset --data_path ./data/caliper-lulesh-json --profile_format caliper_json
 
         - echo -e "Running test (caliper-simple-cali)"
-        - callflow --process --data_path ./data/caliper-simple-cali --profile_format caliper
+        - callflow --process --reset --data_path ./data/caliper-simple-cali --profile_format caliper
 
         - echo -e "Running test (caliper-lulesh-cali)"
-        - callflow --process --data_path ./data/caliper-lulesh-cali --profile_format caliper
+        - callflow --process --reset --data_path ./data/caliper-lulesh-cali --profile_format caliper
 
         - echo -e "Running test (hpctoolkit-cpi-database)"
-        - callflow --process --data_path ./data/hpctoolkit-cpi-database --profile_format hpctoolkit
+        - callflow --process --reset --data_path ./data/hpctoolkit-cpi-database --profile_format hpctoolkit
 
         - echo -e "Running test (hpctoolkit-allgather-database)"
-        - callflow --process --data_path ./data/hpctoolkit-allgather-database --profile_format hpctoolkit
+        - callflow --process --reset --data_path ./data/hpctoolkit-allgather-database --profile_format hpctoolkit
 
     - stage: "style check"
       install: skip
