@@ -90,12 +90,14 @@ export default {
 		updateTargetDataset() {
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			this.$store.selectedFormat = this.$route.name;
+			EventHandler.$emit("setup-colors");
 			EventHandler.$emit(this.emitMapper[this.$store.selectedFormat]);
 		},
 
 		updateCompareDataset() {
 			this.$store.isComparisonMode = true;
 			this.$store.selectedCompareDataset = this.selectedCompareDataset;
+			EventHandler.$emit("setup-colors");
 			EventHandler.$emit("reset");
 		},
 	},
