@@ -39,10 +39,11 @@ export default {
 			xTitle: 20,
 			yTitle: 20,
 		},
-		chartType: "STACKED_BAR_CHART",
-		// chartType: "STACKED_AREA_CHART",
-		chartXAttr: "total",
-		// chartXAttr: "time",
+		// chartType: "STACKED_BAR_CHART",
+		chartType: "STACKED_AREA_CHART",
+		// chartXAttr: "total",
+		chartXAttr: "time",
+		seriesType:"NORMALIZED",
 	}),
 
 	mounted() {
@@ -101,40 +102,41 @@ export default {
 			const filter_keys = ["time", "total", "name"];
 			this.keys = this.keys.filter((e) =>  !filter_keys.includes(e));
 
-			const series = d3
-				.stack()
-				.keys(this.keys)(data)
-				.map((d) => (d.forEach((v) => (v.key = d.key)), d));
-			console.log(series);
+			let series = null;
+			if(this.seriesType == "STACKED") {
+				series = d3
+					.stack()
+					.keys(this.keys)(data)
+					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
+			}
+			else if (this.seriesType == "NORMALIZED") {
+				series = d3
+					.stack()
+					.keys(this.keys)
+					.offset(d3.stackOffsetExpand)(data)
+					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
+			}
 
 			if (this.chartType == "STACKED_BAR_CHART") {
 				this.x = d3
 					.scaleBand()
 					.domain(data.map((d) => d.name))
 					.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
-				// .padding(0.5);
-			}
-			else if(this.chartType == "STACKED_AREA_CHART") {
-				this.x = d3.scaleUtc()
-					.domain(d3.extent(data, d => d[this.chartXAttr]))
-					.range([this.padding.left, this.width - this.padding.right]);
-			}
+					
+				this.color = d3
+					.scaleOrdinal()
+					.domain(series.map((d) => d.key))
+					.range(d3.schemeSpectral[series.length])
+					.unknown("#ccc");
 
-			this.y = d3
-				.scaleLinear()
-				.domain([d3.min(series, (d) => d3.max(d, (d) => d[1])), d3.max(series, (d) => d3.max(d, (d) => d[1]))])
-				.rangeRound([
-					this.height - 2 * this.padding.bottom,
-					2 * this.padding.top,
-				]);
+				this.y = d3
+					.scaleLinear()
+					.domain([d3.min(series, (d) => d3.max(d, (d) => d[1])), d3.max(series, (d) => d3.max(d, (d) => d[1]))])
+					.rangeRound([
+						this.height - 2 * this.padding.bottom,
+						2 * this.padding.top,
+					]);
 
-			this.color = d3
-				.scaleOrdinal()
-				.domain(series.map((d) => d.key))
-				.range(d3.schemeSpectral[series.length])
-				.unknown("#ccc");
-
-			if (this.chartType == "STACKED_BAR_CHART") {
 				this.mainSvg
 					.append("g")
 					.selectAll("g")
@@ -151,18 +153,34 @@ export default {
 					.append("title")
 					.text((d) => `[${d.data.name}] ${d.key} - ${utils.formatRuntimeWithoutUnits(d.data[d.key])}`);
 			}
-			else if (this.chartType == "STACKED_AREA_CHART") { // If stacked or not stacked....
+			else if(this.chartType == "STACKED_AREA_CHART") {
+				this.x = d3.scaleUtc()
+					.domain(d3.extent(data, d => d[this.chartXAttr]))
+					.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
+					
+				this.y = d3.scaleLinear()
+					.domain([d3.min(series, d => d3.min(d, d => d[1])), d3.max(series, d => d3.max(d, d => d[1]))]).nice()
+					.range([this.height - 2 * this.padding.bottom, 2 *this.padding.top]);
+					
+				this.color =  d3.scaleOrdinal()
+					.domain(series.map((d) => d.key))
+					.range(d3.schemeSpectral[series.length])
+					.unknown("#ccc");
+
 				const area = d3.area()
 					.x(d => this.x(d.data.time))
+					// .y(d => this.y(d[0]))
 					.y0(d => this.y(d[0]))
-					// .y0(0)
 					.y1(d => this.y(d[1]));
 
 				this.mainSvg.append("g")
 					.selectAll("path")
 					.data(series)
 					.join("path")
-					// .attr("fill", ({key}) => this.color(key))
+					// .attr("stroke", ({key}) => this.color(key))
+					// .attr("fill", "transparent")
+					.attr("fill", ({key}) => this.color(key))
+					.attr("stroke-width", 5)
 					.attr("d", area)
 					.append("title")
 					.text(({key}) => key);
