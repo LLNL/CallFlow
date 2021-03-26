@@ -59,6 +59,7 @@ export default {
 		b_node_height: 50,
 		s_node_height: 30,
 		isDataReady: false,
+		firstRender: true,
 	}),
 
 	mounted() {
@@ -71,9 +72,9 @@ export default {
 
 	methods: {
 		/**
-     * Send the request to /init endpoint
-     * Parameters: {datasetPath: "path/to/dataset"}
-     */
+		 * Send the request to /init endpoint
+		 * Parameters: {datasetPath: "path/to/dataset"}
+		 */
 		async fetchData() {
 			this.info = "Selected metric : " + this.$store.selectedMetric;
 			return await APIService.POSTRequest("cct", {
@@ -82,16 +83,15 @@ export default {
 		},
 
 		/**
-     * Calls the socket to fetch data.
-     */
+		 * Calls the socket to fetch data.
+		 */
 		async init() {
 			this.data = await this.fetchData();
 			this.isDataReady = true;
 			console.log("CCT data: ", this.data);
 
 			this.width = this.$store.viewWidth;
-			this.height =
-        this.$store.viewHeight;
+			this.height = this.$store.viewHeight;
 
 			this.svg = d3.select("#" + this.id).attrs({
 				width: this.width - this.margin.right,
@@ -120,13 +120,13 @@ export default {
 			// Run the renderer. This is what draws the final graph.
 			dagreRender(inner, this.g);
 
-			this.zoomTranslate();
+			// TODO: Zoom translate is not working well.
+			// this.zoomTranslate();
 
 			let self = this;
 			this.svg.selectAll("g.node").on("click", function (id) {
 				self.node_click_action(id);
 				dagreRender(inner, self.g);
-				self.zoomTranslate();
 			});
 
 			// Add tooltip
@@ -138,10 +138,10 @@ export default {
 		},
 
 		/**
-     * Create a dagre-d3 instance.
-     *
-     * @return {dagreD3 Graph}
-     */
+		 * Create a dagre-d3 instance.
+		 *
+		 * @return {dagreD3 Graph}
+		 */
 		createGraph() {
 			const g = new dagreD3.graphlib.Graph({
 				directed: true,
@@ -160,12 +160,12 @@ export default {
 		},
 
 		/**
-     * Sets callsite's name.
-     * if key "name" is present, then use it, else use nxg node's id.
-     *
-     * @param {Object} callsite
-     * @return {String} callsite's name
-     */
+		 * Sets callsite's name.
+		 * if key "name" is present, then use it, else use nxg node's id.
+		 *
+		 * @param {Object} callsite
+		 * @return {String} callsite's name
+		 */
 		setCallsiteName(callsite) {
 			if (callsite.name == undefined) {
 				return callsite.id;
@@ -174,11 +174,11 @@ export default {
 		},
 
 		/**
-     * Set callsite's text and fill color.
-     *
-     * @param {Object} callsite
-     * @return {JSON<{'node': Color, 'text': Color}>} 'node': fill color, 'text': text color
-     */
+		 * Set callsite's text and fill color.
+		 *
+		 * @param {Object} callsite
+		 * @return {JSON<{'node': Color, 'text': Color}>} 'node': fill color, 'text': text color
+		 */
 		setCallsiteColor(callsite) {
 			// Set node fill color.
 			const color = this.$store.runtimeColor.getColor(
@@ -199,12 +199,12 @@ export default {
 		},
 
 		/**
-     * Sets the html content for rendering inside a node.
-     *
-     * @param {String} callsite
-     * @param {JSON<{'node': Color, 'text': Color}>} callsite_color
-     * @return {HTML} html for rendering.
-     */
+		 * Sets the html content for rendering inside a node.
+		 *
+		 * @param {String} callsite
+		 * @param {JSON<{'node': Color, 'text': Color}>} callsite_color
+		 * @return {HTML} html for rendering.
+		 */
 		setCallsiteHTML(callsite, callsite_color) {
 			let name = callsite.name;
 			const class_name =
@@ -223,10 +223,10 @@ export default {
 		},
 
 		/**
-     * Renders the nodes in the dagre d3 graph.
-     *
-     * @param {JSON} data - networkX graph.
-     */
+		 * Renders the nodes in the dagre d3 graph.
+		 *
+		 * @param {JSON} data - networkX graph.
+		 */
 		nodes(data) {
 			data.forEach((node, i) => {
 				const callsite_name = this.setCallsiteName(node);
@@ -250,22 +250,18 @@ export default {
 				let node = self.g.node(v);
 				if (node != undefined) {
 					node.style = `fill: ${node.fillColor}; color: "#f00";`;
-					node.rx = node.ry = 4;
+					node.rx = node.ry = 8;
 					node.id = node.name;
-					if (node.id != node.name) {
-						node.height = self.b_node_height;
-					} else {
-						node.height = self.s_node_height;
-					}
+					node.height = self.b_node_height;
 				}
 			});
 		},
 
 		/**
-     * Renders the edges in the dagre D3 graph.
-     *
-     * @param {JSON} links - nxGraph edges.
-     */
+		 * Renders the edges in the dagre D3 graph.
+		 *
+		 * @param {JSON} links - nxGraph edges.
+		 */
 		edges(links) {
 			// Set up the edges
 			for (let i = 0; i < links.length; i += 1) {
@@ -284,18 +280,18 @@ export default {
 			let self = this;
 			this.g.edges().forEach((e) => {
 				const edge = self.g.edge(e);
-				edge.id = "cct-edge";
+				edge.class = "cct-edge";
 				self.g.edge(e).style =
           "fill: rgba(255,255,255, 0); stroke: #3c3c3c; stroke-width: 2.5px;";
 			});
 		},
 
 		/**
-     * Node click action.
-     * On click, the inbound and outbound paths are highlighted.
-     *
-     * @param {dagreD3's ID} id
-     */
+		 * Node click action.
+		 * On click, the inbound and outbound paths are highlighted.
+		 *
+		 * @param {dagreD3's ID} id
+		 */
 		node_click_action(id) {
 			const default_dagreD3e_style =
         "fill: rgba(255,255,255, 0); stroke: #d5d5d5; stroke-width: 1.5px;";
@@ -333,6 +329,7 @@ export default {
 					nodeClass = node.class;
 					if (nodeClass !== "cct-node")
 						node.class = nodeClass.replace("highLight", " ").trim();
+					node.height = self.b_node_height;
 				});
 
 				this.g.edges().forEach(function (e, v, w) {
@@ -358,12 +355,12 @@ export default {
 		},
 
 		/**
-     * Translate and zoom to fit the graph to the entire SVG's context.
-     *
-     */
+		 * Translate and zoom to fit the graph to the entire SVG's context.
+		 *
+		 */
 		zoomTranslate() {
-			const graphWidth = this.g.graph().width + 80;
-			const graphHeight = this.g.graph().height + 40;
+			const graphWidth = this.g.graph().width;
+			const graphHeight = this.g.graph().height ;
 
 			// Set the zoom scale
 			let zoomScale = Math.min(
@@ -386,8 +383,8 @@ export default {
 		},
 
 		/**
-     *  Set the has data map.
-     */
+		 *  Set the has data map.
+		 */
 		setHasDataMap() {
 			this.has_data_map = {};
 			for (let i = 0; i < this.HAS_DATA_COLUMNS.length; i += 1) {
@@ -401,12 +398,12 @@ export default {
 		},
 
 		/**
-     * Clear method for the component.
-     */
+		 * Clear method for the component.
+		 */
 		clear() {
-			d3.selectAll("#cct-node").remove();
-			d3.selectAll("#cct-edge").remove();
-			// this.$refs.ColorMap.clear();
+			d3.selectAll(".cct-node").remove();
+			d3.selectAll(".cct-edge").remove();
+			this.$refs.ColorMap.clear();
 		},
 	},
 };
@@ -422,7 +419,7 @@ export default {
   text-align: center;
 }
 
-.c.black-text {
+.black-text {
   color: black !important;
   text-align: center;
 }
@@ -447,7 +444,7 @@ export default {
   font-size: 10pt;
 }
 
-#cct-edge {
+.cct-edge {
   fill: gray;
 }
 </style>
