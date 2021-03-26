@@ -162,7 +162,9 @@ export default {
 					}
 					total += _d[metric_type][info_type];
 				}
-				_r["time"] = moment(new Date(+(new Date()) - Math.floor(Math.random()*10000000000)));
+				// _r["time"] = moment(new Date(+(new Date()) -
+				// Math.floor(Math.random()*10000000000)));
+				_r["time"] = moment(dataset.split("_")[1]);
 				_r["total"] = total;
 				ret.push(_r);
 			}
@@ -207,7 +209,7 @@ export default {
 				this.$store.modules,
 				"time (inc)",
 				"mean",
-				"total",
+				"time",
 				top_n_modules
 			);
 

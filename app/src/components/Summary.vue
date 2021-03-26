@@ -11,9 +11,6 @@
         <ProfileInformation v-if="profiles.length > 0" :data="profiles" />
       </v-col>
     </v-row>
-    <!-- <v-row> -->
-    <!-- <ModuleMappingInformation v-if="moduleCallsiteMap.length > 0" :data="moduleCallsiteMap" /> -->
-    <!-- </v-row> -->
     <v-row>
       <TimeSeries ref="TimeSeries" :data="moduleCallsiteMap" />
     </v-row>
@@ -23,7 +20,6 @@
 <script>
 import ConfigInformation from "./summary/config";
 import ProfileInformation from "./summary/profile";
-// import ModuleMappingInformation from './summary/moduleMap';
 import TimeSeries from "./summary/timeSeries";
 
 export default {
@@ -31,7 +27,6 @@ export default {
 	components: {
 		ConfigInformation,
 		ProfileInformation,
-		// ModuleMappingInformation,
 		TimeSeries,
 	},
 	props: ["config", "profiles", "moduleCallsiteMap"],
