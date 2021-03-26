@@ -181,13 +181,16 @@ export default {
 		 */
 		setCallsiteColor(callsite) {
 			// Set node fill color.
-			const color = this.$store.runtimeColor.getColor(
-				callsite,
-				this.$store.selectedMetric,
-			);
+			// const color = this.$store.runtimeColor.getColor(
+			// 	callsite,
+			// 	this.$store.selectedMetric,
+			// );
+			
+			const data = utils.getCallsite(this.$store, callsite, "mean");
+			const fillColor = this.$store.runtimeColor.getColorByValue(data);
 
 			// Set node color.
-			const fillColor = this.$store.runtimeColor.rgbArrayToHex(color);
+			// const fillColor = this.$store.runtimeColor.rgbArrayToHex(color);
 
 			// Set text color (contrast to the fill color).
 			const textColor = this.$store.runtimeColor.setContrast(fillColor);

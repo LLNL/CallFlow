@@ -429,6 +429,10 @@ class SankeyLayout:
         """
         exc_time_sum = 0
         inc_time_max = 0
+
+        if(module not in module_callsite_map):
+            return {"Inclusive": 0, "Exclusive": 0}
+        
         for callsite in module_callsite_map[module]:
             callsite_df = group_df.get_group((module, callsite))
             max_inc_time = callsite_df[self.time_inc].mean()
@@ -609,8 +613,8 @@ class SankeyLayout:
                     module=module,
                 )
 
-                time_inc = module_time_inc_map[module]
-                time_exc = module_time_exc_map[module]
+                # time_inc = module_time_inc_map[module]
+                # time_exc = module_time_exc_map[module]
 
             for column in columns:
                 if column not in ret:
@@ -631,11 +635,11 @@ class SankeyLayout:
                 elif column == "type":
                     ret[column][node_name] = node_dict["type"]
 
-                elif column == "entry_function":
-                    module_idx = sg.get_module_idx(node_name)
-                    ret[column][node_name] = SankeyLayout.get_entry_functions(
-                        module_group_df, module_idx
-                    )
+                # elif column == "entry_function":
+                #     module_idx = sg.get_module_idx(node_name)
+                #     ret[column][node_name] = SankeyLayout.get_entry_functions(
+                #         module_group_df, module_idx
+                #     )
 
         return ret
 
@@ -843,4 +847,7 @@ class SankeyLayout:
 
         if "=" in node_name:
             node_name = node_name.split("=")[-1]
+
+        if node_name not in self.aux_data["data_cs"]:
+            return 0
         return self.aux_data["data_cs"][node_name][metric][measure]

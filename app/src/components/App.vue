@@ -242,7 +242,7 @@ export default {
 
 			this.$store.runtimeColor.setColorScale(
 				metric,
-				colorMin,
+				0, // TODO: This is a hack for now...
 				colorMax,
 				selectedRuntimeColorMap,
 				this.$store.selectedColorPoint

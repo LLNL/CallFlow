@@ -200,6 +200,20 @@ export function getGradients(store, node) {
 	return gradients;
 }
 
+export function getCallsite(store, node, attr) {
+	const nodeName = node.name;
+	const nodeData = store.data_cs[store.selectedTargetDataset][nodeName];
+	if (nodeData != undefined) {
+		if(nodeData[store.selectedMetric][attr] > 0){
+			return nodeData[store.selectedMetric][attr];
+		}
+		return 0;
+	}
+	else {
+		return 0;
+	}
+}
+
 /**
  * Remove duplicates from an array.
  * @param {*} arr 

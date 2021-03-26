@@ -81,14 +81,14 @@ class NodeLinkLayout:
                 if column not in datamap:
                     datamap[column] = {}
 
-                if column == self.time_inc:
-                    datamap[column][callsite] = name_time_inc_map[callsite]
-                elif column == self.time_exc:
-                    datamap[column][callsite] = name_time_exc_map[callsite]
-                elif column == "name":
+                # if column == self.time_inc:
+                #     datamap[column][callsite] = name_time_inc_map[callsite]
+                # elif column == self.time_exc:
+                #     datamap[column][callsite] = name_time_exc_map[callsite]
+                if column == "name":
                     datamap[column][callsite] = callsite
-                elif column == "module":
-                    datamap[column][callsite] = module_map[callsite]
+                # elif column == "module":
+                #     datamap[column][callsite] = module_map[callsite]
 
         # ----------------------------------------------------------------------
         for idx, key in enumerate(datamap):
