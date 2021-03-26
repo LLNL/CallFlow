@@ -43,7 +43,8 @@ export default {
 		chartType: "STACKED_AREA_CHART",
 		// chartXAttr: "total",
 		chartXAttr: "time",
-		seriesType:"NORMALIZED",
+		// seriesType:"NORMALIZED",
+		seriesType: "STACKED",
 	}),
 
 	mounted() {
@@ -159,7 +160,9 @@ export default {
 					.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
 					
 				this.y = d3.scaleLinear()
-					.domain([d3.min(series, d => d3.min(d, d => d[1])), d3.max(series, d => d3.max(d, d => d[1]))]).nice()
+					// .domain([d3.min(series, d => d3.min(d, d => d[1])), d3.max(series, d => d3.max(d, d => d[1]))])
+					.domain([0, d3.max(series, (d) => d3.max(d, (d) => d[1]))])
+					.nice()
 					.range([this.height - 2 * this.padding.bottom, 2 *this.padding.top]);
 					
 				this.color =  d3.scaleOrdinal()
