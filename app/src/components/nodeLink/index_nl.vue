@@ -284,7 +284,7 @@ export default {
 			let self = this;
 			this.g.edges().forEach((e) => {
 				const edge = self.g.edge(e);
-				edge.id = "cct-edge";
+				edge.class = "cct-edge";
 				self.g.edge(e).style =
           "fill: rgba(255,255,255, 0); stroke: #3c3c3c; stroke-width: 2.5px;";
 			});
@@ -404,9 +404,9 @@ export default {
      * Clear method for the component.
      */
 		clear() {
-			d3.selectAll("#cct-node").remove();
-			d3.selectAll("#cct-edge").remove();
-			// this.$refs.ColorMap.clear();
+			d3.selectAll(".cct-node").remove();
+			d3.selectAll(".cct-edge").remove();
+			this.$refs.ColorMap.clear();
 		},
 	},
 };
@@ -447,7 +447,7 @@ export default {
   font-size: 10pt;
 }
 
-#cct-edge {
+.cct-edge {
   fill: gray;
 }
 </style>
