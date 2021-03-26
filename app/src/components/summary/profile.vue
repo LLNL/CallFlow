@@ -15,6 +15,7 @@
 			class="elevation-1"
 			:loading="isLoading"
 			loading-text="Loading... Please wait"
+			:items-per-page="5"
 			:sort-by="sortBy"
 		>
 			<template slot="items" slot-scope="props">

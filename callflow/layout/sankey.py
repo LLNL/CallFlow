@@ -829,7 +829,7 @@ class SankeyLayout:
             else:
                 return {"type": "component-node"}
         else:
-            return {"type": "component-node"}
+            return {"type": "super-node"}
 
 
     # Getters for aux_data

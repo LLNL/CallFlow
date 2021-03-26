@@ -122,7 +122,7 @@ export default {
 
 			this.y = d3
 				.scaleLinear()
-				.domain([d3.min(series, (d) => d3.max(d, (d) => d[1])), d3.max(series, (d) => d3.max(d, (d) => d[1]))])
+				.domain([0, d3.max(series, (d) => d3.max(d, (d) => d[1]))])
 				.rangeRound([
 					this.height - 2 * this.padding.bottom,
 					2 * this.padding.top,
@@ -194,7 +194,11 @@ export default {
 				.tickPadding(10)
 				.tickFormat((d, i) => {
 					if (this.chartXAttr == "total") {
-						return `${d}`;
+						if(d.split("_")[0] === "kripke") {
+							return d.split("_")[1] + "\n" + d.split("_")[2];
+						}
+						else
+							return `${d}`;
 					}
 					else if(this.chartXAttr == "time") {
 						return moment(d).format("DD-MM-YY");
