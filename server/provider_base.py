@@ -149,12 +149,15 @@ class BaseProvider:
             LOGGER.profile(f'Starting supergraph ({name})')
 
             sg = SuperGraph(name)
-            sg.create(
+            isCreated = sg.create(
                     path=os.path.join(load_path, _prop[0]),
                     profile_format=_prop[1],
                     module_callsite_map=module_callsite_map,
                     filter_by=filter_by, filter_perc=filter_perc
                 )
+
+            if not isCreated:
+                continue
 
             LOGGER.profile(f'Created supergraph {name}')
             Group(sg, group_by=group_by)

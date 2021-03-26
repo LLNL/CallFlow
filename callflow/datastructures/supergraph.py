@@ -100,6 +100,11 @@ class SuperGraph(ht.GraphFrame):
                     f"using ({self.profile_format}) format")
 
         gf = SuperGraph.from_config(path, self.profile_format)
+
+        if gf is None:
+            return False
+
+        assert gf is not None
         assert isinstance(gf, ht.GraphFrame)
         assert gf.graph is not None
         LOGGER.debug(f"Input Dataframe shape: {gf.dataframe.shape}")
@@ -165,6 +170,8 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_column("path", apply_func=lambda _: self.paths[_])
 
         self.modules = np.array(self.df_factorize_column("module", sanitize=True))
+        
+        return True
 
     # --------------------------------------------------------------------------
     def load(
@@ -656,6 +663,11 @@ class SuperGraph(ht.GraphFrame):
 
         return list(self.modules).index(module)
 
+    @staticmethod
+    def check_for_experiment_xml(data_path, fname):
+        fpath = os.path.join(data_path, fname)
+        return os.path.isfile(fpath) 
+
     # --------------------------------------------------------------------------
     # Create GraphFrame methods
     # --------------------------------------------------------------------------
@@ -673,7 +685,9 @@ class SuperGraph(ht.GraphFrame):
 
         gf = None
         if profile_format == "hpctoolkit":
-            gf = ht.GraphFrame.from_hpctoolkit(data_path)
+            if(SuperGraph.check_for_experiment_xml(data_path, "experiment.xml")):
+                LOGGER.debug(f"experiment.xml found at {data_path}")
+                gf = ht.GraphFrame.from_hpctoolkit(data_path)
 
         elif profile_format == "caliper":
             grouping_attribute = "function"
@@ -696,7 +710,6 @@ class SuperGraph(ht.GraphFrame):
         elif profile_format == "lists":
             gf = ht.GraphFrame.from_lists(data_path)
 
-        assert gf is not None
         return gf
 
     # --------------------------------------------------------------------------
