@@ -654,7 +654,7 @@ class SuperGraph(ht.GraphFrame):
         if "=" in module:
             module = module.split("=")[0]
 
-        return self.modules.index(module)
+        return list(self.modules).index(module)
 
     # --------------------------------------------------------------------------
     # Create GraphFrame methods
