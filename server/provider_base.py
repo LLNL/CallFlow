@@ -73,15 +73,46 @@ class BaseProvider:
                 self.supergraphs[name].modules = self.supergraphs["ensemble"].modules
                 self.supergraphs[name].aux_data = self.supergraphs["ensemble"].aux_data[name]
 
+    def _process_load(self):
+        # TODO: This is a copy and also exists in supergraph.py. 
+        # Not quite sure where this should reside to avoid duplication.
+        _FILENAMES = {
+            "df": "df.pkl",
+            "nxg": "nxg.json",
+            "aux": "aux-{}.npz",
+        }
+        ret, unret = [], []
+        save_path = self.config["save_path"]
+
+        for dataset in self.config["runs"]:
+            process = False
+            _name = dataset["name"]
+            _path = os.path.join(save_path, _name)
+            for f_type, f_run in _FILENAMES.items():
+                if f_type == "aux":
+                    f_run = f_run.format(dataset["name"])
+
+                f_path = os.path.join(_path, f_run)
+                if not os.path.isfile(f_path):
+                    process = True
+
+            if (process):
+                ret.append(dataset)
+            else:
+                unret.append(dataset)
+
+        # if len(ret) == 0:
+        #     raise Warning("All datasets have been processed already. To re-process, use --reset.")
+        return ret, unret
+
     # --------------------------------------------------------------------------
-    def process(self):
+    def process(self, reset=False):
         """Process the datasets using a Pipeline of operations.
         1. Each dataset is processed individually into a SuperGraph. Each
         SuperGraph is then processed according the provided config
         variables, e.g., filter_perc, filter_by.
         2. EnsembleGraph is then constructed from the processed SuperGraphs.
         """
-
         save_path = self.config["save_path"]
         load_path = self.config["data_path"]
         group_by = self.config["group_by"]
@@ -98,35 +129,60 @@ class BaseProvider:
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
         LOGGER.warning(f'-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n\n')
+        
+        # Do not process, if already processed. 
+        if(reset):
+            process_datasets, load_datasets = self.config["runs"], []
+        else:
+            process_datasets, load_datasets = self._process_load()
 
-        for dataset in self.config["runs"]:
+        LOGGER.info(f"Processing {len(process_datasets)} datasets.")
+        LOGGER.info(f"Loading {len(load_datasets)} datasets.")
 
+        # TODO: Need to avoid auxiliary processing for single datasets.
+        indivdual_aux_for_ensemble = True
+
+        for dataset in process_datasets:
             name = dataset["name"]
             _prop = run_props[name]
 
-            LOGGER.profile(f'Starting supergraph {name}')
+            LOGGER.profile(f'Starting supergraph ({name})')
 
             sg = SuperGraph(name)
             sg.create(
-                path=os.path.join(load_path, _prop[0]),
-                profile_format=_prop[1],
-                module_callsite_map=module_callsite_map,
-            )
+                    path=os.path.join(load_path, _prop[0]),
+                    profile_format=_prop[1],
+                    module_callsite_map=module_callsite_map,
+                    filter_by=filter_by, filter_perc=filter_perc
+                )
+
             LOGGER.profile(f'Created supergraph {name}')
             Group(sg, group_by=group_by)
             LOGGER.profile(f'Grouped supergraph {name}')
 
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             LOGGER.profile(f'Filtered supergraph {name}')
-            
-            if is_not_ensemble or indivdual_aux_for_ensemble:
+
+            if (is_not_ensemble or indivdual_aux_for_ensemble):
                 Auxiliary(sg)
 
             LOGGER.profile(f'Created Aux for {name}')
-            sg.write(os.path.join(save_path, name), write_aux=is_not_ensemble)
+            sg.write(os.path.join(save_path, name), write_aux=(is_not_ensemble or indivdual_aux_for_ensemble))
 
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
+
+        for dataset in load_datasets:
+            name = dataset["name"]
+            _prop = run_props[name]
+            read_param = self.config["read_parameter"]
+            read_aux = True
+
+            sg = SuperGraph(name)
+            sg.load(os.path.join(save_path, name),
+                read_parameter=read_param,
+                read_aux=read_aux) 
+            self.supergraphs[name] = sg
 
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
@@ -140,10 +196,11 @@ class BaseProvider:
             Unify(sg, self.supergraphs)
             LOGGER.profile(f'Created supergraph {name}')
 
-            Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
-            LOGGER.profile(f'Filtered supergraph {name}')
             Group(sg, group_by=group_by)
             LOGGER.profile(f'Grouped supergraph {name}')
+
+            Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
+            LOGGER.profile(f'Filtered supergraph {name}')
 
             Auxiliary(sg)
             LOGGER.profile(f'Created Aux for {name}')

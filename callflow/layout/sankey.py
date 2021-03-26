@@ -487,7 +487,7 @@ class SankeyLayout:
                         "source_callsite": source["callsite"],
                         "target_callsite": target["callsite"],
                         "edge_type": edge_type,
-                        "weight": self._get_runtime(target, self.time_inc, 'mean'),
+                        "weight": self._get_runtime(target, "time (inc)", 'mean'),
                         "dataset": self.sg.name,
                     }
 

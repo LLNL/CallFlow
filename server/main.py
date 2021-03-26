@@ -58,6 +58,7 @@ def main():
     process = args.args["process"]
     endpoint_access = args.args.get("endpoint_access", "REST")
     endpoint_env = args.args.get("endpoint_env", "TERMINAL")
+    reset = args.args["reset"]
 
     assert endpoint_access in ["REST", "SOCKETS"]
     assert endpoint_env in ["TERMINAL", "JUPYTER"]
@@ -68,7 +69,7 @@ def main():
         assert endpoint_env == "TERMINAL"
         cf = BaseProvider(config=args.config)
         LOGGER.profile(f'-----> Created BaseProvider')
-        cf.process()
+        cf.process(reset)
         LOGGER.profile(f'-----> Processed BaseProvider')
 
     # --------------------------------------------------------------------------
