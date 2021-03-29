@@ -208,7 +208,6 @@ class ArgParser:
 
         if _has_config:
             read_mode = "config"
-            print(self.args["config"])
             if not os.path.isfile(self.args["config"]):
                 s = "Config file ({}) not found!".format(self.args["config"])
                 LOGGER.error(s)
@@ -286,7 +285,7 @@ class ArgParser:
         scheme = {}
 
         # Set the data_path, which is data directory.
-        scheme["data_path"] = os.path.dirname(_configfile)
+        scheme["data_path"] = os.path.dirname(json["data_path"])
         scheme["experiment"] = os.path.basename(scheme["data_path"])
 
         for _ in [
