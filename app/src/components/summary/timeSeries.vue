@@ -43,8 +43,7 @@ export default {
 		chartType: "STACKED_AREA_CHART",
 		// chartXAttr: "total",
 		chartXAttr: "time",
-		// seriesType:"NORMALIZED",
-		seriesType: "STACKED",
+		seriesType:"NORMALIZED",
 	}),
 
 	mounted() {
