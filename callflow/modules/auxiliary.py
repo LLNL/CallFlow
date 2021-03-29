@@ -89,7 +89,14 @@ class Auxiliary:
                                        }
 
             # for relative computation
-            for dataset in self.runs:
+            for dataset in self.runs: # parallelize here....
+                # Copy and creaate a function...
+                # parameters: dataset_name, all_df, ...
+                # Rather than storing the dict, return that. 
+                # use multiprocessing python library
+                # Consider mp.map() (allows to call the lambda over an
+                # iterable.)
+                # Create process pool (20 or 30) ...
                 df = df_lookup_by_column(sg.dataframe, "dataset", dataset)
                 # df_module = df_bi_level_group(df, "module", "rank",
                 # cols=["time", "time (inc)", "name", "module"],
