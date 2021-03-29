@@ -25,9 +25,10 @@
 			</v-btn> -->
 		</v-app-bar>
 		<v-main>
-			<Loader :isDataReady="isDataReady" />
+			<Loader ref="Loader" :isDataReady="isDataReady" />
 			<router-view></router-view>
-			<Summary v-if="$route.path == '/'" :config="config" :profiles="profiles" />
+			<Summary ref="Summary" v-if="$route.path == '/'" :config="config"
+			:profiles="profiles" :moduleCallsiteMap="moduleCallsiteMap" />
 		</v-main>
 		<Footer ref="Footer" :text="footerText" :year="year"></Footer>
 	</v-app>
@@ -39,6 +40,7 @@ import * as utils from "lib/utils";
 import Color from "lib/color/";
 import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
+import moment from "moment";
 
 // Local components
 import Footer from "./general/footer";
@@ -73,6 +75,7 @@ export default {
 		footerText: "Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis",
 		year: "2021",
 		isDataReady: false,
+		moduleCallsiteMap: {},
 	}),
 
 	mounted() {
@@ -119,6 +122,8 @@ export default {
 			}
 			const aux_data = await APIService.POSTRequest("aux_data", payload);
 			this.initStore(aux_data);
+			// TODO: Remove this shortcut.
+			this.$refs.Summary.init(this.moduleCallsiteMap);
 			return;
 		},
 
@@ -141,12 +146,72 @@ export default {
 			this.$store.modules = utils.swapKeysToDict(data, "modules");
 		},
 
+		/**
+     	 * Per dataset information.
+     	 */
+		setModuleWiseInfo(data, module_idx, metric_type, info_type, sort_by, include_modules) {
+			let ret = [];
+			for (let [dataset, d] of Object.entries(data)) {
+				let _r = {};
+				_r["name"] = dataset;
+				let total = 0;
+				for (let [elem, _d] of Object.entries(d)) {
+					const module_name = module_idx[dataset][elem];
+					if(include_modules.includes(module_name)) {
+						_r[module_idx[dataset][elem]] = _d[metric_type][info_type];
+					}
+					total += _d[metric_type][info_type];
+				}
+				// _r["time"] = moment(new Date(+(new Date()) -
+				// Math.floor(Math.random()*10000000000)));
+				_r["time"] = moment(dataset.split("_")[1]);
+				_r["total"] = total;
+				ret.push(_r);
+			}
+			return ret.sort((a, b) => b[sort_by] - a[sort_by]);
+		},
+
+		sortByAttribute(callsites, metric_type, info_type, top_n, module_idx) {
+			let items = Object.keys(callsites).map( (key) => {
+				return [key, callsites[key]];
+			});
+ 
+			items = items.sort( (first, second) => {
+				return second[1][metric_type][info_type] - first[1][metric_type][info_type];
+			});
+
+			if(top_n < items.length) {
+				items = items.slice(items.length - top_n);
+			}
+
+			callsites = items.reduce((lst, obj) => { lst.push(module_idx[obj[1]["name"]]); return lst; }, []);
+
+			return callsites;
+		},
+
 		setLocalVariables(data) {
 			// Render the tables in the view
 			this.profiles = utils.swapKeysToArray(data, "summary");
-				
-			// TODO: Does not work as the format is weird.
-			this.module_callsite_map = utils.swapKeysToDict(data, "c2m");
+
+
+			// Restrict to top n modules from the ensemble, if n < 10 then we would
+			// default to n modules.
+			const top_n_modules = this.sortByAttribute(this.$store.data_mod["ensemble"], "time", "mean", 10, this.$store.modules["ensemble"]);
+			
+			const objectMap = (obj, fn) => Object.fromEntries(Object.entries(obj).map(([k, v], i) => [k, fn(v, k, i)]));
+
+			const remove_ensemble = objectMap(this.$store.data_mod, (_, x) => { if(x != "ensemble") return _; else return {};});
+			delete remove_ensemble["ensemble"]; // Bring this back if we need to.
+
+			// Formulate the data for the module-wise summary information.
+			this.moduleCallsiteMap = this.setModuleWiseInfo(
+				remove_ensemble,
+				this.$store.modules,
+				"time (inc)",
+				"mean",
+				"time",
+				top_n_modules
+			);
 
 			this.$store.metricTimeMap = Object.keys(data).reduce((res, item, idx) => { 
 				if(item != "ensemble"){
