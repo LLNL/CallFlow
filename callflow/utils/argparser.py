@@ -297,6 +297,9 @@ class ArgParser:
         ]:
             scheme[_] = json[_]
 
+        if self.args.get('save_path') is not "":
+            scheme["save_path"] = os.path.join(os.path.abspath(self.args.get("save_path")), ".callflow")
+
         if len(scheme["save_path"]) == 0:
             scheme["save_path"] = os.path.join(scheme["data_path"], ".callflow")
 
