@@ -77,30 +77,7 @@
       :key="getID(callsite.id)"
     >
       <v-row>
-        <v-col cols="1">
-          <v-card class="ma-2 ml-4" tile outlined>
-            <v-tooltip bottom>
-              <template v-slot:activator="{on}">
-                <v-row
-                  class="pl-2"
-                  :id="callsite.name"
-                  text-xs-center
-                  :v-on="on"
-                  :class="selectClassName[callsite.name]"
-                  @click="changeSelectedClassName"
-                >
-                  {{ formatNumberOfHops(callsite.component_path) }}
-                </v-row>
-              </template>
-              <span
-                >Callsite depth:
-                {{ formatNumberOfHops(callsite.component_path) }}</span
-              >
-            </v-tooltip>
-          </v-card>
-        </v-col>
-
-        <v-col cols="11">
+        <v-col cols="12">
           <v-tooltip bottom>
             <template v-slot:activator="{on}">
               <v-row class="pl-2 subtitle-2 font-weight-black" v-on="on">
@@ -112,33 +89,29 @@
         </v-col>
       </v-row>
 
-      <v-row class="information">
-        <v-col class="pa-0 subtitle-2">
-          Module: {{ formatModule(callsite) }}
-        </v-col>
-      </v-row>
-      <v-row>
-        <div class="subtitle-2" :style="'color: ' + targetColor">Mean : {{tMeans[callsite.name]}}</div>
-        <!-- <div class="subtitle-2" :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}</div> -->
-        <v-col
-          class="subtitle-2"
-          :style="'color: ' + targetColor"
-          v-if="selectedMode == 'Ensemble'"
-        >
-          Std. Dev. : {{ targetStandardDeviation[callsite.name] }}
-          {{ selectedMode }}
-        </v-col>
-      </v-row>
-
       <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget="false" />
 
-      <v-row>
-        <v-col class="pl-2subtitle-2" :style="'color: ' + ensembleColor">
-          Mean : {{ ensembleMeans[callsite.name] }}
+	<v-row wrap class="information">
+		<v-col class="pa-0 subtitle-2">Min : {{ eMin[callsite.name] }}</v-col>
+		<v-col class="pa-0 subtitle-2">Max : {{ eMax[callsite.name] }}</v-col>
+      </v-row>
+      <v-row wrap class="information">
+        <v-col class="pa-0 subtitle-2">Mean : {{ eMean[callsite.name] }}</v-col>
+      </v-row>
+      <v-row wrap class="information">
+        <v-col class="pa-0 subtitle-2"
+          >Variance : {{ eVariance[callsite.name] }}</v-col
+        >
+        <v-col class="pa-0 subtitle-2"
+          >Imbalance : {{ eImb[callsite.name] }}</v-col
+        >
+      </v-row>
+      <v-row wrap class="information">
+        <v-col class="pa-0 subtitle-2">
+          Kurtosis : {{ eKurt[callsite.name] }}
         </v-col>
-        <v-col class="pl-2subtitle-2" :style="'color: ' + ensembleColor">
-          Std. Dev. :
-          {{ ensembleStandardDeviation[callsite.name] }}
+        <v-col class="pa-0 subtitle-2">
+          Skewness : {{ eSkew[callsite.name] }}
         </v-col>
       </v-row>
     </v-container>
@@ -419,10 +392,11 @@ export default {
 
 		boxplotByMetric() {
 			for (let callsite in this.callsites) {
-				const t_data = this.targetCallsites[callsite][this.selectedMetric];
 				const e_data = this.callsites[callsite][this.selectedMetric];
 
 				if (this.targetCallsites[callsite] != undefined) {
+					const t_data = this.targetCallsites[callsite][this.selectedMetric];
+
 					this.tMin[callsite] = utils.formatRuntimeWithoutUnits(t_data["min"]);
 					this.tMax[callsite] = utils.formatRuntimeWithoutUnits(t_data["max"]);
 					this.tMean[callsite] = utils.formatRuntimeWithoutUnits(t_data["mean"]);
@@ -431,8 +405,13 @@ export default {
 					this.tKurt[callsite] = utils.formatRuntimeWithoutUnits(t_data["kurt"]);
 					this.tSkew[callsite] = utils.formatRuntimeWithoutUnits(t_data["skew"]);
 				} else {
-					this.tMeans[callsite] = 0;
+					this.tMin[callsite] = 0;
+					this.tMax[callsite] = 0;
+					this.tMean[callsite] = 0;
 					this.tVariance[callsite] = 0;
+					this.tImb[callsite] = 0;
+					this.tKurt[callsite] = 0;
+					this.tSkew[callsite] = 0;
 				}
 
 				this.eMin[callsite] = utils.formatRuntimeWithoutUnits(e_data["min"]);
@@ -499,10 +478,11 @@ export default {
 
 		// Formatting for the html view
 		formatModule(module) {
-			if (module.length < 10) {
-				return module;
+			const moduleName = module["name"];
+			if (moduleName.length < 10) {
+				return moduleName;
 			}
-			return this.trunc(module, 10);
+			return this.trunc(moduleName, 10);
 		},
 
 		formatName(name) {
