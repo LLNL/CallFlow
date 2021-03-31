@@ -119,9 +119,10 @@ class BaseProvider:
         filter_by = self.config["filter_by"]
         filter_perc = self.config["filter_perc"]
         module_callsite_map = self.config.get("module_callsite_map", {})
+        append_path = self.config.get("append_path", "")
 
         run_props = {
-            _["name"]: (_["path"], _["profile_format"]) for _ in self.config["runs"]
+            _["name"]: (os.path.join(_["path"], append_path), _["profile_format"]) for _ in self.config["runs"]
         }
 
         is_not_ensemble = len(self.config["runs"]) == 1
@@ -148,17 +149,23 @@ class BaseProvider:
 
             LOGGER.profile(f'Starting supergraph ({name})')
 
+            data_path = os.path.join(load_path, _prop[0])
+            if _prop[1] == "hpctoolkit" and not os.path.isfile(os.path.join(data_path, "experiment.xml")):
+                LOGGER.debug(f"Skipping {data_path} as it is missing the experiment.xml file")
+                continue
+
             sg = SuperGraph(name)
             sg.create(
-                    path=os.path.join(load_path, _prop[0]),
+                    path=data_path,
                     profile_format=_prop[1],
                     module_callsite_map=module_callsite_map,
-                    filter_by=filter_by, filter_perc=filter_perc
                 )
 
             LOGGER.profile(f'Created supergraph {name}')
             Group(sg, group_by=group_by)
             LOGGER.profile(f'Grouped supergraph {name}')
+
+            sg.write(os.path.join(save_path, name), write_aux=False)
 
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             LOGGER.profile(f'Filtered supergraph {name}')
@@ -167,7 +174,7 @@ class BaseProvider:
                 Auxiliary(sg)
 
             LOGGER.profile(f'Created Aux for {name}')
-            sg.write(os.path.join(save_path, name), write_aux=(is_not_ensemble or indivdual_aux_for_ensemble))
+            sg.write(os.path.join(save_path, name), write_df=False, write_aux=(is_not_ensemble or indivdual_aux_for_ensemble))
 
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')

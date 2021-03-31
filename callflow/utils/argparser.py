@@ -285,7 +285,7 @@ class ArgParser:
         scheme = {}
 
         # Set the data_path, which is data directory.
-        scheme["data_path"] = os.path.dirname(json["data_path"])
+        scheme["data_path"] = json["data_path"]
         scheme["experiment"] = os.path.basename(scheme["data_path"])
 
         for _ in [
@@ -294,6 +294,7 @@ class ArgParser:
             "filter_by",
             "group_by",
             "read_parameter",
+            "append_path"
         ]:
             scheme[_] = json[_]
 
