@@ -106,4 +106,42 @@ def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, apply_func, pr
     ret_df.reset_index(drop=False, inplace=True)
     return ret_df
 
-# ------------------------------------------------------------------------------
+
+def df_bi_level_group_2(df, frst_group_attr, scnd_group_attr, apply_func, proxy={}):
+    _df = df.set_index([frst_group_attr])
+    if scnd_group_attr is not None:
+        _df = df.set_index([frst_group_attr, scnd_group_attr])
+    _levels = _df.index.unique().tolist()
+    if scnd_group_attr is not None:
+        return { _ : _df.xs(_).groupby("rank").mean() for (_, __) in _levels }
+    else:
+        return { _ : _df.xs(_).groupby("rank").mean() for _ in _levels }
+
+
+def df_bi_level_group_3(df, frst_group_attr, scnd_group_attr, cols, group_by, apply_func, proxy={}):
+    _df = df.set_index([frst_group_attr])
+    _cols = [proxy.get(_, _) for _ in cols] + group_by
+
+    # If there is only one attribute to group by, we use the 1st index.
+    if len(group_by) == 1:
+        group_by = group_by[0]
+
+    if scnd_group_attr is not None:
+        _indexes = [frst_group_attr, scnd_group_attr]
+    else:
+        _indexes = [frst_group_attr]
+
+    _df = df.set_index(_indexes)
+    _levels = _df.index.unique().tolist()
+
+    if scnd_group_attr is not None:
+        if len(group_by) == 0:
+            _cols = _cols + ["rank"]
+            return { _ : _df.xs(_)[_cols] for (_, __) in _levels }
+        return { _ : (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index() for (_, __) in _levels }
+    else:
+        if len(group_by) == 0:
+            _cols = _cols + ["rank"]
+            return { _ : _df.xs(_)[_cols] for _ in _levels }
+        return { _ : (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index() for _ in _levels }
+        

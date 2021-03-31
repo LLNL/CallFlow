@@ -114,9 +114,7 @@ class Gradients:
 
         # Get the runtimes for all the runs.
         for idx, dataset in enumerate(self.df_dict):
-            node_df = df_lookup_by_column(self.df_dict[dataset], columnName,
-                                          self.callsiteOrModule)
-
+            node_df = self.df_dict[dataset]
             for tk, tv in zip(TIME_COLUMNS, self.time_columns):
                 if node_df.empty:
                     dists[tk][dataset] = dict((rank, 0) for rank in range(0, self.max_ranks))
