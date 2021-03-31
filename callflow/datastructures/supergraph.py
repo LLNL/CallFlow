@@ -13,6 +13,7 @@ import pandas as pd
 import hatchet as ht
 import networkx as nx
 from ast import literal_eval as make_list
+from pyinstrument import Profiler
 
 import callflow
 from callflow import get_logger
@@ -68,7 +69,8 @@ class SuperGraph(ht.GraphFrame):
         self.modules = []
         self.callsite_module_map = {}
         self.module_callsite_map = {}
-        self.roots = []
+        self.gf = None
+        self.profiler = Profiler()
 
     # --------------------------------------------------------------------------
     def __str__(self):
@@ -80,7 +82,7 @@ class SuperGraph(ht.GraphFrame):
         return self.__str__()
 
     # --------------------------------------------------------------------------
-    def create(self, path, profile_format, module_callsite_map: dict = {}, filter_by="time (inc)", filter_perc=10.0) -> None: 
+    def create(self, path, profile_format, module_callsite_map: dict = {}) -> None: 
         """
         Create SuperGraph from basic information. It does the following:
             1. Using the config object, it constructs the Hatchet GraphFrame.
@@ -95,6 +97,7 @@ class SuperGraph(ht.GraphFrame):
         :param module_callsite_map: Module callsite mapping
         :return:
         """
+        self.profiler.start()
         self.profile_format = profile_format
         LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path}) "
                     f"using ({self.profile_format}) format")
@@ -105,24 +108,13 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.debug(f"Input Dataframe shape: {gf.dataframe.shape}")
 
         super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics) # Initialize here so that we dont drop index levels.
-        self.add_time_proxies()
+        gf.drop_index_levels() # TODO: Remove this.
+        self.gf = gf
 
-        self.callsites = df_unique(gf.dataframe, "name")
-        LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
+        self.add_time_proxies()
 
         self.roots = SuperGraph.hatchet_get_roots(gf.graph) # Contains all unfiltered roots as well.
         self.mean_root_inctime = self.df_mean_runtime(self.roots, "time (inc)")
-        
-        # Filter the graphframe using hatchet (initial filtering) using QueryMatcher.
-        query = [
-            ("*", {f"{self.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
-        ]
-        LOGGER.debug(f"Query is :{query}")
-        gf.drop_index_levels()
-        gf = gf.filter(query)
-        
-        self.f_callsites = df_unique(gf.dataframe, "name")
-        LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
 
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
         self.roots = self.get_roots(self.nxg)  
@@ -151,6 +143,8 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.info(f'Processed dataframe: {self.dataframe.shape}, '
                     f'columns = {list(self.dataframe.columns)}')
 
+        self.profiler.stop()
+
         # ----------------------------------------------------------------------
         # graph-related operations
         for node in self.graph.traverse():
@@ -160,9 +154,9 @@ class SuperGraph(ht.GraphFrame):
             self.callers[node_name] = [_.frame.get("name") for _ in node.parents]
             self.callees[node_name] = [_.frame.get("name") for _ in node.children]
 
-        self.df_add_column("callees", apply_func=lambda _: self.callees[_])
-        self.df_add_column("callers", apply_func=lambda _: self.callers[_])
-        self.df_add_column("path", apply_func=lambda _: self.paths[_])
+        self.df_add_column("callees", apply_func=lambda _: self.callees[_] if _ in self.callees else [])
+        self.df_add_column("callers", apply_func=lambda _: self.callers[_] if _ in self.callers else [])
+        self.df_add_column("path", apply_func=lambda _: self.paths[_] if _ in self.paths else [])
 
         self.modules = np.array(self.df_factorize_column("module", sanitize=True))
 
