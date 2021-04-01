@@ -81,6 +81,23 @@ class SuperGraph(ht.GraphFrame):
         """SuperGraph string representation"""
         return self.__str__()
 
+    def filter_query(self):
+        self.gf.drop_index_levels() # TODO: Remove this.
+
+        self.callsites = df_unique(self.gf.dataframe, "name")
+        LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")       
+        
+        # Filter the graphframe using hatchet (initial filtering) using QueryMatcher.
+        query = [
+            ("*", {f"{self.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
+        ]
+        LOGGER.debug(f"Query is :{query}")
+        # self.sg.gf.drop_index_levels()
+        fgf = self.sg.gf.filter(query)
+        
+        self.f_callsites = df_unique(fgf.dataframe, "name")
+        LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
+
     # --------------------------------------------------------------------------
     def create(self, path, profile_format, module_callsite_map: dict = {}) -> None: 
         """
@@ -102,22 +119,22 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path}) "
                     f"using ({self.profile_format}) format")
 
-        gf = SuperGraph.from_config(path, self.profile_format)
+        self.gf = SuperGraph.from_config(path, self.profile_format)
         assert isinstance(gf, ht.GraphFrame)
         assert gf.graph is not None
         LOGGER.debug(f"Input Dataframe shape: {gf.dataframe.shape}")
+        
+        self.roots = self.get_roots(self.nxg)  
+        self.mean_root_inctime = self.df_mean_runtime(self.roots, "time (inc)")
+        self.filter_query()
 
         super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics) # Initialize here so that we dont drop index levels.
-        gf.drop_index_levels() # TODO: Remove this.
-        self.gf = gf
 
         self.add_time_proxies()
 
         self.roots = SuperGraph.hatchet_get_roots(gf.graph) # Contains all unfiltered roots as well.
-        self.mean_root_inctime = self.df_mean_runtime(self.roots, "time (inc)")
 
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
-        self.roots = self.get_roots(self.nxg)  
 
         # ----------------------------------------------------------------------
         # Hatchet requires node and rank to be indexes.

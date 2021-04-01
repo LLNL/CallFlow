@@ -285,10 +285,10 @@ class ArgParser:
         scheme = {}
 
         # Set the data_path, which is data directory.
-        scheme["data_path"] = json["data_path"]
         scheme["experiment"] = os.path.basename(scheme["data_path"])
 
         for _ in [
+            "data_path",
             "save_path",
             "filter_perc",
             "filter_by",
