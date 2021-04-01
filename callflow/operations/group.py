@@ -65,6 +65,8 @@ class Group:
         self.callsite_module_map = self.sg.df_get_column("module", "name").to_dict()
         self.callsite_path_map = self.sg.df_get_column("path", "name").to_dict()
 
+        print(len(self.callsite_path_map.keys()))
+
         group_path = {}
         component_path = {}
         component_level = {}
@@ -80,40 +82,42 @@ class Group:
             snode = edge[0]
             tnode = edge[1]
 
-            spath = self.callsite_path_map[snode]
-            tpath = self.callsite_path_map[tnode]
+            # TODO: adding this here ensures that the source and target nodes are present in the map. Might have to reconsider if this needs to be here.
+            if snode in self.callsite_path_map and tnode in self.callsite_path_map:
+                spath = self.callsite_path_map[snode]
+                tpath = self.callsite_path_map[tnode]
 
-            # Mappers for the source node, snode.
-            group_path[snode] = self._construct_group_path(spath)
-            component_path[snode] = self._construct_component_path(
-                spath, group_path[snode]
-            )
-            component_level[snode] = len(component_path[snode])
-            if component_level[snode] == 2:
-                entry_func[snode] = True
-                show_node[snode] = True
-            else:
-                entry_func[snode] = False
-                show_node[snode] = False
-            node_name[snode] = self._format_node_name(
-                self.callsite_module_map[snode], snode
-            )
+                # Mappers for the source node, snode.
+                group_path[snode] = self._construct_group_path(spath)
+                component_path[snode] = self._construct_component_path(
+                    spath, group_path[snode]
+                )
+                component_level[snode] = len(component_path[snode])
+                if component_level[snode] == 2:
+                    entry_func[snode] = True
+                    show_node[snode] = True
+                else:
+                    entry_func[snode] = False
+                    show_node[snode] = False
+                node_name[snode] = self._format_node_name(
+                    self.callsite_module_map[snode], snode
+                )
 
-            # Mappers for the target node, tnode.
-            group_path[tnode] = self._construct_group_path(tpath)
-            component_path[tnode] = self._construct_component_path(
-                tpath, group_path[tnode]
-            )
-            component_level[tnode] = len(component_path[tnode])
-            if component_level[tnode] == 2:
-                entry_func[tnode] = True
-                show_node[tnode] = True
-            else:
-                entry_func[tnode] = False
-                show_node[tnode] = False
-            node_name[tnode] = self._format_node_name(
-                self.callsite_module_map[snode], tnode
-            )
+                # Mappers for the target node, tnode.
+                group_path[tnode] = self._construct_group_path(tpath)
+                component_path[tnode] = self._construct_component_path(
+                    tpath, group_path[tnode]
+                )
+                component_level[tnode] = len(component_path[tnode])
+                if component_level[tnode] == 2:
+                    entry_func[tnode] = True
+                    show_node[tnode] = True
+                else:
+                    entry_func[tnode] = False
+                    show_node[tnode] = False
+                node_name[tnode] = self._format_node_name(
+                    self.callsite_module_map[snode], tnode
+                )
 
         # update the graph
         self.sg.df_update_mapping("group_path", group_path)

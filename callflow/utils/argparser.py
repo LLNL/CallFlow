@@ -177,6 +177,13 @@ class ArgParser:
             help="Resets the .callflow directory to re-process entire ensemble"
         )
 
+        parser.add_argument(
+            "--append_path",
+            type=str,
+            default="",
+            help="Appends the path to the directory passed as --data_path",
+        )
+
         # -------------
         return parser
 
@@ -255,6 +262,7 @@ class ArgParser:
             "filter_by",
             "group_by",
             "read_parameter",
+            "append_path"
         ]:
             scheme[_] = self.args[_]
 
@@ -284,18 +292,20 @@ class ArgParser:
         # ----------------------------------------------------------------------
         scheme = {}
 
-        # Set the data_path, which is data directory.
-        scheme["data_path"] = os.path.dirname(json["data_path"])
-        scheme["experiment"] = os.path.basename(scheme["data_path"])
-
         for _ in [
+            "data_path",
             "save_path",
             "filter_perc",
             "filter_by",
             "group_by",
             "read_parameter",
+            "append_path"
         ]:
-            scheme[_] = json[_]
+            if _ in json:
+                scheme[_] = json[_]
+
+        # Set the data_path, which is data directory.
+        scheme["experiment"] = os.path.basename(json["data_path"])
 
         if self.args.get('save_path') is not "":
             scheme["save_path"] = os.path.join(os.path.abspath(self.args.get("save_path")), ".callflow")

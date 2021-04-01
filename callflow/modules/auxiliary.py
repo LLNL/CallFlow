@@ -12,6 +12,9 @@ for each call site or module based on the type of data requested.
 import numpy as np
 import pandas as pd
 from scipy.stats import kurtosis, skew
+import multiprocessing
+from functools import partial
+from pyinstrument import Profiler
 
 import callflow
 from callflow.utils.utils import print_dict_recursive
@@ -53,14 +56,15 @@ class Auxiliary:
         LOGGER.warning(f"Computing auxiliary data for ({sg}) with "
                        f"{len(self.runs)} runs: {self.runs}")
 
+        profiler = Profiler()
+        profiler.start()
+
         self.result = {}
         # ----------------------------------------------------------------------
         # single super graph
         if not isinstance(sg, callflow.EnsembleGraph):
-
-            _df = df_bi_level_group(sg.dataframe, "module", "rank", cols= self.time_columns + ["name", "module"], apply_func=lambda _: _.mean())
-            df_module = _df.groupby("module")
-            df_name = df_group_by(sg.dataframe, "name")
+            df_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+            df_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
 
             self.result = {"summary": sg.summary(),
                            "modules": sg.modules,
@@ -70,14 +74,11 @@ class Auxiliary:
                            "data_cs": self.new_collect_data(sg.name, "name", df_name)
                            }
 
-
         # ----------------------------------------------------------------------
         # ensemble graph
         else:
-            edf = df_bi_level_group(sg.dataframe, "module", "rank", cols= self.time_columns + ["name", "module"], apply_func=lambda _: _.mean())
-            edf_module = edf.groupby("module")
-            
-            edf_name = df_group_by(sg.dataframe, "name")
+            edf_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())        
+            edf_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
 
             self.result['ensemble'] = {"summary": sg.summary(),
                                        "modules": sg.modules,
@@ -88,35 +89,41 @@ class Auxiliary:
                                        "runs": self.runs,
                                        }
 
-            # for relative computation
-            for dataset in self.runs:
-                df = df_lookup_by_column(sg.dataframe, "dataset", dataset)
-                # df_module = df_bi_level_group(df, "module", "rank",
-                # cols=["time", "time (inc)", "name", "module"],
-                # apply_func=lambda _: _.mean())
-                df_module = edf.loc[edf['dataset'] == dataset].groupby("module")
-                df_name = df_group_by(df, "name")
-
-                # TODO: this assumes that the original dataframe was modified
-                self.result[dataset] = {"summary": sg.supergraphs[dataset].summary(),
-                                        "modules": sg.supergraphs[dataset].modules,
-                                        "m2c": sg.supergraphs[dataset].df_mod2callsite(),
-                                        "c2m": sg.supergraphs[dataset].df_callsite2mod(),
-                                        "data_mod": self.new_collect_data(dataset, "module", df_module, edf_module),
-                                        "data_cs": self.new_collect_data(dataset, "name", df_name, edf_name),
-                                        "runs": self.runs,
-                                        }
+            LOGGER.debug(f"Using {multiprocessing.cpu_count()} processes to perform auxiliary operation.")
+            with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+                pool.map(partial(self._relative_computation, sg=sg, edf_module=edf_module, edf_name=edf_name), self.runs)
+                
+            profiler.stop()
+            print(profiler.output_text(unicode=True, color=True))
 
         # TODO: this should not happen this way
         sg.aux_data = self.result
     # --------------------------------------------------------------------------
 
+    def _relative_computation(self, dataset, sg, edf_module, edf_name):
+        _df = sg.dataframe.loc[sg.dataframe['dataset'] == dataset]
+                
+        if len(_df['rank'].unique().tolist()) == 1:
+            group_by = []
+        else:
+            group_by = ["rank"]
+
+        df_module = df_bi_level_group(_df, "module", "name", cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())        
+        df_name = df_bi_level_group(_df, "name", None, cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())
+
+        # TODO: this assumes that the original dataframe was modified
+        self.result[dataset] = {"summary": sg.supergraphs[dataset].summary(),
+                "modules": sg.supergraphs[dataset].modules,
+                "m2c": sg.supergraphs[dataset].df_mod2callsite(),
+                "c2m": sg.supergraphs[dataset].df_callsite2mod(),
+                "data_mod": self.new_collect_data(dataset, "module", df_module, edf_module),
+                "data_cs": self.new_collect_data(dataset, "name", df_name, edf_name),
+                "runs": self.runs,
+                }
+
     def new_collect_data(self, name, grp_column, grp_df, grp_edf=None):
 
         assert grp_column in ['module', 'name']
-        assert isinstance(grp_df, pd.core.groupby.generic.DataFrameGroupBy)
-        if grp_edf is not None:
-            assert isinstance(grp_edf, pd.core.groupby.generic.DataFrameGroupBy)
 
         is_callsite = grp_column == "name"
         is_ensemble = name == "ensemble"
@@ -132,11 +139,12 @@ class Auxiliary:
             histo_types = ['rank']
 
         result = {}
-        for grp_name, df in grp_df:
+        for grp_name in grp_df:
+
+            df = grp_df[grp_name]
 
             if is_relative:
-                ensemble_df = grp_edf.get_group(grp_name)
-
+                ensemble_df = grp_edf[grp_name]
             histogram = Histogram(df, relative_to_df=ensemble_df,
                                   histo_types=histo_types,
                                   proxy_columns=self.proxy_columns).result
@@ -182,7 +190,7 @@ class Auxiliary:
 
         _id_col = 'nid' if grp_type == "name" else 'module'
         result = {"name":               name,
-                  "id":                 f"{grp_type}-{df[_id_col].unique()[0]}",
+                  "id":                 f"{grp_type}-{name}",
                   #"dataset":            df_unique(df, "dataset"),
                   "component_path":     df_unique(df, "component_path"),
                   #"component_level":    df_unique(df, "component_level")

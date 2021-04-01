@@ -12,6 +12,7 @@ import networkx as nx
 from ast import literal_eval as make_list
 
 import callflow
+from callflow.utils.df import *
 
 LOGGER = callflow.get_logger(__name__)
 
@@ -42,6 +43,21 @@ class Filter:
         LOGGER.info(
             f'Filtering ({self.sg}) by "{self.filter_by}" = {self.filter_perc}%'
         )
+
+        # self.callsites = df_unique(sg.dataframe, "name")
+        # LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")       
+        
+        # # Filter the graphframe using hatchet (initial filtering) using QueryMatcher.
+        # query = [
+        #     ("*", {f"{self.sg.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.sg.mean_root_inctime}"})
+        # ]
+        # LOGGER.debug(f"Query is :{query}")
+        # # self.sg.gf.drop_index_levels()
+        # fgf = self.sg.gf.filter(query)
+        
+        # self.f_callsites = df_unique(fgf.dataframe, "name")
+        # LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
+
         self.compute()
         
         # TODO: Find a better way to do this.
@@ -80,7 +96,9 @@ class Filter:
         :return nxg (networkx.graph):
         """
         LOGGER.debug(f'Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
-        self.dataframe = self.sg.df_filter_by_value(filter_by, filter_val)
+        # self.dataframe = self.sg.df_filter_by_value(filter_by, filter_val)
+        if len(self.sg.f_callsites) > 0:
+            self.dataframe = self.sg.dataframe[self.sg.dataframe["name"].isin(self.sg.f_callsites)]
         LOGGER.info(f'Filtered dataframe comprises of: "{self.dataframe.shape}"')
 
         callsites = self.sg.f_callsites
