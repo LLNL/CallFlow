@@ -81,25 +81,8 @@ class SuperGraph(ht.GraphFrame):
         """SuperGraph string representation"""
         return self.__str__()
 
-    def filter_query(self):
-        self.gf.drop_index_levels() # TODO: Remove this.
-
-        self.callsites = df_unique(self.gf.dataframe, "name")
-        LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")       
-        
-        # Filter the graphframe using hatchet (initial filtering) using QueryMatcher.
-        query = [
-            ("*", {f"{self.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
-        ]
-        LOGGER.debug(f"Query is :{query}")
-        # self.sg.gf.drop_index_levels()
-        fgf = self.sg.gf.filter(query)
-        
-        self.f_callsites = df_unique(fgf.dataframe, "name")
-        LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
-
     # --------------------------------------------------------------------------
-    def create(self, path, profile_format, module_callsite_map: dict = {}) -> None: 
+    def create(self, path, profile_format, module_callsite_map: dict = {},  filter_by="time (inc)", filter_perc=10.0) -> None: 
         """
         Create SuperGraph from basic information. It does the following:
             1. Using the config object, it constructs the Hatchet GraphFrame.
@@ -119,21 +102,39 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path}) "
                     f"using ({self.profile_format}) format")
 
-        self.gf = SuperGraph.from_config(path, self.profile_format)
+        # Create the hatchet.GraphFrame based on the profile format.
+        gf = SuperGraph.from_config(path, self.profile_format)
         assert isinstance(gf, ht.GraphFrame)
         assert gf.graph is not None
         LOGGER.debug(f"Input Dataframe shape: {gf.dataframe.shape}")
-        
-        self.roots = self.get_roots(self.nxg)  
-        self.mean_root_inctime = self.df_mean_runtime(self.roots, "time (inc)")
-        self.filter_query()
 
+        # Create a hatchet.GraphFrame using the calculated graph and graphframe.
         super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics) # Initialize here so that we dont drop index levels.
+        
+        # Find the roots of the super graph. Used to get the mean inclusive runtime.
+        self.roots = SuperGraph.hatchet_get_roots(gf.graph) # Contains all unfiltered roots as well.
+        
+        # Call sites in the unfiltered GraphFrame. 
+        self.callsites = df_unique(gf.dataframe, "name")
+        LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
 
+        # Find the mean runtime of all the roots.
+        self.mean_root_inctime = self.df_mean_runtime(gf.dataframe, self.roots, "time (inc)")
+        
+        # Formulate the hatchet query.
+        query = [
+            ("*", {f"{self.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
+        ]
+        LOGGER.debug(f"Filtering GraphFrame by Hatchet Query :{query}")
+
+        self.f_callsites = SuperGraph.hatchet_filter_callsites_by_query(gf, query)
+        LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
+
+        
+        # Add time proxies.
         self.add_time_proxies()
 
-        self.roots = SuperGraph.hatchet_get_roots(gf.graph) # Contains all unfiltered roots as well.
-
+        # Construct the nxg from the hatchet.graph.
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
 
         # ----------------------------------------------------------------------
@@ -317,7 +318,7 @@ class SuperGraph(ht.GraphFrame):
     def summary(self):
 
         cols = list(self.dataframe.columns)
-        result = {"meantime": self.df_mean_runtime(self.roots, "time (inc)"),
+        result = {"meantime": self.df_mean_runtime(self.dataframe, self.roots, "time (inc)"),
                   "roots": self.roots,
                   "ncallsites": self.df_count("name"),
                   "nmodules": self.df_count("module"), # if "module" in cols else 0,
@@ -634,11 +635,24 @@ class SuperGraph(ht.GraphFrame):
     def hatchet_get_roots(graph):
         return [root.frame.get('name') for root in graph.roots]
 
-    def df_mean_runtime(self, roots, column):
+    @staticmethod
+    def hatchet_filter_callsites_by_query(gf, query):
+        """
+        Returns the filtered callsites based on the query.
+        """
+        # Expensive. We need to do this to speed up the filtering process. 
+        gf.drop_index_levels() 
+
+        # Filter the graphframe using hatchet (initial filtering) using QueryMatcher.
+        fgf = gf.filter(query)
+
+        return df_unique(fgf.dataframe, "name")
+
+    def df_mean_runtime(self, df, roots, column):
         mean_runtime = 0.0
         column = self.df_get_proxy(column)
         for root in roots:
-            mean_runtime = max(mean_runtime, self.dataframe.loc[self.dataframe['name'] == root][column].mean())
+            mean_runtime = max(mean_runtime, df.loc[df['name'] == root][column].mean())
         return round(mean_runtime, 2)
 
     def get_roots(self, nxg):

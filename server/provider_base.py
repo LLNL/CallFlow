@@ -10,6 +10,7 @@ from callflow import SuperGraph, EnsembleGraph
 from callflow import get_logger
 from callflow.operations import Filter, Group, Unify
 from callflow.modules import Auxiliary
+from pyinstrument import Profiler
 
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import ParameterProjection, DiffView
@@ -74,7 +75,7 @@ class BaseProvider:
                 self.supergraphs[name].aux_data = self.supergraphs["ensemble"].aux_data[name]
 
     def _process_load(self):
-        # TODO: This is a copy and also exists in supergraph.py. 
+        # TODO: This is a copy of _FILENAMES and also exists in supergraph.py. 
         # Not quite sure where this should reside to avoid duplication.
         _FILENAMES = {
             "df": "df.pkl",
@@ -113,6 +114,7 @@ class BaseProvider:
         variables, e.g., filter_perc, filter_by.
         2. EnsembleGraph is then constructed from the processed SuperGraphs.
         """
+        profile = Profiler()
         save_path = self.config["save_path"]
         load_path = self.config["data_path"]
         group_by = self.config["group_by"]
@@ -144,6 +146,8 @@ class BaseProvider:
         indivdual_aux_for_ensemble = True
 
         for dataset in process_datasets:
+            profile.start()
+
             name = dataset["name"]
             _prop = run_props[name]
             LOGGER.profile(f'Starting supergraph ({name})')
@@ -177,6 +181,9 @@ class BaseProvider:
 
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
+            profile.stop()
+            print(profile.output_text(unicode=True, color=True))
+
 
         for dataset in load_datasets:
             name = dataset["name"]
