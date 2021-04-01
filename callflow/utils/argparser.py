@@ -301,7 +301,8 @@ class ArgParser:
             "read_parameter",
             "append_path"
         ]:
-            scheme[_] = json[_]
+            if _ in json:
+                scheme[_] = json[_]
 
         # Set the data_path, which is data directory.
         scheme["experiment"] = os.path.basename(json["data_path"])

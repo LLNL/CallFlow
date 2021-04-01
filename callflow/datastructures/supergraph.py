@@ -117,6 +117,9 @@ class SuperGraph(ht.GraphFrame):
         # Call sites in the unfiltered GraphFrame. 
         self.callsites = df_unique(gf.dataframe, "name")
         LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
+        
+        # Add time proxies.
+        self.add_time_proxies()
 
         # Find the mean runtime of all the roots.
         self.mean_root_inctime = self.df_mean_runtime(gf.dataframe, self.roots, "time (inc)")
@@ -129,10 +132,6 @@ class SuperGraph(ht.GraphFrame):
 
         self.f_callsites = SuperGraph.hatchet_filter_callsites_by_query(gf, query)
         LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
-
-        
-        # Add time proxies.
-        self.add_time_proxies()
 
         # Construct the nxg from the hatchet.graph.
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
