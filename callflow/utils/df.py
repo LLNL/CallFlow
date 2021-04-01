@@ -86,7 +86,8 @@ def df_group_by(df, columns, proxy={}):
         columns = proxy.get(columns, columns)
         return df.groupby([columns])
 
-def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, apply_func, proxy={}):
+# TODO: Remove before merge to develop
+def df_bi_level_group_v1(df, frst_group_attr, scnd_group_attr, cols, apply_func, proxy={}):
     """
     """
     g_df = df.groupby(frst_group_attr)
@@ -106,8 +107,8 @@ def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, apply_func, pr
     ret_df.reset_index(drop=False, inplace=True)
     return ret_df
 
-
-def df_bi_level_group_2(df, frst_group_attr, scnd_group_attr, apply_func, proxy={}):
+# TODO: Remove before merge to develop
+def df_bi_level_group_v2(df, frst_group_attr, scnd_group_attr, apply_func, proxy={}):
     _df = df.set_index([frst_group_attr])
     if scnd_group_attr is not None:
         _df = df.set_index([frst_group_attr, scnd_group_attr])
@@ -117,8 +118,8 @@ def df_bi_level_group_2(df, frst_group_attr, scnd_group_attr, apply_func, proxy=
     else:
         return { _ : _df.xs(_).groupby("rank").mean() for _ in _levels }
 
-
-def df_bi_level_group_3(df, frst_group_attr, scnd_group_attr, cols, group_by, apply_func, proxy={}):
+# TODO: apply_func is really slow. So we apply the func directly on the column, instead of a lambda like functions.
+def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, group_by, apply_func, proxy={}):
     _df = df.set_index([frst_group_attr])
     _cols = [proxy.get(_, _) for _ in cols] + group_by
 

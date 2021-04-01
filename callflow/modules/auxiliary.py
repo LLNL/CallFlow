@@ -19,7 +19,7 @@ from pyinstrument import Profiler
 import callflow
 from callflow.utils.utils import print_dict_recursive
 from callflow.utils.df import df_minmax, df_count, df_unique, df_group_by, \
-    df_fetch_columns, df_lookup_by_column, df_bi_level_group_3
+    df_fetch_columns, df_lookup_by_column, df_bi_level_group
 
 from .gradients import Gradients
 from .boxplot import BoxPlot
@@ -63,9 +63,8 @@ class Auxiliary:
         # ----------------------------------------------------------------------
         # single super graph
         if not isinstance(sg, callflow.EnsembleGraph):
-
-            df_module = df_bi_level_group_3(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
-            df_name = df_bi_level_group_3(sg.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+            df_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+            df_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
 
             self.result = {"summary": sg.summary(),
                            "modules": sg.modules,
@@ -75,12 +74,11 @@ class Auxiliary:
                            "data_cs": self.new_collect_data(sg.name, "name", df_name)
                            }
 
-
         # ----------------------------------------------------------------------
         # ensemble graph
         else:
-            edf_module = df_bi_level_group_3(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())        
-            edf_name = df_bi_level_group_3(sg.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
+            edf_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())        
+            edf_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
 
             self.result['ensemble'] = {"summary": sg.summary(),
                                        "modules": sg.modules,
@@ -91,8 +89,8 @@ class Auxiliary:
                                        "runs": self.runs,
                                        }
 
-
-            with multiprocessing.Pool(processes=3) as pool:
+            LOGGER.debug(f"Using {multiprocessing.cpu_count()} processes to perform auxiliary operation.")
+            with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
                 pool.map(partial(self._relative_computation, sg=sg, edf_module=edf_module, edf_name=edf_name), self.runs)
                 
             profiler.stop()
@@ -110,8 +108,8 @@ class Auxiliary:
         else:
             group_by = ["rank"]
 
-        df_module = df_bi_level_group_3(_df, "module", "name", cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())        
-        df_name = df_bi_level_group_3(_df, "name", None, cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())
+        df_module = df_bi_level_group(_df, "module", "name", cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())        
+        df_name = df_bi_level_group(_df, "name", None, cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())
 
         # TODO: this assumes that the original dataframe was modified
         self.result[dataset] = {"summary": sg.supergraphs[dataset].summary(),

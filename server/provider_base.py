@@ -122,7 +122,7 @@ class BaseProvider:
         append_path = self.config.get("append_path", "")
 
         run_props = {
-            _["name"]: (os.path.join(_["path"], append_path), _["profile_format"]) for _ in self.config["runs"]
+            _["name"]: (os.path.join(_["path"], append_path) if len(append_path) > 0 else _["path"], _["profile_format"]) for _ in self.config["runs"]
         }
 
         is_not_ensemble = len(self.config["runs"]) == 1
@@ -146,7 +146,6 @@ class BaseProvider:
         for dataset in process_datasets:
             name = dataset["name"]
             _prop = run_props[name]
-
             LOGGER.profile(f'Starting supergraph ({name})')
 
             data_path = os.path.join(load_path, _prop[0])
@@ -206,8 +205,8 @@ class BaseProvider:
             Group(sg, group_by=group_by)
             LOGGER.profile(f'Grouped supergraph {name}')
 
-            Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
-            LOGGER.profile(f'Filtered supergraph {name}')
+            # Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
+            # LOGGER.profile(f'Filtered supergraph {name}')
 
             Auxiliary(sg)
             LOGGER.profile(f'Created Aux for {name}')

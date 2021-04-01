@@ -48,7 +48,7 @@ class SuperGraph(ht.GraphFrame):
         assert isinstance(name, str)
 
         self.roots = [] # Roots of the call graph
-        self.mean_root_inc = 0.0 # Mean inc. metric of the root nodes
+        self.mean_root_inctime = 0.0 # Mean inc. metric of the root nodes
         self.callsites = [] # all callsites in the call graph
         self.f_callsites = [] # filtered callsites (after QueryMatcher))
 

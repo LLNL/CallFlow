@@ -53,7 +53,6 @@ class Filter:
         ]
         LOGGER.debug(f"Query is :{query}")
         # self.sg.gf.drop_index_levels()
-        print(self.sg.gf.dataframe.columns)
         fgf = self.sg.gf.filter(query)
         
         self.f_callsites = df_unique(fgf.dataframe, "name")

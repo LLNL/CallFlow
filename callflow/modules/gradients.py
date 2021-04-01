@@ -41,7 +41,7 @@ class Gradients:
         # # gradient should be computed only for ensemble dataframe
         # # i.e., multiple values in dataframe column
         datasets = df_unique(df, "dataset")
-        assert len(datasets) > 1
+        assert len(datasets) >= 1
 
         self.bins = bins
         self.callsiteOrModule = callsiteOrModule
