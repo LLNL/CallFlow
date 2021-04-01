@@ -5,12 +5,14 @@
 # ------------------------------------------------------------------------------
 
 import os
+import multiprocessing
+from pyinstrument import Profiler
+from functools import partial
 
 from callflow import SuperGraph, EnsembleGraph
 from callflow import get_logger
 from callflow.operations import Filter, Group, Unify
 from callflow.modules import Auxiliary
-from pyinstrument import Profiler
 
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import ParameterProjection, DiffView
@@ -106,6 +108,59 @@ class BaseProvider:
         #     raise Warning("All datasets have been processed already. To re-process, use --reset.")
         return ret, unret
 
+    def single_dataset_process(self, dataset, run_props, load_path, save_path, module_callsite_map, group_by, filter_by, filter_perc):
+        # TODO: Need to avoid auxiliary processing for single datasets.
+        indivdual_aux_for_ensemble = True
+        is_not_ensemble = len(run_props.keys()) == 1
+
+
+        name = dataset["name"]
+        _prop = run_props[name]
+        LOGGER.profile(f'Starting supergraph ({name})')
+
+        data_path = os.path.join(load_path, _prop[0])
+        if _prop[1] == "hpctoolkit" and not os.path.isfile(os.path.join(data_path, "experiment.xml")):
+            LOGGER.debug(f"Skipping {data_path} as it is missing the experiment.xml file")
+            return
+
+        sg = SuperGraph(name)
+        sg.create(
+                path=data_path,
+                profile_format=_prop[1],
+                module_callsite_map=module_callsite_map,
+            )
+
+        LOGGER.profile(f'Created supergraph {name}')
+        Group(sg, group_by=group_by)
+        LOGGER.profile(f'Grouped supergraph {name}')
+
+        sg.write(os.path.join(save_path, name), write_aux=False)
+
+        Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
+        LOGGER.profile(f'Filtered supergraph {name}')
+
+        if (is_not_ensemble or indivdual_aux_for_ensemble):
+            Auxiliary(sg)
+
+        LOGGER.profile(f'Created Aux for {name}')
+        sg.write(os.path.join(save_path, name), write_df=False, write_aux=(is_not_ensemble or indivdual_aux_for_ensemble))
+
+        self.supergraphs[name] = sg
+        LOGGER.profile(f'Stored in dictionary {name}')
+
+    def single_dataset_load(self, dataset, run_props, save_path):
+        name = dataset["name"]
+        _prop = run_props[name]
+        read_param = self.config["read_parameter"]
+        read_aux = True
+
+        sg = SuperGraph(name)
+        sg.load(os.path.join(save_path, name),
+            read_parameter=read_param,
+            read_aux=read_aux) 
+        self.supergraphs[name] = sg
+
+
     # --------------------------------------------------------------------------
     def process(self, reset=False):
         """Process the datasets using a Pipeline of operations.
@@ -115,6 +170,7 @@ class BaseProvider:
         2. EnsembleGraph is then constructed from the processed SuperGraphs.
         """
         profile = Profiler()
+        profile.start()
         save_path = self.config["save_path"]
         load_path = self.config["data_path"]
         group_by = self.config["group_by"]
@@ -142,61 +198,12 @@ class BaseProvider:
         LOGGER.info(f"Processing {len(process_datasets)} datasets.")
         LOGGER.info(f"Loading {len(load_datasets)} datasets.")
 
-        # TODO: Need to avoid auxiliary processing for single datasets.
-        indivdual_aux_for_ensemble = True
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            pool.map(partial(self.single_dataset_process, run_props=run_props, load_path=load_path, save_path=save_path, module_callsite_map=module_callsite_map, group_by=group_by, filter_by=filter_by, filter_perc=filter_perc), process_datasets)
 
-        for dataset in process_datasets:
-            profile.start()
-
-            name = dataset["name"]
-            _prop = run_props[name]
-            LOGGER.profile(f'Starting supergraph ({name})')
-
-            data_path = os.path.join(load_path, _prop[0])
-            if _prop[1] == "hpctoolkit" and not os.path.isfile(os.path.join(data_path, "experiment.xml")):
-                LOGGER.debug(f"Skipping {data_path} as it is missing the experiment.xml file")
-                continue
-
-            sg = SuperGraph(name)
-            sg.create(
-                    path=data_path,
-                    profile_format=_prop[1],
-                    module_callsite_map=module_callsite_map,
-                )
-
-            LOGGER.profile(f'Created supergraph {name}')
-            Group(sg, group_by=group_by)
-            LOGGER.profile(f'Grouped supergraph {name}')
-
-            sg.write(os.path.join(save_path, name), write_aux=False)
-
-            Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
-            LOGGER.profile(f'Filtered supergraph {name}')
-
-            if (is_not_ensemble or indivdual_aux_for_ensemble):
-                Auxiliary(sg)
-
-            LOGGER.profile(f'Created Aux for {name}')
-            sg.write(os.path.join(save_path, name), write_df=False, write_aux=(is_not_ensemble or indivdual_aux_for_ensemble))
-
-            self.supergraphs[name] = sg
-            LOGGER.profile(f'Stored in dictionary {name}')
-            profile.stop()
-            print(profile.output_text(unicode=True, color=True))
-
-
-        for dataset in load_datasets:
-            name = dataset["name"]
-            _prop = run_props[name]
-            read_param = self.config["read_parameter"]
-            read_aux = True
-
-            sg = SuperGraph(name)
-            sg.load(os.path.join(save_path, name),
-                read_parameter=read_param,
-                read_aux=read_aux) 
-            self.supergraphs[name] = sg
-
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            pool.map(partial(self.single_dataset_load, run_props=run_props, save_path=save_path), process_datasets)
+            
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
         if len(self.supergraphs) > 1:
@@ -221,6 +228,9 @@ class BaseProvider:
             sg.write(os.path.join(save_path, name))
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
+
+        profile.stop()
+        print(profile.output_text(unicode=True, color=True))
 
     def request_general(self, operation):
         """
