@@ -168,8 +168,6 @@ class BaseProvider:
             Group(sg, group_by=group_by)
             LOGGER.profile(f'Grouped supergraph {name}')
 
-            sg.write(os.path.join(save_path, name), write_aux=False)
-
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             LOGGER.profile(f'Filtered supergraph {name}')
 
@@ -177,7 +175,7 @@ class BaseProvider:
                 Auxiliary(sg)
 
             LOGGER.profile(f'Created Aux for {name}')
-            sg.write(os.path.join(save_path, name), write_df=False, write_aux=(is_not_ensemble or indivdual_aux_for_ensemble))
+            sg.write(os.path.join(save_path, name), write_aux=(is_not_ensemble or indivdual_aux_for_ensemble))
 
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
