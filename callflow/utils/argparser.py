@@ -299,7 +299,9 @@ class ArgParser:
             "filter_by",
             "group_by",
             "read_parameter",
-            "append_path"
+            "append_path",
+            "start_date",
+            "end_date"
         ]:
             if _ in json:
                 scheme[_] = json[_]
