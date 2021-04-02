@@ -313,6 +313,9 @@ class ArgParser:
             if _ in json:
                 scheme[_] = json[_]
 
+            elif _ in self.args:
+                scheme[_] = self.args[_]
+
         # Set the data_path, which is data directory.
         scheme["experiment"] = os.path.basename(json["data_path"])
 

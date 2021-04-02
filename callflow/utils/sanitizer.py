@@ -44,19 +44,17 @@ class Sanitizer:
         """
         Format according to daniel's data format.
 
-        e.g., laghos_2020-12-04_01-04-11 => 
+        e.g., laghos_2020-12-04_01-04-11 => 2020-12-04 01:04:11
         """
         try: 
             time = string.split("_")[1:]
             date = time[0]
             hhmmss = ":".join(time[1].split("-"))
-            
-            return arrow.get(" ".join([date, hhmmss]))
+            ret = " ".join([date, hhmmss])
+            return arrow.get(ret)
         except:
             s = "Incorrect dataset labelling!! Please use the format 'dataset_YYYY-MM-DD_HH-MM-SS' "
             LOGGER.error(s)
             exit(1)
-
-
 
 # ------------------------------------------------------------------------------
