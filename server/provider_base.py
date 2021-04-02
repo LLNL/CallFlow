@@ -118,15 +118,16 @@ class BaseProvider:
     def _filter_datasets_by_date_range(config, start_date, end_date):
         _start = Sanitizer.fmt_time(start_date)
         _end = Sanitizer.fmt_time(end_date)
-        _range = arrow.Arrow.range('day', _start, _end)
 
         LOGGER.info("Filtering datasets by start_date and end_date")
 
         ret = []
         for dataset in config["runs"]:
-            if Sanitizer.fmt_time(dataset["name"]).floor('day') in _range:
-                ret.append(dataset)
-
+            _range = arrow.Arrow.range('day', _start, _end)
+            is_in_range = Sanitizer.fmt_time(dataset["name"]).floor('day') in _range
+            if is_in_range:
+                ret.append(dataset) 
+                
         return ret
 
     # --------------------------------------------------------------------------
