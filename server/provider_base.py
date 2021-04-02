@@ -5,6 +5,7 @@
 # ------------------------------------------------------------------------------
 
 import os
+import arrow
 
 from callflow import SuperGraph, EnsembleGraph
 from callflow import get_logger
@@ -15,6 +16,7 @@ from pyinstrument import Profiler
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import ParameterProjection, DiffView
 from callflow.utils.utils import get_memory_usage
+from callflow.utils.sanitizer import Sanitizer
 
 LOGGER = get_logger(__name__)
 
@@ -74,7 +76,8 @@ class BaseProvider:
                 self.supergraphs[name].modules = self.supergraphs["ensemble"].modules
                 self.supergraphs[name].aux_data = self.supergraphs["ensemble"].aux_data[name]
 
-    def _process_load(self):
+    @staticmethod
+    def _process_load(config):
         # TODO: This is a copy of _FILENAMES and also exists in supergraph.py. 
         # Not quite sure where this should reside to avoid duplication.
         _FILENAMES = {
@@ -82,10 +85,15 @@ class BaseProvider:
             "nxg": "nxg.json",
             "aux": "aux-{}.npz",
         }
-        ret, unret = [], []
-        save_path = self.config["save_path"]
+        ret = {}
+        unret = {}
 
-        for dataset in self.config["runs"]:
+        save_path = config["save_path"]
+
+        ret = []
+        unret = []
+
+        for dataset in config["runs"]:
             process = False
             _name = dataset["name"]
             _path = os.path.join(save_path, _name)
@@ -106,6 +114,21 @@ class BaseProvider:
         #     raise Warning("All datasets have been processed already. To re-process, use --reset.")
         return ret, unret
 
+    @staticmethod
+    def _filter_datasets_by_date_range(config, start_date, end_date):
+        _start = Sanitizer.fmt_time(start_date)
+        _end = Sanitizer.fmt_time(end_date)
+        _range = arrow.Arrow.range('day', _start, _end)
+
+        LOGGER.info("Filtering datasets by start_date and end_date")
+
+        ret = []
+        for dataset in config["runs"]:
+            if Sanitizer.fmt_time(dataset["name"]).floor('day') in _range:
+                ret.append(dataset)
+
+        return ret
+
     # --------------------------------------------------------------------------
     def process(self, reset=False):
         """Process the datasets using a Pipeline of operations.
@@ -122,25 +145,32 @@ class BaseProvider:
         filter_perc = self.config["filter_perc"]
         module_callsite_map = self.config.get("module_callsite_map", {})
         append_path = self.config.get("append_path", "")
+        start_date = self.config.get("start_date", "")
+        end_date = self.config.get("end_date", "")
 
         run_props = {
             _["name"]: (os.path.join(_["path"], append_path) if len(append_path) > 0 else _["path"], _["profile_format"]) for _ in self.config["runs"]
         }
 
-        is_not_ensemble = len(self.config["runs"]) == 1
-
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
-        LOGGER.warning(f'-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n\n')
+        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS --------------------\n')
+        
+        if start_date and end_date:
+            self.config["runs"] = BaseProvider._filter_datasets_by_date_range(self.config, start_date, end_date)
+            
+        LOGGER.warning(f'-------------------- FILTERED BY TIME {len(self.config["runs"])} SUPERGRAPHS --------------------\n')
+            
+        is_not_ensemble = len(self.config["runs"]) == 1
         
         # Do not process, if already processed. 
         if(reset):
             process_datasets, load_datasets = self.config["runs"], []
         else:
-            process_datasets, load_datasets = self._process_load()
+            process_datasets, load_datasets = BaseProvider._process_load(self.config)
 
-        LOGGER.info(f"Processing {len(process_datasets)} datasets.")
-        LOGGER.info(f"Loading {len(load_datasets)} datasets.")
+        LOGGER.warning(f'-------------------- PROCESSING {len(process_datasets)} SUPERGRAPHS --------------------')
+        LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------\n')
 
         # TODO: Need to avoid auxiliary processing for single datasets.
         indivdual_aux_for_ensemble = True
