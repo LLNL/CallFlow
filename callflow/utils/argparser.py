@@ -29,6 +29,17 @@ JSONSCHEMA_CONFIG = {
     },
 }
 
+CONFIG_KEYS = [
+    "data_path",
+    "save_path",
+    "filter_perc",
+    "filter_by",
+    "group_by",
+    "read_parameter",
+    "append_path",
+    "start_date",
+    "end_date"
+]
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -184,6 +195,20 @@ class ArgParser:
             help="Appends the path to the directory passed as --data_path",
         )
 
+        parser.add_argument(
+            "--start_date",
+            type=str,
+            default="",
+            help="Start date to look for in the dataset name. Use format: {dataset}_{YYYY-MM-DD}_{HH-MM-SS}",
+        )
+
+        parser.add_argument(
+            "--end_date",
+            type=str,
+            default="",
+            help="End date to look for in the dataset name. Use format: {dataset}_{YYYY-MM-DD}_{HH-MM-SS}",
+        )
+
         # -------------
         return parser
 
@@ -255,15 +280,7 @@ class ArgParser:
         This function fills the config object with dataset information from the provided directory.
         """
         scheme = {}
-        for _ in [
-            "data_path",
-            "save_path",
-            "filter_perc",
-            "filter_by",
-            "group_by",
-            "read_parameter",
-            "append_path"
-        ]:
+        for _ in CONFIG_KEYS:
             scheme[_] = self.args[_]
 
         scheme["experiment"] = os.path.basename(scheme["data_path"])
@@ -292,17 +309,7 @@ class ArgParser:
         # ----------------------------------------------------------------------
         scheme = {}
 
-        for _ in [
-            "data_path",
-            "save_path",
-            "filter_perc",
-            "filter_by",
-            "group_by",
-            "read_parameter",
-            "append_path",
-            "start_date",
-            "end_date"
-        ]:
+        for _ in CONFIG_KEYS:
             if _ in json:
                 scheme[_] = json[_]
 
