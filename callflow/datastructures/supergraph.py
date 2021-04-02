@@ -265,6 +265,7 @@ class SuperGraph(ht.GraphFrame):
         :return:
         """
         for key, proxies in METRIC_PROXIES.items():
+            print("Columns: ", self.dataframe.columns)
             if key in self.dataframe.columns:
                 continue
             for _ in proxies:
