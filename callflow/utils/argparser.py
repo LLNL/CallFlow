@@ -25,7 +25,9 @@ JSONSCHEMA_CONFIG = {
         "filter_perc": {"type": "number"},
         "filter_by": {"type": "string"},
         "group_by": {"type": "string"},
-        "module_callsite_map": {"type": "object"}
+        "module_callsite_map": {"type": "object"},
+        "chunk_idx": {"type": "string"},
+        "chunk_size": {"type": "string"},
     },
 }
 
@@ -38,7 +40,9 @@ CONFIG_KEYS = [
     "read_parameter",
     "append_path",
     "start_date",
-    "end_date"
+    "end_date",
+    "chunk_idx",
+    "chunk_size"
 ]
 
 # ------------------------------------------------------------------------------
@@ -207,6 +211,20 @@ class ArgParser:
             type=str,
             default="",
             help="End date to look for in the dataset name. Use format: {dataset}_{YYYY-MM-DD}_{HH-MM-SS}",
+        )
+
+        parser.add_argument(
+            "--chunk_idx",
+            type=str,
+            default="0",
+            help="",
+        )
+
+        parser.add_argument(
+            "--chunk_size",
+            type=str,
+            default="0",
+            help="",
         )
 
         # -------------

@@ -148,6 +148,8 @@ class BaseProvider:
         append_path = self.config.get("append_path", "")
         start_date = self.config.get("start_date", "")
         end_date = self.config.get("end_date", "")
+        chunk_idx = int(self.config.get("chunk_idx", 0))
+        chunk_size = int(self.config.get("chunk_size", -1))
 
         run_props = {
             _["name"]: (os.path.join(_["path"], append_path) if len(append_path) > 0 else _["path"], _["profile_format"]) for _ in self.config["runs"]
@@ -161,7 +163,12 @@ class BaseProvider:
             self.config["runs"] = BaseProvider._filter_datasets_by_date_range(self.config, start_date, end_date)
             
         LOGGER.warning(f'-------------------- FILTERED BY TIME {len(self.config["runs"])} SUPERGRAPHS --------------------\n')
-            
+        
+        if chunk_size != 0:
+            self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
+
+        LOGGER.warning(f'-------------------- CHUNK SIZE = {chunk_size}; CHUNK_IDX = {chunk_idx} --------------------\n')
+
         is_not_ensemble = len(self.config["runs"]) == 1
         
         # Do not process, if already processed. 
