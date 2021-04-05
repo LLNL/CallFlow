@@ -28,7 +28,7 @@ class Unify:
         :param supergraphs:
         """
         assert isinstance(eg, callflow.EnsembleGraph)
-        assert isinstance(supergraphs, list)
+        assert isinstance(supergraphs, dict)
         for sg in supergraphs:
             isinstance(sg, callflow.SuperGraph)
 
@@ -36,7 +36,7 @@ class Unify:
         self.eg.supergraphs = supergraphs
 
         # collect all modules and compute a superset
-        self.eg.modules = reduce(np.union1d, [sg.modules for sg in supergraphs])
+        self.eg.modules = reduce(np.union1d, [v.modules for k, v in supergraphs.items()])
 
         self.compute()
         self.eg.add_time_proxies()
@@ -56,7 +56,7 @@ class Unify:
         self.eg.dataframe = pd.DataFrame([])
         self.eg.nxg = nx.DiGraph()
 
-        for sg in self.eg.supergraphs:
+        for name, sg in self.eg.supergraphs.items():
 
             # ------------------------------------------------------------------
             # unify the dataframe

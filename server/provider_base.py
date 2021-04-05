@@ -245,10 +245,10 @@ class BaseProvider:
 
         LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------')
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            self.supergraphs = pool.map(partial(self.mp_dataset_load, save_path=save_path), load_datasets)
+            supergraphs = pool.map(partial(self.mp_dataset_load, save_path=save_path), load_datasets)
+            
+        self.supergraphs = { sg.name: sg for sg in supergraphs }
     
-        print(self.supergraphs)
-
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
         if len(self.supergraphs) > 1:
@@ -261,8 +261,8 @@ class BaseProvider:
             Unify(sg, self.supergraphs)
             LOGGER.profile(f'Created supergraph {name}')
 
-            Group(sg, group_by=group_by)
-            LOGGER.profile(f'Grouped supergraph {name}')
+            # Group(sg, group_by=group_by)
+            # LOGGER.profile(f'Grouped supergraph {name}')
 
             # Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             # LOGGER.profile(f'Filtered supergraph {name}')
