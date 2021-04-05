@@ -44,6 +44,27 @@ class BaseProvider:
         self.supergraphs = {}
 
     # --------------------------------------------------------------------------
+    def _mp_saved_data(dataset, save_path):
+        _FILENAMES = {
+            "df": "df.pkl",
+            "nxg": "nxg.json",
+            "aux": "aux-{}.npz",
+        }
+        _name = dataset
+        _path = os.path.join(save_path, _name)
+        process = False
+        for f_type, f_run in _FILENAMES.items():
+            if f_type == "aux":
+                f_run = f_run.format(dataset)
+
+            f_path = os.path.join(_path, f_run)
+            if not os.path.isfile(f_path):
+                process = True
+
+        if not process:
+            return dataset
+        return
+
     def load(self):
         """Load the processed datasets by the format."""
         load_path = self.config.get("save_path", "")
@@ -53,19 +74,22 @@ class BaseProvider:
 
         is_not_ensemble = self.ndatasets == 1
 
+        folders = [f for f in os.listdir(save_path) if os.path.isdir(os.path.join(f, save_path))]
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            processed_folders = pool.map(partial(self._mp_processed_data, save_path=save_path), folders)
+        self.config["runs"] = processed_folders
+
+
         LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
 
         LOGGER.warning(f'-------------------- CHUNKING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
-
 
         if chunk_size != 0:
             self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
 
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            supergraphs = pool.map(partial(self.mp_dataset_load, save_path=load_path), self.config["runs"])
+            self.supergraphs = pool.map(partial(self.single_dataset_load, save_path=load_path), self.config["runs"])
             
-        self.supergraphs = {sg.name: sg for sg in supergraphs}
-
         # ensemble case
         if not is_not_ensemble:
             name = "ensemble"
@@ -106,8 +130,6 @@ class BaseProvider:
             "nxg": "nxg.json",
             "aux": "aux-{}.npz",
         }
-        ret = {}
-        unret = {}
 
         save_path = config["save_path"]
 
