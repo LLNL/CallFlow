@@ -62,8 +62,10 @@ class BaseProvider:
             self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
 
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            self.supergraphs = pool.map(partial(self.single_dataset_load, save_path=load_path), self.config["runs"])
+            supergraphs = pool.map(partial(self.mp_dataset_load, save_path=load_path), self.config["runs"])
             
+        self.supergraphs = {sg.name: sg for sg in supergraphs}
+
         # ensemble case
         if not is_not_ensemble:
             name = "ensemble"
