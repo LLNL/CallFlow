@@ -187,26 +187,67 @@ export function getGradients(store, node) {
 
 	// If the module callsite map only node, then its a component node.
 	let type = "";
-	if (store.m2c[store.selectedTargetDataset][node.id].length == 1) {
+	// if (store.m2c[store.selectedTargetDataset][node.id].length == 1) {
+	// 	type = "component-node";
+	// 	if (store.data_mod[store.selectedTargetDataset][nodeName] != undefined) {
+	// 		type = "super-node";
+	// 	}
+	// }
+	// else {
+	// 	type = node.type;
+	// }
+
+	// if (type == "super-node") {
+	// 	nodeName = node.module_idx;
+	// 	gradients = store.data_mod[store.selectedTargetDataset][nodeName][store.selectedMetric]["gradients"];
+	// }
+	// else if (type == "component-node") {
+	// 	nodeName = node.id;
+	// 	gradients = store.data_cs[store.selectedTargetDataset][nodeName][store.selectedMetric]["gradients"];
+	// }
+	// else if (type == "intermediate") {
+	// 	gradients = {};
+	// }
+
+	if(node.id.indexOf("=") > 0) {
 		type = "component-node";
-		if (store.data_mod[store.selectedTargetDataset][nodeName] != undefined) {
-			type = "super-node";
-		}
 	}
 	else {
-		type = node.type;
+		type = "super-node";
 	}
+
+	const def = {
+		"bins": "20",
+		"dataset": {
+			"mean": [],
+			"position": {},
+		},
+		"hist": {
+			"b": [],
+			"h": [],
+		}
+	};
 
 	if (type == "super-node") {
 		nodeName = node.module_idx;
-		gradients = store.data_mod[store.selectedTargetDataset][nodeName][store.selectedMetric]["gradients"];
+		if (store.data_cs[store.selectedTargetDataset][nodeName] == undefined) {
+			gradients = def;
+		}
+		else {
+			gradients = store.data_mod[store.selectedTargetDataset][nodeName][store.selectedMetric]["gradients"];
+		}
 	}
 	else if (type == "component-node") {
 		nodeName = node.id;
-		gradients = store.data_cs[store.selectedTargetDataset][nodeName][store.selectedMetric]["gradients"];
+		if (store.data_cs[store.selectedTargetDataset][nodeName] == undefined) {
+			gradients = def;
+		}
+		else {
+			gradients = store.data_cs[store.selectedTargetDataset][nodeName][store.selectedMetric]["gradients"];
+		}
 	}
 	else if (type == "intermediate") {
-		gradients = {};
+		gradients = def;
 	}
 	return gradients;
 }

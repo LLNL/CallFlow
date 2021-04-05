@@ -44,43 +44,45 @@ class BaseProvider:
         self.supergraphs = {}
 
     # --------------------------------------------------------------------------
-    def _mp_saved_data(dataset, save_path):
+    def _mp_saved_data(self, run_prop, save_path):
+        """
+        Outputs the directories that have the processed result. Others will be omitted during the loading. 
+        """
         _FILENAMES = {
             "df": "df.pkl",
             "nxg": "nxg.json",
             "aux": "aux-{}.npz",
         }
-        _name = dataset
+        _name = run_prop["name"]
         _path = os.path.join(save_path, _name)
         process = False
         for f_type, f_run in _FILENAMES.items():
             if f_type == "aux":
-                f_run = f_run.format(dataset)
+                f_run = f_run.format(_name)
 
             f_path = os.path.join(_path, f_run)
             if not os.path.isfile(f_path):
                 process = True
 
         if not process:
-            return dataset
-        return
+            return run_prop
 
     def load(self):
         """Load the processed datasets by the format."""
         load_path = self.config.get("save_path", "")
         read_param = self.config.get("read_parameter", "")
+        save_path = self.config.get("save_path", "")
         chunk_idx = int(self.config.get("chunk_idx", 0))
         chunk_size = int(self.config.get("chunk_size", -1))
 
         is_not_ensemble = self.ndatasets == 1
 
-        folders = [f for f in os.listdir(save_path) if os.path.isdir(os.path.join(f, save_path))]
-        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            processed_folders = pool.map(partial(self._mp_processed_data, save_path=save_path), folders)
-        self.config["runs"] = processed_folders
-
-
         LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
+
+        # folders = [f for f in os.listdir(save_path) if os.path.isdir(os.path.join(f, save_path))]
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            processed_folders = pool.map(partial(self._mp_saved_data, save_path=save_path), self.config["runs"])
+        self.config["runs"] = [d for d in processed_folders if d is not None] # Filter the none's 
 
         LOGGER.warning(f'-------------------- CHUNKING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
 
@@ -88,8 +90,9 @@ class BaseProvider:
             self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
 
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            self.supergraphs = pool.map(partial(self.single_dataset_load, save_path=load_path), self.config["runs"])
-            
+            supergraphs = pool.map(partial(self.mp_dataset_load, save_path=load_path), self.config["runs"])
+        self.supergraphs = { sg.name: sg for sg in supergraphs }
+
         # ensemble case
         if not is_not_ensemble:
             name = "ensemble"
@@ -119,7 +122,6 @@ class BaseProvider:
             read_parameter=read_param,
             read_aux=read_aux) 
         return sg
-        
 
     @staticmethod
     def _process_load(config):

@@ -429,13 +429,14 @@ class SankeyLayout:
         """
         exc_time_sum = 0
         inc_time_max = 0
-        for callsite in module_callsite_map[module]:
-            callsite_df = group_df.get_group((module, callsite))
-            max_inc_time = callsite_df[self.time_inc].mean()
-            inc_time_max = max(inc_time_max, max_inc_time)
-            max_exc_time = callsite_df[self.time_exc].max()
-            exc_time_sum += max_exc_time
-        return {"Inclusive": inc_time_max, "Exclusive": exc_time_sum}
+        if module in module_callsite_map:
+            for callsite in module_callsite_map[module]:
+                callsite_df = group_df.get_group((module, callsite))
+                max_inc_time = callsite_df[self.time_inc].mean()
+                inc_time_max = max(inc_time_max, max_inc_time)
+                max_exc_time = callsite_df[self.time_exc].max()
+                exc_time_sum += max_exc_time
+            return {"Inclusive": inc_time_max, "Exclusive": exc_time_sum}
 
     def callsite_time(self, group_df, module, callsite):
         """
@@ -609,8 +610,9 @@ class SankeyLayout:
                     module=module,
                 )
 
-                time_inc = module_time_inc_map[module]
-                time_exc = module_time_exc_map[module]
+                if module in module_time_inc_map and module in module_time_exc_map:
+                    time_inc = module_time_inc_map[module]
+                    time_exc = module_time_exc_map[module]
 
             for column in columns:
                 if column not in ret:
@@ -732,9 +734,10 @@ class SankeyLayout:
         """
         Get the entry function of a module from the dataframe.
         """
-        module_df = df.get_group(module)
-        entry_func_df = module_df.loc[module_df["entry_function"]]
-        return entry_func_df["callees"].unique()
+        if module in df.groups:
+            module_df = df.get_group(module)
+            entry_func_df = module_df.loc[module_df["entry_function"]]
+            return entry_func_df["callees"].unique()
 
     # --------------------------------------------------------------------------
     @staticmethod
