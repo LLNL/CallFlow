@@ -60,7 +60,7 @@ class EnsembleGraph(SuperGraph):
             runs = selected_runs
             self.dataframe = self.df_filter_by_search_string("dataset", runs)
         else:
-            runs = [k for k, v in self.supergraphs.items()]
+            runs = [name for name, sg in self.supergraphs.items()]
             self.dataframe = self.df_filter_by_search_string("dataset", runs)
 
         return runs

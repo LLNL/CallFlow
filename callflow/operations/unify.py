@@ -29,8 +29,8 @@ class Unify:
         """
         assert isinstance(eg, callflow.EnsembleGraph)
         assert isinstance(supergraphs, dict)
-        for k, v in supergraphs.items():
-            assert isinstance(k, str) and isinstance(v, callflow.SuperGraph)
+        for sg in supergraphs:
+            isinstance(sg, callflow.SuperGraph)
 
         self.eg = eg
         self.eg.supergraphs = supergraphs
@@ -86,7 +86,7 @@ class Unify:
             is_same = set(self.eg.nxg) == set(sg.nxg)
             if not is_same:
                 LOGGER.debug(
-                    f"Difference between (ensemble) and ({name}): "
+                    f"Difference between (ensemble) and ({sg.name}): "
                     f"{list(set(self.eg.nxg) - set(sg.nxg))}"
                 )
 
