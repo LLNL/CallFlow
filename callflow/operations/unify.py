@@ -28,15 +28,15 @@ class Unify:
         :param supergraphs:
         """
         assert isinstance(eg, callflow.EnsembleGraph)
-        assert isinstance(supergraphs, dict)
-        for k, v in supergraphs.items():
-            assert isinstance(k, str) and isinstance(v, callflow.SuperGraph)
+        assert isinstance(supergraphs, list)
+        for sg in supergraphs:
+            isinstance(sg, callflow.SuperGraph)
 
         self.eg = eg
         self.eg.supergraphs = supergraphs
 
         # collect all modules and compute a superset
-        self.eg.modules = reduce(np.union1d, [v.modules for k, v in supergraphs.items()])
+        self.eg.modules = reduce(np.union1d, [sg.modules for sg in supergraphs])
 
         self.compute()
         self.eg.add_time_proxies()
@@ -56,7 +56,7 @@ class Unify:
         self.eg.dataframe = pd.DataFrame([])
         self.eg.nxg = nx.DiGraph()
 
-        for name, sg in self.eg.supergraphs.items():
+        for sg in self.eg.supergraphs:
 
             # ------------------------------------------------------------------
             # unify the dataframe
@@ -86,7 +86,7 @@ class Unify:
             is_same = set(self.eg.nxg) == set(sg.nxg)
             if not is_same:
                 LOGGER.debug(
-                    f"Difference between (ensemble) and ({name}): "
+                    f"Difference between (ensemble) and ({sg.name}): "
                     f"{list(set(self.eg.nxg) - set(sg.nxg))}"
                 )
 

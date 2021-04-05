@@ -190,7 +190,7 @@ class SuperGraph(ht.GraphFrame):
         :param read_aux: (bool) Read auxiliary data, default is True.
         :return:
         """
-        LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path})")
+        LOGGER.info(f"Reading SuperGraph ({self.name}) from ({path})")
         self.dataframe = None
         self.nxg = None
         self.graph = None
@@ -265,7 +265,6 @@ class SuperGraph(ht.GraphFrame):
         :return:
         """
         for key, proxies in METRIC_PROXIES.items():
-            print("Columns: ", self.dataframe.columns)
             if key in self.dataframe.columns:
                 continue
             for _ in proxies:

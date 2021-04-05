@@ -46,10 +46,20 @@ class BaseProvider:
     # --------------------------------------------------------------------------
     def load(self):
         """Load the processed datasets by the format."""
-        load_path = self.config["save_path"]
-        read_param = self.config["read_parameter"]
+        load_path = self.config.get("save_path", "")
+        read_param = self.config.get("read_parameter", "")
+        chunk_idx = int(self.config.get("chunk_idx", 0))
+        chunk_size = int(self.config.get("chunk_size", -1))
 
         is_not_ensemble = self.ndatasets == 1
+
+        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
+
+        LOGGER.warning(f'-------------------- CHUNKING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
+
+
+        if chunk_size != 0:
+            self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
 
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
             self.supergraphs = pool.map(partial(self.single_dataset_load, save_path=load_path), self.config["runs"])
@@ -70,7 +80,7 @@ class BaseProvider:
                 self.supergraphs[name].modules = self.supergraphs["ensemble"].modules
                 self.supergraphs[name].aux_data = self.supergraphs["ensemble"].aux_data[name]
                    
-    def single_dataset_load(self, dataset, save_path):
+    def mp_dataset_load(self, dataset, save_path):
         """
         Parallel function to load single supergraph loading.
         """
@@ -168,13 +178,16 @@ class BaseProvider:
 
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
-        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS --------------------')
+        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
         
         if start_date and end_date:
             self.config["runs"] = BaseProvider._filter_datasets_by_date_range(self.config, start_date, end_date)
             
-        LOGGER.warning(f'-------------------- FILTERED BY TIME {len(self.config["runs"])} SUPERGRAPHS --------------------')
+        LOGGER.warning(f'-------------------- FILTERED {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
         
+
+        LOGGER.warning(f'-------------------- CHUNKING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
+
         if chunk_size != 0:
             self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
 
@@ -232,7 +245,7 @@ class BaseProvider:
 
         LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------')
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            self.supergraphs = pool.map(partial(self.single_dataset_load, save_path=save_path), load_datasets)
+            self.supergraphs = pool.map(partial(self.mp_dataset_load, save_path=save_path), load_datasets)
     
         print(self.supergraphs)
 
