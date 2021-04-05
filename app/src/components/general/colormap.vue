@@ -35,7 +35,6 @@ export default {
 
 	methods: {
 		init(color) {
-			console.log(color);
 			this.color = color;
 			this.colorMin = this.color.getScale().domain()[0];
 			this.colorMax = this.color.getScale().domain()[1];

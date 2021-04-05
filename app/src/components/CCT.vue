@@ -174,7 +174,6 @@ export default {
 		},
 
 		clearComponents(componentList) {
-			console.log(componentList);
 			for (let i = 0; i < componentList.length; i++) {
 				componentList[i].clear();
 			}
