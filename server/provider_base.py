@@ -189,8 +189,8 @@ class BaseProvider:
         save_path = self.config["save_path"]
         load_path = self.config["data_path"]
         group_by = self.config["group_by"]
-        filter_by = self.config["filter_by"]
-        filter_perc = self.config["filter_perc"]
+        filter_by = self.config.get("filter_by","")
+        filter_perc = self.config.get("filter_perc", 0)
         module_callsite_map = self.config.get("module_callsite_map", {})
         append_path = self.config.get("append_path", "")
         start_date = self.config.get("start_date", "")
@@ -249,6 +249,8 @@ class BaseProvider:
                     path=data_path,
                     profile_format=_prop[1],
                     module_callsite_map=module_callsite_map,
+                    filter_by=filter_by,
+                    filter_perc=filter_perc
                 )
 
             LOGGER.profile(f'Created supergraph {name}')
@@ -270,11 +272,12 @@ class BaseProvider:
             print(profile.output_text(unicode=True, color=True))
 
         LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------')
-        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            supergraphs = pool.map(partial(self.mp_dataset_load, save_path=save_path), load_datasets)
+        if len(load_datasets) > 0:
+            with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+                load_supergraphs = pool.map(partial(self.mp_dataset_load, save_path=save_path), load_datasets)
             
-        self.supergraphs = { sg.name: sg for sg in supergraphs }
-    
+            for sg in load_supergraphs:
+                self.supergraphs[sg.name] = sg
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
         if len(self.supergraphs) > 1:
