@@ -350,7 +350,9 @@ export function findExpensiveCallsite(store, dataset, granularity) {
 	let map = {};
 	if (granularity == "SuperGraph") {
 		for (let _ of Object.keys(store.data_mod[dataset])) {
-			map[_] = store.data_mod[dataset][_][store.selectedMetric]["mean"];
+			const node_id = store.data_mod[dataset][_].name;
+			const node_name = store.modules[dataset][node_id];
+			map[node_name] = store.data_mod[dataset][_][store.selectedMetric]["mean"];
 		}	
 	}
 	else if (granularity == "CCT") {

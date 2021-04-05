@@ -117,7 +117,6 @@ export default {
 				selected_runs: [this.$store.selectedTargetDataset],
 				groupBy: "module",
 			};
-			console.log(payload);
 			if (this.$store.selectedMode == "Single") {
 				payload["dataset"] = this.$store.selectedTargetDataset;
 				data = await APIService.POSTRequest("single_supergraph", payload);
@@ -218,8 +217,7 @@ export default {
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
 
 			const node_id = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "SuperGraph");
-			this.$store.selectedNode = this.$store.graph["nodes"][node_id];
-
+			this.$store.selectedNode = this.$store.graph["nodes"].filter(d => d.id == node_id)[0];
 
 			const mode_lower = this.$store.selectedMode.toLowerCase();
 			EventHandler.$emit(mode_lower + "-histogram", {
