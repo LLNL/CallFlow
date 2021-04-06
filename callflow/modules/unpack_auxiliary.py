@@ -101,11 +101,11 @@ class UnpackAuxiliary:
 
         ret = {}
         _e_d_cs = None
-        for cs in _d.keys():
+        for idx, cs in enumerate(_d):
             _e_d_cs = e_d[cs] if e_d else None
             ret[cs] = {
                 "name": _d[cs]['name'],
-                "id": str(_d[cs]["id"]),
+                "id": idx,
                 "component_path": _d[cs]["component_path"].tolist(),
                 "time (inc)": UnpackAuxiliary.unpack_metric("time (inc)",_d[cs], _e_d_cs),
                 "time": UnpackAuxiliary.unpack_metric( "time", _d[cs], _e_d_cs),
