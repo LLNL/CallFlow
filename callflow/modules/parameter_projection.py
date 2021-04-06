@@ -14,7 +14,7 @@ from sklearn.manifold import TSNE, MDS
 from sklearn.cluster import KMeans
 
 from callflow.algorithms import KMedoids
-
+from callflow.datastructures.metrics import TIME_COLUMNS
 
 class ParameterProjection:
     """
@@ -33,6 +33,8 @@ class ParameterProjection:
         self.projection = "MDS"
         self.clustering = "k_means"
         self.n_cluster = int(n_cluster)
+        self.proxy_columns = sg.proxy_columns
+        self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
         if len(selected_runs) >= self.n_cluster:
             self.result = self.compute(sg, selected_runs)
@@ -49,10 +51,10 @@ class ParameterProjection:
         ret = {}
         ret["max_inclusive_time"] = sg.dataframe.loc[
             sg.dataframe["dataset"] == dataset
-        ]["time (inc)"].max()
+        ][self.time_columns[0]].mean()
         ret["max_exclusive_time"] = sg.dataframe.loc[
             sg.dataframe["dataset"] == dataset
-        ]["time"].max()
+        ][self.time_columns[1]].mean()
         ret["rank_count"] = len(
             sg.dataframe.loc[sg.dataframe["dataset"] == dataset]["rank"].unique()
         )
