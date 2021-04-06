@@ -42,7 +42,8 @@ CONFIG_KEYS = [
     "start_date",
     "end_date",
     "chunk_idx",
-    "chunk_size"
+    "chunk_size",
+    "ensemble_process"
 ]
 
 # ------------------------------------------------------------------------------
@@ -225,6 +226,12 @@ class ArgParser:
             type=str,
             default="0",
             help="",
+        )
+
+        parser.add_argument(
+            "--ensemble_process",
+            action="store_true",
+            help="Directly trigger ensemble SuperGraph construction",
         )
 
         # -------------

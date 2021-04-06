@@ -124,7 +124,7 @@ class BaseProvider:
         return sg
 
     @staticmethod
-    def _process_load(config):
+    def split_process_load_datasets(config):
         # TODO: This is a copy of _FILENAMES and also exists in supergraph.py. 
         # Not quite sure where this should reside to avoid duplication.
         _FILENAMES = {
@@ -177,60 +177,11 @@ class BaseProvider:
                 
         return ret
 
-    # --------------------------------------------------------------------------
-    def process(self, reset=False):
-        """Process the datasets using a Pipeline of operations.
-        1. Each dataset is processed individually into a SuperGraph. Each
-        SuperGraph is then processed according the provided config
-        variables, e.g., filter_perc, filter_by.
-        2. EnsembleGraph is then constructed from the processed SuperGraphs.
-        """
-        profile = Profiler()
-        save_path = self.config["save_path"]
-        load_path = self.config["data_path"]
-        group_by = self.config["group_by"]
-        filter_by = self.config.get("filter_by","")
-        filter_perc = self.config.get("filter_perc", 0)
-        module_callsite_map = self.config.get("module_callsite_map", {})
-        append_path = self.config.get("append_path", "")
-        start_date = self.config.get("start_date", "")
-        end_date = self.config.get("end_date", "")
-        chunk_idx = int(self.config.get("chunk_idx", 0))
-        chunk_size = int(self.config.get("chunk_size", -1))
-
-        run_props = {
-            _["name"]: (os.path.join(_["path"], append_path) if len(append_path) > 0 else _["path"], _["profile_format"]) for _ in self.config["runs"]
-        }
-
-        # ----------------------------------------------------------------------
-        # Stage-1: Each dataset is processed individually into a SuperGraph.
-        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
-        
-        if start_date and end_date:
-            self.config["runs"] = BaseProvider._filter_datasets_by_date_range(self.config, start_date, end_date)
-            
-        LOGGER.warning(f'-------------------- FILTERED {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
-        
-
-        LOGGER.warning(f'-------------------- CHUNKING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
-
-        if chunk_size != 0:
-            self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
-
-        LOGGER.warning(f'-------------------- CHUNK SIZE = {chunk_size}; CHUNK_IDX = {chunk_idx} --------------------')
-
-        is_not_ensemble = len(self.config["runs"]) == 1
-        
-        # Do not process, if already processed. 
-        if(reset):
-            process_datasets, load_datasets = self.config["runs"], []
-        else:
-            process_datasets, load_datasets = BaseProvider._process_load(self.config)
-
-        LOGGER.warning(f'-------------------- {len(process_datasets)/len(run_props.keys())} DATASETS NEED TO BE PROCESSED--------------------')
-
+    def process_single(self, process_datasets):
         # TODO: Need to avoid auxiliary processing for single datasets.
         indivdual_aux_for_ensemble = True
+
+        LOGGER.warning(f'-------------------- {len(process_datasets)} DATASETS NEED TO BE PROCESSED--------------------')
 
         for dataset in process_datasets:
             profile.start()
@@ -271,13 +222,16 @@ class BaseProvider:
             profile.stop()
             print(profile.output_text(unicode=True, color=True))
 
-        LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------')
+    def load_single(self, load_datasets, save_path):
         if len(load_datasets) > 0:
+            LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------')
             with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
                 load_supergraphs = pool.map(partial(self.mp_dataset_load, save_path=save_path), load_datasets)
             
             for sg in load_supergraphs:
                 self.supergraphs[sg.name] = sg
+
+    def process_ensemble(self):
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
         if len(self.supergraphs) > 1:
@@ -303,6 +257,67 @@ class BaseProvider:
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
 
+
+    # --------------------------------------------------------------------------
+    def process(self, reset=False):
+        """Process the datasets using a Pipeline of operations.
+        1. Each dataset is processed individually into a SuperGraph. Each
+        SuperGraph is then processed according the provided config
+        variables, e.g., filter_perc, filter_by.
+        2. EnsembleGraph is then constructed from the processed SuperGraphs.
+        """
+        profile = Profiler()
+        save_path = self.config["save_path"]
+        load_path = self.config["data_path"]
+        group_by = self.config["group_by"]
+        filter_by = self.config.get("filter_by","")
+        filter_perc = self.config.get("filter_perc", 0)
+        module_callsite_map = self.config.get("module_callsite_map", {})
+        append_path = self.config.get("append_path", "")
+        start_date = self.config.get("start_date", "")
+        end_date = self.config.get("end_date", "")
+        chunk_idx = int(self.config.get("chunk_idx", 0))
+        chunk_size = int(self.config.get("chunk_size", -1))
+        ensemble_process = self.config.get("ensemble_process", False);
+
+        run_props = {
+            _["name"]: (os.path.join(_["path"], append_path) if len(append_path) > 0 else _["path"], _["profile_format"]) for _ in self.config["runs"]
+        }
+
+        # ----------------------------------------------------------------------
+        # Stage-1: Each dataset is processed individually into a SuperGraph.
+        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
+        
+        if start_date and end_date:
+            self.config["runs"] = BaseProvider._filter_datasets_by_date_range(self.config, start_date, end_date)
+            
+        LOGGER.warning(f'-------------------- FILTERED {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
+        
+
+        LOGGER.warning(f'-------------------- CHUNKING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
+
+        if chunk_size != 0:
+            self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
+
+        LOGGER.warning(f'-------------------- CHUNK SIZE = {chunk_size}; CHUNK_IDX = {chunk_idx} --------------------')
+
+        is_not_ensemble = len(self.config["runs"]) == 1
+        
+        # Do not process, if already processed. 
+        if(reset):
+            process_datasets, load_datasets = self.config["runs"], []
+        else:
+            process_datasets, load_datasets = BaseProvider.split_process_load_datasets(self.config)
+
+        if ensemble_process:
+            process_datasets, load_datasets = [], self.config["runs"]
+
+        self.process_single(process_datasets)
+
+        self.load_single(load_datasets, save_path)
+
+        self.process_ensemble()
+        
     def request_general(self, operation):
         """
         Handles general requests
