@@ -79,7 +79,6 @@ class BaseProvider:
 
         LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
 
-        # folders = [f for f in os.listdir(save_path) if os.path.isdir(os.path.join(f, save_path))]
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
             processed_folders = pool.map(partial(self._mp_saved_data, save_path=save_path), self.config["runs"])
         self.config["runs"] = [d for d in processed_folders if d is not None] # Filter the none's 
@@ -225,6 +224,11 @@ class BaseProvider:
     def load_single(self, load_datasets, save_path):
         if len(load_datasets) > 0:
             LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------')
+            
+            with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+                processed_folders = pool.map(partial(self._mp_saved_data, save_path=save_path), self.config["runs"])
+            self.config["runs"] = [d for d in processed_folders if d is not None] # Filter the none's 
+        
             with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
                 load_supergraphs = pool.map(partial(self.mp_dataset_load, save_path=save_path), load_datasets)
             
