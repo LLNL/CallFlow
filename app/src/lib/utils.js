@@ -75,7 +75,7 @@ export function formatName(name) {
 	if (name.length < 20) {
 		return name;
 	}
-	let ret = this.trunc(name, 20);
+	let ret = name.trunc(20);
 	return ret;
 }
 

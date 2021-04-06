@@ -207,18 +207,17 @@ export default {
 		 */
 		setCallsiteHTML(callsite, callsite_color) {
 			let name = callsite.name;
+			name = utils.formatName(name.replace("<", "").replace(">", ""));
+
 			const class_name =
         callsite_color["text"] === "#fff" ? "white-text" : "black-text";
 
 			let html = `<div><span class=${class_name} > ${name} </span> </div>`;
 			if (this.has_data_map["module"] && callsite.id != callsite.name) {
 				let thismodule = utils.getModuleName(this.$store, callsite.module);
-				html =
-          html +
-          `<br/><span class= ${class_name}><b>Module :</b>` +
-          thismodule +
-          "</span> </div>";
+				html += `<br/><span class= ${class_name}><b>Module :</b>` + thismodule + "</span> </div>";
 			}
+			console.log(html);
 			return html;
 		},
 
@@ -233,11 +232,12 @@ export default {
 				const callsite_color = this.setCallsiteColor(node);
 				const label = this.setCallsiteHTML(node, callsite_color);
 
+				console.log(label);
 				const payload = {
 					...node,
 					class: "cct-node",
 					labelType: "html",
-					label: label,
+					label,
 					fillColor: callsite_color["node"],
 				};
 
