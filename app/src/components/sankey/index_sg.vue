@@ -214,7 +214,7 @@ export default {
 
 			this.$refs.Nodes.init(this.$store.graph, this.view);
 			this.$refs.Edges.init(this.$store.graph, this.view);
-			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
+			// this.$refs.MiniHistograms.init(this.$store.graph, this.view);
 
 			const node_id = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "SuperGraph");
 			this.$store.selectedNode = this.$store.graph["nodes"].filter(d => d.id == node_id)[0];

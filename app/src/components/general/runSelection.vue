@@ -68,7 +68,12 @@ export default {
 
 	mounted() {
 		// Set the metricTimeMap, used by the dropdown to select the dataset.
-		this.metricTimeMap = this.$store.metricTimeMap;
+		this.metricTimeMap = Object.keys(this.$store.summary).reduce((res, item, idx) => { 
+			if(item != "ensemble"){
+				res[item] = this.$store.summary[item]["meantime"];
+			}
+			return res;
+		}, {});
 		this.datasets = this.$store.selectedDatasets;
 		this.selectedTargetDataset = this.$store.selectedTargetDataset;
 		this.isComparisonMode = this.$store.isComparisonMode;

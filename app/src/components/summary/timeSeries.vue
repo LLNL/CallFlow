@@ -39,11 +39,12 @@ export default {
 			xTitle: 20,
 			yTitle: 20,
 		},
-		// chartType: "STACKED_BAR_CHART",
-		chartType: "STACKED_AREA_CHART",
+		chartType: "STACKED_BAR_CHART",
+		// chartType: "STACKED_AREA_CHART",
 		// chartXAttr: "total",
 		chartXAttr: "time",
-		seriesType:"NORMALIZED",
+		// seriesType:"NORMALIZED",
+		seriesType: "STACKED"
 	}),
 
 	mounted() {
@@ -57,7 +58,6 @@ export default {
         this.$store.viewHeight / 2 - this.padding.bottom - this.padding.top;
 
 			this.initSVG();
-			this.initLine();
 			this.plot(data);
 			this.axis();
 			this.label();
@@ -117,6 +117,9 @@ export default {
 					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
 			}
 
+			data.reverse();
+
+
 			if (this.chartType == "STACKED_BAR_CHART") {
 				this.x = d3
 					.scaleBand()
@@ -131,10 +134,11 @@ export default {
 
 				this.y = d3
 					.scaleLinear()
-					.domain([d3.min(series, (d) => d3.max(d, (d) => d[1])), d3.max(series, (d) => d3.max(d, (d) => d[1]))])
-					.rangeRound([
-						this.height - 2 * this.padding.bottom,
-						2 * this.padding.top,
+					.domain([d3.min(series, (d) => d3.min(d, (d) => d[1])), d3.max(series, (d) => d3.max(d, (d) => d[1]))])
+					.nice()
+					.range([
+						this.height - 2 * this.padding.bottom, 
+						2 * this.padding.top
 					]);
 
 				this.mainSvg
@@ -160,7 +164,7 @@ export default {
 					
 				this.y = d3.scaleLinear()
 					.domain([d3.min(series, d => d3.min(d, d => d[1])), d3.max(series, d => d3.max(d, d => d[1]))]).nice()
-					.range([this.height - 2 * this.padding.bottom, 2 *this.padding.top]);
+					.range([this.height - 2 * this.padding.bottom, 2 * this.padding.top]);
 					
 				this.color =  d3.scaleOrdinal()
 					.domain(series.map((d) => d.key))
@@ -177,31 +181,14 @@ export default {
 					.selectAll("path")
 					.data(series)
 					.join("path")
-					// .attr("stroke", ({key}) => this.color(key))
-					// .attr("fill", "transparent")
-					.attr("fill", ({key}) => this.color(key))
+					.attr("stroke", ({key}) => this.color(key))
+					.attr("fill", "transparent")
+					// .attr("fill", ({key}) => this.color(key))
 					.attr("stroke-width", 5)
 					.attr("d", area)
 					.append("title")
 					.text(({key}) => key);
 			}
-		},
-
-		initLine() {
-			this.line = d3
-				.line()
-				.x((d, i) => {
-					return this.x(this.windowActualTime[i]);
-				})
-				.y((d) => this.y(d));
-
-			// this.area = d3
-			// 	.area()
-			// 	.curve(d3.curveStepAfter)
-			// 	.y0(this.y(0))
-			// 	.y1(function (d) {
-			// 		return this.y(d.value);
-			// 	});
 		},
 
 		// Axis for timeline view
@@ -215,7 +202,7 @@ export default {
 						return `${d}`;
 					}
 					else if(this.chartXAttr == "time") {
-						return moment(d).format("DD-MM-YY");
+						return moment(d.split("_")[1]).format("DD-MM-YY");
 					}
 				});
 

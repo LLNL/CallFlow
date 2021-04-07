@@ -193,7 +193,6 @@ export default {
 			// Render the tables in the view
 			this.profiles = utils.swapKeysToArray(data, "summary");
 
-
 			// Restrict to top n modules from the ensemble, if n < 10 then we would
 			// default to n modules.
 			const top_n_modules = this.sortByAttribute(this.$store.data_mod["ensemble"], "time", "mean", 10, this.$store.modules["ensemble"]);
@@ -215,7 +214,7 @@ export default {
 
 			this.$store.metricTimeMap = Object.keys(data).reduce((res, item, idx) => { 
 				if(item != "ensemble"){
-					res[item] = data[item]["summary"][this.$store.selectedMetric][1];
+					res[item] = data[item]["summary"]["meantime"];
 				}
 				return res;
 			}, {});
