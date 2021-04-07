@@ -235,7 +235,7 @@ class BaseProvider:
             for sg in load_supergraphs:
                 self.supergraphs[sg.name] = sg
 
-    def process_ensemble(self):
+    def process_ensemble(self, save_path):
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
         if len(self.supergraphs) > 1:
@@ -320,7 +320,7 @@ class BaseProvider:
 
         self.load_single(load_datasets, save_path)
 
-        self.process_ensemble()
+        self.process_ensemble(save_path)
         
     def request_general(self, operation):
         """
