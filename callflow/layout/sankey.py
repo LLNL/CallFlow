@@ -23,17 +23,6 @@ class SankeyLayout:
     Appends all information to networkX graph to satisfy the user request.
     """
 
-    _COLUMNS = [
-        "actual_time",
-        "time (inc)",
-        "module",
-        "name",
-        "time",
-        "type",
-        "module",
-        "entry_function",
-    ]
-
     _PRIMARY_GROUPBY_COLUMN = "name"
     _SECONDARY_GROUPBY_COLUMN = "module"
 
@@ -68,6 +57,18 @@ class SankeyLayout:
 
         self.time_exc = self.sg.df_get_proxy("time")
         self.time_inc = self.sg.df_get_proxy("time (inc)")
+
+        self._COLUMNS = [
+            "module",
+            "name",
+            "type",
+            "module",
+            "entry_function",
+            "time",
+            "time (inc)"
+        ]
+
+        # self._COLUMNS = self._COLUMNS + [self.time_inc, self.time_exc]
 
         if len(selected_runs) > 1:
             self.runs = sg.filter_by_datasets(selected_runs) # Filter based on the sub set asked by the client
@@ -377,7 +378,7 @@ class SankeyLayout:
         :return:
         """
         ensemble_mapping = self._ensemble_map(
-            sg=self.sg, nxg=self.nxg, columns=SankeyLayout._COLUMNS
+            sg=self.sg, nxg=self.nxg, columns=self._COLUMNS
         )
         for idx, key in enumerate(ensemble_mapping):
             nx.set_node_attributes(self.nxg, name=key, values=ensemble_mapping[key])
@@ -388,7 +389,7 @@ class SankeyLayout:
                 sg=self.sg,
                 nxg=self.nxg,
                 tag=run,
-                columns=SankeyLayout._COLUMNS,
+                columns=self._COLUMNS,
             )
             nx.set_node_attributes(
                 self.nxg, name=self.sg.name, values=dataset_mapping[run]
@@ -618,10 +619,10 @@ class SankeyLayout:
                 if column not in ret:
                     ret[column] = {}
 
-                if column == self.time_inc:
+                if column == "time (inc)":
                     ret[column][node_name] = self._get_runtime(node_dict, column, "mean")
 
-                elif column == self.time_exc:
+                elif column == "time":
                     ret[column][node_name] = self._get_runtime(node_dict, column, "mean")
 
                 elif column == "module":
@@ -703,10 +704,10 @@ class SankeyLayout:
                     ret[node_name] = {}
 
                 for column in columns:
-                    if column == self.time_inc:
+                    if column == "time (inc)":
                         ret[node_name][column] = time_inc
 
-                    elif column == self.time_exc:
+                    elif column == "time":
                         ret[node_name][column] = time_exc
 
                     elif column == "module":
@@ -846,4 +847,9 @@ class SankeyLayout:
 
         if "=" in node_name:
             node_name = node_name.split("=")[-1]
-        return self.aux_data["data_cs"][node_name][metric][measure]
+        if node_name in self.aux_data["data_cs"]:
+            return self.aux_data["data_cs"][node_name][metric][measure]
+        elif node_name in self.aux_data["data_mod"]:
+            return self.aux_data["data_mod"][node_name][metric][measure]
+        else:
+            return 0
