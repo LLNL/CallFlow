@@ -217,7 +217,6 @@ export default {
 				let thismodule = utils.getModuleName(this.$store, callsite.module);
 				html += `<br/><span class= ${class_name}><b>Module :</b>` + thismodule + "</span> </div>";
 			}
-			console.log(html);
 			return html;
 		},
 
@@ -232,7 +231,6 @@ export default {
 				const callsite_color = this.setCallsiteColor(node);
 				const label = this.setCallsiteHTML(node, callsite_color);
 
-				console.log(label);
 				const payload = {
 					...node,
 					class: "cct-node",
