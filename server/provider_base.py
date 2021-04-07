@@ -122,8 +122,7 @@ class BaseProvider:
             read_aux=read_aux) 
         return sg
 
-    @staticmethod
-    def split_process_load_datasets(config):
+    def split_process_load_datasets(self):
         # TODO: This is a copy of _FILENAMES and also exists in supergraph.py. 
         # Not quite sure where this should reside to avoid duplication.
         _FILENAMES = {
@@ -132,13 +131,13 @@ class BaseProvider:
             "aux": "aux-{}.npz",
         }
 
-        save_path = config["save_path"]
+        save_path = self.config["save_path"]
 
         ret = []
         unret = []
 
         # Parallelize this. 
-        for dataset in config["runs"]:
+        for dataset in self.config["runs"]:
             process = False
             _name = dataset["name"]
             _path = os.path.join(save_path, _name)
@@ -180,11 +179,23 @@ class BaseProvider:
         # TODO: Need to avoid auxiliary processing for single datasets.
         indivdual_aux_for_ensemble = True
 
+        is_not_ensemble = len(self.config["runs"]) == 1
+
+        append_path = self.config.get("append_path", "")
+        load_path = self.config["data_path"]
+        module_callsite_map = self.config.get("module_callsite_map", {})
+        group_by = self.config["group_by"]
+        filter_by = self.config.get("filter_by","")
+        filter_perc = self.config.get("filter_perc", 0)
+        save_path = self.config.get("save_path", "")
+        
+        run_props = {
+            _["name"]: (os.path.join(_["path"], append_path) if len(append_path) > 0 else _["path"], _["profile_format"]) for _ in self.config["runs"]
+        }
+
         LOGGER.warning(f'-------------------- {len(process_datasets)} DATASETS NEED TO BE PROCESSED--------------------')
 
         for dataset in process_datasets:
-            profile.start()
-
             name = dataset["name"]
             _prop = run_props[name]
             LOGGER.profile(f'Starting supergraph ({name})')
@@ -218,10 +229,11 @@ class BaseProvider:
 
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
-            profile.stop()
-            print(profile.output_text(unicode=True, color=True))
 
-    def load_single(self, load_datasets, save_path):
+    def load_single(self, load_datasets):
+        append_path = self.config.get("append_path", "")
+        save_path = self.config.get("save_path", "")
+
         if len(load_datasets) > 0:
             LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------')
             
@@ -239,8 +251,6 @@ class BaseProvider:
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
         if len(self.supergraphs) > 1:
-            LOGGER.warning('-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n')
-
             name = "ensemble"
             LOGGER.profile(f'Starting supergraph {name}')
             sg = EnsembleGraph(name)
@@ -271,55 +281,41 @@ class BaseProvider:
         2. EnsembleGraph is then constructed from the processed SuperGraphs.
         """
         profile = Profiler()
-        save_path = self.config["save_path"]
-        load_path = self.config["data_path"]
-        group_by = self.config["group_by"]
-        filter_by = self.config.get("filter_by","")
-        filter_perc = self.config.get("filter_perc", 0)
-        module_callsite_map = self.config.get("module_callsite_map", {})
-        append_path = self.config.get("append_path", "")
         start_date = self.config.get("start_date", "")
         end_date = self.config.get("end_date", "")
+        save_path = self.config.get("save_path", "")
         chunk_idx = int(self.config.get("chunk_idx", 0))
         chunk_size = int(self.config.get("chunk_size", -1))
         ensemble_process = self.config.get("ensemble_process", False);
-
-        run_props = {
-            _["name"]: (os.path.join(_["path"], append_path) if len(append_path) > 0 else _["path"], _["profile_format"]) for _ in self.config["runs"]
-        }
 
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
         LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
         
+        LOGGER.warning(f'-------------------- FILTERING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
         if start_date and end_date:
             self.config["runs"] = BaseProvider._filter_datasets_by_date_range(self.config, start_date, end_date)
-            
-        LOGGER.warning(f'-------------------- FILTERED {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
-        
-
-        LOGGER.warning(f'-------------------- CHUNKING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
-
+                    
+        LOGGER.warning(f'-------------------- CHUNKING {chunk_size} SUPERGRAPHS from {chunk_idx} --------------------')
         if chunk_size != 0:
             self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
-
-        LOGGER.warning(f'-------------------- CHUNK SIZE = {chunk_size}; CHUNK_IDX = {chunk_idx} --------------------')
-
-        is_not_ensemble = len(self.config["runs"]) == 1
         
         # Do not process, if already processed. 
         if(reset):
             process_datasets, load_datasets = self.config["runs"], []
         else:
-            process_datasets, load_datasets = BaseProvider.split_process_load_datasets(self.config)
+            process_datasets, load_datasets = self.split_process_load_datasets()
 
         if ensemble_process:
             process_datasets, load_datasets = [], self.config["runs"]
 
+        LOGGER.warning(f'-------------------- PROCESSING {len(process_datasets)} SUPERGRAPHS --------------------\n\n')
         self.process_single(process_datasets)
 
-        self.load_single(load_datasets, save_path)
+        LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------\n\n')
+        self.load_single(load_datasets)
 
+        LOGGER.warning('-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n')
         self.process_ensemble(save_path)
         
     def request_general(self, operation):
