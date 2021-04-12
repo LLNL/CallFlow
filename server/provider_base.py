@@ -221,7 +221,7 @@ class BaseProvider:
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             LOGGER.profile(f'Filtered supergraph {name}')
 
-            if (is_not_ensemble or indivdual_aux_for_ensemble):
+            if (is_not_ensemble or indivdual_aux_for_ensemble) and no_aux_process:
                 Auxiliary(sg)
 
             LOGGER.profile(f'Created Aux for {name}')
@@ -250,6 +250,8 @@ class BaseProvider:
     def process_ensemble(self, save_path):
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
+        no_aux_process = self.config.get("no_aux_process", False)
+
         if len(self.supergraphs) > 1:
             name = "ensemble"
             LOGGER.profile(f'Starting supergraph {name}')
@@ -264,8 +266,9 @@ class BaseProvider:
             # Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             # LOGGER.profile(f'Filtered supergraph {name}')
 
-            Auxiliary(sg)
-            LOGGER.profile(f'Created Aux for {name}')
+            if not no_aux_process:
+                Auxiliary(sg)
+                LOGGER.profile(f'Created Aux for {name}')
 
             sg.write(os.path.join(save_path, name))
             self.supergraphs[name] = sg

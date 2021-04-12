@@ -28,6 +28,8 @@ JSONSCHEMA_CONFIG = {
         "module_callsite_map": {"type": "object"},
         "chunk_idx": {"type": "string"},
         "chunk_size": {"type": "string"},
+        "ensemble_process": {"type": "boolean"},
+        "no_aux_process": {"type": "boolean"}
     },
 }
 
@@ -43,7 +45,8 @@ CONFIG_KEYS = [
     "end_date",
     "chunk_idx",
     "chunk_size",
-    "ensemble_process"
+    "ensemble_process",
+    "no_aux_process",
 ]
 
 # ------------------------------------------------------------------------------
@@ -231,7 +234,13 @@ class ArgParser:
         parser.add_argument(
             "--ensemble_process",
             action="store_true",
-            help="Directly trigger ensemble SuperGraph construction",
+            help="Enables ensemble SuperGraph construction",
+        )
+
+        parser.add_argument(
+             "--no_aux_process",
+            action="store_true",
+            help="Disables the auxiliary processing for single and ensemble supergraph.",
         )
 
         # -------------
