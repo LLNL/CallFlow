@@ -56,75 +56,70 @@ class Auxiliary:
         LOGGER.warning(f"Computing auxiliary data for ({sg}) with "
                        f"{len(self.runs)} runs: {self.runs}")
 
-        profiler = Profiler()
-        profiler.start()
-
-        self.result = {}
-        # ----------------------------------------------------------------------
-        # single super graph
-        if not isinstance(sg, callflow.EnsembleGraph):
-            df_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
-            df_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
-
-            self.result = {"summary": sg.summary(),
-                           "modules": sg.modules,
-                           "m2c": sg.df_mod2callsite(),
-                           "c2m": sg.df_callsite2mod(),
-                           "data_mod": self.new_collect_data(sg.name, "module", df_module),
-                           "data_cs": self.new_collect_data(sg.name, "name", df_name)
-                           }
-
-        # ----------------------------------------------------------------------
-        # ensemble graph
-        else:
-            edf_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())        
-            edf_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
-
-            LOGGER.debug(f"Using {multiprocessing.cpu_count()} processes to perform auxiliary operation.")
-            with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-                result = pool.map(partial(self._relative_computation, sg=sg, edf_module=edf_module, edf_name=edf_name), self.runs)
-
-            self.result = {res["tag"]: res for res in result}
-
-            self.result['ensemble'] = {"summary": sg.summary(),
-                                       "modules": sg.modules,
-                                       "m2c": sg.df_mod2callsite(),
-                                       "c2m": sg.df_callsite2mod(),
-                                       "data_mod": self.new_collect_data(sg.name, "module", edf_module),
-                                       "data_cs": self.new_collect_data(sg.name, "name", edf_name),
-                                       "tag": "ensemble",
-                                       "runs": self.runs
-                                       }
-
-            print(self.result.keys())
-                
-            profiler.stop()
-            print(profiler.output_text(unicode=True, color=True))
-
-        # TODO: this should not happen this way
-        sg.aux_data = self.result
+        sg.aux_data = self.ensemble_auxiliary(sg) if isinstance(sg, callflow.EnsembleGraph) else self.single_auxiliary(sg)
     # --------------------------------------------------------------------------
 
+    def single_auxilairy(self, sg):
+        assert isinstance(sg, callflow.SuperGraph)
+        df_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+        df_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+
+        return {
+            "summary": sg.summary(),
+            "modules": sg.modules,
+            "m2c": sg.df_mod2callsite(),
+            "c2m": sg.df_callsite2mod(),
+            "data_mod": self.new_collect_data(sg.name, "module", df_module),
+            "data_cs": self.new_collect_data(sg.name, "name", df_name),
+            "tag": "single",
+            "run": sg.dataframe.name
+        }
+
+    def ensemble_auxiliary(self, sg):
+        assert isinstance(sg, callflow.EnsembleGraph)
+        edf_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())        
+        edf_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
+
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            result = pool.map(partial(self._relative_computation, sg=sg, edf_module=edf_module, edf_name=edf_name), self.runs)
+
+        result = {res["tag"]: res for res in result}
+
+        result["ensemble"] = {
+            "summary": sg.summary(),
+            "modules": sg.modules,
+            "m2c": sg.df_mod2callsite(),
+            "c2m": sg.df_callsite2mod(),
+            "data_mod": self.new_collect_data(sg.name, "module", edf_module),
+            "data_cs": self.new_collect_data(sg.name, "name", edf_name),
+            "tag": "ensemble",
+            "runs": self.runs
+        }
+
+        return result
+
     def _relative_computation(self, dataset, sg, edf_module, edf_name):
-        _df = sg.dataframe.loc[sg.dataframe['dataset'] == dataset]
-                
-        if len(_df['rank'].unique().tolist()) == 1:
+        assert isinstance(sg, callflow.EnsembleGraph)
+
+        if len(sg.supergraphs[dataset].dataframe['rank'].unique().tolist()) == 1:
             group_by = []
         else:
             group_by = ["rank"]
 
-        df_module = df_bi_level_group(_df, "module", "name", cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())        
-        df_name = df_bi_level_group(_df, "name", None, cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())
+        df_module = df_bi_level_group(sg.supergraphs[dataset].dataframe, "module", "name", cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())        
+        df_name = df_bi_level_group(sg.supergraphs[dataset].dataframe, "name", None, cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())
 
         # TODO: this assumes that the original dataframe was modified
-        return {"summary": sg.supergraphs[dataset].summary(),
-                "modules": sg.supergraphs[dataset].modules,
-                "m2c": sg.supergraphs[dataset].df_mod2callsite(),
-                "c2m": sg.supergraphs[dataset].df_callsite2mod(),
-                "data_mod": self.new_collect_data(dataset, "module", df_module, edf_module),
-                "data_cs": self.new_collect_data(dataset, "name", df_name, edf_name),
-                "tag": dataset,
-                }
+        return {
+            "summary": sg.supergraphs[dataset].summary(),
+            "modules": sg.supergraphs[dataset].modules,
+            "m2c": sg.supergraphs[dataset].df_mod2callsite(),
+            "c2m": sg.supergraphs[dataset].df_callsite2mod(),
+            "data_mod": self.new_collect_data(dataset, "module", df_module, edf_module),
+            "data_cs": self.new_collect_data(dataset, "name", df_name, edf_name),
+            "tag": "relative",
+            "run": sg.supergraphs[dataset].name
+        }
 
     def new_collect_data(self, name, grp_column, grp_df, grp_edf=None):
 
