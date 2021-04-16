@@ -5,11 +5,13 @@
 # ------------------------------------------------------------------------------
 import os
 import hatchet as ht
-import arrow
+import datetime
+#import arrow
 
 import callflow
-
 LOGGER = callflow.get_logger(__name__)
+
+
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 class Sanitizer:
@@ -46,6 +48,15 @@ class Sanitizer:
 
         e.g., laghos_2020-12-04_01-04-11 => 2020-12-04 01:04:11
         """
+        fmt_from = '%Y-%m-%d_%H-%M-%S'
+        fmt_to = '%Y-%m-%d %H:%M:%S'
+
+        toks = string.split('_')
+        dataname, tstamp = toks[0], '_'.join(toks[1:])
+        dt = datetime.datetime.strptime(tstamp, fmt_from)
+        return datetime.datetime.strftime(dt, fmt_to)
+
+        '''
         try: 
             time = string.split("_")[1:]
             date = time[0]
@@ -56,5 +67,5 @@ class Sanitizer:
             s = "Incorrect dataset labelling!! Please use the format 'dataset_YYYY-MM-DD_HH-MM-SS' "
             LOGGER.error(s)
             exit(1)
-
+        '''
 # ------------------------------------------------------------------------------
