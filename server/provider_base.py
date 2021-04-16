@@ -180,7 +180,7 @@ class BaseProvider:
         indivdual_aux_for_ensemble = True
 
         is_not_ensemble = len(self.config["runs"]) == 1
-
+        no_aux_process = self.config.get("no_aux_process", False)
         append_path = self.config.get("append_path", "")
         load_path = self.config["data_path"]
         module_callsite_map = self.config.get("module_callsite_map", {})
@@ -273,7 +273,6 @@ class BaseProvider:
             sg.write(os.path.join(save_path, name))
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
-
 
     # --------------------------------------------------------------------------
     def process(self, reset=False):
