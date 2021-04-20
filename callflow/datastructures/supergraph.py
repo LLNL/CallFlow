@@ -13,7 +13,18 @@ import pandas as pd
 import hatchet as ht
 import networkx as nx
 from ast import literal_eval as make_list
-from pyinstrument import Profiler
+
+try:
+    from pyinstrument import Profiler
+except Exception:
+    #print('Did not find pytinstrument')
+    class Profiler:
+        def __init__(self):
+            pass
+        def start(self):
+            pass
+        def stop(self):
+            pass
 
 import callflow
 from callflow import get_logger
@@ -64,7 +75,9 @@ class SuperGraph(ht.GraphFrame):
         self.callees = {}
         self.paths = {}
         self.hatchet_nodes = {}
-        self.indexes = []
+        ## should not use this since we can re-extract this instantly
+        ## keeping indexes stored runs the risk of using stale information
+        #self.indexes = []
 
         self.modules = []
         self.callsite_module_map = {}
@@ -106,64 +119,71 @@ class SuperGraph(ht.GraphFrame):
         gf = SuperGraph.from_config(path, self.profile_format)
         assert isinstance(gf, ht.GraphFrame)
         assert gf.graph is not None
-        LOGGER.debug(f"Input Dataframe shape: {gf.dataframe.shape}")
+        LOGGER.info(f'Loaded Hatchet GraphFrame: {df_info(gf.dataframe)}')
+        LOGGER.profile('')
+        if 0:
+            SuperGraph.write_ht(gf, path)
 
         # Create a hatchet.GraphFrame using the calculated graph and graphframe.
         super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics) # Initialize here so that we dont drop index levels.
-        
+
+        # Call sites in the unfiltered GraphFrame.
+        self.callsites = df_unique(gf.dataframe, "name")
+        LOGGER.debug(f'Found {len(self.callsites)} unique callsites')
+
         # Find the roots of the super graph. Used to get the mean inclusive runtime.
         self.roots = SuperGraph.hatchet_get_roots(gf.graph) # Contains all unfiltered roots as well.
-        
-        # Call sites in the unfiltered GraphFrame. 
-        self.callsites = df_unique(gf.dataframe, "name")
-        LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
-        
+        LOGGER.debug(f'Found {len(self.roots)} graph roots')
+
         # Add time proxies.
         self.add_time_proxies()
 
-        # Find the mean runtime of all the roots.
-        self.mean_root_inctime = self.df_mean_runtime(gf.dataframe, self.roots, "time (inc)")
-        
-        # Formulate the hatchet query.
-        query = [
-            ("*", {f"{self.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
-        ]
-        LOGGER.debug(f"Filtering GraphFrame by Hatchet Query :{query}")
+        # ----------------------------------------------------------------------
+        if False: ## TODO: move this to the filter class!
+            # Find the mean runtime of all the roots.
+            self.mean_root_inctime = self.df_mean_runtime(gf.dataframe, self.roots, "time (inc)")
 
-        self.f_callsites = SuperGraph.hatchet_filter_callsites_by_query(gf, query)
-        LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
+            # Formulate the hatchet query.
+            query = [
+                ("*", {f"{self.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
+            ]
+            LOGGER.info(f"Filtering GraphFrame by Hatchet Query :{query}")
 
-        # Construct the nxg from the hatchet.graph.
-        self.nxg = self.hatchet_graph_to_nxg(self.graph)
+            LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
+            self.f_callsites = SuperGraph.hatchet_filter_callsites_by_query(gf, query)
+            LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
+
+            LOGGER.profile(f'-----> Finished with hatchet filter: {_df_info(self.dataframe)}')
 
         # ----------------------------------------------------------------------
         # Hatchet requires node and rank to be indexes.
         # remove the indexes to maintain consistency.
-        self.indexes = list(self.dataframe.index.names) # We will remove node since it gets droped when `gf.drop_index_levels()`
-        self.df_reset_index()
+        # We will remove node since it gets droped when `gf.drop_index_levels()`
+        #self.indexes = list(self.dataframe.index.names)
+        #LOGGER.debug(f'Dataframe indexes = {self.indexes}')
+        #self.df_reset_index()
 
         # ----------------------------------------------------------------------
-        LOGGER.info(f'Loaded dataframe: {self.dataframe.shape}, '
-                    f'columns = {list(self.dataframe.columns)}')
+        #LOGGER.info(f'Loaded dataframe: {df_info(self.dataframe)}')
 
         # add modules
         self.add_modules(module_callsite_map)
+        self.modules = np.array(self.df_factorize_column("module", sanitize=True))
+        LOGGER.debug(f'Found {len(self.modules)} unique modules')
 
         # add new columns to the dataframe
         self.df_add_nid_column()
-        
         # ----------------------------------------------------------------------
         # TODO: For faster searches, bring this back.
         # self.indexes.insert(0, 'dataset')
         # self.dataframe.set_index(self.indexes, inplace=True, drop=True)
 
-        LOGGER.info(f'Processed dataframe: {self.dataframe.shape}, '
-                    f'columns = {list(self.dataframe.columns)}')
-
+        LOGGER.info(f'Processed dataframe: {df_info(self.dataframe)}')
         self.profiler.stop()
 
         # ----------------------------------------------------------------------
         # graph-related operations
+        self.nxg = self.hatchet_graph_to_nxg(self.graph)
         for node in self.graph.traverse():
             node_name = Sanitizer.from_htframe(node.frame)
             self.hatchet_nodes[node_name] = node
@@ -171,11 +191,11 @@ class SuperGraph(ht.GraphFrame):
             self.callers[node_name] = [_.frame.get("name") for _ in node.parents]
             self.callees[node_name] = [_.frame.get("name") for _ in node.children]
 
+        LOGGER.info(f'Processed graph')
+
         self.df_add_column("callees", apply_func=lambda _: self.callees[_] if _ in self.callees else [])
         self.df_add_column("callers", apply_func=lambda _: self.callers[_] if _ in self.callers else [])
         self.df_add_column("path", apply_func=lambda _: self.paths[_] if _ in self.paths else [])
-
-        self.modules = np.array(self.df_factorize_column("module", sanitize=True))
 
     # --------------------------------------------------------------------------
     def load(
@@ -228,29 +248,57 @@ class SuperGraph(ht.GraphFrame):
         has_modules_in_map = len(module_callsite_map) > 0
         assert not (has_modules_in_df and has_modules_in_map)
 
+        LOGGER.info('Creating \"module-callsite\" and \"callsite-module\" maps.')
+
         # ----------------------------------------------------------------------
         # if dataframe already has modules
         if has_modules_in_df:
-            LOGGER.info('Found \"module\" column in the dataframe. Doing nothing.')
-            self.module_callsite_map = self.df_mod2callsite()
-            self.callsite_module_map = self.df_callsite2mod() # Expensive...
+            LOGGER.info('Found \"module\" column in the dataframe.')
+
+            # work on this smaller dataframe for speed
+            df = self.dataframe[['module', 'name']]
+            modules = df_unique(df, "module")
+            callsites = df_unique(df, "name")
+            df.set_index('module', inplace=True)
+
+            self.module_callsite_map = {}
+            self.callsite_module_map = {_: [] for _ in callsites}
+            for m in modules:
+                clist = df.xs(m)['name'].unique()
+                self.module_callsite_map[m] = clist
+                for c in clist:
+                    self.callsite_module_map[c].append(m)
+
+            LOGGER.debug(f'Created \"module-to-callsite\" = {len(self.module_callsite_map)} '
+                         f'and \"callsite-to-module\" = {len(self.callsite_module_map)} '
+                         ' maps.')
+
+            '''
+            self.module_callsite_map = self.to_delete_df_mod2callsite()
+            LOGGER.debug('Created \"module-to-callsite\" map.')
+            self.callsite_module_map = self.to_delete_df_callsite2mod() # Expensive...
+            LOGGER.debug('Created \"module-to-callsite\" map.')
+            '''
 
         # ----------------------------------------------------------------------
         # use the given module-callsite map
         elif has_modules_in_map:
-            LOGGER.info('Found user-specified module_callsite_map')
+            LOGGER.debug('Found user-specified module_callsite_map')
 
             self.module_callsite_map = module_callsite_map
             self.callsite_module_map = {}
 
             for m, clist in self.module_callsite_map.items():
                 for c in clist:
-                    self.callsite_module_map[c] = m
+                    if c in self.callsite_module_map:
+                        self.callsite_module_map[c].append(m)
+                    else:
+                        self.callsite_module_map[c] = [m]
 
             self.df_add_column("module", apply_func=lambda _: self.callsite_module_map[_])
         # ----------------------------------------------------------------------
         else:
-            LOGGER.info('No module map found. Defaulting to "module=callsite"')
+            LOGGER.info('No module map found. Defaulting to \"module=callsite\"')
             self.df_add_column("module",
                                apply_func=lambda _: Sanitizer.sanitize(_),
                                apply_on="name")
@@ -332,7 +380,26 @@ class SuperGraph(ht.GraphFrame):
     # --------------------------------------------------------------------------
     # added these functions to support auxiliary
     # we need this
-    def df_mod2callsite(self, modules = None):
+    '''
+    def df_mod_callsite_maps(self):
+
+        # let's reduce the size for faster processing
+        df = self.dataframe[['module', 'name']]
+        modules = df_unique(df, "module")
+        callsites = df_unique(df, "name")
+        df.set_index('module', inplace=True)
+
+        m2c = {}
+        c2m = {_: [] for _ in callsites}
+        for m in modules:
+            clist = df.xs(m)['name'].unique()
+            m2c[m] = clist
+            for c in clist:
+                c2m[c].append(m)
+
+        return m2c, c2m
+    '''
+    def to_delete_df_mod2callsite(self, modules = None):
 
         if None in self.indexes:
             LOGGER.error('Found None in indexes. Removing!')
@@ -355,7 +422,7 @@ class SuperGraph(ht.GraphFrame):
         else:
             return {_: _df.xs(_, 0)["name"] for _ in modules}
 
-    def df_callsite2mod(self, callsites = None):
+    def to_delete_df_callsite2mod(self, callsites = None):
 
         if callsites is None:
             callsites = self.df_unique("name")
@@ -447,6 +514,7 @@ class SuperGraph(ht.GraphFrame):
         """
         if "nid" in self.dataframe.columns:
             return
+        LOGGER.debug('Adding nid column')
         self.dataframe["nid"] = self.dataframe.groupby("name")["name"].transform(
             lambda x: pd.factorize(x)[0]
         )
@@ -695,7 +763,10 @@ class SuperGraph(ht.GraphFrame):
         if profile_format not in FILE_FORMATS:
             raise ValueError(f"Invalid profile format: {profile_format}")
 
-        gf = None
+        gf = SuperGraph.read_ht(data_path)
+        if gf is not None:
+            return gf
+
         if profile_format == "hpctoolkit":
             gf = ht.GraphFrame.from_hpctoolkit(data_path)
 
@@ -725,6 +796,42 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     # static read/write functionality
+    # --------------------------------------------------------------------------
+    @staticmethod
+    def write_ht(gf, path='.'):
+
+        import pickle
+        assert isinstance(gf, ht.GraphFrame)
+
+        LOGGER.debug(f"Writing Hatchet GraphFrame to ({path})")
+        fdf = os.path.join(path, 'ht-df.pkl')
+        fdg = os.path.join(path, 'ht-graph.pkl')
+        fdm = os.path.join(path, 'ht--metrics.npz')
+
+        gf.dataframe.to_pickle(fdf)
+        with open(fdg, "wb") as fptr:
+            pickle.dump(gf.graph, fptr)
+        np.savez_compressed(fdm, exc=gf.exc_metrics, inc=gf.inc_metrics)
+
+    @staticmethod
+    def read_ht(path):
+
+        import pickle
+        fdf = os.path.join(path, 'ht-df.pkl')
+        fdg = os.path.join(path, 'ht-graph.pkl')
+        fdm = os.path.join(path, 'ht-metrics.npz')
+
+        if not os.path.exists(fdf) or not os.path.exists(fdg) or not os.path.exists(fdm):
+            return None
+
+        LOGGER.debug(f"Reading Hatchet GraphFrame from ({path})")
+        df = pd.read_pickle(fdf)
+        with open(fdg, "rb") as fptr:
+            graph = pickle.load(fptr)
+        met = np.load(fdm)
+        ext_metrics, int_metrics = list(met['exc'][()]), list(met['inc'][()])
+        return ht.GraphFrame(graph, df, ext_metrics, int_metrics)
+
     # --------------------------------------------------------------------------
     # TODO: CAL-66: Clean up unnecessary writing and reading functions.
     @staticmethod

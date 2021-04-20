@@ -7,9 +7,14 @@
 import numpy as np
 import pandas as pd
 
+
 # ------------------------------------------------------------------------------
 # pandas dataframe utils
 # ------------------------------------------------------------------------------
+def df_info(df):
+    return f'{df.shape} {list(df.index.names)} {list(df.columns)}'
+
+
 def df_unique(df, column, proxy={}):
     column = proxy.get(column, column)
     if column not in df.columns:

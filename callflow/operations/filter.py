@@ -109,8 +109,8 @@ class Filter:
                 # If source is present in the callsites list
                 if edge[0] in callsites and edge[1] in callsites:
                     nxg.add_edge(edge[0], edge[1])
-                else:
-                    LOGGER.debug(f"Removing the edge: {edge}")
+                #else:
+                #    LOGGER.debug(f"Removing the edge: {edge}")
 
         elif filter_by == "time":
             for callsite in callsites:

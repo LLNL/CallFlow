@@ -65,7 +65,7 @@ class Group:
         self.callsite_module_map = self.sg.df_get_column("module", "name").to_dict()
         self.callsite_path_map = self.sg.df_get_column("path", "name").to_dict()
 
-        print(len(self.callsite_path_map.keys()))
+        #print(len(self.callsite_path_map.keys()))
 
         group_path = {}
         component_path = {}
