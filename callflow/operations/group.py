@@ -36,10 +36,8 @@ class Group:
         self.sg = sg
         self.group_by = group_by
 
-        self.callsite_module_map = {}
-        self.callsite_path_map = {}
-        self.entry_funcs = {}
-        self.other_funcs = {}
+        self.callsite_module_map = self.sg.df_get_column("module", "name").to_dict()
+        self.callsite_path_map = self.sg.df_get_column("path", "name").to_dict()
 
         LOGGER.info(f'Grouping ({self.sg}) by "{self.group_by}"')
         self.compute()
@@ -47,6 +45,9 @@ class Group:
     def _format_node_name(self, module_idx, name):
         return f'({module_idx}, {name})'
         #return self.sg.modules[module_idx] + "=" + name
+
+    def _format_callsite(self, module_idx, name):
+        return (module_idx, name)
 
     # --------------------------------------------------------------------------
     def compute(self):
@@ -223,85 +224,39 @@ class Group:
         """
         if isinstance(path, str):
             path = make_list(path)
+            
         group_path = []
         prev_module = None
         for idx, callsite in enumerate(path):
-            if idx == 0:
+            if idx == 0: # root node 
                 # Assign the first callsite as from_callsite and not push into an array.
                 from_callsite = callsite
                 from_module = self.callsite_module_map[from_callsite]
 
+                # Append to the group path.
+                group_path.append(self._format_callsite(from_module, from_callsite))
+                
                 # Store the previous module to check the hierarchy later.
                 prev_module = from_module
 
-                # Create the entry function and other functions dict.
-                if from_module not in self.entry_funcs:
-                    self.entry_funcs[from_module] = []
-                if from_module not in self.other_funcs:
-                    self.other_funcs[from_module] = []
-
-                # Push into entry function dict since it is the first callsite.
-                self.entry_funcs[from_module].append(from_callsite)
-
-                # Append to the group path.
-                group_path.append(self._format_node_name(from_module, from_callsite))
-
-            elif idx == len(path) - 1:
-                # Final call site in the path.
-                # to_callsite = Sanitizer.from_htframe(callsite)
+            elif idx == len(path) - 1: # Final call site in the path.
                 to_callsite = callsite
-
                 to_module = self.callsite_module_map[to_callsite]
 
                 if prev_module != to_module:
-                    group_path.append(self._format_node_name(to_module, to_callsite))
+                    group_path.append(self._format_callsite(to_module, to_callsite))
 
-                if to_module not in self.entry_funcs:
-                    self.entry_funcs[to_module] = []
-                if to_module not in self.other_funcs:
-                    self.other_funcs[to_module] = []
-
-                if to_callsite not in self.other_funcs[to_module]:
-                    self.other_funcs[to_module].append(to_callsite)
-
-                if to_callsite not in self.entry_funcs[to_module]:
-                    self.entry_funcs[to_module].append(to_callsite)
             else:
-                # Assign the from and to call site.
-                # from_callsite = path[idx - 1]
-                to_callsite = callsite
+                to_module = self.callsite_module_map[callsite]
 
-                # from_module = self.callsite_module_map[from_callsite]
-                to_module = self.callsite_module_map[to_callsite]
-
-                # Create the entry function and other function dict if not already present.
-                if to_module not in self.entry_funcs:
-                    self.entry_funcs[to_module] = []
-                if to_module not in self.other_funcs:
-                    self.other_funcs[to_module] = []
-
-                # if previous module is not same as the current module.
+                # if previous module is not same as the current module, we append.
                 if to_module != prev_module:
-                    # TODO: Come back and check if it is in the path.
-                    if to_module in group_path:
-                        prev_module = to_module
-                    else:
-                        group_path.append(
-                            self._format_node_name(to_module, to_callsite)
-                        )
-                        prev_module = to_module
-                        if to_callsite not in self.entry_funcs[to_module]:
-                            self.entry_funcs[to_module].append(to_callsite)
-
+                    group_path.append(self._format_callsite(to_module, callsite))
+    
                 elif to_module == prev_module:
-                    to_callsite = callsite
-                    # to_module = self.entire_df.loc[self.entire_df['name'] == to_callsite]['module'].unique()[0]
-                    to_module = self.callsite_module_map[to_callsite]
+                    pass
 
-                    prev_module = to_module
-
-                    if to_callsite not in self.other_funcs[to_module]:
-                        self.other_funcs[to_module].append(to_callsite)
+                prev_module = to_module
 
         return tuple(group_path)
 
