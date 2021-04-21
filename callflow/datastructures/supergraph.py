@@ -209,17 +209,12 @@ class SuperGraph(ht.GraphFrame):
 
         if read_aux:
             self.aux_data = UnpackAuxiliary(path, self.name).result
-            # TODO: this should be handled better
-            if "modules" in self.aux_data.keys():   # single case
-                self.modules = self.aux_data["modules"]
-            elif self.name in self.aux_data.keys():     # ensemble base
-                self.modules = self.aux_data[self.name]["modules"]
-
         # ----------------------------------------------------------------------
         self.add_time_proxies()
         # self.df_reset_index() # TODO: This might be cause a possible side
         # effect. Beware!!
         self.roots = self.get_roots(self.nxg)
+        self.modules = np.array(self.df_factorize_column("module", sanitize=False))
 
     # --------------------------------------------------------------------------
     def add_modules(self, module_callsite_map={}):

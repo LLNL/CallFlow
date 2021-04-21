@@ -98,7 +98,7 @@ class BaseProvider:
             sg = EnsembleGraph(name)
             sg.load(os.path.join(load_path, name),
                     read_parameter=read_param,
-                    read_aux=True)
+                    read_aux=False)
             self.supergraphs[name] = sg
 
             # TODO: This is repopulation of data. Avoid!
@@ -114,7 +114,7 @@ class BaseProvider:
         """
         name = dataset["name"]
         read_param = self.config["read_parameter"]
-        read_aux = True
+        read_aux = False
 
         sg = SuperGraph(name)
         sg.load(os.path.join(save_path, name),
@@ -222,11 +222,13 @@ class BaseProvider:
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             LOGGER.profile(f'Filtered supergraph {name}')
 
-            if (is_not_ensemble or indivdual_aux_for_ensemble) and no_aux_process:
+            calculate_aux = no_aux_process and (is_not_ensemble or indivdual_aux_for_ensemble)
+
+            if calculate_aux:
                 Auxiliary(sg)
 
             LOGGER.profile(f'Created Aux for {name}')
-            sg.write(os.path.join(save_path, name), write_aux=(is_not_ensemble or indivdual_aux_for_ensemble))
+            sg.write(os.path.join(save_path, name), write_aux=calculate_aux)
 
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
