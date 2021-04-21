@@ -56,16 +56,10 @@ class Sanitizer:
         dt = datetime.datetime.strptime(tstamp, fmt_from)
         return datetime.datetime.strftime(dt, fmt_to)
 
-        '''
-        try: 
-            time = string.split("_")[1:]
-            date = time[0]
-            hhmmss = ":".join(time[1].split("-"))
-            ret = " ".join([date, hhmmss])
-            return arrow.get(ret)
-        except:
-            s = "Incorrect dataset labelling!! Please use the format 'dataset_YYYY-MM-DD_HH-MM-SS' "
-            LOGGER.error(s)
-            exit(1)
-        '''
+    @staticmethod
+    def fmt_timestr_to_datetime(string):
+        fmt_to = '%Y-%m-%d %H:%M:%S'
+
+        return datetime.datetime.strptime(string, fmt_to)
+
 # ------------------------------------------------------------------------------
