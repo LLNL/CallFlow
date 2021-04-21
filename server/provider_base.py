@@ -5,7 +5,7 @@
 # ------------------------------------------------------------------------------
 
 import os
-import arrow
+import datetime
 import multiprocessing
 from functools import partial
 
@@ -160,16 +160,16 @@ class BaseProvider:
 
     @staticmethod
     def _filter_datasets_by_date_range(config, start_date, end_date):
-        _start = Sanitizer.fmt_time(start_date)
-        _end = Sanitizer.fmt_time(end_date)
+        _start = Sanitizer.fmt_timestr_to_datetime(Sanitizer.fmt_time(start_date))
+        _end = Sanitizer.fmt_timestr_to_datetime(Sanitizer.fmt_time(end_date))
 
         LOGGER.info("Filtering datasets by start_date and end_date")
 
         ret = []
         # Parallelize this.
         for dataset in config["runs"]:
-            _range = arrow.Arrow.range('day', _start, _end)
-            is_in_range = Sanitizer.fmt_time(dataset["name"]).floor('day') in _range
+            is_in_range = _start <= Sanitizer.fmt_timestr_to_datetime(Sanitizer.fmt_time(dataset["name"])) <= _end
+            print(Sanitizer.fmt_time(dataset["name"]), is_in_range)
             if is_in_range:
                 ret.append(dataset) 
                 
@@ -180,7 +180,7 @@ class BaseProvider:
         indivdual_aux_for_ensemble = True
 
         is_not_ensemble = len(self.config["runs"]) == 1
-
+        no_aux_process = self.config.get("no_aux_process", False)
         append_path = self.config.get("append_path", "")
         load_path = self.config["data_path"]
         module_callsite_map = self.config.get("module_callsite_map", {})
@@ -188,6 +188,7 @@ class BaseProvider:
         filter_by = self.config.get("filter_by","")
         filter_perc = self.config.get("filter_perc", 0)
         save_path = self.config.get("save_path", "")
+        no_aux_process = self.config.get("no_aux_process", False)
         
         run_props = {
             _["name"]: (os.path.join(_["path"], append_path) if len(append_path) > 0 else _["path"], _["profile_format"]) for _ in self.config["runs"]
@@ -273,7 +274,6 @@ class BaseProvider:
             sg.write(os.path.join(save_path, name))
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
-
 
     # --------------------------------------------------------------------------
     def process(self, reset=False):

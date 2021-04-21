@@ -65,8 +65,6 @@ class Group:
         self.callsite_module_map = self.sg.df_get_column("module", "name").to_dict()
         self.callsite_path_map = self.sg.df_get_column("path", "name").to_dict()
 
-        print(len(self.callsite_path_map.keys()))
-
         group_path = {}
         component_path = {}
         component_level = {}
@@ -124,9 +122,6 @@ class Group:
         self.sg.df_update_mapping("component_path", component_path)
         self.sg.df_update_mapping("component_level", component_level)
         self.sg.df_update_mapping("entry_function", entry_func)
-        # TODO: Remove the below columns
-        self.sg.df_update_mapping("show_node", entry_func)
-        self.sg.df_update_mapping("vis_name", node_name)
 
     def _construct_group_path(self, path):  # noqa: C901
         """
