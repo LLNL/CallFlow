@@ -246,8 +246,7 @@ class SuperGraph(ht.GraphFrame):
 
         ccodes, self.callsites = self.dataframe['name'].factorize(sort=True)
         LOGGER.info(f'Found {len(self.callsites)} unique callsites')
-
-        # should copy callsites as well
+        self.dataframe['callsite'] = ccodes
         del ccodes
 
         # ----------------------------------------------------------------------
@@ -257,6 +256,7 @@ class SuperGraph(ht.GraphFrame):
             LOGGER.info(f'Found {len(self.modules)} unique modules')
 
             self.dataframe['module'] = mcodes
+            del mcodes
             self.modules = [Sanitizer.sanitize(_) for _ in self.modules]
 
             # work on this smaller dataframe for speed
@@ -271,7 +271,6 @@ class SuperGraph(ht.GraphFrame):
                 for c in clist:
                     self.callsite_module_map[c].append(mcode)
 
-            del mcodes
             del df
 
         # ----------------------------------------------------------------------
