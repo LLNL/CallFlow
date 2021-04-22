@@ -61,8 +61,8 @@ class Filter:
         self.compute()
         
         # TODO: Find a better way to do this.
-        self.sg.dataframe = self.dataframe
-        self.sg.nxg = self.nxg
+        #self.sg.dataframe = self.dataframe
+        #self.sg.nxg = self.nxg
 
     # --------------------------------------------------------------------------
     def compute(self):
@@ -102,7 +102,7 @@ class Filter:
         # self.dataframe = self.sg.df_filter_by_value(filter_by, filter_val)
         if len(self.sg.f_callsites) > 0:
             self.dataframe = self.sg.dataframe[self.sg.dataframe["name"].isin(self.sg.f_callsites)]
-        LOGGER.info(f'Filtered dataframe comprises of: "{self.dataframe.shape}"')
+        LOGGER.info(f'Filtered dataframe comprises of: "{self.sg.dataframe.shape}"')
 
         callsites = self.sg.f_callsites
         nxg = nx.DiGraph()
