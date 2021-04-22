@@ -86,6 +86,9 @@ class Filter:
             value = self.filter_perc
             self._filter_sg(self.filter_by, value)
 
+        else:
+            assert 0
+
     # --------------------------------------------------------------------------
     def _filter_sg(self, filter_by, filter_val):
         """

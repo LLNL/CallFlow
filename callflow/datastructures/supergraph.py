@@ -186,9 +186,9 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.profile('')
 
         # ----------------------------------------------------------------------
-        self.df_add_column("callees", apply_func=lambda _: self.callees[_] if _ in self.callees else [])
-        self.df_add_column("callers", apply_func=lambda _: self.callers[_] if _ in self.callers else [])
-        self.df_add_column("path", apply_func=lambda _: self.paths[_] if _ in self.paths else [])
+        self.df_add_column("callees", apply_dict=self.callees, dict_default=[])
+        self.df_add_column("callers", apply_dict=self.callers, dict_default=[])
+        self.df_add_column("path", apply_dict=self.paths, dict_default=[])
 
     # --------------------------------------------------------------------------
     def load(
@@ -286,7 +286,9 @@ class SuperGraph(ht.GraphFrame):
             for c,mlist in self.callsite_module_map.items():
                 assert len(mlist) == 1
 
-            self.df_add_column("module", apply_func=lambda _: self.callsite_module_map[_])
+            self.df_add_column("module",
+                               apply_dict=self.callsite_module_map,
+                               apply_on="name")
 
         # ----------------------------------------------------------------------
         else:
@@ -477,31 +479,43 @@ class SuperGraph(ht.GraphFrame):
         column = self.df_get_proxy(column)
         return self.dataframe.set_index(index)[column]
 
-    def df_add_column(self, column_name, value=None, apply_func=None, apply_on="name",
-                      update=False,):
+    def df_add_column(self, column_name,
+                      apply_value=None, apply_func=None,
+                      apply_dict=None, dict_default=None,
+                      apply_on="name", update=False):
         """
 
         :param column_name:
-        :param value:
+        :param apply_value:
         :param apply_func:
         :param apply_on:
+        :param apply_dict:
+        :param dict_default:
         :param update:
         :return:
         """
+        has_value = apply_value is not None
+        has_func = apply_func is not None
+        has_dict = apply_dict is not None
+        assert 1 == int(has_value) + int(has_func) + int(has_dict)
 
-        assert (value is None) != (apply_func is None)
         if column_name in self.dataframe.columns and not update:
             return
 
-        if value is not None:
-            assert isinstance(value, (int, float, str))
-            LOGGER.debug(f'appending column "{column_name}" = "{value}"')
-            self.dataframe[column_name] = value
+        if has_value:
+            assert isinstance(apply_value, (int, float, str))
+            LOGGER.debug(f'appending column "{column_name}" = "{apply_value}"')
+            self.dataframe[column_name] = apply_value
 
-        if apply_func is not None:
+        if has_func:
             assert callable(apply_func) and isinstance(apply_on, str)
             LOGGER.debug(f'appending column "{column_name}" = {apply_func}')
             self.dataframe[column_name] = self.dataframe[apply_on].apply(apply_func)
+
+        if has_dict:
+            assert isinstance(apply_dict, dict) and isinstance(apply_on, str)
+            LOGGER.debug(f'appending column "{column_name}" = (dict); default=({dict_default})')
+            self.dataframe[column_name] = self.dataframe[apply_on].apply(lambda _: apply_dict.get(_, dict_default))
 
     # TODO: merge this with the function above
     def df_add_nid_column(self):
@@ -516,6 +530,7 @@ class SuperGraph(ht.GraphFrame):
             lambda x: pd.factorize(x)[0]
         )
 
+    '''
     def df_update_mapping(self, col_name, mapping, apply_on="name"):
         """
 
@@ -527,7 +542,7 @@ class SuperGraph(ht.GraphFrame):
         self.dataframe[col_name] = self.dataframe[apply_on].apply(
             lambda _: mapping[_] if _ in mapping.keys() else ""
         )
-
+    '''
     def df_unique(self, column):
         """
 
@@ -624,7 +639,7 @@ class SuperGraph(ht.GraphFrame):
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
 
-    def df_factorize_column(self, column, sanitize=False):
+    def todelete_df_factorize_column(self, column, sanitize=False):
         """
 
         :param column:
