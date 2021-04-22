@@ -66,7 +66,7 @@ class Group:
                entry_functions =  [M3.e], this is a list since a call site can multiple entry points.
         :return: None
         """
-        LOGGER.debug('computing grouping')
+        #LOGGER.debug('computing grouping')
 
         # no need to recompute. should use the one available in supergraph
         #self.callsite_module_map = self.sg.df_get_column("module", "name").to_dict()
@@ -89,55 +89,79 @@ class Group:
         # construct group and component paths
         def _construct_paths(path):
 
+            #LOGGER.warning(f' >>> parsing [{path}]')
             #cs_path = self.sg.callsites[path]
             #print('path callsites =', type(cs_path), len(cs_path), cs_path)
+
+            #for _ in path:
+            #    _m = self.sg.callsite_module_map[_]
+            #    print('\t:', _, '::', self.sg.get_name(_, 'callsite'), '--', _m, '::', self.sg.get_name(_m, 'module'))
 
             # extract the modules in the path
             mod_path = np.array([self.sg.callsite_module_map[_] for _ in path])
             #print('path modules =', type(mod_path), mod_path.shape, mod_path)
 
             # callsite-to-module map stores a vector and that is a problem
-            if any([len(_) > 1 for _ in mod_path]):
-                LOGGER.warning('need to fix this problem')
+            #if any([len(_) > 1 for _ in mod_path]):
+            #    LOGGER.warning('need to fix this problem')
 
             ## TODO: seeing some empty list here for "loops"
-            mod_path = np.array([_[0] if len(_) > 0 else None for _ in mod_path])
+            #mod_path = np.array([_[0] if len(_) > 0 else None for _ in mod_path])
             #print('path modules:', type(mod_path), mod_path.shape, mod_path)
 
-            n = len(path)
+            # root
             if len(path) == 1:
-                gpath = mod_path
-                cpath = path
+                return mod_path, path
 
-            else:
-                # remove all entries where the module is repeated
-                mods_diff = np.array([mod_path[i] != mod_path[i-1] for i in range(1, n)])
-                mods_diff = np.where(np.array([True] + mods_diff, dtype=bool))[0]
+            # if there is an unknown module (= -1), get rid of that
+            if True:
+                mod_path = mod_path[np.where(mod_path != -1)[0]]
 
-                # the resulting list will be the group path
-                gpath = mod_path[mods_diff]
+            # remove all entries where the module is repeated
+            mods_diff = [True] + [mod_path[i] != mod_path[i-1]
+                                  for i in range(1, len(mod_path))]
+            mods_diff = np.where(np.array(mods_diff, dtype=bool))[0]
 
-                # from the right, figure out how many times the same module appears
-                mods_diff = mod_path != mod_path[-1]
+            # the resulting list will be the group path
+            gpath = mod_path[mods_diff]
 
-                # last element in the path must be true
-                assert not mods_diff[-1]
+            # from the right, figure out how many times the same module appears
+            mods_diff = mod_path != mod_path[-1]
 
-                # the last module that is different
-                mods_diff = np.where(mods_diff)[0]
-                last_diff_mod = mods_diff[-1] if len(mods_diff) > 0 else -1
+            # last element in the path must be true
+            assert not mods_diff[-1]
 
-                # the last set of the same modules will form the component path
-                cpath = mod_path[last_diff_mod+1:]
+            # the last module that is different
+            mods_diff = np.where(mods_diff)[0]
+            last_diff_mod = mods_diff[-1] if len(mods_diff) > 0 else -1
 
+            # the last set of the same modules will form the component path
+            cpath = path[last_diff_mod+1:]
+
+            # ------------------------------------------------------------------
+            if False:
+                snode = path[-1]
+                print('--> snode', snode, '::', self.sg.get_name(snode, 'callsite'))
+                print('--> path')
+                for _ in path:
+                    _m = self.sg.callsite_module_map[_]
+                    print('\t:', _, '::', self.sg.get_name(_, 'callsite'), '--', _m, '::', self.sg.get_name(_m, 'module'))
+                print('--> gpath')
+                for _ in gpath:
+                    print('\t:', _, '::', self.sg.get_name(_, 'module'))
+                print('--> cpath')
+                for _ in cpath:
+                    print('\t:', _, '::', self.sg.get_name(_, 'callsite'))
+
+            # ------------------------------------------------------------------
             return gpath, cpath
 
+        # ----------------------------------------------------------------------
         for idx, edge in enumerate(self.sg.nxg.edges()):
 
-            #print()
             #LOGGER.info(f'starting {idx}, {edge}')
-            snode = edge[0]
-            tnode = edge[1]
+            snode = self.sg.get_idx(edge[0], 'callsite')
+            tnode = self.sg.get_idx(edge[1], 'callsite')
 
             assert snode in self.sg.paths
             assert tnode in self.sg.paths
@@ -150,8 +174,8 @@ class Group:
 
                 group_path[snode], component_path[snode] = _construct_paths(spath)
 
-                #LOGGER.info(f'new group path[{snode}]: {gpath}')
-                #LOGGER.info(f'new component path[{snode}]: {cpath}')
+                #LOGGER.info(f'src: group path[{snode}]: {group_path[snode]}')
+                #LOGGER.info(f'src: component path[{snode}]: {component_path[snode]}')
 
                 '''
                 # --------------------------------------------------------------
@@ -182,6 +206,9 @@ class Group:
 
                 group_path[tnode], component_path[tnode] = _construct_paths(tpath)
 
+                #LOGGER.info(f'dst: group path[{tnode}]: {group_path[tnode]}')
+                #LOGGER.info(f'dst: component path[{tnode}]: {component_path[tnode]}')
+
                 '''
                 # Mappers for the target node, tnode.
                 group_path[tnode] = self._construct_group_path(tpath)
@@ -200,8 +227,9 @@ class Group:
                 )
                 '''
 
-        LOGGER.debug('done with the loop')
-        LOGGER.profile(df_info(self.sg.dataframe))
+        # ----------------------------------------------------------------------
+        #LOGGER.debug('done with the loop')
+        #LOGGER.profile(df_info(self.sg.dataframe))
 
         # update the graph
         self.sg.df_add_column("group_path", apply_dict=group_path, dict_default='')
@@ -211,9 +239,8 @@ class Group:
         # TODO: Remove the below columns
         # self.sg.df_add_column("show_node", apply_dict=entry_func, dict_default='')
         # self.sg.df_add_column("vis_name", apply_dict=node_name, dict_default='')
-
-        LOGGER.debug('finished grouping')
-        LOGGER.profile(df_info(self.sg.dataframe))
+        # LOGGER.debug('finished grouping')
+        LOGGER.profile(f'Finished Grouping: {df_info(self.sg.dataframe)}')
 
     def _construct_group_path(self, path):  # noqa: C901
         """

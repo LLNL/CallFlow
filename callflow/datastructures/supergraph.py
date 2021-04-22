@@ -79,8 +79,8 @@ class SuperGraph(ht.GraphFrame):
         ## keeping indexes stored runs the risk of using stale information
         #self.indexes = []
 
-        self.callsites = []
-        self.modules = []
+        self.callsites = {}
+        self.modules = {}
         self.inv_callsites = {}
         self.inv_modules = {}
         self.callsite_module_map = {}
@@ -97,6 +97,20 @@ class SuperGraph(ht.GraphFrame):
     def __repr__(self):
         """SuperGraph string representation"""
         return self.__str__()
+
+    def get_name(self, idx, ntype):
+        if ntype == 'callsite':
+            return self.callsites.get(idx, None)
+        if ntype == 'module':
+            return self.modules.get(idx, None)
+        assert 0
+
+    def get_idx(self, name, ntype):
+        if ntype == 'callsite':
+            return self.inv_callsites.get(name, None)
+        if ntype == 'module':
+            return self.inv_modules.get(name, None)
+        assert 0
 
     # --------------------------------------------------------------------------
     def create(self, path, profile_format, module_callsite_map: dict = {},  filter_by="time (inc)", filter_perc=10.0) -> None: 
@@ -152,7 +166,7 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         self.add_callsites_and_modules_maps(module_callsite_map)
         self.add_time_proxies()
-        self.df_add_nid_column()
+        #self.df_add_nid_column()
 
         # ----------------------------------------------------------------------
         # Hatchet requires node and rank to be indexes.
@@ -177,16 +191,14 @@ class SuperGraph(ht.GraphFrame):
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
         LOGGER.debug(f'Found {len(self.roots)} graph roots; and converted to nxg')
 
-        inv_cs = {v: i for i, v in enumerate(self.callsites)}
+        _csidx = lambda _: self.get_idx(_, 'callsite')
         for node in self.graph.traverse():
             node_name = Sanitizer.from_htframe(node.frame)
-            self.hatchet_nodes[node_name] = node
-            self.paths[node_name] = [inv_cs.get(Sanitizer.from_htframe(_), -1)
-                                     for _ in node.paths()[0]]
-            self.callers[node_name] = [inv_cs.get(_.frame.get("name"), -1)
-                                       for _ in node.parents]
-            self.callees[node_name] = [inv_cs.get(_.frame.get("name"), -1)
-                                       for _ in node.children]
+            node_idx = _csidx(node_name)
+            self.hatchet_nodes[node_idx] = node
+            self.paths[node_idx] = [_csidx(Sanitizer.from_htframe(_)) for _ in node.paths()[0]]
+            self.callers[node_idx] = [_csidx(_.frame.get('name')) for _ in node.parents]
+            self.callees[node_idx] = [_csidx(_.frame.get('name')) for _ in node.children]
 
         LOGGER.info(f'Processed graph')
         LOGGER.profile('')
@@ -249,41 +261,34 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         LOGGER.info('Creating \"module-callsite\" and \"callsite-module\" maps')
 
-        self.dataframe['callsite'], self.callsites = \
-            self.dataframe['name'].factorize(sort=True)
-
-        self.callsites = np.array(self.callsites)
-        assert len(self.callsites.shape) == 1
+        # create a map of callsite-indexes
+        self.callsites = df_as_dict(self.dataframe, 'nid', 'name')
 
         # ----------------------------------------------------------------------
         # if the dataframe already has columns
         if 'module' in self.dataframe.columns:
-
             LOGGER.debug('Extracting the module map from the dataframe')
+
+            # create a map of module-indexes
             self.dataframe['module'], self.modules = \
                 self.dataframe['module'].factorize(sort=True)
 
-            self.modules = np.array([Sanitizer.sanitize(_) for _ in self.modules])
-            assert len(self.modules.shape) == 1
+            #self.modules = {i: v for i, v in enumerate(self.modules)}
+            self.modules = {i: Sanitizer.sanitize(v) for i,v in enumerate(self.modules)}
+            #for k,v in self.modules.items():
+            #    print(f'[{k}] --> ({v})')
 
-            # work on this smaller dataframe for speed
-            df = self.dataframe[['module', 'callsite']]
-            df.set_index('module', inplace=True)
-
-            self.module_callsite_map = {}
-            self.callsite_module_map = {i: [] for i in range(len(self.callsites))}
-
-            for mcode, mname in enumerate(self.modules):
-                clist = list(df.xs(mcode)['callsite'].unique())
-                self.module_callsite_map[mcode] = clist
-                for c in clist:
-                    self.callsite_module_map[c].append(mcode)
-
-            del df
+            self.callsite_module_map = df_as_dict(self.dataframe, 'nid', 'module')
+            self.module_callsite_map = {m: [] for m,c in self.modules.items()}
+            self.module_callsite_map[-1] = []
+            for ccode, mcode in self.callsite_module_map.items():
+                self.module_callsite_map[mcode].append(ccode)
 
         # ----------------------------------------------------------------------
         elif has_modules_in_map:
             LOGGER.debug('Using the supplied module map')
+            # need to change the datastructures for this case
+            assert 0
             self.modules = module_callsite_map.keys()
             self.module_callsite_map = module_callsite_map
             self.callsite_module_map = {_: [] for _ in self.callsites}
@@ -300,23 +305,20 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         else:
             LOGGER.debug('No module map found. Defaulting to \"module=callsite\"')
-            self.callsite_module_map = {i: [i] for i in range(len(self.callsites))}
-            self.module_callsite_map = {i: [i] for i in range(len(self.callsites))}
             self.modules = self.callsites
-            self.df_add_column("module", apply_func=lambda _: _, apply_on="callsite")
+            self.callsite_module_map = {c: c for c,m in self.callsites.items()}
+            self.module_callsite_map = {m: [m] for m,c in self.modules.items()}
+            self.df_add_column('module', apply_func=lambda _: _, apply_on='name')
 
         # ----------------------------------------------------------------------
-        self.callsites = np.array(self.callsites)
-        self.modules = np.array(self.modules)
-        assert len(self.modules.shape) == 1
-        self.inv_modules = {v: i for i, v in enumerate(self.modules)}
-        self.inv_callsites = {v: i for i, v in enumerate(self.callsites)}
-        assert all([isinstance(m,list) for c,m in self.callsite_module_map.items()])
+        self.inv_callsites = {v: i for i,v in self.callsites.items()}
+        self.inv_modules = {v: i for i, v in self.modules.items()}
+        assert all([isinstance(m,int) for c,m in self.callsite_module_map.items()])
         assert all([isinstance(c,list) for m,c in self.module_callsite_map.items()])
 
-        LOGGER.info(f'Created \"module-to-callsite\" = {len(self.module_callsite_map)} '
-                    f'and \"callsite-to-module\" = {len(self.callsite_module_map)} '
-                    ' maps')
+        LOGGER.info(f'Created (\"module-to-callsite\" = {len(self.module_callsite_map)}) '
+                    f'and (\"callsite-to-module\" = {len(self.callsite_module_map)}) '
+                    'maps')
 
     # --------------------------------------------------------------------------
     def add_time_proxies(self):
