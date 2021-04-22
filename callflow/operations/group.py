@@ -85,13 +85,17 @@ class Group:
         #show_node = {}
         #node_name = {}
 
+        inv_cs = {v: i for i, v in enumerate(self.sg.callsites)}
+        inv_mod = {v: i for i, v in enumerate(self.sg.modules)}
+
         # construct group and component paths
         def _construct_paths(path):
 
-            n = len(spath)
+            path = self.sg.callsites[path]
+            n = len(path)
 
             # extract the module names for all callsites in the path
-            mod_path = np.array([self.sg.callsite_module_map[_] for _ in spath])
+            mod_path = np.array([self.sg.callsite_module_map[_] for _ in path])
 
             # remove all entries where the module is repeated
             mods_diff = np.array([mod_path[i] != mod_path[i-1] for i in range(1, n)])
@@ -106,6 +110,9 @@ class Group:
 
             # the last set of the same modules will form the component path
             cpath = mod_path[-len(mods_same[-1]):]
+
+            gpath = [inv_mod[_] for _ in gpath]
+            cpath = [inv_cs[_] for _ in cpath]
             return gpath, cpath
 
         for idx, edge in enumerate(self.sg.nxg.edges()):

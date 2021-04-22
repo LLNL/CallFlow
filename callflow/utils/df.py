@@ -45,6 +45,7 @@ def df_fetch_columns(df, columns, proxy={}):
     columns = [proxy.get(_, _) for _ in columns]
     return df[columns]
 
+
 # ------------------------------------------------------------------------------
 def df_filter_by_value(df, column, value, index="name", proxy={}):
     assert isinstance(value, (int, float))

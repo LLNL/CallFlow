@@ -126,7 +126,6 @@ class SuperGraph(ht.GraphFrame):
 
         # Create a hatchet.GraphFrame using the calculated graph and graphframe.
         super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics) # Initialize here so that we dont drop index levels.
-        LOGGER.profile('')
 
         # ----------------------------------------------------------------------
         # Process the dataframe
@@ -171,21 +170,23 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         # Find the roots of the super graph. Used to get the mean inclusive runtime.
         self.roots = SuperGraph.hatchet_get_roots(gf.graph)  # Contains all unfiltered roots as well.
-        LOGGER.debug(f'Found {len(self.roots)} graph roots')
-
-        # graph-related operations
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
+        LOGGER.debug(f'Found {len(self.roots)} graph roots and Converted to nxg')
+
+        inv_cs = {v: i for i, v in enumerate(self.callsites)}
         for node in self.graph.traverse():
             node_name = Sanitizer.from_htframe(node.frame)
             self.hatchet_nodes[node_name] = node
-            self.paths[node_name] = [ Sanitizer.from_htframe(_) for _ in node.paths()[0]]
-            self.callers[node_name] = [_.frame.get("name") for _ in node.parents]
-            self.callees[node_name] = [_.frame.get("name") for _ in node.children]
+            self.paths[node_name] = [inv_cs.get(Sanitizer.from_htframe(_), -1)
+                                     for _ in node.paths()[0]]
+            self.callers[node_name] = [inv_cs.get(_.frame.get("name"), -1)
+                                       for _ in node.parents]
+            self.callees[node_name] = [inv_cs.get(_.frame.get("name"), -1)
+                                       for _ in node.children]
 
         LOGGER.info(f'Processed graph')
         LOGGER.profile('')
 
-        # ----------------------------------------------------------------------
         self.df_add_column("callees", apply_dict=self.callees, dict_default=[])
         self.df_add_column("callers", apply_dict=self.callers, dict_default=[])
         self.df_add_column("path", apply_dict=self.paths, dict_default=[])
@@ -242,7 +243,7 @@ class SuperGraph(ht.GraphFrame):
         assert not (has_modules_in_df and has_modules_in_map)
 
         # ----------------------------------------------------------------------
-        LOGGER.info('Creating \"module-callsite\" and \"callsite-module\" maps.')
+        LOGGER.info('Creating \"module-callsite\" and \"callsite-module\" maps')
 
         self.dataframe['callsite'], self.callsites = \
             self.dataframe['name'].factorize(sort=True)
@@ -295,11 +296,15 @@ class SuperGraph(ht.GraphFrame):
             LOGGER.info('No module map found. Defaulting to \"module=callsite\"')
             self.callsite_module_map = {_: _ for _ in self.callsites}
             self.module_callsite_map = {_: _ for _ in self.callsites}
+            self.modules = self.callsites
+
             self.df_add_column("module",
                                apply_func=lambda _: Sanitizer.sanitize(_),
                                apply_on="name")
 
         # ----------------------------------------------------------------------
+        self.callsites = np.array(self.callsites)
+        self.modules = np.array(self.modules)
         LOGGER.debug(f'Created \"module-to-callsite\" = {len(self.module_callsite_map)} '
                      f'and \"callsite-to-module\" = {len(self.callsite_module_map)} '
                      ' maps.')
