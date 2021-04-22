@@ -244,19 +244,17 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         LOGGER.info('Creating \"module-callsite\" and \"callsite-module\" maps.')
 
-        ccodes, self.callsites = self.dataframe['name'].factorize(sort=True)
+        self.dataframe['callsite'], self.callsites = \
+            self.dataframe['name'].factorize(sort=True)
         LOGGER.info(f'Found {len(self.callsites)} unique callsites')
-        self.dataframe['callsite'] = ccodes
-        del ccodes
 
         # ----------------------------------------------------------------------
         # if the dataframe already has columns
         if 'module' in self.dataframe.columns:
-            mcodes, self.modules = self.dataframe['module'].factorize(sort=True)
+            self.dataframe['module'], self.modules = \
+                self.dataframe['module'].factorize(sort=True)
             LOGGER.info(f'Found {len(self.modules)} unique modules')
 
-            self.dataframe['module'] = mcodes
-            del mcodes
             self.modules = [Sanitizer.sanitize(_) for _ in self.modules]
 
             # work on this smaller dataframe for speed
@@ -293,6 +291,8 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         else:
             LOGGER.info('No module map found. Defaulting to \"module=callsite\"')
+            self.callsite_module_map = {_: _ for _ in self.callsites}
+            self.module_callsite_map = {_: _ for _ in self.callsites}
             self.df_add_column("module",
                                apply_func=lambda _: Sanitizer.sanitize(_),
                                apply_on="name")
