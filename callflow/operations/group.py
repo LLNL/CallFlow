@@ -71,8 +71,8 @@ class Group:
         #self.callsite_module_map = self.sg.df_get_column("module", "name").to_dict()
         #LOGGER.profile(f'computed callsite_module_map: {len(self.callsite_module_map)}')
 
-        self.callsite_path_map = self.sg.df_get_column("path", "name").to_dict()
-        LOGGER.profile(f'computed callsite_path_map: {len(self.callsite_path_map)}')
+        #self.callsite_path_map = self.sg.df_get_column("path", "name").to_dict()
+        #LOGGER.profile(f'computed callsite_path_map: {len(self.callsite_path_map)}')
 
         LOGGER.debug(
             f"Nodes: {len(self.sg.nxg.nodes())}, Edges: {len(self.sg.nxg.edges())}"
@@ -85,34 +85,50 @@ class Group:
         #show_node = {}
         #node_name = {}
 
-        inv_cs = {v: i for i, v in enumerate(self.sg.callsites)}
-        inv_mod = {v: i for i, v in enumerate(self.sg.modules)}
-
         # construct group and component paths
         def _construct_paths(path):
 
-            path = self.sg.callsites[path]
-            n = len(path)
+            #cs_path = self.sg.callsites[path]
+            #print('path callsites =', type(cs_path), len(cs_path), cs_path)
 
-            # extract the module names for all callsites in the path
+            # extract the modules in the path
             mod_path = np.array([self.sg.callsite_module_map[_] for _ in path])
+            #print('path modules =', type(mod_path), mod_path.shape, mod_path)
 
-            # remove all entries where the module is repeated
-            mods_diff = np.array([mod_path[i] != mod_path[i-1] for i in range(1, n)])
-            mods_diff = np.where(np.array([True] + mods_diff, dtype=bool))[0]
+            # callsite-to-module map stores a vector and that is a problem
+            if any([len(_) > 1 for _ in mod_path]):
+                LOGGER.warning('need to fix this problem')
 
-            # the resulting list will be the group path
-            gpath = mod_path[mods_diff]
+            ## TODO: seeing some empty list here for "loops"
+            mod_path = np.array([_[0] if len(_) > 0 else None for _ in mod_path])
+            #print('path modules:', type(mod_path), mod_path.shape, mod_path)
 
-            # from the right, figure out how many times the same module appears
-            mods_same = np.array([mod_path[i] == mod_path[-1] for i in range(n)])
-            mods_same = np.split(mods_same, np.where(mods_diff)[0])
+            n = len(path)
+            if len(path) == 1:
+                gpath = mod_path
+                cpath = path
 
-            # the last set of the same modules will form the component path
-            cpath = mod_path[-len(mods_same[-1]):]
+            else:
+                # remove all entries where the module is repeated
+                mods_diff = np.array([mod_path[i] != mod_path[i-1] for i in range(1, n)])
+                mods_diff = np.where(np.array([True] + mods_diff, dtype=bool))[0]
 
-            gpath = [inv_mod[_] for _ in gpath]
-            cpath = [inv_cs[_] for _ in cpath]
+                # the resulting list will be the group path
+                gpath = mod_path[mods_diff]
+
+                # from the right, figure out how many times the same module appears
+                mods_diff = mod_path != mod_path[-1]
+
+                # last element in the path must be true
+                assert not mods_diff[-1]
+
+                # the last module that is different
+                mods_diff = np.where(mods_diff)[0]
+                last_diff_mod = mods_diff[-1] if len(mods_diff) > 0 else -1
+
+                # the last set of the same modules will form the component path
+                cpath = mod_path[last_diff_mod+1:]
+
             return gpath, cpath
 
         for idx, edge in enumerate(self.sg.nxg.edges()):
@@ -122,14 +138,14 @@ class Group:
             snode = edge[0]
             tnode = edge[1]
 
-            assert snode in self.callsite_path_map
-            assert tnode in self.callsite_path_map
+            assert snode in self.sg.paths
+            assert tnode in self.sg.paths
 
             # should remove this condition. this should always be true?
             # TODO: adding this here ensures that the source and target nodes are present in the map. Might have to reconsider if this needs to be here.
-            if snode in self.callsite_path_map and tnode in self.callsite_path_map:
-                spath = self.callsite_path_map[snode]
-                tpath = self.callsite_path_map[tnode]
+            if snode in self.sg.paths and tnode in self.sg.paths:
+                spath = self.sg.paths[snode]
+                tpath = self.sg.paths[tnode]
 
                 group_path[snode], component_path[snode] = _construct_paths(spath)
 
