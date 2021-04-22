@@ -36,8 +36,8 @@ class Group:
         self.sg = sg
         self.group_by = group_by
 
-        self.callsite_module_map = self.sg.df_get_column("module", "name").to_dict()
-        self.callsite_path_map = self.sg.df_get_column("path", "name").to_dict()
+        #self.callsite_module_map = self.sg.df_get_column("module", "name").to_dict()
+        #self.callsite_path_map = self.sg.df_get_column("path", "name").to_dict()
 
         LOGGER.info(f'Grouping ({self.sg}) by "{self.group_by}"')
         self.compute()
@@ -57,11 +57,11 @@ class Group:
         Columns appended: group_path, component_path, component_level, entry_functions
 
         e.g.,
-           path = [M1.a, M1.b,  M2.c, M2.d,  M3.e, M3.f, M3.g]
+           path = [M1.a, M1.b,  M2.c, M2.d,  M3.e, M3.f, M3.g / M4.g]
 
            For node "g",
                group_path = [M1, M2, M3]
-               component_path = [M3, M3.e, M3.f, M3.g]
+               component_path = [e, f, g]
                component_level = 3 (depth of call site from the module)
                entry_functions =  [M3.e], this is a list since a call site can multiple entry points.
         :return: None
