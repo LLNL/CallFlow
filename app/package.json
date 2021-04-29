@@ -1,6 +1,6 @@
 {
   "name": "CallFlow",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Visualization tool for Calling Context Trees (CCTs)",
   "author": "Suraj Kesavan, Harsh Bhatia",
   "scripts": {
