@@ -193,11 +193,10 @@ class BaseProvider:
             _["name"]: (os.path.join(_["path"], append_path) if len(append_path) > 0 else _["path"], _["profile_format"]) for _ in self.config["runs"]
         }
 
-        LOGGER.warning(f'-------------------- {len(process_datasets)} DATASETS NEED TO BE PROCESSED--------------------')
-
         for dataset in process_datasets:
             name = dataset["name"]
             _prop = run_props[name]
+            LOGGER.warning(f'-------------------- Dataset = {name} --------------------')
             LOGGER.profile(f'Starting supergraph ({name})')
 
             data_path = os.path.join(load_path, _prop[0])
@@ -290,14 +289,14 @@ class BaseProvider:
 
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
-        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
+        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} datasets detected from  in the directory/config --------------------')
         
-        LOGGER.warning(f'-------------------- FILTERING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
         if start_date and end_date:
+            LOGGER.warning(f'-------------------- FILTERING {len(self.config["runs"])} SUPERGRAPHS from start_date={start_date} to end_date={end_date} --------------------')
             self.config["runs"] = BaseProvider._filter_datasets_by_date_range(self.config, start_date, end_date)
                     
-        LOGGER.warning(f'-------------------- CHUNKING {chunk_size} SUPERGRAPHS from {chunk_idx} --------------------')
         if chunk_size != 0:
+            LOGGER.warning(f'-------------------- CHUNKING size={chunk_size} SUPERGRAPHS from index={chunk_idx} --------------------')
             self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
         
         # Do not process, if already processed. 
@@ -309,13 +308,13 @@ class BaseProvider:
         if ensemble_process:
             process_datasets, load_datasets = [], self.config["runs"]
 
-        LOGGER.warning(f'-------------------- PROCESSING {len(process_datasets)} SUPERGRAPHS --------------------\n\n')
+        LOGGER.warning(f'-------------------- PROCESSING {len(process_datasets)} SUPERGRAPHS --------------------')
         self.process_single(process_datasets)
 
-        LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------\n\n')
+        LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------')
         self.load_single(load_datasets)
 
-        LOGGER.warning('-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n')
+        LOGGER.warning('-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------')
         self.process_ensemble(save_path)
         
     def request_general(self, operation):
