@@ -175,11 +175,6 @@ class BaseProvider:
         return ret
 
     def process_single(self, process_datasets):
-        # TODO: Need to avoid auxiliary processing for single datasets.
-        indivdual_aux_for_ensemble = True
-
-        is_not_ensemble = len(self.config["runs"]) == 1
-        no_aux_process = self.config.get("no_aux_process", False)
         append_path = self.config.get("append_path", "")
         load_path = self.config["data_path"]
         module_callsite_map = self.config.get("module_callsite_map", {})
@@ -216,17 +211,15 @@ class BaseProvider:
             LOGGER.profile(f'Created supergraph {name}')
             Group(sg, group_by=group_by)
             LOGGER.profile(f'Grouped supergraph {name}')
-
+ 
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             LOGGER.profile(f'Filtered supergraph {name}')
 
-            calculate_aux = no_aux_process and (is_not_ensemble or indivdual_aux_for_ensemble)
-
-            if calculate_aux:
+            if not no_aux_process:
                 Auxiliary(sg)
 
             LOGGER.profile(f'Created Aux for {name}')
-            sg.write(os.path.join(save_path, name), write_aux=calculate_aux)
+            sg.write(os.path.join(save_path, name), write_aux=not no_aux_process)
 
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
