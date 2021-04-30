@@ -61,8 +61,8 @@ class Filter:
         self.compute()
         
         # TODO: Find a better way to do this.
-        self.sg.dataframe = self.dataframe
-        self.sg.nxg = self.nxg
+        #self.sg.dataframe = self.dataframe
+        #self.sg.nxg = self.nxg
 
     # --------------------------------------------------------------------------
     def compute(self):
@@ -86,6 +86,9 @@ class Filter:
             value = self.filter_perc
             self._filter_sg(self.filter_by, value)
 
+        else:
+            assert 0
+
     # --------------------------------------------------------------------------
     def _filter_sg(self, filter_by, filter_val):
         """
@@ -99,7 +102,7 @@ class Filter:
         # self.dataframe = self.sg.df_filter_by_value(filter_by, filter_val)
         if len(self.sg.f_callsites) > 0:
             self.dataframe = self.sg.dataframe[self.sg.dataframe["name"].isin(self.sg.f_callsites)]
-        LOGGER.info(f'Filtered dataframe comprises of: "{self.dataframe.shape}"')
+        LOGGER.info(f'Filtered dataframe comprises of: "{self.sg.dataframe.shape}"')
 
         callsites = self.sg.f_callsites
         nxg = nx.DiGraph()
@@ -109,8 +112,8 @@ class Filter:
                 # If source is present in the callsites list
                 if edge[0] in callsites and edge[1] in callsites:
                     nxg.add_edge(edge[0], edge[1])
-                else:
-                    LOGGER.debug(f"Removing the edge: {edge}")
+                #else:
+                #    LOGGER.debug(f"Removing the edge: {edge}")
 
         elif filter_by == "time":
             for callsite in callsites:
