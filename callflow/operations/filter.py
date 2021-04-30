@@ -44,6 +44,24 @@ class Filter:
             f'Filtering ({self.sg}) by "{self.filter_by}" = {self.filter_perc}%'
         )
 
+        # ----------------------------------------------------------------------
+        # Process the dataframe
+        if False: ## TODO: move this to the filter class!
+            # Find the mean runtime of all the roots.
+            self.mean_root_inctime = self.df_mean_runtime(gf.dataframe, self.roots, "time (inc)")
+
+            # Formulate the hatchet query.
+            query = [
+                ("*", {f"{self.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
+            ]
+            LOGGER.info(f"Filtering GraphFrame by Hatchet Query :{query}")
+
+            LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
+            self.f_callsites = SuperGraph.hatchet_filter_callsites_by_query(gf, query)
+            LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
+
+            LOGGER.profile(f'-----> Finished with hatchet filter: {_df_info(self.dataframe)}')
+
         # self.callsites = df_unique(sg.dataframe, "name")
         # LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")       
         
@@ -99,12 +117,13 @@ class Filter:
         :return nxg (networkx.graph):
         """
         LOGGER.debug(f'Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
+        callsites = self.sg.f_callsites
+
         # self.dataframe = self.sg.df_filter_by_value(filter_by, filter_val)
-        if len(self.sg.f_callsites) > 0:
-            self.dataframe = self.sg.dataframe[self.sg.dataframe["name"].isin(self.sg.f_callsites)]
+        if len(callsites) > 0:
+            self.dataframe = self.sg.dataframe[self.sg.dataframe["name"].isin(callsites)]
         LOGGER.info(f'Filtered dataframe comprises of: "{self.sg.dataframe.shape}"')
 
-        callsites = self.sg.f_callsites
         nxg = nx.DiGraph()
 
         if filter_by == "time (inc)":
