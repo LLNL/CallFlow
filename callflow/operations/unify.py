@@ -36,7 +36,7 @@ class Unify:
         self.eg.supergraphs = supergraphs
 
         # collect all modules and compute a superset
-        self.eg.modules = reduce(np.union1d, [v.modules for k, v in supergraphs.items()])
+        self.eg.modules_list = reduce(np.union1d, [v.modules_list for k, v in supergraphs.items()])
 
         self.compute()
         self.eg.add_time_proxies()
@@ -61,10 +61,10 @@ class Unify:
             # ------------------------------------------------------------------
             # unify the dataframe
             # remap the modules in this supergraph to the one in ensemble graph
-            _mod_map = create_reindex_map(sg.modules, self.eg.modules)
+            _mod_map = create_reindex_map(sg.modules_list, self.eg.modules_list)
 
             if 1:       # edit directly in the supergraph
-                sg.df_add_column('dataset', value=sg.name)
+                sg.df_add_column('dataset', apply_value=sg.name)
                 sg.df_add_column('module', update=True,
                                  apply_func=lambda _: _mod_map[_],
                                  apply_on='module')

@@ -78,6 +78,7 @@ class SuperGraph(ht.GraphFrame):
 
         self.callsites = {}
         self.modules = {}
+        self.modules_list = []
         self.inv_callsites = {}
         self.inv_modules = {}
         self.callsite_module_map = {}
@@ -220,8 +221,10 @@ class SuperGraph(ht.GraphFrame):
         # self.df_reset_index() # TODO: This might be cause a possible side
         # effect. Beware!!
         self.roots = self.get_roots(self.nxg)
-        self.modules = np.array(self.df_factorize_column("module", sanitize=False))
-
+        
+        self.add_callsites_and_modules_maps(module_callsite_map)
+        self.add_time_proxies()
+        
     # --------------------------------------------------------------------------
     def add_callsites_and_modules_maps(self, module_callsite_map={}):
 
@@ -244,11 +247,8 @@ class SuperGraph(ht.GraphFrame):
             self.dataframe['module'], self.modules = \
                 self.dataframe['module'].factorize(sort=True)
 
-            self.modules = {i: v for i, v in enumerate(self.modules)}
-            # self.modules = {i: Sanitizer.sanitize(v) for i, v in enumerate(self.modules)}
-            #for k,v in self.modules.items():
-            #    print(f'[{k}] --> ({v})')
-
+            self.modules = {i: Sanitizer.sanitize(v) for i, v in enumerate(self.modules)}
+        
             self.callsite_module_map = df_as_dict(self.dataframe, 'nid', 'module')
             self.module_callsite_map = {m: [] for m,c in self.modules.items()}
             self.module_callsite_map[-1] = []
@@ -284,6 +284,8 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         self.inv_callsites = {v: i for i,v in self.callsites.items()}
         self.inv_modules = {v: i for i, v in self.modules.items()}
+
+        self.modules_list = np.array(list(self.inv_modules.keys()))
         assert all([isinstance(m,int) for c,m in self.callsite_module_map.items()])
         assert all([isinstance(c,list) for m,c in self.module_callsite_map.items()])
 
