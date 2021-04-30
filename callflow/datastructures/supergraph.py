@@ -60,10 +60,10 @@ class SuperGraph(ht.GraphFrame):
 
         self.roots = [] # Roots of the call graph
         self.mean_root_inctime = 0.0 # Mean inc. metric of the root nodes
-        self.callsites = [] # all callsites in the call graph
-        self.f_callsites = [] # filtered callsites (after QueryMatcher))
 
+        self.dataframe = None
         self.nxg = None
+        self.graph = None
 
         self.name = name  # dataset name
         self.profile_format = ""
@@ -75,9 +75,6 @@ class SuperGraph(ht.GraphFrame):
         self.callees = {}
         self.paths = {}
         self.hatchet_nodes = {}
-        ## should not use this since we can re-extract this instantly
-        ## keeping indexes stored runs the risk of using stale information
-        #self.indexes = []
 
         self.callsites = {}
         self.modules = {}
@@ -86,7 +83,6 @@ class SuperGraph(ht.GraphFrame):
         self.callsite_module_map = {}
         self.module_callsite_map = {}
 
-        self.gf = None
         self.profiler = Profiler()
 
     # --------------------------------------------------------------------------
@@ -146,24 +142,6 @@ class SuperGraph(ht.GraphFrame):
         super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics) # Initialize here so that we dont drop index levels.
 
         # ----------------------------------------------------------------------
-        # Process the dataframe
-        if False: ## TODO: move this to the filter class!
-            # Find the mean runtime of all the roots.
-            self.mean_root_inctime = self.df_mean_runtime(gf.dataframe, self.roots, "time (inc)")
-
-            # Formulate the hatchet query.
-            query = [
-                ("*", {f"{self.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
-            ]
-            LOGGER.info(f"Filtering GraphFrame by Hatchet Query :{query}")
-
-            LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
-            self.f_callsites = SuperGraph.hatchet_filter_callsites_by_query(gf, query)
-            LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
-
-            LOGGER.profile(f'-----> Finished with hatchet filter: {_df_info(self.dataframe)}')
-
-        # ----------------------------------------------------------------------
         self.add_callsites_and_modules_maps(module_callsite_map)
         self.add_time_proxies()
         #self.df_add_nid_column()
@@ -221,9 +199,7 @@ class SuperGraph(ht.GraphFrame):
         :return:
         """
         LOGGER.info(f"Reading SuperGraph ({self.name}) from ({path})")
-        self.dataframe = None
-        self.nxg = None
-        self.graph = None
+        
 
         if True:
             self.dataframe = SuperGraph.read_df(path)
@@ -268,8 +244,8 @@ class SuperGraph(ht.GraphFrame):
             self.dataframe['module'], self.modules = \
                 self.dataframe['module'].factorize(sort=True)
 
-            #self.modules = {i: v for i, v in enumerate(self.modules)}
-            self.modules = {i: Sanitizer.sanitize(v) for i,v in enumerate(self.modules)}
+            self.modules = {i: v for i, v in enumerate(self.modules)}
+            # self.modules = {i: Sanitizer.sanitize(v) for i, v in enumerate(self.modules)}
             #for k,v in self.modules.items():
             #    print(f'[{k}] --> ({v})')
 
