@@ -24,6 +24,7 @@ from callflow.utils.df import df_minmax, df_count, df_unique, df_group_by, \
 from .gradients import Gradients
 from .boxplot import BoxPlot
 from .histogram import Histogram
+from .unpack_auxiliary import UnpackAuxiliary
 from callflow.datastructures.metrics import TIME_COLUMNS
 
 LOGGER = callflow.get_logger(__name__)
@@ -43,6 +44,7 @@ class Auxiliary:
         :param nbins_rank: Bin count for MPI-level histogram
         :param nbins_run: Bin count for run-level histogram
         """
+        
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
 
         self.nbins_rank = nbins_rank
@@ -51,10 +53,19 @@ class Auxiliary:
         self.proxy_columns = sg.proxy_columns
         self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
-        self.runs = sg.filter_by_datasets(selected_runs)
+        # self.runs = sg.filter_by_datasets(selected_runs)
 
-        LOGGER.warning(f"Computing auxiliary data for ({sg}) with "
-                       f"{len(self.runs)} runs: {self.runs}")
+        LOGGER.info(f"Computing auxiliary data for ({sg.name})")
+
+        if isinstance(sg, callflow.SuperGraph):
+            self.aux = UnpackAuxiliary(data=self.single_auxilairy(sg), name=sg.name).data
+        elif isinstance(sg, callflow.EnsembleGraph):
+            self.aux = UnpackAuxiliary(data=self.ensemble_auxilairy(sg), name=sg.name).data
+    
+    @property
+    def get_aux(self):
+        print(self.aux)
+        return self.aux
 
     # --------------------------------------------------------------------------
 
@@ -65,9 +76,9 @@ class Auxiliary:
 
         return {
             "summary": sg.summary(),
-            "modules": sg.modules,
-            "m2c": sg.df_mod2callsite(),
-            "c2m": sg.df_callsite2mod(),
+            "modules": sg.modules_list,
+            "m2c": sg.module_callsite_map,
+            "c2m": sg.callsite_module_map,
             "data_mod": self.new_collect_data(sg.name, "module", df_module),
             "data_cs": self.new_collect_data(sg.name, "name", df_name),
             "tag": "single",
@@ -87,8 +98,8 @@ class Auxiliary:
         result["ensemble"] = {
             "summary": sg.summary(),
             "modules": sg.modules,
-            "m2c": sg.df_mod2callsite(),
-            "c2m": sg.df_callsite2mod(),
+            "m2c": sg.module_callsite_map,
+            "c2m": sg.callsite_module_map,
             "data_mod": self.new_collect_data(sg.name, "module", edf_module),
             "data_cs": self.new_collect_data(sg.name, "name", edf_name),
             "tag": "ensemble",
@@ -111,8 +122,8 @@ class Auxiliary:
         return {
             "summary": sg.supergraphs[dataset].summary(),
             "modules": sg.supergraphs[dataset].modules,
-            "m2c": sg.supergraphs[dataset].df_mod2callsite(),
-            "c2m": sg.supergraphs[dataset].df_callsite2mod(),
+            "m2c": sg.supergraphs[dataset].module_callsite_map,
+            "c2m": sg.supergraphs[dataset].callsite_module_map,
             "data_mod": self.new_collect_data(dataset, "module", df_module, edf_module),
             "data_cs": self.new_collect_data(dataset, "name", df_name, edf_name),
             "tag": "relative",

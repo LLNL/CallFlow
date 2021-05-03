@@ -16,28 +16,52 @@ class UnpackAuxiliary:
         "aux": "aux-{}.npz",
     }
 
-    def __init__(self, path, name):
+    def __init__(self, data: dict = {}, path: str = "", name: str = ""):
+        if len(path) > 0: 
+            self.data = self.aux_from_storage(path, name)
+        if len(data) > 0:
+            self.data = self.aux_from_data(data, name)
+
+    @property
+    def get_data(self):
+        return self.data
+
+    @staticmethod
+    def aux_from_storage( path, name):
         parent_dir = os.path.dirname(path)
-        self.result = {}
+        ret = {}
 
         if name != "ensemble":
             path = os.path.join(parent_dir, name)
             # .callflow/1-core/aux-1-core.npz
             npz = UnpackAuxiliary.read_aux(path, name)
-            self.result = UnpackAuxiliary.unpack_single(npz)
+            ret = UnpackAuxiliary.unpack_single(npz)
         else:
             e_path = os.path.join(parent_dir, "ensemble")
             # .callflow/ensemble/aux-ensemble.npz
-
             e_npz = UnpackAuxiliary.read_aux(e_path, "ensemble")
 
-            self.result = {}
-            self.result["ensemble"] = UnpackAuxiliary.unpack_single(e_npz)
+            ret = {}
+            ret["ensemble"] = UnpackAuxiliary.unpack_single(e_npz)
             for run in e_npz['runs']:
                 # .callflow/ensemble/aux-1-core.npz
                 npz = UnpackAuxiliary.read_aux(e_path, run)
-                self.result[run] =  UnpackAuxiliary.unpack_ensemble(npz, e_npz)
+                ret[run] =  UnpackAuxiliary.unpack_ensemble(npz, e_npz)
 
+        return ret
+
+    @staticmethod
+    def aux_from_data(data, name):
+        ret = {}
+        if name != "ensemble":
+            ret = UnpackAuxiliary.d_unpack_single(data)
+        else:  
+            ret["ensemble"] = UnpackAuxiliary.d_unpack_single(e_npz)
+            for run in e_npz['runs']:
+                npz = UnpackAuxiliary.read_aux(e_path, run)
+                ret[run] =  UnpackAuxiliary.unpack_ensemble(npz, e_npz)
+
+        return ret
             
     # TODO: Remove this later.
     @staticmethod
@@ -62,6 +86,22 @@ class UnpackAuxiliary:
         except Exception as e:
             LOGGER.critical(f"Failed to read aux file: {e}")
         return data
+
+    @staticmethod
+    def d_unpack_single(npz):
+        c2m_dict = npz["c2m"]
+        m2c_dict = npz["m2c"]
+        modules = npz["modules"]
+        summary = npz["summary"]
+
+        return {
+            "summary": summary,
+            "modules": modules,
+            "data_cs": UnpackAuxiliary.d_unpack_data(npz["data_cs"]),
+            "data_mod": UnpackAuxiliary.d_unpack_data(npz["data_mod"]),
+            "c2m": { c: modules[c2m_dict[c]]  for c in c2m_dict },
+            "m2c": { modules[m]: m2c_dict[m].tolist() for m in m2c_dict}
+        }
 
     @staticmethod
     def unpack_single(npz):
@@ -95,9 +135,28 @@ class UnpackAuxiliary:
             "m2c": { modules[m]: m2c_dict[m].tolist() for m in m2c_dict}
         }
 
+    @staticmethod
     def unpack_data(data, e_data=None):
         _d = data.item()
         e_d = e_data.item() if e_data is not None else {}
+
+        ret = {}
+        _e_d_cs = None
+        for idx, cs in enumerate(_d):
+            _e_d_cs = e_d[cs] if e_d else None
+            ret[cs] = {
+                "name": _d[cs]['name'],
+                "id": idx,
+                "component_path": _d[cs]["component_path"].tolist(),
+                "time (inc)": UnpackAuxiliary.unpack_metric("time (inc)",_d[cs], _e_d_cs),
+                "time": UnpackAuxiliary.unpack_metric( "time", _d[cs], _e_d_cs),
+            }
+        return ret
+
+    @staticmethod
+    def d_unpack_data(data, e_data=None):
+        _d = data
+        e_d = e_data if e_data is not None else {}
 
         ret = {}
         _e_d_cs = None

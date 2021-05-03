@@ -217,7 +217,7 @@ class SuperGraph(ht.GraphFrame):
             self.aux_data = UnpackAuxiliary(path, self.name).result
         # ----------------------------------------------------------------------
         self.add_time_proxies()
-        # self.df_reset_index() # TODO: This might be cause a possible side
+        self.df_reset_index() # TODO: This might be cause a possible side
         # effect. Beware!!
         self.roots = self.get_roots(self.nxg)
         

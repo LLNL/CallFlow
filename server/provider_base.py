@@ -39,7 +39,25 @@ class BaseProvider:
         assert config is not None
         assert isinstance(config, dict)
         self.config = config
-        self.ndatasets = len(self.config["runs"])
+        start_date = self.config.get("start_date", "")
+        end_date = self.config.get("end_date", "")
+        chunk_idx = int(self.config.get("chunk_idx", 0))
+        chunk_size = int(self.config.get("chunk_size", -1))
+
+        # ----------------------------------------------------------------------
+        # Stage-1: Each dataset is processed individually into a SuperGraph.
+        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} datasets detected from  in the CallFlow.config --------------------')
+        self.datasets = self.config["runs"]
+
+        if start_date and end_date:
+            LOGGER.warning(f'-------------------- FILTERING {len(self.config["runs"])} SUPERGRAPHS from start_date={start_date} to end_date={end_date} --------------------')
+            self.datasets = BaseProvider._filter_datasets_by_date_range(self.config, start_date, end_date)
+                    
+        if chunk_size != 0:
+            LOGGER.warning(f'-------------------- CHUNKING size={chunk_size} SUPERGRAPHS from index={chunk_idx} --------------------')
+            self.datasets = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
+        
+        self.ndatasets = len(self.datasets)
         assert self.ndatasets > 0
         self.supergraphs = {}
 
@@ -72,25 +90,25 @@ class BaseProvider:
         load_path = self.config.get("save_path", "")
         read_param = self.config.get("read_parameter", "")
         save_path = self.config.get("save_path", "")
-        chunk_idx = int(self.config.get("chunk_idx", 0))
-        chunk_size = int(self.config.get("chunk_size", -1))
+        # chunk_idx = int(self.config.get("chunk_idx", 0))
+        # chunk_size = int(self.config.get("chunk_size", -1))
         no_aux_process = self.config.get("no_aux_process", False)
 
         is_not_ensemble = self.ndatasets == 1
 
-        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
+        # LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
+
+        # with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+        #     processed_folders = pool.map(partial(self._mp_saved_data, save_path=save_path), self.config["runs"])
+        # datasets = [d for d in processed_folders if d is not None] # Filter the none's 
+
+        # LOGGER.warning(f'-------------------- CHUNKING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
+
+        # if chunk_size != 0:
+        #     datasets = datasets[chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
 
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            processed_folders = pool.map(partial(self._mp_saved_data, save_path=save_path), self.config["runs"])
-        self.config["runs"] = [d for d in processed_folders if d is not None] # Filter the none's 
-
-        LOGGER.warning(f'-------------------- CHUNKING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
-
-        if chunk_size != 0:
-            self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
-        
-        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            supergraphs = pool.map(partial(self.mp_dataset_load, save_path=load_path, read_aux=no_aux_process), self.config["runs"])
+            supergraphs = pool.map(partial(self.mp_dataset_load, save_path=load_path, read_aux=not(no_aux_process)), self.datasets)
         self.supergraphs = { sg.name: sg for sg in supergraphs }
 
         # ensemble case
@@ -102,12 +120,16 @@ class BaseProvider:
                     read_aux=not(no_aux_process))
             self.supergraphs[name] = sg
 
-            # TODO: This is repopulation of data. Avoid!
-            for run in self.config["runs"]:
-                name = run["name"]
-                LOGGER.warning(f"Duplicating aux data for run {name}!")
-                self.supergraphs[name].modules = self.supergraphs["ensemble"].modules
-                self.supergraphs[name].aux_data = self.supergraphs["ensemble"].aux_data[name]
+            # # TODO: This is repopulation of data. Avoid!
+            # for run in self.datasets:
+            #     name = run["name"]
+            #     LOGGER.warning(f"Duplicating aux data for run {name}!")
+            #     self.supergraphs[name].modules = self.supergraphs["ensemble"].modules
+            #     self.supergraphs[name].aux_data =
+            #     self.supergraphs["ensemble"].aux_data[name]
+
+        self.aux = { sg.name : Auxiliary(sg, selected_runs=self.supergraphs.keys()) for sg in supergraphs }
+
                    
     def mp_dataset_load(self, dataset, save_path, read_aux):
         """
@@ -275,33 +297,17 @@ class BaseProvider:
         2. EnsembleGraph is then constructed from the processed SuperGraphs.
         """
         profile = Profiler()
-        start_date = self.config.get("start_date", "")
-        end_date = self.config.get("end_date", "")
         save_path = self.config.get("save_path", "")
-        chunk_idx = int(self.config.get("chunk_idx", 0))
-        chunk_size = int(self.config.get("chunk_size", -1))
         ensemble_process = self.config.get("ensemble_process", False);
 
-        # ----------------------------------------------------------------------
-        # Stage-1: Each dataset is processed individually into a SuperGraph.
-        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} datasets detected from  in the directory/config --------------------')
-        
-        if start_date and end_date:
-            LOGGER.warning(f'-------------------- FILTERING {len(self.config["runs"])} SUPERGRAPHS from start_date={start_date} to end_date={end_date} --------------------')
-            self.config["runs"] = BaseProvider._filter_datasets_by_date_range(self.config, start_date, end_date)
-                    
-        if chunk_size != 0:
-            LOGGER.warning(f'-------------------- CHUNKING size={chunk_size} SUPERGRAPHS from index={chunk_idx} --------------------')
-            self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
-        
         # Do not process, if already processed. 
         if(reset):
-            process_datasets, load_datasets = self.config["runs"], []
+            process_datasets, load_datasets = self.datasets, []
         else:
             process_datasets, load_datasets = self.split_process_load_datasets()
 
         if ensemble_process:
-            process_datasets, load_datasets = [], self.config["runs"]
+            process_datasets, load_datasets = [], self.datasets
 
         LOGGER.warning(f'-------------------- PROCESSING {len(process_datasets)} SUPERGRAPHS --------------------')
         self.process_single(process_datasets)
@@ -327,18 +333,8 @@ class BaseProvider:
             return self.config
 
         elif operation_name == "aux_data":
-            if operation["reProcess"]:
-                Auxiliary(self.supergraphs["ensemble"], selected_runs=operation["datasets"], rankBinCount=int(operation["rankBinCount"]), runBinCount=int(operation["runBinCount"]))
-
-            if len(operation["datasets"]) > 1:
-                operation["datasets"].append("ensemble")
-                ret = {dataset: self.supergraphs["ensemble"].aux_data[dataset] for dataset in operation["datasets"]}
-            else:
-                dataset = operation["datasets"][0]
-                ret = {dataset: self.supergraphs[dataset].aux_data}
-
-            return ret
-
+            return { dataset: self.aux[dataset].aux for dataset in operation["datasets"]}
+           
     def request_single(self, operation):
         """
         Handles requests connected to Single CallFlow.

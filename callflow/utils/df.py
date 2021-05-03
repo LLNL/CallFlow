@@ -101,22 +101,29 @@ def df_group_by(df, columns, proxy={}):
         columns = proxy.get(columns, columns)
         return df.groupby([columns])
 
-def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, group_by, proxy={}):
-    _df = df.set_index([frst_group_attr])
+# TODO: Generalize to apply_func. 
+# Performs a 2-level grouping based on frst_group_attr and scnd_group_attr. 
+# Example use case:
+#   Group the dataframe by "module" and "name".
+# Returns a dict 
+def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, group_by, apply_func, proxy={}):
     _cols = [proxy.get(_, _) for _ in cols] + group_by
 
     # If there is only one attribute to group by, we use the 1st index.
     if len(group_by) == 1:
         group_by = group_by[0]
 
+    # Find the grouping
     if scnd_group_attr is not None:
-        _indexes = [frst_group_attr, scnd_group_attr]
+        _groups = [frst_group_attr, scnd_group_attr]
     else:
-        _indexes = [frst_group_attr]
+        _groups = [frst_group_attr]
 
-    _df = df.set_index(_indexes)
+    # Set the df.index as the _groups
+    _df = df.set_index(_groups)
     _levels = _df.index.unique().tolist()
         
+    # If "rank" is present in the columns, we will group by "rank".
     if "rank" in _df.columns and len(df["rank"].unique().tolist()) > 1:
         if scnd_group_attr is not None:
             if len(group_by) == 0:
