@@ -44,7 +44,7 @@ class Auxiliary:
         :param nbins_rank: Bin count for MPI-level histogram
         :param nbins_run: Bin count for run-level histogram
         """
-        
+        LOGGER.info(f"Computing auxiliary data for {sg}")
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
 
         self.nbins_rank = nbins_rank
@@ -53,10 +53,6 @@ class Auxiliary:
         self.proxy_columns = sg.proxy_columns
         self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
-        # self.runs = sg.filter_by_datasets(selected_runs)
-
-        LOGGER.info(f"Computing auxiliary data for ({sg.name})")
-
         if isinstance(sg, callflow.SuperGraph):
             self.aux = UnpackAuxiliary(data=self.single_auxilairy(sg), name=sg.name).data
         elif isinstance(sg, callflow.EnsembleGraph):
@@ -64,7 +60,6 @@ class Auxiliary:
     
     @property
     def get_aux(self):
-        print(self.aux)
         return self.aux
 
     # --------------------------------------------------------------------------

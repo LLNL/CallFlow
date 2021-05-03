@@ -90,26 +90,15 @@ class BaseProvider:
         load_path = self.config.get("save_path", "")
         read_param = self.config.get("read_parameter", "")
         save_path = self.config.get("save_path", "")
-        # chunk_idx = int(self.config.get("chunk_idx", 0))
-        # chunk_size = int(self.config.get("chunk_size", -1))
         no_aux_process = self.config.get("no_aux_process", False)
 
         is_not_ensemble = self.ndatasets == 1
 
-        # LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
-
-        # with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-        #     processed_folders = pool.map(partial(self._mp_saved_data, save_path=save_path), self.config["runs"])
-        # datasets = [d for d in processed_folders if d is not None] # Filter the none's 
-
-        # LOGGER.warning(f'-------------------- CHUNKING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
-
-        # if chunk_size != 0:
-        #     datasets = datasets[chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
-
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
             supergraphs = pool.map(partial(self.mp_dataset_load, save_path=load_path, read_aux=not(no_aux_process)), self.datasets)
         self.supergraphs = { sg.name: sg for sg in supergraphs }
+
+        selected_runs = self.supergraphs.keys()
 
         # ensemble case
         if not is_not_ensemble:
@@ -120,16 +109,7 @@ class BaseProvider:
                     read_aux=not(no_aux_process))
             self.supergraphs[name] = sg
 
-            # # TODO: This is repopulation of data. Avoid!
-            # for run in self.datasets:
-            #     name = run["name"]
-            #     LOGGER.warning(f"Duplicating aux data for run {name}!")
-            #     self.supergraphs[name].modules = self.supergraphs["ensemble"].modules
-            #     self.supergraphs[name].aux_data =
-            #     self.supergraphs["ensemble"].aux_data[name]
-
-        self.aux = { sg.name : Auxiliary(sg, selected_runs=self.supergraphs.keys()) for sg in supergraphs }
-
+        self.aux = { sg_name : Auxiliary(self.supergraphs[sg_name], selected_runs=selected_runs) for sg_name in self.supergraphs.keys() }
                    
     def mp_dataset_load(self, dataset, save_path, read_aux):
         """
