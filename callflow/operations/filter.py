@@ -42,12 +42,7 @@ class Filter:
         self.filter_perc = filter_perc
         LOGGER.info(
             f'Filtering ({self.sg}) by "{self.filter_by}" = {self.filter_perc}%'
-        )
-
-        self.f_callsites = list(self.sg.callsites.values())
-
-        if False: ## TODO: move this to the filter class!
-            # Find the mean runtime of all the roots.
+        )e
             self.mean_root_inctime = self.df_mean_runtime(gf.dataframe, self.roots, "time (inc)")
 
             # Formulate the hatchet query.

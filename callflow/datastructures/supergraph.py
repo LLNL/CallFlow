@@ -253,7 +253,7 @@ class SuperGraph(ht.GraphFrame):
             self.module_callsite_map = {m: [] for m,c in self.modules.items()}
             self.module_callsite_map[-1] = []
             for ccode, mcode in self.callsite_module_map.items():
-                self.module_callsite_map[mcode].append(ccode)
+                self.module_callsite_map[mcodse].append(ccode)
 
         # ----------------------------------------------------------------------
         elif has_modules_in_map:
