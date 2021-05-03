@@ -31,7 +31,6 @@ indivdual_aux_for_ensemble = False
 # ------------------------------------------------------------------------------
 class BaseProvider:
 
-    # TODO: CAL-38: add additional module map argument
     def __init__(self, config: dict = None):
         """
         Entry interface to access CallFlow's functionalities.
@@ -98,7 +97,8 @@ class BaseProvider:
             supergraphs = pool.map(partial(self.mp_dataset_load, save_path=load_path, read_aux=not(no_aux_process)), self.datasets)
         self.supergraphs = { sg.name: sg for sg in supergraphs }
 
-        selected_runs = self.supergraphs.keys()
+        selected_runs = list(self.supergraphs.keys())
+        all_runs = selected_runs + ['ensemble']
 
         # ensemble case
         if not is_not_ensemble:
@@ -109,8 +109,14 @@ class BaseProvider:
                     read_aux=not(no_aux_process))
             self.supergraphs[name] = sg
 
-        self.aux = { sg_name : Auxiliary(self.supergraphs[sg_name], selected_runs=selected_runs) for sg_name in self.supergraphs.keys() }
+        # with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+        #     aux = pool.map(partial(self.mp_aux_computation, supergraphs=self.supergraphs, selected_runs=selected_runs), all_runs)
+        # self.aux = { sg.name: _aux for _aux in aux}
+        self.aux = { sg_name : Auxiliary(self.supergraphs[sg_name], selected_runs=selected_runs) for sg_name in selected_runs }
                    
+    def mp_aux_computation(self, dataset, supergraphs, selected_runs):
+        return Auxiliary(supergraphs[dataset], selected_runs=selected_runs)
+
     def mp_dataset_load(self, dataset, save_path, read_aux):
         """
         Parallel function to load single supergraph loading.
