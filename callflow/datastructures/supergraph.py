@@ -221,8 +221,8 @@ class SuperGraph(ht.GraphFrame):
         # effect. Beware!!
         self.roots = self.get_roots(self.nxg)
         
-        # self.add_callsites_and_modules_maps()
-        # self.add_time_proxies()
+        self.add_callsites_and_modules_maps()
+        self.add_time_proxies()
         
     # --------------------------------------------------------------------------
     def add_callsites_and_modules_maps(self, module_callsite_map={}):
@@ -239,7 +239,7 @@ class SuperGraph(ht.GraphFrame):
 
         # ----------------------------------------------------------------------
         # if the dataframe already has columns
-        if 'module' in self.dataframe.columns:
+        if 'module' in self.dataframe.columns and self.dataframe['module'].dtype != "int64":
             LOGGER.debug('Extracting the module map from the dataframe')
 
             # create a map of module-indexes

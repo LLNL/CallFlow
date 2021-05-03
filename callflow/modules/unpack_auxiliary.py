@@ -100,7 +100,7 @@ class UnpackAuxiliary:
             "data_cs": UnpackAuxiliary.d_unpack_data(npz["data_cs"]),
             "data_mod": UnpackAuxiliary.d_unpack_data(npz["data_mod"]),
             "c2m": { c: modules[c2m_dict[c]]  for c in c2m_dict },
-            "m2c": { modules[m]: m2c_dict[m].tolist() for m in m2c_dict}
+            "m2c": { modules[m]: m2c_dict[m] for m in m2c_dict}
         }
 
     @staticmethod
