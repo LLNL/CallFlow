@@ -56,7 +56,6 @@ class Auxiliary:
         LOGGER.warning(f"Computing auxiliary data for ({sg}) with "
                        f"{len(self.runs)} runs: {self.runs}")
 
-        sg.aux_data = self.ensemble_auxiliary(sg) if isinstance(sg, callflow.EnsembleGraph) else self.single_auxiliary(sg)
     # --------------------------------------------------------------------------
 
     def single_auxilairy(self, sg):
@@ -109,7 +108,6 @@ class Auxiliary:
         df_module = df_bi_level_group(sg.supergraphs[dataset].dataframe, "module", "name", cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())        
         df_name = df_bi_level_group(sg.supergraphs[dataset].dataframe, "name", None, cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())
 
-        # TODO: this assumes that the original dataframe was modified
         return {
             "summary": sg.supergraphs[dataset].summary(),
             "modules": sg.supergraphs[dataset].modules,

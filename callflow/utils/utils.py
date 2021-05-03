@@ -43,7 +43,7 @@ def create_reindex_map(lista, listb):
     for i, m in enumerate(lista):
         _ni = np.where(m == listb)[0]
         assert _ni.shape[0] == 1
-        _map[i] = _ni[0]
+        _map[m] = _ni[0]
     return _map
 
 
