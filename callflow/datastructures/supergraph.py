@@ -43,9 +43,8 @@ class SuperGraph(ht.GraphFrame):
     SuperGraph data structure
     """
     _FILENAMES = {
-        "ht": "hatchet_tree.txt",
-        "df": "df.pkl",
-        "nxg": "nxg.json",
+        "df": "cf-df.pkl",
+        "nxg": "cf-nxg.json",
         "env_params": "env_params.txt",
         "aux": "aux-{}.npz",
     }
@@ -222,8 +221,8 @@ class SuperGraph(ht.GraphFrame):
         # effect. Beware!!
         self.roots = self.get_roots(self.nxg)
         
-        self.add_callsites_and_modules_maps(module_callsite_map)
-        self.add_time_proxies()
+        # self.add_callsites_and_modules_maps()
+        # self.add_time_proxies()
         
     # --------------------------------------------------------------------------
     def add_callsites_and_modules_maps(self, module_callsite_map={}):
@@ -253,7 +252,7 @@ class SuperGraph(ht.GraphFrame):
             self.module_callsite_map = {m: [] for m,c in self.modules.items()}
             self.module_callsite_map[-1] = []
             for ccode, mcode in self.callsite_module_map.items():
-                self.module_callsite_map[mcodse].append(ccode)
+                self.module_callsite_map[mcode].append(ccode)
 
         # ----------------------------------------------------------------------
         elif has_modules_in_map:
@@ -808,7 +807,7 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.debug(f"Writing Hatchet GraphFrame to ({path})")
         fdf = os.path.join(path, 'ht-df.pkl')
         fdg = os.path.join(path, 'ht-graph.pkl')
-        fdm = os.path.join(path, 'ht--metrics.npz')
+        fdm = os.path.join(path, 'ht-metrics.npz')
 
         gf.dataframe.to_pickle(fdf)
         with open(fdg, "wb") as fptr:

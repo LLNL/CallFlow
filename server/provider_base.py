@@ -49,8 +49,8 @@ class BaseProvider:
         Outputs the directories that have the processed result. Others will be omitted during the loading. 
         """
         _FILENAMES = {
-            "df": "df.pkl",
-            "nxg": "nxg.json",
+            "df": "cf-df.pkl",
+            "nxg": "cf-nxg.json",
             "aux": "aux-{}.npz",
         }
         _name = run_prop["name"]
@@ -74,6 +74,7 @@ class BaseProvider:
         save_path = self.config.get("save_path", "")
         chunk_idx = int(self.config.get("chunk_idx", 0))
         chunk_size = int(self.config.get("chunk_size", -1))
+        no_aux_process = self.config.get("no_aux_process", False)
 
         is_not_ensemble = self.ndatasets == 1
 
@@ -87,9 +88,9 @@ class BaseProvider:
 
         if chunk_size != 0:
             self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
-
+        
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            supergraphs = pool.map(partial(self.mp_dataset_load, save_path=load_path), self.config["runs"])
+            supergraphs = pool.map(partial(self.mp_dataset_load, save_path=load_path, read_aux=no_aux_process), self.config["runs"])
         self.supergraphs = { sg.name: sg for sg in supergraphs }
 
         # ensemble case
@@ -98,7 +99,7 @@ class BaseProvider:
             sg = EnsembleGraph(name)
             sg.load(os.path.join(load_path, name),
                     read_parameter=read_param,
-                    read_aux=False)
+                    read_aux=not(no_aux_process))
             self.supergraphs[name] = sg
 
             # TODO: This is repopulation of data. Avoid!
@@ -108,13 +109,12 @@ class BaseProvider:
                 self.supergraphs[name].modules = self.supergraphs["ensemble"].modules
                 self.supergraphs[name].aux_data = self.supergraphs["ensemble"].aux_data[name]
                    
-    def mp_dataset_load(self, dataset, save_path):
+    def mp_dataset_load(self, dataset, save_path, read_aux):
         """
         Parallel function to load single supergraph loading.
         """
         name = dataset["name"]
         read_param = self.config["read_parameter"]
-        read_aux = False
 
         sg = SuperGraph(name)
         sg.load(os.path.join(save_path, name),

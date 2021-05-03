@@ -42,7 +42,11 @@ class Filter:
         self.filter_perc = filter_perc
         LOGGER.info(
             f'Filtering ({self.sg}) by "{self.filter_by}" = {self.filter_perc}%'
-        )e
+        )
+        
+        self.callsites = self.sg.callsites
+
+        if 0:
             self.mean_root_inctime = self.df_mean_runtime(gf.dataframe, self.roots, "time (inc)")
 
             # Formulate the hatchet query.
@@ -52,8 +56,8 @@ class Filter:
             LOGGER.info(f"Filtering GraphFrame by Hatchet Query :{query}")
 
             LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
-            self.f_callsites = SuperGraph.hatchet_filter_callsites_by_query(gf, query)
-            LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
+            self.callsites = SuperGraph.hatchet_filter_callsites_by_query(gf, query)
+            LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.callsites)}")
 
             LOGGER.profile(f'-----> Finished with hatchet filter: {_df_info(self.dataframe)}')
 
@@ -86,11 +90,9 @@ class Filter:
         :return nxg (networkx.graph):
         """
         LOGGER.debug(f'Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
-        callsites = self.f_callsites 
 
-        # self.dataframe = self.sg.df_filter_by_value(filter_by, filter_val)
-        if len(callsites) > 0:
-            self.dataframe = self.sg.dataframe[self.sg.dataframe["name"].isin(callsites)]
+        if len(self.callsites) > 0:
+            self.dataframe = self.sg.dataframe[self.sg.dataframe["name"].isin(self.callsites)]
         LOGGER.info(f'Filtered dataframe comprises of: "{self.sg.dataframe.shape}"')
 
         nxg = nx.DiGraph()
@@ -98,13 +100,13 @@ class Filter:
         if filter_by == "time (inc)":
             for edge in self.sg.nxg.edges():
                 # If source is present in the callsites list
-                if edge[0] in callsites and edge[1] in callsites:
+                if edge[0] in self.callsites and edge[1] in self.callsites:
                     nxg.add_edge(edge[0], edge[1])
                 #else:
                 #    LOGGER.debug(f"Removing the edge: {edge}")
 
         elif filter_by == "time":
-            for callsite in callsites:
+            for callsite in self.callsites:
                 path = self.sg.df_lookup_with_column("name", callsite)["path"].tolist()[
                     0
                 ]
