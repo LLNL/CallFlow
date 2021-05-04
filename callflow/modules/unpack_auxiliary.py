@@ -16,18 +16,20 @@ class UnpackAuxiliary:
         "aux": "aux-{}.npz",
     }
 
-    def __init__(self, data: dict = {}, path: str = "", name: str = ""):
+    def __init__(self, data: dict = {}, e_data: dict = {}, path: str = "", name: str = ""):
         if len(path) > 0: 
             self.data = self.aux_from_storage(path, name)
-        if len(data) > 0:
+        if len(data) > 0 and name != "ensemble":
             self.data = self.aux_from_data(data, name)
+        elif len(data) > 0 and name == "ensemble":
+            self.data = self.aux_from_data(data, e_data, name)
 
     @property
     def get_data(self):
         return self.data
 
     @staticmethod
-    def aux_from_storage( path, name):
+    def aux_from_storage(path, name):
         parent_dir = os.path.dirname(path)
         ret = {}
 
@@ -56,10 +58,10 @@ class UnpackAuxiliary:
         if name != "ensemble":
             ret = UnpackAuxiliary.d_unpack_single(data)
         else:  
-            ret["ensemble"] = UnpackAuxiliary.d_unpack_single(e_npz)
-            for run in e_npz['runs']:
+            ret["ensemble"] = UnpackAuxiliary.d_unpack_single(e_data)
+            for run in e_data['runs']:
                 npz = UnpackAuxiliary.read_aux(e_path, run)
-                ret[run] =  UnpackAuxiliary.unpack_ensemble(npz, e_npz)
+                ret[run] =  UnpackAuxiliary.unpack_ensemble(data, e_data)
 
         return ret
             

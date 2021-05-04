@@ -14,12 +14,9 @@ import pandas as pd
 from scipy.stats import kurtosis, skew
 import multiprocessing
 from functools import partial
-from pyinstrument import Profiler
 
 import callflow
-from callflow.utils.utils import print_dict_recursive
-from callflow.utils.df import df_minmax, df_count, df_unique, df_group_by, \
-    df_fetch_columns, df_lookup_by_column, df_bi_level_group
+from callflow.utils.df import df_unique, df_bi_level_group
 
 from .gradients import Gradients
 from .boxplot import BoxPlot
@@ -52,6 +49,8 @@ class Auxiliary:
 
         self.proxy_columns = sg.proxy_columns
         self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
+
+        self.name = sg.name
 
         if isinstance(sg, callflow.SuperGraph) and not isinstance(sg, callflow.EnsembleGraph):
             self.aux = UnpackAuxiliary(data=self.single_auxiliary(sg), name=sg.name).data
@@ -198,9 +197,9 @@ class Auxiliary:
         _id_col = 'nid' if grp_type == "name" else 'module'
         result = {"name":               name,
                   "id":                 f"{grp_type}-{name}",
-                  #"dataset":            df_unique(df, "dataset"),
+                  "dataset":            df_unique(df, "dataset"),
                   "component_path":     df_unique(df, "component_path"),
-                  #"component_level":    df_unique(df, "component_level")
+                #   "component_level":    df_unique(df, "component_level")
                   }
 
         #if grp_type == "module":

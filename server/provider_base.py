@@ -112,8 +112,9 @@ class BaseProvider:
             self.supergraphs[name] = eg
 
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            aux = pool.map(partial(self.mp_aux_computation, supergraphs=self.supergraphs, selected_runs=selected_runs), selected_runs)
-        self.aux = { sg.name: _aux for _aux in aux}
+            aux = pool.map(partial(self.mp_aux_computation, supergraphs=self.supergraphs, selected_runs=selected_runs), all_runs)
+        
+        self.aux = { _aux.name: _aux for _aux in aux}
         # self.aux = { sg_name : Auxiliary(self.supergraphs[sg_name], selected_runs=selected_runs) for sg_name in selected_runs }
                    
     def mp_aux_computation(self, dataset, supergraphs, selected_runs):
