@@ -111,11 +111,12 @@ class BaseProvider:
             
             self.supergraphs[name] = eg
 
-        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            aux = pool.map(partial(self.mp_aux_computation, supergraphs=self.supergraphs, selected_runs=selected_runs), all_runs)
+        # with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+        #     aux = pool.map(partial(self.mp_aux_computation, supergraphs=self.supergraphs, selected_runs=selected_runs), selected_runs)
         
-        self.aux = { _aux.name: _aux for _aux in aux}
-        # self.aux = { sg_name : Auxiliary(self.supergraphs[sg_name], selected_runs=selected_runs) for sg_name in selected_runs }
+        # self.aux = { _aux.name: _aux for _aux in aux}
+        self.aux = Auxiliary(self.supergraphs["ensemble"], selected_runs=selected_runs) 
+        print(self.aux.aux.keys())
                    
     def mp_aux_computation(self, dataset, supergraphs, selected_runs):
         return Auxiliary(supergraphs[dataset], selected_runs=selected_runs)
@@ -322,7 +323,7 @@ class BaseProvider:
             return self.config
 
         elif operation_name == "aux_data":
-            return { dataset: self.aux[dataset].aux for dataset in operation["datasets"]}
+            return { dataset: self.aux.aux[dataset] for dataset in operation["datasets"] + ['ensemble']}
            
     def request_single(self, operation):
         """

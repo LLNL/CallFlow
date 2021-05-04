@@ -123,8 +123,7 @@ class Auxiliary:
             "c2m": sg.supergraphs[dataset].callsite_module_map,
             "data_mod": self.new_collect_data(dataset, "module", df_module, edf_module),
             "data_cs": self.new_collect_data(dataset, "name", df_name, edf_name),
-            "tag": "relative",
-            "run": sg.supergraphs[dataset].name
+            "tag": sg.supergraphs[dataset].name,
         }
 
     def new_collect_data(self, name, grp_column, grp_df, grp_edf=None):

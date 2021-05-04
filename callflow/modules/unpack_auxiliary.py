@@ -19,11 +19,9 @@ class UnpackAuxiliary:
     def __init__(self, data: dict = {}, e_data: dict = {}, path: str = "", name: str = ""):
         if len(path) > 0: 
             self.data = self.aux_from_storage(path, name)
-        if len(data) > 0 and name != "ensemble":
+        if len(data) > 0:
             self.data = self.aux_from_data(data, name)
-        elif len(data) > 0 and name == "ensemble":
-            self.data = self.aux_from_data(data, e_data, name)
-
+ 
     @property
     def get_data(self):
         return self.data
@@ -53,15 +51,14 @@ class UnpackAuxiliary:
         return ret
 
     @staticmethod
-    def aux_from_data(data, name):
+    def aux_from_data(data, name: str=""):
         ret = {}
         if name != "ensemble":
             ret = UnpackAuxiliary.d_unpack_single(data)
         else:  
-            ret["ensemble"] = UnpackAuxiliary.d_unpack_single(e_data)
-            for run in e_data['runs']:
-                npz = UnpackAuxiliary.read_aux(e_path, run)
-                ret[run] =  UnpackAuxiliary.unpack_ensemble(data, e_data)
+            ret["ensemble"] = UnpackAuxiliary.d_unpack_single(data["ensemble"])
+            for run in data["ensemble"]['runs']:
+                ret[run] =  UnpackAuxiliary.d_unpack_ensemble(data[run], data["ensemble"])
 
         return ret
             
@@ -119,6 +116,22 @@ class UnpackAuxiliary:
             "data_mod": UnpackAuxiliary.unpack_data(npz["data_mod"]),
             "c2m": { c: modules[c2m_dict[c]]  for c in c2m_dict },
             "m2c": { modules[m]: m2c_dict[m].tolist() for m in m2c_dict}
+        }
+
+    @staticmethod
+    def d_unpack_ensemble(npz, e_npz):
+        c2m_dict = npz["c2m"]
+        m2c_dict = npz["m2c"]
+        modules = e_npz["modules"]
+        summary = npz["summary"]
+
+        return {
+            "summary": summary,
+            "modules": modules,
+            "data_cs": UnpackAuxiliary.d_unpack_data(npz["data_cs"], e_npz["data_cs"]),
+            "data_mod": UnpackAuxiliary.d_unpack_data(npz["data_mod"], e_npz["data_mod"]),
+            "c2m": { c: modules[c2m_dict[c]]  for c in c2m_dict },
+            # "m2c": { modules[m]: m2c_dict[m] for m in m2c_dict}
         }
 
     @staticmethod
