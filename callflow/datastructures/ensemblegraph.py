@@ -41,7 +41,7 @@ class EnsembleGraph(SuperGraph):
         :return:
         """
         return f"EnsembleGraph<{self.name} of {len(self.supergraphs)} supergraphs; " \
-               f"df = {self.dataframe.shape}>"
+               f"df = {self.dataframe.shape}, cols = {list(self.dataframe.columns)}>"
 
     def __repr__(self):
         """

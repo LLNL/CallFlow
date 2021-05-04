@@ -103,16 +103,18 @@ class BaseProvider:
         # ensemble case
         if not is_not_ensemble:
             name = "ensemble"
-            sg = EnsembleGraph(name)
-            sg.load(os.path.join(load_path, name),
+            eg = EnsembleGraph(name)
+            eg.load(os.path.join(load_path, name),
                     read_parameter=read_param,
                     read_aux=not(no_aux_process))
-            self.supergraphs[name] = sg
+            eg.supergraphs = self.supergraphs
+            
+            self.supergraphs[name] = eg
 
-        # with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-        #     aux = pool.map(partial(self.mp_aux_computation, supergraphs=self.supergraphs, selected_runs=selected_runs), all_runs)
-        # self.aux = { sg.name: _aux for _aux in aux}
-        self.aux = { sg_name : Auxiliary(self.supergraphs[sg_name], selected_runs=selected_runs) for sg_name in selected_runs }
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            aux = pool.map(partial(self.mp_aux_computation, supergraphs=self.supergraphs, selected_runs=selected_runs), selected_runs)
+        self.aux = { sg.name: _aux for _aux in aux}
+        # self.aux = { sg_name : Auxiliary(self.supergraphs[sg_name], selected_runs=selected_runs) for sg_name in selected_runs }
                    
     def mp_aux_computation(self, dataset, supergraphs, selected_runs):
         return Auxiliary(supergraphs[dataset], selected_runs=selected_runs)

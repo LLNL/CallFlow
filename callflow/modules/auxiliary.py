@@ -53,10 +53,10 @@ class Auxiliary:
         self.proxy_columns = sg.proxy_columns
         self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
-        if isinstance(sg, callflow.SuperGraph):
-            self.aux = UnpackAuxiliary(data=self.single_auxilairy(sg), name=sg.name).data
+        if isinstance(sg, callflow.SuperGraph) and not isinstance(sg, callflow.EnsembleGraph):
+            self.aux = UnpackAuxiliary(data=self.single_auxiliary(sg), name=sg.name).data
         elif isinstance(sg, callflow.EnsembleGraph):
-            self.aux = UnpackAuxiliary(data=self.ensemble_auxilairy(sg), name=sg.name).data
+            self.aux = UnpackAuxiliary(data=self.ensemble_auxiliary(sg), name=sg.name).data
     
     @property
     def get_aux(self):
@@ -64,7 +64,7 @@ class Auxiliary:
 
     # --------------------------------------------------------------------------
 
-    def single_auxilairy(self, sg):
+    def single_auxiliary(self, sg):
         assert isinstance(sg, callflow.SuperGraph)
         df_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
         df_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
@@ -85,8 +85,11 @@ class Auxiliary:
         edf_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())        
         edf_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
 
+        runs = list(sg.supergraphs.keys())
+        runs.remove("ensemble") # TODO: avoid removing "ensemble" here. 
+
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            result = pool.map(partial(self._relative_computation, sg=sg, edf_module=edf_module, edf_name=edf_name), self.runs)
+            result = pool.map(partial(self._relative_computation, sg=sg, edf_module=edf_module, edf_name=edf_name), runs)
 
         result = {res["tag"]: res for res in result}
 
@@ -98,7 +101,7 @@ class Auxiliary:
             "data_mod": self.new_collect_data(sg.name, "module", edf_module),
             "data_cs": self.new_collect_data(sg.name, "name", edf_name),
             "tag": "ensemble",
-            "runs": self.runs
+            "runs": runs
         }
 
         return result
@@ -116,7 +119,7 @@ class Auxiliary:
 
         return {
             "summary": sg.supergraphs[dataset].summary(),
-            "modules": sg.supergraphs[dataset].modules,
+            "modules": sg.supergraphs[dataset].modules_list,
             "m2c": sg.supergraphs[dataset].module_callsite_map,
             "c2m": sg.supergraphs[dataset].callsite_module_map,
             "data_mod": self.new_collect_data(dataset, "module", df_module, edf_module),

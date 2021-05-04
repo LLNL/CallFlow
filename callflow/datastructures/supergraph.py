@@ -220,9 +220,7 @@ class SuperGraph(ht.GraphFrame):
         self.df_reset_index() # TODO: This might be cause a possible side
         # effect. Beware!!
         self.roots = self.get_roots(self.nxg)
-        
         self.add_callsites_and_modules_maps()
-        self.add_time_proxies()
         
     # --------------------------------------------------------------------------
     def add_callsites_and_modules_maps(self, module_callsite_map={}):
