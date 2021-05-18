@@ -33,7 +33,7 @@ class Auxiliary:
     Auxiliary: consolidates per-callsite and per-module information.
     """
     def __init__(self, sg, selected_runs=None,
-                 nbins_rank: int = 20, nbins_run: int = 20):
+                 nbins_rank: int = 20, nbins_run: int = 20, unpack: bool=False):
         """
         Constructor
         :param sg: SuperGraph
@@ -46,17 +46,28 @@ class Auxiliary:
 
         self.nbins_rank = nbins_rank
         self.nbins_run = nbins_run
+        self.selected_runs = selected_runs
 
         self.proxy_columns = sg.proxy_columns
         self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
         self.name = sg.name
 
-        if isinstance(sg, callflow.SuperGraph) and not isinstance(sg, callflow.EnsembleGraph):
-            self.aux = UnpackAuxiliary(data=self.single_auxiliary(sg), name=sg.name).data
-        elif isinstance(sg, callflow.EnsembleGraph):
-            self.aux = UnpackAuxiliary(data=self.ensemble_auxiliary(sg), name=sg.name).data
-    
+        if unpack:
+            if isinstance(sg, callflow.SuperGraph) and not isinstance(sg, callflow.EnsembleGraph):
+                self.aux = UnpackAuxiliary(data=self.single_auxiliary(sg), name=sg.name).data
+            elif isinstance(sg, callflow.EnsembleGraph):
+                self.aux = UnpackAuxiliary(data=self.ensemble_auxiliary(sg), name=sg.name).data
+
+        else:
+            # TODO: This will be deprecated.
+            self.runs = sg.filter_by_datasets(selected_runs)
+
+            if not isinstance(sg, callflow.EnsembleGraph):
+                self.result =  self.single_auxiliary(sg)
+            else:
+                self.result = self.ensemble_auxiliary(sg)
+        
     @property
     def get_aux(self):
         return self.aux

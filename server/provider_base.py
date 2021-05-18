@@ -12,18 +12,12 @@ from functools import partial
 from callflow import SuperGraph, EnsembleGraph
 from callflow import get_logger
 from callflow.operations import Filter, Group, Unify
-from callflow.modules import Auxiliary
-from pyinstrument import Profiler
 
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import ParameterProjection, DiffView
-from callflow.utils.utils import get_memory_usage
 from callflow.utils.sanitizer import Sanitizer
 
 LOGGER = get_logger(__name__)
-
-# TODO: this flag should come from commandline
-indivdual_aux_for_ensemble = False
 
 
 # ------------------------------------------------------------------------------
@@ -68,15 +62,11 @@ class BaseProvider:
         _FILENAMES = {
             "df": "cf-df.pkl",
             "nxg": "cf-nxg.json",
-            "aux": "aux-{}.npz",
         }
         _name = run_prop["name"]
         _path = os.path.join(save_path, _name)
         process = False
         for f_type, f_run in _FILENAMES.items():
-            if f_type == "aux":
-                f_run = f_run.format(_name)
-
             f_path = os.path.join(_path, f_run)
             if not os.path.isfile(f_path):
                 process = True
@@ -89,12 +79,11 @@ class BaseProvider:
         load_path = self.config.get("save_path", "")
         read_param = self.config.get("read_parameter", "")
         save_path = self.config.get("save_path", "")
-        no_aux_process = self.config.get("no_aux_process", False)
 
         is_not_ensemble = self.ndatasets == 1
 
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            supergraphs = pool.map(partial(self.mp_dataset_load, save_path=load_path, read_aux=not(no_aux_process)), self.datasets)
+            supergraphs = pool.map(partial(self.mp_dataset_load, save_path=load_path), self.datasets)
         self.supergraphs = { sg.name: sg for sg in supergraphs }
 
         selected_runs = list(self.supergraphs.keys())
@@ -105,8 +94,7 @@ class BaseProvider:
             name = "ensemble"
             eg = EnsembleGraph(name)
             eg.load(os.path.join(load_path, name),
-                    read_parameter=read_param,
-                    read_aux=not(no_aux_process))
+                    read_parameter=read_param)
             eg.supergraphs = self.supergraphs
             
             self.supergraphs[name] = eg
@@ -115,13 +103,12 @@ class BaseProvider:
         #     aux = pool.map(partial(self.mp_aux_computation, supergraphs=self.supergraphs, selected_runs=selected_runs), selected_runs)
         
         # self.aux = { _aux.name: _aux for _aux in aux}
-        self.aux = Auxiliary(self.supergraphs["ensemble"], selected_runs=selected_runs) 
-        print(self.aux.aux.keys())
+        # self.aux = Auxiliary(self.supergraphs["ensemble"], selected_runs=selected_runs) 
                    
-    def mp_aux_computation(self, dataset, supergraphs, selected_runs):
-        return Auxiliary(supergraphs[dataset], selected_runs=selected_runs)
+    # def mp_aux_computation(self, dataset, supergraphs, selected_runs):
+    #     return Auxiliary(supergraphs[dataset], selected_runs=selected_runs)
 
-    def mp_dataset_load(self, dataset, save_path, read_aux):
+    def mp_dataset_load(self, dataset, save_path):
         """
         Parallel function to load single supergraph loading.
         """
@@ -130,8 +117,7 @@ class BaseProvider:
 
         sg = SuperGraph(name)
         sg.load(os.path.join(save_path, name),
-            read_parameter=read_param,
-            read_aux=read_aux) 
+            read_parameter=read_param) 
         return sg
 
     def split_process_load_datasets(self):
@@ -140,7 +126,6 @@ class BaseProvider:
         _FILENAMES = {
             "df": "df.pkl",
             "nxg": "nxg.json",
-            "aux": "aux-{}.npz",
         }
 
         save_path = self.config["save_path"]
@@ -154,9 +139,6 @@ class BaseProvider:
             _name = dataset["name"]
             _path = os.path.join(save_path, _name)
             for f_type, f_run in _FILENAMES.items():
-                if f_type == "aux":
-                    f_run = f_run.format(dataset["name"])
-
                 f_path = os.path.join(_path, f_run)
                 if not os.path.isfile(f_path):
                     process = True
@@ -194,7 +176,6 @@ class BaseProvider:
         filter_by = self.config.get("filter_by","")
         filter_perc = self.config.get("filter_perc", 0)
         save_path = self.config.get("save_path", "")
-        no_aux_process = self.config.get("no_aux_process", False)
         
         run_props = {
             _["name"]: (os.path.join(_["path"], append_path) if len(append_path) > 0 else _["path"], _["profile_format"]) for _ in self.config["runs"]
@@ -227,11 +208,7 @@ class BaseProvider:
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             LOGGER.profile(f'Filtered supergraph {name}')
 
-            if not no_aux_process:
-                Auxiliary(sg)
-
-            LOGGER.profile(f'Created Aux for {name}')
-            sg.write(os.path.join(save_path, name), write_aux=not no_aux_process)
+            sg.write(os.path.join(save_path, name))
 
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
@@ -254,7 +231,6 @@ class BaseProvider:
     def process_ensemble(self, save_path):
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
-        no_aux_process = self.config.get("no_aux_process", False)
 
         if len(self.supergraphs) > 1:
             name = "ensemble"
@@ -263,16 +239,6 @@ class BaseProvider:
 
             Unify(sg, self.supergraphs)
             LOGGER.profile(f'Created supergraph {name}')
-
-            # Group(sg, group_by=group_by)
-            # LOGGER.profile(f'Grouped supergraph {name}')
-
-            # Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
-            # LOGGER.profile(f'Filtered supergraph {name}')
-
-            if not no_aux_process:
-                Auxiliary(sg)
-                LOGGER.profile(f'Created Aux for {name}')
 
             sg.write(os.path.join(save_path, name))
             self.supergraphs[name] = sg
@@ -286,7 +252,6 @@ class BaseProvider:
         variables, e.g., filter_perc, filter_by.
         2. EnsembleGraph is then constructed from the processed SuperGraphs.
         """
-        profile = Profiler()
         save_path = self.config.get("save_path", "")
         ensemble_process = self.config.get("ensemble_process", False);
 
@@ -323,7 +288,7 @@ class BaseProvider:
             return self.config
 
         elif operation_name == "aux_data":
-            return { dataset: self.aux.aux[dataset] for dataset in operation["datasets"] + ['ensemble']}
+            return {} # dataset: self.aux.aux[dataset] for dataset in operation["datasets"] + ['ensemble']}
            
     def request_single(self, operation):
         """

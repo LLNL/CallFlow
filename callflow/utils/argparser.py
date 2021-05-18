@@ -18,10 +18,8 @@ JSONSCHEMA_CONFIG = {
     "type": "object",
     "properties": {
         "data_path": {"type": "string"},
-        "experiment": {"type": "string"},
         "save_path": {"type": "string"},
         "read_parameter": {"type": "boolean"},
-        "runs": {"type": "array"},
         "filter_perc": {"type": "number"},
         "filter_by": {"type": "string"},
         "group_by": {"type": "string"},
@@ -29,25 +27,11 @@ JSONSCHEMA_CONFIG = {
         "chunk_idx": {"type": "string"},
         "chunk_size": {"type": "string"},
         "ensemble_process": {"type": "boolean"},
-        "no_aux_process": {"type": "boolean"}
     },
 }
 
-CONFIG_KEYS = [
-    "data_path",
-    "save_path",
-    "filter_perc",
-    "filter_by",
-    "group_by",
-    "read_parameter",
-    "append_path",
-    "start_date",
-    "end_date",
-    "chunk_idx",
-    "chunk_size",
-    "ensemble_process",
-    "no_aux_process",
-]
+CONFIG_KEYS = list(JSONSCHEMA_CONFIG["properties"].keys())
+print(CONFIG_KEYS)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -237,12 +221,6 @@ class ArgParser:
             help="Enables ensemble SuperGraph construction",
         )
 
-        parser.add_argument(
-             "--no_aux_process",
-            action="store_true",
-            help="Disables the auxiliary processing for single and ensemble supergraph.",
-        )
-
         # -------------
         return parser
 
@@ -314,8 +292,10 @@ class ArgParser:
         This function fills the config object with dataset information from the provided directory.
         """
         scheme = {}
+        print(self.args.keys())
         for _ in CONFIG_KEYS:
-            scheme[_] = self.args[_]
+            if _ in self.args:
+                scheme[_] = self.args[_]
 
         scheme["experiment"] = os.path.basename(scheme["data_path"])
         if len(scheme["save_path"]) == 0:
