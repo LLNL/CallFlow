@@ -19,11 +19,11 @@
 		>
 			<template slot="items" slot-scope="props">
 				<tr>
-					<td nowrap="true">{{ props.item.run }}</td>
-					<td nowrap="true">{{ props.item.meantime }}</td>
-					<td nowrap="true">{{ props.item.nranks }}</td>
-					<td nowrap="true">{{ props.item.ncallsites }}</td>
-					<td nowrap="true">{{ props.item.nedges }}</td>
+					<td nowrap="true">{{ props.run }}</td>
+					<td nowrap="true">{{ props.meantime }}</td>
+					<td nowrap="true">{{ props.nranks }}</td>
+					<td nowrap="true">{{ props.ncallsites }}</td>
+					<td nowrap="true">{{ props.nedges }}</td>
 				</tr>
 			</template>
 		</v-data-table>

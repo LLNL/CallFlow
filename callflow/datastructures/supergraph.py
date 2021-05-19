@@ -350,9 +350,13 @@ class SuperGraph(ht.GraphFrame):
     def summary(self):
 
         cols = list(self.dataframe.columns)
-        result = {"meantime": self.df_mean_runtime(self.dataframe, self.roots, "time (inc)"),
+        result = {"name": self.name,
+                  "meantime": self.df_mean_runtime(self.dataframe, self.roots, "time (inc)"),
                   "roots": self.roots,
                   "ncallsites": self.df_count("name"),
+                  "modules": self.modules_list,
+                  "m2c": self.module_callsite_map,
+                  "c2m": self.callsite_module_map,
                   "nmodules": self.df_count("module"), # if "module" in cols else 0,
                   "nranks": self.df_count("rank") if "rank" in cols else 1,
                   "nedges": len(self.nxg.edges())}

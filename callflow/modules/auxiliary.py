@@ -32,8 +32,7 @@ class Auxiliary:
     """
     Auxiliary: consolidates per-callsite and per-module information.
     """
-    def __init__(self, sg, selected_runs=None,
-                 nbins_rank: int = 20, nbins_run: int = 20, unpack: bool=False):
+    def __init__(self, sg, nbins_rank: int = 20, nbins_run: int = 20):
         """
         Constructor
         :param sg: SuperGraph
@@ -46,13 +45,17 @@ class Auxiliary:
 
         self.nbins_rank = nbins_rank
         self.nbins_run = nbins_run
-        self.selected_runs = selected_runs
+        self.sg = sg
 
         self.proxy_columns = sg.proxy_columns
         self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
         self.name = sg.name
+    
+    def get_summary(self):
+        return self.sg.summary()
 
+    def unpack(self, unpack: bool=False):
         if unpack:
             if isinstance(sg, callflow.SuperGraph) and not isinstance(sg, callflow.EnsembleGraph):
                 self.aux = UnpackAuxiliary(data=self.single_auxiliary(sg), name=sg.name).data
@@ -80,14 +83,8 @@ class Auxiliary:
         df_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
 
         return {
-            "summary": sg.summary(),
-            "modules": sg.modules_list,
-            "m2c": sg.module_callsite_map,
-            "c2m": sg.callsite_module_map,
             "data_mod": self.new_collect_data(sg.name, "module", df_module),
             "data_cs": self.new_collect_data(sg.name, "name", df_name),
-            "tag": "single",
-            "run": sg.dataframe.name
         }
 
     def ensemble_auxiliary(self, sg):
@@ -104,14 +101,8 @@ class Auxiliary:
         result = {res["tag"]: res for res in result}
 
         result["ensemble"] = {
-            "summary": sg.summary(),
-            "modules": sg.modules,
-            "m2c": sg.module_callsite_map,
-            "c2m": sg.callsite_module_map,
             "data_mod": self.new_collect_data(sg.name, "module", edf_module),
             "data_cs": self.new_collect_data(sg.name, "name", edf_name),
-            "tag": "ensemble",
-            "runs": runs
         }
 
         return result
@@ -128,13 +119,8 @@ class Auxiliary:
         df_name = df_bi_level_group(sg.supergraphs[dataset].dataframe, "name", None, cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())
 
         return {
-            "summary": sg.supergraphs[dataset].summary(),
-            "modules": sg.supergraphs[dataset].modules_list,
-            "m2c": sg.supergraphs[dataset].module_callsite_map,
-            "c2m": sg.supergraphs[dataset].callsite_module_map,
             "data_mod": self.new_collect_data(dataset, "module", df_module, edf_module),
             "data_cs": self.new_collect_data(dataset, "name", df_name, edf_name),
-            "tag": sg.supergraphs[dataset].name,
         }
 
     def new_collect_data(self, name, grp_column, grp_df, grp_edf=None):

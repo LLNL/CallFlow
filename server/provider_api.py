@@ -108,17 +108,17 @@ class APIProvider(BaseProvider):
             result = self.request_general({"name": "init"})
             return APIProvider.emit_json("config", result)
 
-        @app.route("/aux_data", methods=["POST"])
+        @app.route("/summary", methods=["POST"])
         @cross_origin()
         def supergraph_data():
             data = request.json
             result = self.request_general(
                 {
-                    "name": "aux_data",
+                    "name": "summary",
                     **data,
                 }
             )
-            return APIProvider.emit_json("aux_data", result)
+            return APIProvider.emit_json("summary", result)
 
         @app.route("/single_supergraph", methods=["POST"])
         @cross_origin()

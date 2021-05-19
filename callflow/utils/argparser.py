@@ -292,7 +292,6 @@ class ArgParser:
         This function fills the config object with dataset information from the provided directory.
         """
         scheme = {}
-        print(self.args.keys())
         for _ in CONFIG_KEYS:
             if _ in self.args:
                 scheme[_] = self.args[_]

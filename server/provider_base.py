@@ -5,13 +5,13 @@
 # ------------------------------------------------------------------------------
 
 import os
-import datetime
 import multiprocessing
 from functools import partial
 
 from callflow import SuperGraph, EnsembleGraph
 from callflow import get_logger
 from callflow.operations import Filter, Group, Unify
+from callflow.modules import Auxiliary
 
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import ParameterProjection, DiffView
@@ -99,14 +99,7 @@ class BaseProvider:
             
             self.supergraphs[name] = eg
 
-        # with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-        #     aux = pool.map(partial(self.mp_aux_computation, supergraphs=self.supergraphs, selected_runs=selected_runs), selected_runs)
-        
-        # self.aux = { _aux.name: _aux for _aux in aux}
-        # self.aux = Auxiliary(self.supergraphs["ensemble"], selected_runs=selected_runs) 
-                   
-    # def mp_aux_computation(self, dataset, supergraphs, selected_runs):
-    #     return Auxiliary(supergraphs[dataset], selected_runs=selected_runs)
+        self.aux = { dataset: Auxiliary(self.supergraphs[dataset]) for dataset in all_runs } 
 
     def mp_dataset_load(self, dataset, save_path):
         """
@@ -277,7 +270,7 @@ class BaseProvider:
         """
         Handles general requests
         """
-        _OPERATIONS = ["init", "aux_data"]
+        _OPERATIONS = ["init", "summary"]
 
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
@@ -287,8 +280,8 @@ class BaseProvider:
         if operation_name == "init":
             return self.config
 
-        elif operation_name == "aux_data":
-            return {} # dataset: self.aux.aux[dataset] for dataset in operation["datasets"] + ['ensemble']}
+        elif operation_name == "summary":
+            return { dataset: self.aux[dataset].get_summary() for dataset in self.supergraphs.keys() }
            
     def request_single(self, operation):
         """

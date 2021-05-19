@@ -28,7 +28,7 @@
 			<Loader ref="Loader" :isDataReady="isDataReady" />
 			<router-view></router-view>
 			<Summary ref="Summary" v-if="$route.path == '/'" :config="config"
-			:profiles="profiles" :moduleCallsiteMap="moduleCallsiteMap" />
+			:profiles="profiles" />
 		</v-main>
 		<Footer ref="Footer" :text="footerText" :year="year"></Footer>
 	</v-app>
@@ -104,7 +104,6 @@ export default {
 
 			await this.fetchData();
 			this.isDataReady = true;
-			// this.initStore(data);
 		},
 
 		/**
@@ -120,17 +119,16 @@ export default {
 					reProcess: false,
 				};
 			}
-			const aux_data = await APIService.POSTRequest("aux_data", payload);
+			const aux_data = await APIService.POSTRequest("summary", payload);
 			this.initStore(aux_data);
 			// TODO: Remove this shortcut.
-			this.$refs.Summary.init(this.moduleCallsiteMap);
+			this.$refs.Summary.init();
 			return;
 		},
 
 		initStore(data) {
 			this.setAuxVariables(data); // Set the variables that are affected by auxiliary data.
 			this.setGlobalVariables(); // Set the general variables in the store.
-			this.setLocalVariables(data); // Set the local variables (i.e., in this component).
 			this.setViewDimensions(); // Set the view dimensions.
 		},
 
@@ -138,86 +136,9 @@ export default {
 		 * Attaches properties to central storage based on the data from `this.auxiliary_data`.
 		 */
 		setAuxVariables(data) {
-			this.$store.summary = utils.swapKeysToDict(data, "summary");
-			this.$store.data_mod = utils.swapKeysToDict(data, "data_mod");
-			this.$store.data_cs = utils.swapKeysToDict(data, "data_cs");
-			this.$store.m2c = utils.swapKeysToDict(data, "m2c");
-			this.$store.c2m = utils.swapKeysToDict(data, "c2m");
-			this.$store.modules = utils.swapKeysToDict(data, "modules");
-		},
-
-		/**
-     	 * Per dataset information.
-     	 */
-		setModuleWiseInfo(data, module_idx, metric_type, info_type, sort_by, include_modules) {
-			let ret = [];
-			for (let [dataset, d] of Object.entries(data)) {
-				let _r = {};
-				_r["name"] = dataset;
-				let total = 0;
-				for (let [elem, _d] of Object.entries(d)) {
-					const module_name = module_idx[dataset][elem];
-					if(include_modules.includes(module_name)) {
-						_r[module_idx[dataset][elem]] = _d[metric_type][info_type];
-					}
-					total += _d[metric_type][info_type];
-				}
-				// _r["time"] = moment(new Date(+(new Date()) -
-				// Math.floor(Math.random()*10000000000)));
-				_r["time"] = moment(dataset.split("_")[1]);
-				_r["total"] = total;
-				ret.push(_r);
-			}
-			return ret.sort((a, b) => b[sort_by] - a[sort_by]);
-		},
-
-		sortByAttribute(callsites, metric_type, info_type, top_n, module_idx) {
-			let items = Object.keys(callsites).map( (key) => {
-				return [key, callsites[key]];
-			});
- 
-			items = items.sort( (first, second) => {
-				return second[1][metric_type][info_type] - first[1][metric_type][info_type];
-			});
-
-			if(top_n < items.length) {
-				items = items.slice(items.length - top_n);
-			}
-
-			callsites = items.reduce((lst, obj) => { lst.push(module_idx[obj[1]["name"]]); return lst; }, []);
-
-			return callsites;
-		},
-
-		setLocalVariables(data) {
-			// Render the tables in the view
-			this.profiles = utils.swapKeysToArray(data, "summary");
-
-			// Restrict to top n modules from the ensemble, if n < 10 then we would
-			// default to n modules.
-			const top_n_modules = this.sortByAttribute(this.$store.data_mod["ensemble"], "time", "mean", 10, this.$store.modules["ensemble"]);
-			
-			const objectMap = (obj, fn) => Object.fromEntries(Object.entries(obj).map(([k, v], i) => [k, fn(v, k, i)]));
-
-			const remove_ensemble = objectMap(this.$store.data_mod, (_, x) => { if(x != "ensemble") return _; else return {};});
-			delete remove_ensemble["ensemble"]; // Bring this back if we need to.
-
-			// Formulate the data for the module-wise summary information.
-			this.moduleCallsiteMap = this.setModuleWiseInfo(
-				remove_ensemble,
-				this.$store.modules,
-				"time (inc)",
-				"mean",
-				"time",
-				top_n_modules
-			);
-
-			this.$store.metricTimeMap = Object.keys(data).reduce((res, item, idx) => { 
-				if(item != "ensemble"){
-					res[item] = data[item]["summary"]["meantime"];
-				}
-				return res;
-			}, {});
+			this.$store.summary = data;
+			this.profiles = utils.swapKeysToArray(data);
+			this.$store.metricTimeMap = utils.swapKeysToDict(data, "meantime");
 
 			this.$store.selectedTargetDataset = utils.getKeyWithMaxValue(this.$store.metricTimeMap);
 			this.$store.selectedNode = this.$store.summary[this.$store.selectedTargetDataset]["roots"][0];
