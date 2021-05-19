@@ -26,7 +26,6 @@ except Exception:
         def stop(self):
             pass
 
-import callflow
 from callflow import get_logger
 from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.utils import NumpyEncoder
@@ -366,13 +365,9 @@ class SuperGraph(ht.GraphFrame):
 
         return result
 
-    def module_runtime_info(self, count: int= 10, metric: str="time (inc)", apply_func="mean"):
-        top_modules = self.df_get_top_by_attr("module", count, metric)
-        if 'module' in self.df_columns():
-            grp_df = self.df_group_by('module')
-            return { module: df_apply_func(grp_df.get_group(module), metric, apply_func, self.proxy_columns) for module in top_modules}
-        else:
-            return {}
+    def timeline(self, nodes, ntype, metric):
+        grp_df = self.df_group_by(ntype)
+        return { node : df_apply_func(grp_df.get_group(self.get_idx(node, ntype)), metric, self.proxy_columns) for node in nodes}    
 
     # --------------------------------------------------------------------------
     # added these functions to support auxiliary
@@ -612,9 +607,10 @@ class SuperGraph(ht.GraphFrame):
 
     def df_group_by(self, columns):
         """
+        Wrapper to group the dataframe by columns. 
 
-        :param columns:
-        :return:
+        :param columns: columns to groupby
+        :return: grouped dataframe
         """
         if isinstance(columns, list):
             return self.dataframe.groupby(columns)
@@ -624,10 +620,13 @@ class SuperGraph(ht.GraphFrame):
 
     def df_get_top_by_attr(self, column, count, sort_attr):
         """
+        Get top n values of a column sorted in descending fashion by another column ("sort_attr")
 
-        :param count:
-        :param sort_attr:
-        :return:
+        :param column: (str) column to groupby (e.g., name, module)
+        :param count: (int) number of rows to return (e.g., n = 10 would return top-10
+        values)
+        :param sort_attr: (str) sorting attribute (e.g., time or time (inc))
+        :return: (list) top-n values 
         """
         assert isinstance(count, int) and isinstance(sort_attr, str)
         assert count > 0

@@ -40,7 +40,6 @@ import * as utils from "lib/utils";
 import Color from "lib/color/";
 import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
-import moment from "moment";
 
 // Local components
 import Footer from "./general/footer";

@@ -6,9 +6,9 @@
  */
 <template>
   <v-card fill-height flex>
-    <v-row class="ml-3 pa-1">
-      <svg :id="id" :width="width" :height="height"></svg>
-    </v-row>
+	<v-row class="ml-3 pa-1">
+		<svg :id="id" :width="width" :height="height"></svg>
+	</v-row>
   </v-card>
 </template>
 
@@ -19,7 +19,7 @@ import moment from "moment";
 
 export default {
 	name: "TimeSeries",
-	props: [],
+	props: ["data"],
 	data: () => ({
 		id: null,
 		height: 0,
@@ -41,24 +41,31 @@ export default {
 		},
 		chartType: "STACKED_BAR_CHART",
 		// chartType: "STACKED_AREA_CHART",
-		// chartXAttr: "total",
-		chartXAttr: "time",
+		chartXAttr: "total",
+		// chartXAttr: "time",
 		// seriesType:"NORMALIZED",
 		seriesType: "STACKED"
 	}),
 
 	mounted() {
-		this.id = "time-overview";
+		this.id = "timeline-overview";
+	},
+	
+	watch: {
+		data: function(newVal, oldVal) {
+			if(newVal != oldVal) {
+				this.init();
+			}
+		}
 	},
 
 	methods: {
-		init(data) {
+		init() {
 			this.width = this.$store.viewWidth;
-			this.height =
-        this.$store.viewHeight / 2 - this.padding.bottom - this.padding.top;
+			this.height = this.$store.viewHeight / 2 - this.padding.bottom - this.padding.top;
 
 			this.initSVG();
-			this.plot(data);
+			this.plot();
 			this.axis();
 			this.label();
 			this.colorMap();
@@ -97,33 +104,33 @@ export default {
 				});
 		},
 
-		plot(data) {
-			this.keys = Object.keys(data[0]);
-			const filter_keys = ["time", "total", "name"];
-			this.keys = this.keys.filter((e) =>  !filter_keys.includes(e));
+		plot() {
+			this.keys = this.data.keys;
+			this.timeline = Object.values(this.data).map((d) => d);
+			console.log(this.timeline);
 
 			let series = null;
 			if(this.seriesType == "STACKED") {
 				series = d3
 					.stack()
-					.keys(this.keys)(data)
+					.keys(this.keys)(this.timeline)
 					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
 			}
 			else if (this.seriesType == "NORMALIZED") {
 				series = d3
 					.stack()
 					.keys(this.keys)
-					.offset(d3.stackOffsetExpand)(data)
+					.offset(d3.stackOffsetExpand)(this.timeline)
 					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
 			}
 
-			data.reverse();
+			this.timeline.reverse();
 
 
 			if (this.chartType == "STACKED_BAR_CHART") {
 				this.x = d3
 					.scaleBand()
-					.domain(data.map((d) => d.name))
+					.domain(this.timeline.map((d) => d.name))
 					.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
 					
 				this.color = d3
@@ -159,7 +166,7 @@ export default {
 			}
 			else if(this.chartType == "STACKED_AREA_CHART") {
 				this.x = d3.scaleUtc()
-					.domain(d3.extent(data, d => d[this.chartXAttr]))
+					.domain(d3.extent(this.timeline, d => d[this.chartXAttr]))
 					.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
 					
 				this.y = d3.scaleLinear()
@@ -198,12 +205,12 @@ export default {
 				.axisBottom(this.x)
 				.tickPadding(10)
 				.tickFormat((d, i) => {
-					if (this.chartXAttr == "total") {
-						return `${d}`;
-					}
-					else if(this.chartXAttr == "time") {
-						return moment(d.split("_")[1]).format("DD-MM-YY");
-					}
+					// if (this.chartXAttr == "total") {
+					return `${d}`;
+					// }
+					// else if(this.chartXAttr == "time") {
+					// return moment(d.split("_")[1]).format("DD-MM-YY");
+					// }
 				});
 
 			const yFormat = d3.format("0.01s");

@@ -12,7 +12,7 @@
       </v-col>
     </v-row>
     <v-row>
-      <!-- <TimeSeries ref="TimeSeries" :data="moduleCallsiteMap" /> -->
+      <TimeSeries ref="TimeSeries" :data="moduleCallsiteMap" />
     </v-row>
   </v-flex>
 </template>
@@ -29,7 +29,7 @@ export default {
 	components: {
 		ConfigInformation,
 		ProfileInformation,
-		// TimeSeries,
+		TimeSeries,
 	},
 	props: ["config", "profiles"],
 	data: () => ({
@@ -44,8 +44,12 @@ export default {
 			// Restrict to top n modules from the ensemble, if n < 10 then we would
 			// default to n modules.
 			
-			const data = await APIService.POSTRequest("timeline", {});
-			console.log(data);
+			this.moduleCallsiteMap = await APIService.POSTRequest("timeline", {
+				"ntype": "module",
+				"ncount": 5,
+				"metric": "time",
+			});
+			console.log(this.moduleCallsiteMap);
 			// const top_n_modules = this.sortByAttribute(this.$store.data_mod["ensemble"], "time", "mean", 10, this.$store.modules["ensemble"]);
 			
 			// const objectMap = (obj, fn) => Object.fromEntries(Object.entries(obj).map(([k, v], i) => [k, fn(v, k, i)]));

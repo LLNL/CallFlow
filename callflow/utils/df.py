@@ -138,12 +138,12 @@ def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, group_by, appl
     else: 
         return { _ : _df.xs(_)[_cols] for _ in _levels}
 
-def df_apply_func(df, column, apply_func, proxy={}):
+def df_apply_func(df, column, proxy={}):
     """
     Apply a function to the df.column
 
     :param column: column to apply on. 
-    :param apply_func: Applying function (e.g., min, mean, max)
+    :param proxy: 
     :return: 
     """
     assert isinstance(column, str)

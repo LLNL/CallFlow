@@ -126,6 +126,7 @@ class APIProvider(BaseProvider):
                 "name": "timeline",
                 **data,
             })
+            return APIProvider.emit_json("timeline", result)
 
         @app.route("/single_supergraph", methods=["POST"])
         @cross_origin()

@@ -16,6 +16,7 @@ from callflow.modules import Auxiliary
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import ParameterProjection, DiffView
 from callflow.utils.sanitizer import Sanitizer
+from numpy.lib.arraysetops import isin
 
 LOGGER = get_logger(__name__)
 
@@ -284,8 +285,22 @@ class BaseProvider:
             return { sg: self.supergraphs[sg].summary() for sg in self.supergraphs }
             
         elif operation_name == "timeline":
-            data = { sg: self.supergraphs[sg].module_runtime_info() for sg in self.supergraphs }
-            print(data)
+            assert operation["ntype"] in ["module", "callsite"]
+            assert isinstance(operation["ncount"], int)
+            assert operation["metric"] in ["time", "time (inc)"]
+
+            # Get the top-n nodes from the "ensemble" based on the ntype.
+            top_nodes_idx = self.supergraphs["ensemble"].df_get_top_by_attr(operation["ntype"], operation["ncount"], operation["metric"])
+            
+            # Convert the indexs to the modules. 
+            top_nodes = [ self.supergraphs["ensemble"].get_name(module_idx, operation["ntype"]) for module_idx in top_nodes_idx]
+
+            # Construct the per-supergraph timeline data. 
+            data = { sg: self.supergraphs[sg].timeline(top_nodes, operation["ntype"], operation["metric"]) for sg in self.supergraphs }
+            
+            # Attach the keys as the top_nodes
+            data['keys'] = top_nodes
+
             return data
             
     def request_single(self, operation):
@@ -385,7 +400,6 @@ class BaseProvider:
             target_dataset = operation["targetDataset"]
 
             assert operation["selectedMetric"] in ["Inclusive", "Exclusive"]
-            # TODO: CAL-37: Use proxies.
             if operation["selectedMetric"] == "Inclusive":
                 selected_metric = "time (inc)"
             elif operation["selectedMetric"] == "Exclusive":
