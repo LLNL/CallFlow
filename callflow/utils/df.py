@@ -137,3 +137,15 @@ def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, group_by, appl
             return { _ : (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index() for _ in _levels }
     else: 
         return { _ : _df.xs(_)[_cols] for _ in _levels}
+
+def df_apply_func(df, column, apply_func, proxy={}):
+    """
+    Apply a function to the df.column
+
+    :param column: column to apply on. 
+    :param apply_func: Applying function (e.g., min, mean, max)
+    :return: 
+    """
+    assert isinstance(column, str)
+    column = proxy.get(column, column)
+    return df[column].mean()

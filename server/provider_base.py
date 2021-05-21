@@ -270,7 +270,7 @@ class BaseProvider:
         """
         Handles general requests
         """
-        _OPERATIONS = ["init", "summary"]
+        _OPERATIONS = ["init", "summary", "timeline"]
 
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
@@ -281,8 +281,13 @@ class BaseProvider:
             return self.config
 
         elif operation_name == "summary":
-            return { dataset: self.aux[dataset].get_summary() for dataset in self.supergraphs.keys() }
-           
+            return { sg: self.supergraphs[sg].summary() for sg in self.supergraphs }
+            
+        elif operation_name == "timeline":
+            data = { sg: self.supergraphs[sg].module_runtime_info() for sg in self.supergraphs }
+            print(data)
+            return data
+            
     def request_single(self, operation):
         """
         Handles requests connected to Single CallFlow.

@@ -52,9 +52,6 @@ class Auxiliary:
 
         self.name = sg.name
     
-    def get_summary(self):
-        return self.sg.summary()
-
     def unpack(self, unpack: bool=False):
         if unpack:
             if isinstance(sg, callflow.SuperGraph) and not isinstance(sg, callflow.EnsembleGraph):

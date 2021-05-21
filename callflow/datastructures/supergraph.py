@@ -366,6 +366,14 @@ class SuperGraph(ht.GraphFrame):
 
         return result
 
+    def module_runtime_info(self, count: int= 10, metric: str="time (inc)", apply_func="mean"):
+        top_modules = self.df_get_top_by_attr("module", count, metric)
+        if 'module' in self.df_columns():
+            grp_df = self.df_group_by('module')
+            return { module: df_apply_func(grp_df.get_group(module), metric, apply_func, self.proxy_columns) for module in top_modules}
+        else:
+            return {}
+
     # --------------------------------------------------------------------------
     # added these functions to support auxiliary
     # we need this
@@ -614,7 +622,7 @@ class SuperGraph(ht.GraphFrame):
             assert isinstance(columns, str)
             return self.dataframe.groupby([columns])
 
-    def df_get_top_by_attr(self, count, sort_attr):
+    def df_get_top_by_attr(self, column, count, sort_attr):
         """
 
         :param count:
@@ -624,7 +632,7 @@ class SuperGraph(ht.GraphFrame):
         assert isinstance(count, int) and isinstance(sort_attr, str)
         assert count > 0
 
-        df = self.dataframe.groupby(["name"]).mean()
+        df = self.dataframe.groupby([column]).mean()
         df = df.sort_values(by=[sort_attr], ascending=False)
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()

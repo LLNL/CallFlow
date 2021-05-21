@@ -21,6 +21,7 @@
 import ConfigInformation from "./summary/config";
 import ProfileInformation from "./summary/profile";
 import TimeSeries from "./summary/timeSeries";
+import APIService from "lib/routing/APIService";
 import moment from "moment";
 
 export default {
@@ -39,25 +40,28 @@ export default {
 	},
 
 	methods: {
-		init() {
+		async init() {
 			// Restrict to top n modules from the ensemble, if n < 10 then we would
 			// default to n modules.
-			const top_n_modules = this.sortByAttribute(this.$store.data_mod["ensemble"], "time", "mean", 10, this.$store.modules["ensemble"]);
 			
-			const objectMap = (obj, fn) => Object.fromEntries(Object.entries(obj).map(([k, v], i) => [k, fn(v, k, i)]));
+			const data = await APIService.POSTRequest("timeline", {});
+			console.log(data);
+			// const top_n_modules = this.sortByAttribute(this.$store.data_mod["ensemble"], "time", "mean", 10, this.$store.modules["ensemble"]);
+			
+			// const objectMap = (obj, fn) => Object.fromEntries(Object.entries(obj).map(([k, v], i) => [k, fn(v, k, i)]));
 
-			const remove_ensemble = objectMap(this.$store.data_mod, (_, x) => { if(x != "ensemble") return _; else return {};});
-			delete remove_ensemble["ensemble"]; // Bring this back if we need to.
+			// const remove_ensemble = objectMap(this.$store.data_mod, (_, x) => { if(x != "ensemble") return _; else return {};});
+			// delete remove_ensemble["ensemble"]; // Bring this back if we need to.
 
-			// // Formulate the data for the module-wise summary information.
-			this.moduleCallsiteMap = this.setModuleWiseInfo(
-				remove_ensemble,
-				this.$store.modules,
-				"time (inc)",
-				"mean",
-				"time",
-				top_n_modules
-			);
+			// // // Formulate the data for the module-wise summary information.
+			// this.moduleCallsiteMap = this.setModuleWiseInfo(
+			// 	remove_ensemble,
+			// 	this.$store.modules,
+			// 	"time (inc)",
+			// 	"mean",
+			// 	"time",
+			// 	top_n_modules
+			// );
 		},
 
 		/**
