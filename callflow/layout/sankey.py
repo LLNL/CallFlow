@@ -71,7 +71,7 @@ class SankeyLayout:
         # self._COLUMNS = self._COLUMNS + [self.time_inc, self.time_exc]
 
         if len(selected_runs) > 1:
-            self.runs = sg.filter_by_datasets(selected_runs) # Filter based on the sub set asked by the client
+            self.runs = sg.nxg_filter_by_datasets(selected_runs) # Filter based on the sub set asked by the client
         else:
             self.runs = selected_runs # Do not filter
 
@@ -591,7 +591,7 @@ class SankeyLayout:
         for node in nxg.nodes(data=True):
             node_name, node_dict = SankeyLayout.nx_deconstruct_node(node)
             if node_dict["type"] == "component-node":
-                module = sg.get_module_idx(node_name.split("=")[0])
+                module = sg.get_idx(node_name.split("=")[0], "module")
                 callsite = node_dict["callsite"]
                 # actual_time = SankeyLayout.callsite_time(
                 #     group_df=module_name_group_df, module=module, callsite=callsite
@@ -603,8 +603,7 @@ class SankeyLayout:
                 module_idx = node_name
                 # TODO: Add the entry function as the callsite.
                 callsite = ""
-                # TODO: Avoid sg.get_module_idx
-                module = sg.get_module_idx(module_idx)
+                module = sg.get_name(module_idx, "module")
                 actual_time = self.module_time(
                     group_df=module_name_group_df,
                     module_callsite_map=module_callsite_map,
@@ -635,7 +634,7 @@ class SankeyLayout:
                     ret[column][node_name] = node_dict["type"]
 
                 elif column == "entry_function":
-                    module_idx = sg.get_module_idx(node_name)
+                    module_idx = sg.get_idx(node_name, "module")
                     ret[column][node_name] = SankeyLayout.get_entry_functions(
                         module_group_df, module_idx
                     )
@@ -723,7 +722,7 @@ class SankeyLayout:
                         ret[node_name][column] = node_dict["type"]
 
                     elif column == "entry_function":
-                        module_idx = sg.get_module_idx(node_name)
+                        module_idx = sg.get_idx(node_name, "module")
                         ret[node_name][column] = SankeyLayout.get_entry_functions(
                             target_module_group_df, module_idx
                         )

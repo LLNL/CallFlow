@@ -61,7 +61,7 @@ class Auxiliary:
 
         else:
             # TODO: This will be deprecated.
-            self.runs = sg.filter_by_datasets(selected_runs)
+            self.runs = sg.nxg_filter_by_datasets(selected_runs)
 
             if not isinstance(sg, callflow.EnsembleGraph):
                 self.result =  self.single_auxiliary(sg)

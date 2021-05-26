@@ -40,7 +40,7 @@ class NodeLinkLayout:
 
         # Do not filter if the selected_runs is a single run.
         if not isinstance(sg, callflow.SuperGraph):
-            sg.filter_by_datasets(selected_runs)
+            sg.nxg_filter_by_datasets(selected_runs)
 
         self.runs = selected_runs
 
@@ -52,10 +52,10 @@ class NodeLinkLayout:
         # Filter out the callsites not in the list. (in a LOCAL copy)
         # _fdf = sg.df_filter_by_name(callsites)
 
-        paths = [df_get_column(sg.dataframe, "path")[0] for callsite in callsites]
+        # paths = [df_get_column(sg.dataframe, "path")[0] for callsite in callsites]
 
         self.nxg = sg.nxg
-        self.aux_data = sg.aux_data
+        # self.aux_data = sg.aux_data
 
         # Add node and edge attributes.
         self._add_node_attributes()
