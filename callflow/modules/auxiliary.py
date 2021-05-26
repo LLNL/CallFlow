@@ -10,7 +10,6 @@ CallFlow's module to consolidate the auxiliary information
 for each call site or module based on the type of data requested.
 """
 import numpy as np
-import pandas as pd
 from scipy.stats import kurtosis, skew
 import multiprocessing
 from functools import partial
@@ -34,7 +33,8 @@ class Auxiliary:
     """
     def __init__(self, sg, nbins_rank: int = 20, nbins_run: int = 20):
         """
-        Constructor
+        Constructor of the class 
+
         :param sg: SuperGraph
         :param selected_runs: Array of selected runs
         :param nbins_rank: Bin count for MPI-level histogram
@@ -52,39 +52,53 @@ class Auxiliary:
 
         self.name = sg.name
     
-    def unpack(self, unpack: bool=False):
-        if unpack:
-            if isinstance(sg, callflow.SuperGraph) and not isinstance(sg, callflow.EnsembleGraph):
-                self.aux = UnpackAuxiliary(data=self.single_auxiliary(sg), name=sg.name).data
-            elif isinstance(sg, callflow.EnsembleGraph):
-                self.aux = UnpackAuxiliary(data=self.ensemble_auxiliary(sg), name=sg.name).data
+    def unpack(self, sg, fmt: str="json"):
+        """
+        Wrapper to trigger UnpackAuxiliary.
 
-        else:
-            # TODO: This will be deprecated.
-            self.runs = sg.nxg_filter_by_datasets(selected_runs)
-
-            if not isinstance(sg, callflow.EnsembleGraph):
-                self.result =  self.single_auxiliary(sg)
-            else:
-                self.result = self.ensemble_auxiliary(sg)
+        :param sg: (callflow.Supergraph) Supergraph
+        :param json: (bool) Convert to JSON format or not. 
+        :return: (JSON or npz) Auxiliary data in the specified format.
         
-    @property
-    def get_aux(self):
-        return self.aux
+        """
+        if fmt == "json":
+            if isinstance(sg, callflow.SuperGraph) and not isinstance(sg, callflow.EnsembleGraph):
+                ret = UnpackAuxiliary(data=self.single_auxiliary(sg), name=sg.name).data
+            elif isinstance(sg, callflow.EnsembleGraph):
+                ret = UnpackAuxiliary(data=self.ensemble_auxiliary(sg), name=sg.name).data
+
+        elif fmt == "npz":
+            if not isinstance(sg, callflow.EnsembleGraph):
+                ret =  self.single_auxiliary(sg)
+            else:
+                ret = self.ensemble_auxiliary(sg)
+
+        return ret
 
     # --------------------------------------------------------------------------
-
     def single_auxiliary(self, sg):
+        """
+        Compute the single auxiliary for a SuperGraph.
+
+        :param sg: (callflow.Supergraph) Supergraph
+        :return: (dict): Auxiliary data for modules and callsits
+        """
         assert isinstance(sg, callflow.SuperGraph)
         df_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
         df_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
 
         return {
-            "data_mod": self.new_collect_data(sg.name, "module", df_module),
-            "data_cs": self.new_collect_data(sg.name, "name", df_name),
+            "data_mod": self._auxiliary(sg.name, "module", df_module),
+            "data_cs": self._auxiliary(sg.name, "name", df_name),
         }
 
     def ensemble_auxiliary(self, sg):
+        """
+        Compute the single auxiliary for a EnsembleSuperGraph.
+
+        :param sg: (callflow.EnsembleGraph) Supergraph
+        :return: (dict): Auxiliary data for modules and callsits
+        """
         assert isinstance(sg, callflow.EnsembleGraph)
         edf_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())        
         edf_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
@@ -98,13 +112,22 @@ class Auxiliary:
         result = {res["tag"]: res for res in result}
 
         result["ensemble"] = {
-            "data_mod": self.new_collect_data(sg.name, "module", edf_module),
-            "data_cs": self.new_collect_data(sg.name, "name", edf_name),
+            "data_mod": self._auxiliary(sg.name, "module", edf_module),
+            "data_cs": self._auxiliary(sg.name, "name", edf_name),
         }
 
         return result
 
     def _relative_computation(self, dataset, sg, edf_module, edf_name):
+        """
+        Compute the relative auxiliary of SuperGraph w.r.t a EnsembleSuperGraph.
+
+        :param dataset: (str) Supergraph name
+        :param sg: (callflow.EnsembleGraph) Supergraph
+        :param edf_module: (pandas.DataFrameGroupBy) Grouped dataframe by module
+        :param edf_name: (pandas.DataFrameGroupBy) Grouped dataframe by module
+        :return: (dict): Auxiliary data for modules and callsits
+        """
         assert isinstance(sg, callflow.EnsembleGraph)
 
         if len(sg.supergraphs[dataset].dataframe['rank'].unique().tolist()) == 1:
@@ -116,12 +139,11 @@ class Auxiliary:
         df_name = df_bi_level_group(sg.supergraphs[dataset].dataframe, "name", None, cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())
 
         return {
-            "data_mod": self.new_collect_data(dataset, "module", df_module, edf_module),
-            "data_cs": self.new_collect_data(dataset, "name", df_name, edf_name),
+            "data_mod": self._auxiliary(dataset, "module", df_module, edf_module),
+            "data_cs": self._auxiliary(dataset, "name", df_name, edf_name),
         }
 
-    def new_collect_data(self, name, grp_column, grp_df, grp_edf=None):
-
+    def _auxiliary(self, name, grp_column, grp_df, grp_edf=None):
         assert grp_column in ['module', 'name']
 
         is_callsite = grp_column == "name"
@@ -148,7 +170,7 @@ class Auxiliary:
                                   histo_types=histo_types,
                                   proxy_columns=self.proxy_columns).result
 
-            # todo: boxplot should also be for target wrt ensemble
+            # TODO: boxplot should also be for target wrt ensemble
             boxplot = BoxPlot(df, proxy_columns=self.proxy_columns).result
 
             if is_ensemble:
@@ -157,8 +179,7 @@ class Auxiliary:
                                       grp_type=grp_column,
                                       proxy_columns=self.proxy_columns).result
 
-            # ------------------------------------------------------------------
-            result[grp_name] = self.pack_json(df=df,
+            result[grp_name] = self.pack_npz(df=df,
                                               name=grp_name,
                                               grp_type=grp_column,
                                               is_ensemble=is_ensemble,
@@ -170,15 +191,14 @@ class Auxiliary:
         return result
 
     # --------------------------------------------------------------------------
-    def pack_json(self, name, df, is_ensemble, is_callsite,
+    def pack_npz(self, name, df,
                   gradients=None, histograms=None, boxplots=None,
                   grp_type="name"):
         """
+        Pack the data (gradients, histograms, and boxplots) into npz format
 
         :param name:
         :param df:
-        :param is_ensemble:
-        :param is_callsite:
         :param gradients:
         :param histograms:
         :param boxplots:
@@ -187,16 +207,12 @@ class Auxiliary:
         """
         assert grp_type in ['name', 'module']
 
-        _id_col = 'nid' if grp_type == "name" else 'module'
         result = {"name":               name,
                   "id":                 f"{grp_type}-{name}",
                   "dataset":            df_unique(df, "dataset"),
                   "component_path":     df_unique(df, "component_path"),
                 #   "component_level":    df_unique(df, "component_level")
                   }
-
-        #if grp_type == "module":
-        #    result["module"] = df_unique(df, "module")
 
         # now, append the data
         for tk, tv in zip(TIME_COLUMNS, self.time_columns):
@@ -211,7 +227,6 @@ class Auxiliary:
             # compute the statistics
             _min, _mean, _max = _data.min(), _data.mean(), _data.max()
             _var = _data.var() if _data.shape[0] > 0 else 0.0
-            #_std = np.sqrt(_var)
             _imb = (_max - _mean) / _mean if not np.isclose(_mean, 0.0) else _max
             _skew = skew(_data)
             _kurt = kurtosis(_data)
@@ -219,7 +234,6 @@ class Auxiliary:
             result[tk] = {"d": _data,
                           "rng": (_min, _max),
                           "uv": (_mean, _var),
-                          #"std": _std,
                           "imb": _imb,
                           "ks": (_kurt, _skew)
                           }
