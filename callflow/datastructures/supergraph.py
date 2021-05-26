@@ -67,7 +67,6 @@ class SuperGraph(ht.GraphFrame):
         self.profile_format = ""
 
         self.parameters = {}
-        self.aux_data = {}
         self.proxy_columns = {}
         self.callers = {}
         self.callees = {}
@@ -212,8 +211,6 @@ class SuperGraph(ht.GraphFrame):
         if read_parameter:
             self.parameters = SuperGraph.read_env_params(path)
 
-        if read_aux:
-            self.aux_data = UnpackAuxiliary(path, self.name).result
         # ----------------------------------------------------------------------
         self.add_time_proxies()
         self.df_reset_index() # TODO: This might be cause a possible side
@@ -334,14 +331,6 @@ class SuperGraph(ht.GraphFrame):
 
         if write_nxg:
             SuperGraph.write_nxg(path, self.nxg)
-
-        if write_aux:
-            #if self.name in list(self.auxiliary_data.keys()):
-            if self.name == 'ensemble':
-                for k, v in self.aux_data.items():
-                    SuperGraph.write_aux(path, v, k)
-            else:
-                SuperGraph.write_aux(path, self.aux_data, self.name)
 
     # --------------------------------------------------------------------------
     # SuperGraph.dataframe api
