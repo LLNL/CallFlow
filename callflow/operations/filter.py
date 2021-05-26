@@ -47,7 +47,7 @@ class Filter:
         self.callsites = self.sg.callsites
 
         if 0:
-            self.mean_root_inctime = self.df_mean_runtime(gf.dataframe, self.roots, "time (inc)")
+            self.mean_root_inctime = self.df_root_max_mean_runtime(gf.dataframe, self.roots, "time (inc)")
 
             # Formulate the hatchet query.
             query = [
