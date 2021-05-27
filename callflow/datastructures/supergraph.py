@@ -6,6 +6,7 @@
 """
 CallFlow's data structure to construct Super Graphs.
 """
+from operator import mod
 import os
 import json
 import numpy as np
@@ -31,7 +32,6 @@ from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.utils import NumpyEncoder
 from callflow.utils.df import *
 from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
-from callflow.modules import UnpackAuxiliary
 
 LOGGER = get_logger(__name__)
 
@@ -52,7 +52,7 @@ class SuperGraph(ht.GraphFrame):
     def __init__(self, name):
         """
         Constructor to SuperGraph
-        :param name: SuperGraph's tag.
+        :param name: SuperGraph's tag name
         """
         assert isinstance(name, str)
 
@@ -95,11 +95,11 @@ class SuperGraph(ht.GraphFrame):
 
     def get_name(self, idx, ntype):
         """
-        Getter to obtain the name of a node based on ntype.
-        
-        :param (int): node index
-        :param (str): node type 
-        :return (str): node name
+        Getter to get the node's name based on type.
+
+        :param idx (int): node index
+        :param ntype (str): node type (e.g., module, callsite)
+        :return name (str)
         """
         if ntype == 'callsite':
             return self.callsites.get(idx, None)
@@ -109,11 +109,11 @@ class SuperGraph(ht.GraphFrame):
 
     def get_idx(self, name, ntype):
         """
-        Getter to obtain the index of a node based on ntype.
+        Getter to get the node's index based on type.
 
-        :param (str): node name
-        :param (str): node type
-        :return (int): node index
+        :param name (str): node name
+        :param ntype (str): node type (e.g., module, callsite)
+        :return idx (int)
         """
         if ntype == 'callsite':
             return self.inv_callsites.get(name, None)
@@ -121,14 +121,18 @@ class SuperGraph(ht.GraphFrame):
             return self.inv_modules.get(name, None)
         assert 0
 
-    def get_module(self, callsite):
+    def get_module(self, callsite_idx):
         """
         Get module name from the node name.
 
-        :param callsite (str): callsite
-        :return (str): module for a callsite
+        :param callsite_idx (int): callsite index
+        :return (str): module for a call site
         """
-        return self.module_map[callsite]
+        assert isinstance(callsite_idx, int)
+        
+        module_idx = self.module_callsite_map[callsite_idx]
+        assert len(module_idx) == 1
+        return self.module_callsite_map[callsite_idx][0]
 
     def get_runtime(self, node_idx, ntype, metric, apply_func=None):
         """
@@ -378,7 +382,7 @@ class SuperGraph(ht.GraphFrame):
 
         cols = list(self.dataframe.columns)
         result = {"name": self.name,
-                  "meantime": self.df_mean_runtime(self.dataframe, self.roots, "time (inc)"),
+                  "meantime": self.df_root_max_mean_runtime(self.roots, "time (inc)"),
                   "roots": self.roots,
                   "ncallsites": self.df_count("name"),
                   "modules": self.modules_list,
@@ -546,7 +550,7 @@ class SuperGraph(ht.GraphFrame):
         :param value: (int, or float) Value to lookup by
         :return: (pandas.dataframe) Lookup dataframe
         """
-        assert isinstance(value, (int, float))
+        assert isinstance(value, (int, float, str))
 
         column = self.df_get_proxy(column)
         return self.dataframe.loc[self.dataframe[column] == value]
@@ -615,11 +619,12 @@ class SuperGraph(ht.GraphFrame):
 
         return _df.xs(name, level=column)
 
-    def df_mean_runtime(self, df, roots, column):
+    def df_root_max_mean_runtime(self, roots, column):
         mean_runtime = 0.0
         column = self.df_get_proxy(column)
         for root in roots:
-            mean_runtime = max(mean_runtime, df.loc[df['name'] == root][column].mean())
+            root_idx = self.get_idx(root, "callsite")
+            mean_runtime = max(mean_runtime, self.df_lookup_with_column("name", root_idx)[column].mean())
         return round(mean_runtime, 2)
 
     # --------------------------------------------------------------------------

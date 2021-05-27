@@ -12,7 +12,6 @@ import networkx as nx
 import callflow
 from callflow.utils.timer import Timer
 from callflow.utils.sanitizer import Sanitizer
-from callflow.utils.df import df_get_column
 
 
 class NodeLinkLayout:
@@ -55,8 +54,7 @@ class NodeLinkLayout:
         # paths = [df_get_column(sg.dataframe, "path")[0] for callsite in callsites]
 
         self.nxg = sg.nxg
-        # self.aux_data = sg.aux_data
-
+        
         # Add node and edge attributes.
         self._add_node_attributes()
         self._add_edge_attributes()
@@ -78,14 +76,17 @@ class NodeLinkLayout:
                 if column not in datamap:
                     datamap[column] = {}
 
-                if column == "time (inc)":
-                    datamap[column][callsite] = self.aux_data["data_cs"][callsite]["time (inc)"]["mean"]
-                elif column == "time":
-                    datamap[column][callsite] = self.aux_data["data_cs"][callsite]["time"]["mean"]
+                callsite_idx = self.sg.get_idx(callsite, "callsite")
+                _df =  self.sg.df_lookup_with_column("name", callsite)
+
+                if column == self.time_inc:
+                    datamap[column][callsite] = _df["time (inc)"].mean()
+                elif column == self.time_exc:
+                    datamap[column][callsite] = _df["time"].mean()
                 elif column == "name":
                     datamap[column][callsite] = callsite
                 elif column == "module":
-                    datamap[column][callsite] = self.aux_data["c2m"][callsite]
+                    datamap[column][callsite] = self.sg.get_module(callsite_idx)
 
         # ----------------------------------------------------------------------
         for idx, key in enumerate(datamap):
