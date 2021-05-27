@@ -129,11 +129,8 @@ class SuperGraph(ht.GraphFrame):
         :return (str): module for a call site
         """
         assert isinstance(callsite_idx, int)
+        return self.callsite_module_map[callsite_idx]
         
-        module_idx = self.module_callsite_map[callsite_idx]
-        assert len(module_idx) == 1
-        return self.module_callsite_map[callsite_idx][0]
-
     def get_runtime(self, node_idx, ntype, metric, apply_func=None):
         """
         Getter to obtain the runtime as per the node type.

@@ -258,7 +258,6 @@ export default {
 		},
 
 		setViewDimensions() {
-			this.$store.viewWidth = window.innerWidth;
 
 			// Set toolbar height 
 			let toolbarHeight = 0;
@@ -272,7 +271,8 @@ export default {
 				footerHeight = document.getElementById("footer").clientHeight;
 			}
 
-			this.$store.viewHeight = window.innerHeight;/// - 2 * toolbarHeight - footerHeight;
+			this.$store.viewWidth = window.innerWidth;
+			this.$store.viewHeight = window.innerHeight - footerHeight;
 		},
 	},
 };
