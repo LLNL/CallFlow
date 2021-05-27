@@ -22,7 +22,6 @@ import ConfigInformation from "./summary/config";
 import ProfileInformation from "./summary/profile";
 import TimeSeries from "./summary/timeSeries";
 import APIService from "lib/routing/APIService";
-import moment from "moment";
 
 export default {
 	name: "Summary",

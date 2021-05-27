@@ -5,17 +5,19 @@
  * SPDX-License-Identifier: MIT
  */
 <template>
-  <v-card fill-height flex>
-	<v-row class="ml-3 pa-1">
-		<svg :id="id" :width="width" :height="height"></svg>
-	</v-row>
-  </v-card>
+  <v-container fluid class="px-3">
+	<v-card tile>
+		<v-card-title class="pa-4 pb-0"> Timeline </v-card-title>
+		<v-row class="ml-3 pa-1">
+			<svg :id="id" :width="width" :height="height"></svg>
+		</v-row>
+	</v-card>
+  </v-container>
 </template>
 
 <script>
 import * as d3 from "d3";
 import * as utils from "lib/utils";
-import moment from "moment";
 
 export default {
 	name: "TimeSeries",
@@ -27,8 +29,8 @@ export default {
 		yMin: 0,
 		yMax: 0,
 		padding: {
-			top: 20,
-			bottom: 30,
+			top: 10,
+			bottom: 40,
 			left: 100,
 			right: 0,
 		},
@@ -64,6 +66,9 @@ export default {
 			this.width = this.$store.viewWidth;
 			this.height = this.$store.viewHeight / 2 - this.padding.bottom - this.padding.top;
 
+			this.keys = this.data.keys;
+			this.timeline = Object.values(this.data).map((d) => d);
+
 			this.initSVG();
 			this.plot();
 			this.axis();
@@ -75,19 +80,12 @@ export default {
 			this.svg = d3.select("#" + this.id).attrs({
 				width: this.width,
 				height: this.height,
-				transform: `translate(${0}, ${0})`,
 				"pointer-events": "all",
 				border: "1px solid lightgray",
 			});
 
 			this.mainSvg = this.svg.append("g").attrs({
-				height: this.height,
-				width: this.width,
 				id: "mainSVG",
-				transform: `translate(${this.padding.left}, ${this.padding.top})`,
-			});
-
-			this.mainPathG = this.mainSvg.append("g").attrs({
 				transform: `translate(${this.padding.left}, ${this.padding.top})`,
 			});
 
@@ -105,10 +103,6 @@ export default {
 		},
 
 		plot() {
-			this.keys = this.data.keys;
-			this.timeline = Object.values(this.data).map((d) => d);
-			console.log(this.timeline);
-
 			let series = null;
 			if(this.seriesType == "STACKED") {
 				series = d3
@@ -272,10 +266,11 @@ export default {
 		},
 
 		colorMap() {
+			console.log(this.height);
 			let width = this.width;
 			let n_colors = this.keys.length;
 			let x_offset = 20;
-			let y_offset = 12;
+			let y_offset = this.height;
 			let radius = 10;
 			let padding = 10;
 			let height = 3 * radius + padding;
@@ -284,14 +279,13 @@ export default {
 			d3.select(".colorMapSVG").remove();
 
 			let svg = this.svg
-				.append("svg")
+				.append("g")
 				.attrs({
-					transform: `translate(${x_offset}, ${y_offset})`,
+					transform: `translate(${20}, ${-30})`,
 					width: this.width,
 					height: height,
 					class: "colorMapSVG",
-				})
-				.append("g");
+				});
 
 			svg
 				.selectAll("circle")
@@ -307,7 +301,7 @@ export default {
 					cx: (d, i) => {
 						return i * gap + radius;
 					},
-					cy: radius + y_offset,
+					cy: (radius + y_offset),
 				});
 
 			svg
