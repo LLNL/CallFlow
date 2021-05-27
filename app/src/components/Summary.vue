@@ -12,7 +12,7 @@
       </v-col>
     </v-row>
     <v-row>
-      <TimeSeries ref="TimeSeries" :data="data" />
+      <TimeSeries ref="TimeSeries" :data="timeline"/>
     </v-row>
   </v-flex>
 </template>
@@ -22,6 +22,7 @@ import ConfigInformation from "./summary/config";
 import ProfileInformation from "./summary/profile";
 import TimeSeries from "./summary/timeSeries";
 import APIService from "lib/routing/APIService";
+import * as utils from "lib/utils";
 
 export default {
 	name: "Summary",
@@ -30,9 +31,16 @@ export default {
 		ProfileInformation,
 		TimeSeries,
 	},
-	props: ["config", "profiles"],
+	props: ["config"],
 	data: () => ({
 		data: {},
+		runs: [],
+		run_counts: 0,
+		summary: {},
+		profiles: [],
+		timeline: {},
+		rankBinCount: 20,
+		runBinCount: 20,
 	}),
 	mounted() {
 		document.title = "CallFlow - ";
@@ -40,12 +48,40 @@ export default {
 
 	methods: {
 		async init() {
-			this.data = await APIService.POSTRequest("timeline", {
+			this.runs = this.$store.config.runs.map((_) => _["name"]);
+			this.run_counts = this.runs.length;
+
+			this.summary = await APIService.POSTRequest("summary", {
+				datasets: this.runs,
+				rankBinCount: this.rankBinCount,
+				runBinCount: this.runBinCount,
+				reProcess: false,
+			});
+
+			this.timeline = await APIService.POSTRequest("timeline", {
 				"ntype": "module",
 				"ncount": 5,
 				"metric": "time",
 			});
+
+			this.profiles = utils.swapKeysToArray(this.summary);
 		},
+
+		/**
+		 * Attaches properties to central storage based on the data from `this.auxiliary_data`.
+		 */
+		setSummaryGlobalVariables() {
+			this.$store.summary = this.summary;
+			this.$store.metricTimeMap = utils.swapKeysToDict(this.summary, "meantime");
+
+			this.$store.selectedTargetDataset = utils.getKeyWithMaxValue(this.$store.metricTimeMap);
+			this.$store.selectedNode = this.$store.summary[this.$store.selectedTargetDataset]["roots"][0];
+
+			this.$store.numOfRuns = this.runs.length;
+			this.$store.selectedDatasets = this.runs;
+		},
+
+
 		/**
      	* Per dataset information.
      	*/

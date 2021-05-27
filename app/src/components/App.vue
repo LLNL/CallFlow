@@ -27,8 +27,7 @@
 		<v-main>
 			<Loader ref="Loader" :isDataReady="isDataReady" />
 			<router-view></router-view>
-			<Summary ref="Summary" v-if="$route.path == '/'" :config="config"
-			:profiles="profiles" />
+			<Summary ref="Summary" v-if="$route.path == '/'" :config="config" />
 		</v-main>
 		<Footer ref="Footer" :text="footerText" :year="year"></Footer>
 	</v-app>
@@ -57,13 +56,9 @@ export default {
 	},
 	data: () => ({
 		data: {},
-		runs: {},
 		config: {},
-		profiles: [],
 		moduleMap: [],
 		run_counts: 0,
-		rankBinCount: 20,
-		runBinCount: 20,
 		selectedIQRFactor: 0.15,
 		targetColorMap: {
 			Green: "#4EAF4A",
@@ -85,62 +80,21 @@ export default {
 		EventHandler.$on("setup-colors", () => {
 			self.setupColors(this.$store.selectedRuntimeColorMap, this.$store.selectedDistributionColorMap);
 		});
-
-		EventHandler.$on("aux-data", (payload) => {
-			this.fetchData(payload);
-		});
 	},
 
 	methods: {
 		async init() {
 			this.config = await APIService.GETRequest("config");
+			this.run_counts = this.config.runs.map((_) => _["name"]).length;
 			this.$store.config = this.config;
 
 			document.title = "CallFlow - " + this.$store.config.experiment;
 
-			this.runs = this.$store.config.runs.map((_) => _["name"]);
-			this.run_counts = this.runs.length;
-
-			await this.fetchData();
-			this.isDataReady = true;
-		},
-
-		/**
-		 * Send the request to /init endpoint
-		 * Parameters: {datasetPath: "path/to/dataset"}
-		*/ 
-		async fetchData(payload) {
-			if(!payload) {
-				payload = {
-					datasets: this.runs,
-					rankBinCount: this.rankBinCount,
-					runBinCount: this.runBinCount,
-					reProcess: false,
-				};
-			}
-			const aux_data = await APIService.POSTRequest("summary", payload);
-			this.initStore(aux_data);
-			// TODO: Remove this shortcut.
-			this.$refs.Summary.init();
-			return;
-		},
-
-		initStore(data) {
-			this.setAuxVariables(data); // Set the variables that are affected by auxiliary data.
 			this.setGlobalVariables(); // Set the general variables in the store.
 			this.setViewDimensions(); // Set the view dimensions.
-		},
 
-		/**
-		 * Attaches properties to central storage based on the data from `this.auxiliary_data`.
-		 */
-		setAuxVariables(data) {
-			this.$store.summary = data;
-			this.profiles = utils.swapKeysToArray(data);
-			this.$store.metricTimeMap = utils.swapKeysToDict(data, "meantime");
-
-			this.$store.selectedTargetDataset = utils.getKeyWithMaxValue(this.$store.metricTimeMap);
-			this.$store.selectedNode = this.$store.summary[this.$store.selectedTargetDataset]["roots"][0];
+			this.$refs.Summary.init();
+			this.isDataReady = true;
 		},
 
 		setGlobalVariables() {
@@ -169,9 +123,6 @@ export default {
 			// Set the metric to sort the call site information
 			this.$store.selectedRuntimeSortBy = "time (inc)";
 			this.$store.selectedMetric = "time (inc)";
-
-			this.$store.numOfRuns = this.runs.length;
-			this.$store.selectedDatasets = this.runs;
 		},
 
 		setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {
