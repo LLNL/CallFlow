@@ -75,11 +75,6 @@ class SankeyLayout:
         else:
             self.runs = selected_runs # Do not filter
 
-        if isinstance(self.sg, callflow.EnsembleGraph):
-            self.aux_data = self.sg.aux_data["ensemble"]
-        else:
-            self.aux_data = self.sg.aux_data
-
         self.reveal_callsites = reveal_callsites
         self.split_entry_module = split_entry_module
         self.split_callee_module = split_callee_module
@@ -489,7 +484,7 @@ class SankeyLayout:
                         "source_callsite": source["callsite"],
                         "target_callsite": target["callsite"],
                         "edge_type": edge_type,
-                        "weight": self._get_runtime(target, "time (inc)", 'mean'),
+                        "weight": self.sg.get_runtime(target, "time (inc)", lambda x: x.mean()),
                         "dataset": self.sg.name,
                     }
 
@@ -829,26 +824,3 @@ class SankeyLayout:
                 return {"type": "component-node"}
         else:
             return {"type": "component-node"}
-
-
-    # Getters for aux_data
-    # TODO: Find a more suitable place for this. 
-    # TODO: We should technically use the "node_type" to recognize what data to
-    # look for. But we are doing this because for runs with "no module map" by
-    # default assume each node to be a "super-node". However the grouping logic
-    # consumes only "super-node", so changing that to "component-node" does not
-    # solve the underlying problem. 
-    # NOTE: THe desired code should be as follows:
-    # if node.type = "super-node": return information from "data_mod"
-    # elif node.type == "component-node": return information from "data_cs"
-    def _get_runtime(self, node, metric, measure):
-        node_name = node["callsite"]
-
-        if "=" in node_name:
-            node_name = node_name.split("=")[-1]
-        if node_name in self.aux_data["data_cs"]:
-            return self.aux_data["data_cs"][node_name][metric][measure]
-        elif node_name in self.aux_data["data_mod"]:
-            return self.aux_data["data_mod"][node_name][metric][measure]
-        else:
-            return 0

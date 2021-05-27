@@ -64,6 +64,7 @@ class SuperGraph(ht.GraphFrame):
         self.graph = None
 
         self.name = name  # dataset name
+        # self.timestamp = timestamp # dataset timestamp
         self.profile_format = ""
 
         self.parameters = {}
@@ -93,6 +94,13 @@ class SuperGraph(ht.GraphFrame):
         return self.__str__()
 
     def get_name(self, idx, ntype):
+        """
+        Getter to obtain the name of a node based on ntype.
+        
+        :param (int): node index
+        :param (str): node type 
+        :return (str): node name
+        """
         if ntype == 'callsite':
             return self.callsites.get(idx, None)
         if ntype == 'module':
@@ -100,6 +108,13 @@ class SuperGraph(ht.GraphFrame):
         assert 0
 
     def get_idx(self, name, ntype):
+        """
+        Getter to obtain the index of a node based on ntype.
+
+        :param (str): node name
+        :param (str): node type
+        :return (int): node index
+        """
         if ntype == 'callsite':
             return self.inv_callsites.get(name, None)
         if ntype == 'module':
@@ -108,13 +123,27 @@ class SuperGraph(ht.GraphFrame):
 
     def get_module(self, callsite):
         """
-        If such a mapping exists, this function returns the module based on
-        mapping. Else, it queries the graphframe for a module name.
+        Get module name from the node name.
 
-        :param callsite (str): call site
-        :return (str): module for a call site
+        :param callsite (str): callsite
+        :return (str): module for a callsite
         """
         return self.module_map[callsite]
+
+    def get_runtime(self, node_idx, ntype, metric, apply_func=None):
+        """
+        Getter to obtain the runtime as per the node type.
+
+        :param node_idx (int): node index
+        :param ntype (str): node type (e.g., 'callsite' or 'module')
+        :param metric (str): metric (e.g., 'time' or 'time (inc)')
+        :param apply_func (func): apply function (e.g., mean, min, max)
+        :return (float): runtime of a node
+        """
+        if ntype == 'callsite':
+            return self.df_lookup_by_column("name", node_idx)[metric].apply(apply_func)
+        elif ntype == 'module':
+            return self.df_lookup_by_column("module", node_idx)[metric].apply(apply_func)
 
     # --------------------------------------------------------------------------
     def create(self, path, profile_format, module_callsite_map: dict = {},  filter_by="time (inc)", filter_perc=10.0) -> None: 
