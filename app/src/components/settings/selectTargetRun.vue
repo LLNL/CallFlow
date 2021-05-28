@@ -35,6 +35,11 @@ export default {
 	}),
 	props: ["datasets", "targetDataset"],
 	mounted() {
+		this.metricTimeMap = utils.swapKeysToDict(data, "meantime");
+
+		this.$store.selectedTargetDataset = utils.getKeyWithMaxValue(this.$store.metricTimeMap);
+		this.$store.selectedNode = this.$store.summary[this.$store.selectedTargetDataset]["roots"][0];
+		
 		this.sortedDatasets = this.sortDatasetsByAttr(
 			this.$store.selectedDatasets,
 			"Inclusive"

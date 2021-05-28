@@ -6,7 +6,6 @@
 """
 CallFlow's data structure to construct Super Graphs.
 """
-from operator import mod
 import os
 import json
 import numpy as np
