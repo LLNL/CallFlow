@@ -619,8 +619,7 @@ class SuperGraph(ht.GraphFrame):
         mean_runtime = 0.0
         column = self.df_get_proxy(column)
         for root in roots:
-            root_idx = self.get_idx(root, "callsite")
-            mean_runtime = max(mean_runtime, self.df_lookup_with_column("name", root_idx)[column].mean())
+            mean_runtime = max(mean_runtime, self.df_lookup_with_column("name", root)[column].mean())
         return round(mean_runtime, 2)
 
     # --------------------------------------------------------------------------

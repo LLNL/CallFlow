@@ -95,6 +95,9 @@ export default {
 
 			this.$refs.Summary.init();
 			this.isDataReady = true;
+			
+			this.setRuntimeColorScale();
+			this.setDistributionColorScale();
 		},
 
 		setGlobalVariables() {
