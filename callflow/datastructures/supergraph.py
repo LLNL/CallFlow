@@ -221,9 +221,9 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.info(f'Processed graph')
         LOGGER.profile('')
 
-        self.df_add_column("callees", apply_dict=self.callees, dict_default=[])
-        self.df_add_column("callers", apply_dict=self.callers, dict_default=[])
-        #self.df_add_column("path", apply_dict=self.paths, dict_default=[])
+        self.df_add_column("callees", apply_dict=self.callees, dict_default=[], apply_on="nid")
+        self.df_add_column("callers", apply_dict=self.callers, dict_default=[], apply_on="nid")
+        self.df_add_column("path", apply_dict=self.paths, dict_default=[], apply_on="nid")
 
     # --------------------------------------------------------------------------
     def load(
