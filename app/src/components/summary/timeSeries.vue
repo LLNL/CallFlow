@@ -66,8 +66,11 @@ export default {
 			this.width = this.$store.viewWidth;
 			this.height = this.$store.viewHeight / 2 - this.padding.bottom - this.padding.top;
 
-			this.keys = this.data.keys;
-			this.timeline = Object.values(this.data).map((d) => d);
+			this.nodes = this.data.nodes;
+
+			this.timeline = Object.values(this.data.d).map((d) => d);
+
+			console.log(this.data, this.timeline);
 
 			this.initSVG();
 			this.plot();
@@ -107,13 +110,13 @@ export default {
 			if(this.seriesType == "STACKED") {
 				series = d3
 					.stack()
-					.keys(this.keys)(this.timeline)
+					.keys(this.nodes)(this.timeline)
 					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
 			}
 			else if (this.seriesType == "NORMALIZED") {
 				series = d3
 					.stack()
-					.keys(this.keys)
+					.keys(this.nodes)
 					.offset(d3.stackOffsetExpand)(this.timeline)
 					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
 			}
@@ -268,7 +271,7 @@ export default {
 		colorMap() {
 			console.log(this.height);
 			let width = this.width;
-			let n_colors = this.keys.length;
+			let n_colors = this.nodes.length;
 			let x_offset = 20;
 			let y_offset = this.height;
 			let radius = 10;
@@ -289,12 +292,12 @@ export default {
 
 			svg
 				.selectAll("circle")
-				.data(this.keys)
+				.data(this.nodes)
 				.enter()
 				.append("circle")
 				.style("stroke", "gray")
 				.style("fill", (d, i) => {
-					return this.color(this.keys[i]);
+					return this.color(this.nodes[i]);
 				})
 				.attrs({
 					r: radius,
@@ -306,11 +309,11 @@ export default {
 
 			svg
 				.selectAll("text")
-				.data(this.keys)
+				.data(this.nodes)
 				.enter()
 				.append("text")
 				.text((d, i) => {
-					return this.keys[i];
+					return this.nodes[i];
 				})
 				.attrs({
 					x: (d, i) => {

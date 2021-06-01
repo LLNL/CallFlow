@@ -64,7 +64,10 @@ class SuperGraph(ht.GraphFrame):
         self.graph = None
 
         self.name = name  # dataset name
-        # self.timestamp = timestamp # dataset timestamp
+        if name != "ensemble":
+            self.timestamp = Sanitizer.fmt_time(name) # dataset timestamp
+        else: 
+            self.timestamp = ""
         self.profile_format = ""
 
         self.parameters = {}
