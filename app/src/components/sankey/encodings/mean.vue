@@ -21,8 +21,8 @@ export default {
 			this.nodes = nodes;
 			this.containerG = containerG;
 
-			this.module_data = this.$store.data_mod[this.$store.selectedTargetDataset];
-			this.callsite_data = this.$store.data_cs[this.$store.selectedTargetDataset];
+			// this.module_data = this.$store.data_mod[this.$store.selectedTargetDataset];
+			// this.callsite_data = this.$store.data_cs[this.$store.selectedTargetDataset];
 
 			// this.setColorScale();
 			this.visualize();

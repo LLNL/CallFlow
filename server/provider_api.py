@@ -194,4 +194,11 @@ class APIProvider(BaseProvider):
             return APIProvider.emit_json("compare", result)
 
 
+        @app.route("/single_histogram", methods=["POST"])
+        @cross_origin()
+        def single_histogram():
+            data = request.json
+            result = self.request_single({"name": "histogram", **data})
+            return APIProvider.emit_json("single_histogram", result)
+        
 # ------------------------------------------------------------------------------

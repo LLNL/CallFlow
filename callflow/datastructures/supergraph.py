@@ -27,6 +27,7 @@ except Exception:
             pass
 
 from callflow import get_logger
+from callflow.modules import Histogram
 from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.utils import NumpyEncoder
 from callflow.utils.df import *
@@ -396,6 +397,16 @@ class SuperGraph(ht.GraphFrame):
     def timeline(self, nodes, ntype, metric):
         grp_df = self.df_group_by(ntype)
         return { node : df_apply_func(grp_df.get_group(self.get_idx(node, ntype)), metric, self.proxy_columns) for node in nodes}    
+
+    def histogram(self, node, ntype, metric, nbins):
+        if ntype == "callsite":
+            df = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+        elif ntype == "module":
+            df = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())        
+
+        result = Histogram(df, relative_to_df=None,
+                                histo_types="rank",
+                                proxy_columns=self.proxy_columns).result
 
     # --------------------------------------------------------------------------
     # SuperGraph.df functions

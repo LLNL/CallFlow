@@ -16,7 +16,6 @@ from callflow.modules import Auxiliary
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import ParameterProjection, DiffView
 from callflow.utils.sanitizer import Sanitizer
-from numpy.lib.arraysetops import isin
 
 LOGGER = get_logger(__name__)
 
@@ -308,7 +307,7 @@ class BaseProvider:
         Handles requests connected to Single CallFlow.
         """
         assert isinstance(operation, dict)
-        _OPERATIONS = ["cct", "supergraph", "split_mpi_distribution"]
+        _OPERATIONS = ["cct", "supergraph", "split_mpi_distribution", "histogram", "boxplot"]
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
 
@@ -340,6 +339,15 @@ class BaseProvider:
         elif operation_name == "split_mpi_distribution":
             assert False
             pass
+    
+        elif operation_name == "histogram":
+            dataset = operation["dataset"]
+            node = operation["node"]
+            ntype = operation["ntype"]
+            metric = operation["metric"]
+            nbins = operation["nbins"]
+
+            return self.supergraphs[dataset].histogram(node, ntype, metric, nbins)
 
     def request_ensemble(self, operation):
         """

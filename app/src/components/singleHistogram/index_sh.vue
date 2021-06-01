@@ -20,6 +20,7 @@ import "d3-selection-multi";
 
 // Local library imports
 import * as utils from "lib/utils";
+import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
 
 import InfoChip from "../general/infoChip";
@@ -104,10 +105,10 @@ export default {
 			});
 		},
 
-		setupScale(data) {
-			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
-			const _data = store[this.$store.selectedMetric]["hists"][this.$store.selectedProp];
-			const _mpiData = store[this.$store.selectedMetric]["d"];
+		setupScale() {
+			// const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
+			const _data = this.data[this.$store.selectedMetric]["hists"][this.$store.selectedProp];
+			const _mpiData = this.data[this.$store.selectedMetric]["d"];
 
 			let temp = this.dataProcess(_data, _mpiData);
 			this.xVals = temp[0];
@@ -149,7 +150,7 @@ export default {
 			// this.$refs.ToolTip.clear();
 		},
 
-		visualize(callsite) {
+		async visualize(callsite) {
 			if(!this.firstRender) {
 				this.clear();
 			}
@@ -157,7 +158,15 @@ export default {
 				this.init();
 			}
 			this.firstRender = false;
-			this.setupScale(callsite);
+			console.log("here");
+			this.data = await APIService.POSTRequest("single_histogram", {
+				dataset: this.$store.selectedTargetDataset,
+				node: callsite,
+				ntype: "super-node",
+				metric: this.$store.selectedMetric,
+				nbins: this.$store.selectedMPIBinCount,
+			});
+			this.setupScale();
 			this.bars();
 			this.xAxis();
 			this.yAxis();
