@@ -6,7 +6,6 @@
 """
 CallFlow's data structure to construct Super Graphs.
 """
-from operator import mod
 import os
 import json
 import numpy as np
@@ -28,6 +27,7 @@ except Exception:
             pass
 
 from callflow import get_logger
+from callflow.modules import Histogram
 from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.utils import NumpyEncoder
 from callflow.utils.df import *
@@ -401,6 +401,16 @@ class SuperGraph(ht.GraphFrame):
         grp_df = self.df_group_by(ntype)
         return { node : df_apply_func(grp_df.get_group(self.get_idx(node, ntype)), metric, self.proxy_columns) for node in nodes}    
 
+    def histogram(self, node, ntype, metric, nbins):
+        if ntype == "callsite":
+            df = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+        elif ntype == "module":
+            df = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())        
+
+        result = Histogram(df, relative_to_df=None,
+                                histo_types="rank",
+                                proxy_columns=self.proxy_columns).result
+
     # --------------------------------------------------------------------------
     # SuperGraph.df functions
     # --------------------------------------------------------------------------
@@ -623,8 +633,7 @@ class SuperGraph(ht.GraphFrame):
         mean_runtime = 0.0
         column = self.df_get_proxy(column)
         for root in roots:
-            root_idx = self.get_idx(root, "callsite")
-            mean_runtime = max(mean_runtime, self.df_lookup_with_column("name", root_idx)[column].mean())
+            mean_runtime = max(mean_runtime, self.df_lookup_with_column("name", root)[column].mean())
         return round(mean_runtime, 2)
 
     # --------------------------------------------------------------------------

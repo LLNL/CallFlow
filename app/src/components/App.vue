@@ -95,6 +95,9 @@ export default {
 
 			this.$refs.Summary.init();
 			this.isDataReady = true;
+			
+			this.setRuntimeColorScale();
+			this.setDistributionColorScale();
 		},
 
 		setGlobalVariables() {
@@ -130,7 +133,6 @@ export default {
 			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
 			
 			this.setRuntimeColorScale(selectedRuntimeColorMap, this.$store.selectedMetric);
-
 
 			if(this.$store.numOfRuns > 1 && this.$store.selectedFormat == "EnsembleSuperGraph") {
 				// Create distribution color object

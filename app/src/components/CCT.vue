@@ -132,10 +132,6 @@ export default {
 			// Set the datasets
 			this.datasets = this.$store.selectedDatasets;
 
-			// Set the metricTimeMap, used by the dropdown to select the dataset.
-			// TODO: Move this to viewSelection component 
-			this.metricTimeMap = this.$store.metricTimeMap;
-
 			// Set encoding method.
 			this.$store.encoding = "MEAN";
 

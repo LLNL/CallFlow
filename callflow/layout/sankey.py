@@ -6,7 +6,6 @@
 """
 CallFlow's layout - Sankey.
 """
-import pandas as pd
 import networkx as nx
 import numpy as np
 from ast import literal_eval as make_list
@@ -68,8 +67,6 @@ class SankeyLayout:
             "time (inc)"
         ]
 
-        # self._COLUMNS = self._COLUMNS + [self.time_inc, self.time_exc]
-
         if len(selected_runs) > 1:
             self.runs = sg.nxg_filter_by_datasets(selected_runs) # Filter based on the sub set asked by the client
         else:
@@ -92,9 +89,10 @@ class SankeyLayout:
                 SankeyLayout._PRIMARY_GROUPBY_COLUMN,
             ],
         )
-        self.paths_df = df_group_by(self.sg.dataframe, [SankeyLayout._PRIMARY_GROUPBY_COLUMN, self.path])
+
 
         self.nxg = self._create_nxg_from_paths()
+        print(self.nxg.nodes())
         self.add_reveal_paths(self.reveal_callsites)
 
         if len(self.split_entry_module) > 0:
@@ -457,56 +455,60 @@ class SankeyLayout:
         Note: Current logic constructs two graphs (one for cct, and one for supergraph)
         and later uses them to construct a module level supergraph.
         """
-
+        print(self.sg.dataframe['path'])
+        paths_df = df_group_by(self.sg.dataframe, [SankeyLayout._PRIMARY_GROUPBY_COLUMN, self.path])
         nxg = nx.DiGraph()
-        # cct = nx.DiGraph()
 
-        for (callsite, path), path_df in self.paths_df:
+        for callsite in paths_df.groups:
+            path = paths_df.get_group(callsite).columns
+
+
+            print(f"callsite: {callsite}, path: {path}")
             # Break cycles, if any.
-            path_list = SankeyLayout._break_cycles_in_paths(path)
+            # path_list = SankeyLayout._break_cycles_in_paths(path)
 
-            # loop through the path lists for each callsite.
-            for callsite_idx, callsite2 in enumerate(path_list):
-                if callsite_idx != len(path_list) - 1:
-                    source = path_list[callsite_idx]
-                    target = path_list[callsite_idx + 1]
+            # # loop through the path lists for each callsite.
+            # for callsite_idx, callsite2 in enumerate(path_list):
+            #     if callsite_idx != len(path_list) - 1:
+            #         source = path_list[callsite_idx]
+            #         target = path_list[callsite_idx + 1]
 
-                    # has_caller_edge = nxg.has_edge(source["module"], target["module"])
-                    has_callback_edge = nxg.has_edge(target["module"], source["module"])
-                    # has_cct_edge = cct.has_edge(source["callsite"], target["callsite"])
+            #         # has_caller_edge = nxg.has_edge(source["module"], target["module"])
+            #         has_callback_edge = nxg.has_edge(target["module"], source["module"])
+            #         # has_cct_edge = cct.has_edge(source["callsite"], target["callsite"])
 
-                    if has_callback_edge:
-                        edge_type = "callback"
-                    else:
-                        edge_type = "caller"
+            #         if has_callback_edge:
+            #             edge_type = "callback"
+            #         else:
+            #             edge_type = "caller"
 
-                    edge_dict = {
-                        "source_callsite": source["callsite"],
-                        "target_callsite": target["callsite"],
-                        "edge_type": edge_type,
-                        "weight": self.sg.get_runtime(target, "time (inc)", lambda x: x.mean()),
-                        "dataset": self.sg.name,
-                    }
+            #         edge_dict = {
+            #             "source_callsite": source["callsite"],
+            #             "target_callsite": target["callsite"],
+            #             "edge_type": edge_type,
+            #             "weight": self.sg.get_runtime(target, "time (inc)", lambda x: x.mean()),
+            #             "dataset": self.sg.name,
+            #         }
 
-                    if source["type"] == "super-node":
-                        source_id = source["module"]
+            #         if source["type"] == "super-node":
+            #             source_id = source["module"]
 
-                    elif source["type"] == "component-node":
-                        source_id = source["module"] + "=" + source["callsite"]
+            #         elif source["type"] == "component-node":
+            #             source_id = source["module"] + "=" + source["callsite"]
 
-                    if target["type"] == "super-node":
-                        target_id = target["module"]
+            #         if target["type"] == "super-node":
+            #             target_id = target["module"]
 
-                    elif target["type"] == "component-node":
-                        target_id = target["module"] + "=" + target["callsite"]
+            #         elif target["type"] == "component-node":
+            #             target_id = target["module"] + "=" + target["callsite"]
 
-                    if not nxg.has_node(source_id):
-                        nxg.add_node(source_id, attr_dict=source)
-                    if not nxg.has_node(target_id):
-                        nxg.add_node(target_id, attr_dict=target)
+            #         if not nxg.has_node(source_id):
+            #             nxg.add_node(source_id, attr_dict=source)
+            #         if not nxg.has_node(target_id):
+            #             nxg.add_node(target_id, attr_dict=target)
 
-                    if not nxg.has_edge(source_id, target_id) and edge_dict["weight"] > 0:
-                        nxg.add_edge(source_id, target_id, attr_dict=edge_dict)
+            #         if not nxg.has_edge(source_id, target_id) and edge_dict["weight"] > 0:
+            #             nxg.add_edge(source_id, target_id, attr_dict=edge_dict)
 
         return nxg
 
@@ -614,10 +616,10 @@ class SankeyLayout:
                     ret[column] = {}
 
                 if column == "time (inc)":
-                    ret[column][node_name] = self._get_runtime(node_dict, column, "mean")
+                    ret[column][node_name] = time_inc
 
                 elif column == "time":
-                    ret[column][node_name] = self._get_runtime(node_dict, column, "mean")
+                    ret[column][node_name] = time_exc
 
                 elif column == "module":
                     ret[column][node_name] = module

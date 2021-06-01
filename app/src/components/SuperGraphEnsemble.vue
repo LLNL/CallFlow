@@ -194,9 +194,6 @@ export default {
 
 			// Set this.selectedTargetDataset (need to remove)
 			this.selectedTargetDataset = this.$store.selectedTargetDataset;
-			
-			// Set the metricTimeMap, used by the dropdown to select the dataset.
-			this.metricTimeMap = this.$store.metricTimeMap;
 
 			// Set the datasets
 			this.datasets = this.$store.selectedDatasets;

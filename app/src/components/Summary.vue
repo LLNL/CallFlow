@@ -65,12 +65,13 @@ export default {
 			});
 
 			this.profiles = utils.swapKeysToArray(this.summary);
+			this.setSummaryGlobalVariables();
 		},
 
 		/**
 		 * Attaches properties to central storage based on the data from `this.auxiliary_data`.
 		 */
-		setSummaryGlobalVariables() {
+		setSummaryGlobalVariables() { 
 			this.$store.summary = this.summary;
 			this.$store.metricTimeMap = utils.swapKeysToDict(this.summary, "meantime");
 

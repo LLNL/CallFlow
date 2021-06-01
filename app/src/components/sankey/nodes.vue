@@ -90,8 +90,8 @@ export default {
 					this.sankeySVG.attr("transform", "translate(" + [tx, ty] + ")scale(" + d3.event.transform.k + ")");
 				});
 
-			this.ensemble_module_data = this.$store.data_mod["ensemble"];
-			this.ensemble_callsite_data = this.$store.data_cs["ensemble"];
+			// this.ensemble_module_data = this.$store.data_mod["ensemble"];
+			// this.ensemble_callsite_data = this.$store.data_cs["ensemble"];
 
 			this.preVis();
 			this.visualize();
@@ -230,10 +230,10 @@ export default {
 						dataset: this.$store.selectedTargetDataset,
 					});
 
-					EventHandler.$emit("single-scatterplot", {
-						node,
-						dataset: this.$store.selectedTargetDataset,
-					});
+					// EventHandler.$emit("single-scatterplot", {
+					// 	node,
+					// 	dataset: this.$store.selectedTargetDataset,
+					// });
 
 					// TODO: Bring this back.
 					// EventHandler.$emit("single-select-module", {
