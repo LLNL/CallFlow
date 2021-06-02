@@ -28,6 +28,7 @@ JSONSCHEMA_CONFIG = {
         "chunk_idx": {"type": "string"},
         "chunk_size": {"type": "string"},
         "ensemble_process": {"type": "boolean"},
+        "experiment": {"type": "string"},
     },
 }
 
@@ -330,7 +331,9 @@ class ArgParser:
                 scheme[_] = self.args[_]
 
         # Set the data_path, which is data directory.
-        scheme["experiment"] = os.path.basename(json["data_path"])
+        if len(scheme["experiment"]) == 0:
+            print(os.path.dirname(json["data_path"]))
+            scheme["experiment"] = os.path.basename(json["data_path"])
 
         if self.args.get('save_path') is not "":
             scheme["save_path"] = os.path.join(os.path.abspath(self.args.get("save_path")), ".callflow")

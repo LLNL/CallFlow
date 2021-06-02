@@ -85,6 +85,7 @@ export default {
 	methods: {
 		async init() {
 			this.config = await APIService.GETRequest("config");
+			console.log(this.config);
 			this.run_counts = this.config.runs.map((_) => _["name"]).length;
 			this.$store.config = this.config;
 
@@ -95,9 +96,6 @@ export default {
 
 			this.$refs.Summary.init();
 			this.isDataReady = true;
-			
-			this.setRuntimeColorScale();
-			this.setDistributionColorScale();
 		},
 
 		setGlobalVariables() {
