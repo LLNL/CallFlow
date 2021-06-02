@@ -17,6 +17,7 @@ SUPPORTED_PROFILE_FORMATS = ["hpctoolkit", "caliper_json", "caliper"]
 JSONSCHEMA_CONFIG = {
     "type": "object",
     "properties": {
+        "append_path": {"type": "string"},
         "data_path": {"type": "string"},
         "save_path": {"type": "string"},
         "read_parameter": {"type": "boolean"},
@@ -31,7 +32,6 @@ JSONSCHEMA_CONFIG = {
 }
 
 CONFIG_KEYS = list(JSONSCHEMA_CONFIG["properties"].keys())
-print(CONFIG_KEYS)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------

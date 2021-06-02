@@ -232,8 +232,8 @@ class Group:
         #LOGGER.profile(df_info(self.sg.dataframe))
 
         # update the graph
-        self.sg.df_add_column("group_path", apply_dict=group_path, dict_default='')
-        self.sg.df_add_column("component_path", apply_dict=component_path, dict_default='')
+        self.sg.df_add_column("group_path", apply_dict=group_path, dict_default='', apply_on="nid")
+        self.sg.df_add_column("component_path", apply_dict=component_path, dict_default='', apply_on="nid")
         # self.sg.df_add_column("component_level", apply_dict=component_level, dict_default='')
         # self.sg.df_add_column("entry_function", apply_dict=entry_func, dict_default='')
         # TODO: Remove the below columns
