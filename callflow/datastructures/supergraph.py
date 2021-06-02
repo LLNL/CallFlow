@@ -150,6 +150,17 @@ class SuperGraph(ht.GraphFrame):
         elif ntype == 'module':
             return self.df_lookup_with_column("module", node_idx)[metric].apply(apply_func)
 
+    def get_name_by_nid(self, nid):
+        """
+        Getter to obtain node's name by nid.
+
+        :param nid (int): node index
+        :return (str): node's name.
+        """
+        unique_names = self.df_lookup_with_column("nid", nid)['name'].unique()
+        assert len(unique_names) == 1
+        return unique_names[0]
+
     # --------------------------------------------------------------------------
     def create(self, path, profile_format, module_callsite_map: dict = {},  filter_by="time (inc)", filter_perc=10.0) -> None: 
         """
@@ -296,12 +307,18 @@ class SuperGraph(ht.GraphFrame):
             LOGGER.debug('Using the supplied module map')
             self.modules = { i: m for i, m in enumerate(module_callsite_map.keys()) }
             _modules_inv = dict((v, k) for k, v in self.modules.items())
+
             _nid = lambda _: self.df_lookup_with_column("name", _)["nid"].unique().tolist()
             _mid = lambda _: _modules_inv.get(_)
 
-            self.module_callsite_map = {_mid(i): [_nid(_cs) for _cs in m] for i, m in module_callsite_map.items() }
-            self.module_callsite_map = {i: np.array(v).flatten() for i, v in self.module_callsite_map.items()}
-            print(self.module_callsite_map)
+            #self.module_callsite_map = {_mid(i): [_nid(_cs) for _cs in m] for i, m in module_callsite_map.items() }
+            self.module_callsite_map = {}
+            for i,m in module_callsite_map.items():
+                for _cs in m:
+                    if(_mid(i) in self.module_callsite_map.keys()):
+                        self.module_callsite_map[_mid(i)]= np.append(self.module_callsite_map[_mid(i)],_nid(_cs)).tolist()
+                    else: 
+                        self.module_callsite_map[_mid(i)] = _nid(_cs)
 
             self.callsite_module_map = {_: -1 for _ in self.callsites}
 
@@ -313,9 +330,13 @@ class SuperGraph(ht.GraphFrame):
             self.df_add_column("module",
                                apply_dict=self.callsite_module_map,
                                apply_on="nid")
-        
-            print([self.df_lookup_with_column('nid', k)['name'].unique()[0] for k, c in self.callsite_module_map.items() if c == -1])
 
+            missing_callsites = [self.get_name_by_nid(c) for c in self.callsites if self.callsite_module_map[c] == -1]
+            if len(missing_callsites) > 0:
+                LOGGER.error(f"Missing callistes: {missing_callsites}")
+                LOGGER.error("Please add the missing callsite's module map in the config file.")
+                assert 0          
+            
         # ----------------------------------------------------------------------
         else:
             LOGGER.debug('No module map found. Defaulting to \"module=callsite\"')
@@ -324,8 +345,6 @@ class SuperGraph(ht.GraphFrame):
             self.module_callsite_map = {m: [m] for m,c in self.modules.items()}
             self.df_add_column('module', apply_func=lambda _: _, apply_on='name')
 
-        # print("module callsite map: ", self.module_callsite_map)
-        # print("callsite module map: ", self.callsite_module_map)
         # ----------------------------------------------------------------------
         self.inv_callsites = {v: i for i,v in self.callsites.items()}
         self.inv_modules = {v: i for i, v in self.modules.items()}
