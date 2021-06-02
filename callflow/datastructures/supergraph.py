@@ -27,7 +27,6 @@ except Exception:
             pass
 
 from callflow import get_logger
-from callflow.modules import Histogram
 from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.utils import NumpyEncoder
 from callflow.utils.df import *
@@ -85,6 +84,7 @@ class SuperGraph(ht.GraphFrame):
         self.inv_modules = {}
         self.callsite_module_map = {}
         self.module_callsite_map = {}
+        self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
         self.profiler = Profiler()
 
@@ -236,6 +236,12 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_column("callees", apply_dict=self.callees, dict_default=[], apply_on="nid")
         self.df_add_column("callers", apply_dict=self.callers, dict_default=[], apply_on="nid")
         self.df_add_column("path", apply_dict=self.paths, dict_default=[], apply_on="nid")
+
+        self.callsite_aux_dict = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+        self.module_aux_dict = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+
+        self.rel_callsite_aux_dict = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
+        self.rel_module_aux_dict = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean()) 
 
     # --------------------------------------------------------------------------
     def load(
@@ -432,16 +438,6 @@ class SuperGraph(ht.GraphFrame):
         data['root_time_inc'] = self.df_root_max_mean_runtime(self.roots, "time (inc)")
         data['name'] = self.name
         return data
-
-    def histogram(self, node, ntype, metric, nbins):
-        if ntype == "callsite":
-            df = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
-        elif ntype == "module":
-            df = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())        
-
-        result = Histogram(df, relative_to_df=None,
-                                histo_types="rank",
-                                proxy_columns=self.proxy_columns).result
 
     # --------------------------------------------------------------------------
     # SuperGraph.df functions

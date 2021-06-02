@@ -85,6 +85,21 @@ class Histogram:
                 hist = hist[1]              # dont's store the bins
             self.result[tk][h] = hist
 
+    def unpack(self, hists, metric):
+        data = hists[metric]
+        result = {}
+        for histo_type in data.keys():
+            result[histo_type] = {
+                "x": data[histo_type][0].tolist(),
+                "y": data[histo_type][1].tolist(),
+                "x_min": float(data[histo_type][0][0]),
+                "x_max": float(data[histo_type][0][-1]),
+                "y_min": float(data[histo_type][1].min()),
+                "y_max": float(data[histo_type][1].max()),
+            }
+        
+        return result
+
     # --------------------------------------------------------------------------
     # Return the histogram in the required form.
     def _get_data_by_histo_type(self, df, histo_type):

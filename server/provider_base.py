@@ -16,6 +16,7 @@ from callflow.modules import Auxiliary
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import ParameterProjection, DiffView
 from callflow.utils.sanitizer import Sanitizer
+from callflow.modules import Histogram
 
 LOGGER = get_logger(__name__)
 
@@ -348,7 +349,27 @@ class BaseProvider:
             metric = operation["metric"]
             nbins = operation["nbins"]
 
-            return self.supergraphs[dataset].histogram(node, ntype, metric, nbins)
+            if ntype == "callsite":
+                aux_dict = self.sg[dataset].callsite_aux_dict
+            elif ntype == "module":
+                aux_dict = self.sg[dataset].module_aux_dict
+
+            hist = Histogram(aux_dict[node], relative_to_df=None,
+                        histo_types=["rank"],
+                        proxy_columns=self.proxy_columns)
+
+            return hist.unpack(fmt="JSON")
+        
+        elif operation_name == "boxplot":
+            dataset = operation["dataset"]
+            metric = operation["metric"]
+
+            if ntype == "callsite":
+                aux_dict = self.sg[dataset].callsite_aux_dict
+            elif ntype == "module":
+                aux_dict = self.sg[dataset].module_aux_dict
+
+            boxplot = Boxplot(aux_dict[node])
 
     def request_ensemble(self, operation):
         """
