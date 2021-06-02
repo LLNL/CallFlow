@@ -43,7 +43,7 @@ export default {
 		},
 		chartType: "STACKED_BAR_CHART",
 		// chartType: "STACKED_AREA_CHART",
-		chartXAttr: "total",
+		chartXAttr: "root_time_inc",
 		// chartXAttr: "time",
 		// seriesType:"NORMALIZED",
 		seriesType: "STACKED"
@@ -69,8 +69,6 @@ export default {
 			this.nodes = this.data.nodes;
 
 			this.timeline = Object.values(this.data.d).map((d) => d);
-
-			console.log(this.data, this.timeline);
 
 			this.initSVG();
 			this.plot();
@@ -176,7 +174,7 @@ export default {
 					.unknown("#ccc");
 
 				const area = d3.area()
-					.x(d => this.x(d.data.time))
+					.x(d => this.x(d.data.root_time_inc))
 					// .y(d => this.y(d[0]))
 					.y0(d => this.y(d[0]))
 					.y1(d => this.y(d[1]));
@@ -237,11 +235,6 @@ export default {
 					"stroke-width": "1.5px",
 				})
 				.call(this.yAxis);
-
-			// this.areaPath = this.mainSvg.append('path')
-			//     .attrs({
-			//         "clip-path": "url(#clip)",
-			//     })
 		},
 
 		// draw axis label
@@ -269,7 +262,6 @@ export default {
 		},
 
 		colorMap() {
-			console.log(this.height);
 			let width = this.width;
 			let n_colors = this.nodes.length;
 			let x_offset = 20;

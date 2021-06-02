@@ -296,7 +296,7 @@ class BaseProvider:
 
             # Construct the per-supergraph timeline data. 
             data = {}
-            data['d'] = { sg: self.supergraphs[sg].timeline(top_nodes, operation["ntype"], operation["metric"]) for sg in self.supergraphs }
+            data['d'] = { sg: self.supergraphs[sg].timeline(top_nodes, operation["ntype"], operation["metric"]) for sg in self.supergraphs if sg != "ensemble"}
             
             # Attach the keys as the top_nodes
             data['nodes'] = top_nodes
