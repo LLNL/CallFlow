@@ -43,6 +43,7 @@ class SuperGraph(ht.GraphFrame):
     """
     _FILENAMES = {
         "df": "cf-df.pkl",
+        "ht": "ht-graph.json",
         "nxg": "cf-nxg.json",
         "env_params": "env_params.txt",
         "aux": "aux-{}.npz",
@@ -145,9 +146,9 @@ class SuperGraph(ht.GraphFrame):
         :return (float): runtime of a node
         """
         if ntype == 'callsite':
-            return self.df_lookup_by_column("name", node_idx)[metric].apply(apply_func)
+            return self.df_lookup_with_column("name", node_idx)[metric].apply(apply_func)
         elif ntype == 'module':
-            return self.df_lookup_by_column("module", node_idx)[metric].apply(apply_func)
+            return self.df_lookup_with_column("module", node_idx)[metric].apply(apply_func)
 
     # --------------------------------------------------------------------------
     def create(self, path, profile_format, module_callsite_map: dict = {},  filter_by="time (inc)", filter_perc=10.0) -> None: 
@@ -286,27 +287,34 @@ class SuperGraph(ht.GraphFrame):
         
             self.callsite_module_map = df_as_dict(self.dataframe, 'nid', 'module')
             self.module_callsite_map = {m: [] for m,c in self.modules.items()}
-            self.module_callsite_map[-1] = []
+            self.module_callsite_map[-1] = [] # @harsh: Why have assigned the index=-1 as empty array?
             for ccode, mcode in self.callsite_module_map.items():
                 self.module_callsite_map[mcode].append(ccode)
 
         # ----------------------------------------------------------------------
         elif has_modules_in_map:
             LOGGER.debug('Using the supplied module map')
-            # need to change the datastructures for this case
-            assert 0
-            self.modules = module_callsite_map.keys()
-            self.module_callsite_map = module_callsite_map
-            self.callsite_module_map = {_: [] for _ in self.callsites}
+            self.modules = { i: m for i, m in enumerate(module_callsite_map.keys()) }
+            _modules_inv = dict((v, k) for k, v in self.modules.items())
+            _nid = lambda _: self.df_lookup_with_column("name", _)["nid"].unique().tolist()
+            _mid = lambda _: _modules_inv.get(_)
+
+            self.module_callsite_map = {_mid(i): [_nid(_cs) for _cs in m] for i, m in module_callsite_map.items() }
+            self.module_callsite_map = {i: np.array(v).flatten() for i, v in self.module_callsite_map.items()}
+            print(self.module_callsite_map)
+
+            self.callsite_module_map = {_: -1 for _ in self.callsites}
 
             for mcode, mname in enumerate(self.modules):
                 clist = self.module_callsite_map[mname]
                 for c in clist:
-                    self.callsite_module_map[c].append(mcode)
+                    self.callsite_module_map[c] = mcode
 
             self.df_add_column("module",
                                apply_dict=self.callsite_module_map,
-                               apply_on="name")
+                               apply_on="nid")
+        
+            print([self.df_lookup_with_column('nid', k)['name'].unique()[0] for k, c in self.callsite_module_map.items() if c == -1])
 
         # ----------------------------------------------------------------------
         else:
@@ -316,6 +324,8 @@ class SuperGraph(ht.GraphFrame):
             self.module_callsite_map = {m: [m] for m,c in self.modules.items()}
             self.df_add_column('module', apply_func=lambda _: _, apply_on='name')
 
+        # print("module callsite map: ", self.module_callsite_map)
+        # print("callsite module map: ", self.callsite_module_map)
         # ----------------------------------------------------------------------
         self.inv_callsites = {v: i for i,v in self.callsites.items()}
         self.inv_modules = {v: i for i, v in self.modules.items()}
@@ -630,6 +640,13 @@ class SuperGraph(ht.GraphFrame):
         return _df.xs(name, level=column)
 
     def df_root_max_mean_runtime(self, roots, column):
+        """
+        Wrapper to get the root node's [max, mean] runtime.
+
+        :param roots: (list) list of roots
+        :param column: (str) runtime column (e.g., time or time (inc))
+        :return: max (mean runtime of the root nodes)
+        """
         mean_runtime = 0.0
         column = self.df_get_proxy(column)
         for root in roots:
@@ -644,8 +661,8 @@ class SuperGraph(ht.GraphFrame):
         """
         Constructs a networkX graph from hatchet graph.
 
-        :param ht_graph:
-        :return:
+        :param ht_graph: (hatchet.Graph) Hatchet Graph
+        :return: (NetworkX.nxg) NetworkX graph
         """
         assert isinstance(ht_graph, ht.graph.Graph)
 
@@ -676,8 +693,15 @@ class SuperGraph(ht.GraphFrame):
         return nxg
 
     @staticmethod
-    def hatchet_get_roots(graph):
-        return [root.frame.get('name') for root in graph.roots]
+    def hatchet_get_roots(ht_graph):
+        """
+        Wrapper to get roots from the hatchet Graph.
+
+        :return: (list) Root nodes of a graph.
+        """
+        assert isinstance(ht_graph, ht.graph.Graph)
+
+        return [root.frame.get('name') for root in ht_graph.roots]
 
     @staticmethod
     def hatchet_filter_callsites_by_query(gf, query):
