@@ -7,7 +7,49 @@
 <template>
   <v-container fluid class="px-3">
 	<v-card tile>
-		<v-card-title class="pa-4 pb-0"> Timeline </v-card-title>
+		<v-row class="pl-8">
+			<v-card-title class="pa-2 pt-0"> Timeline View </v-card-title>
+			<v-flex xs2 class="ma-1">
+				<v-select
+					label="Chart Type"
+					:items="chartTypes"
+					v-model="selectedChartType"
+					:menu-props="{maxHeight: '200'}"
+					persistent-hint
+				>
+				</v-select>
+			</v-flex>
+			<v-flex xs2 class="ma-1">
+				<v-select
+					label="Y axis bandwidth"
+					:items="seriesTypes"
+					v-model="selectedSeriesType"
+					:menu-props="{maxHeight: '200'}"
+					persistent-hint
+				>
+				</v-select>
+			</v-flex>
+			<v-flex xs2 class="ma-1">
+				<v-select
+					label="Metric"
+					:items="metrics"
+					v-model="selectedMetric"
+					:menu-props="{maxHeight: '200'}"
+					persistent-hint
+				>
+				</v-select>
+			</v-flex>
+			<v-flex xs2 class="ma-1">
+				<v-text-field
+					label="Top N-callsites"
+					type="number"
+					v-model="selectedTopCallsiteCount"
+					:menu-props="{maxHeight: '200'}"
+					persistent-hint
+				>
+				</v-text-field>
+			</v-flex>
+		</v-row>
 		<v-row class="ml-3 pa-1">
 			<svg :id="id" :width="width" :height="height"></svg>
 		</v-row>
@@ -41,12 +83,14 @@ export default {
 			xTitle: 20,
 			yTitle: 20,
 		},
-		chartType: "STACKED_BAR_CHART",
-		// chartType: "STACKED_AREA_CHART",
+		chartTypes: ["STACKED_BAR_CHART", "STACKED_AREA_CHART"],
+		selectedChartType: "STACKED_BAR_CHART",
 		chartXAttr: "root_time_inc",
-		// chartXAttr: "time",
-		// seriesType:"NORMALIZED",
-		seriesType: "STACKED"
+		seriesTypes: ["STACKED", "NORMALIZED"],
+		selectedSeriesType: "STACKED",
+		metrics: ["time", "time (inc)"],
+		selectedMetric: "time (inc)",
+		selectedTopCallsiteCount: 10,
 	}),
 
 	mounted() {
@@ -105,13 +149,13 @@ export default {
 
 		plot() {
 			let series = null;
-			if(this.seriesType == "STACKED") {
+			if(this.selectedSeriesType == "STACKED") {
 				series = d3
 					.stack()
 					.keys(this.nodes)(this.timeline)
 					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
 			}
-			else if (this.seriesType == "NORMALIZED") {
+			else if (this.selectedSeriesType == "NORMALIZED") {
 				series = d3
 					.stack()
 					.keys(this.nodes)
@@ -122,7 +166,7 @@ export default {
 			this.timeline.reverse();
 
 
-			if (this.chartType == "STACKED_BAR_CHART") {
+			if (this.selectedChartType == "STACKED_BAR_CHART") {
 				this.x = d3
 					.scaleBand()
 					.domain(this.timeline.map((d) => d.name))
@@ -159,7 +203,7 @@ export default {
 					.append("title")
 					.text((d) => `[${d.data.name}] ${d.key} - ${utils.formatRuntimeWithoutUnits(d.data[d.key])}`);
 			}
-			else if(this.chartType == "STACKED_AREA_CHART") {
+			else if(this.selectedChartType == "STACKED_AREA_CHART") {
 				this.x = d3.scaleUtc()
 					.domain(d3.extent(this.timeline, d => d[this.chartXAttr]))
 					.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
@@ -200,12 +244,7 @@ export default {
 				.axisBottom(this.x)
 				.tickPadding(10)
 				.tickFormat((d, i) => {
-					// if (this.chartXAttr == "total") {
 					return `${d}`;
-					// }
-					// else if(this.chartXAttr == "time") {
-					// return moment(d.split("_")[1]).format("DD-MM-YY");
-					// }
 				});
 
 			const yFormat = d3.format("0.01s");

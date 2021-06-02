@@ -332,7 +332,6 @@ class ArgParser:
 
         # Set the data_path, which is data directory.
         if len(scheme["experiment"]) == 0:
-            print(os.path.dirname(json["data_path"]))
             scheme["experiment"] = os.path.basename(json["data_path"])
 
         if self.args.get('save_path') is not "":

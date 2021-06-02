@@ -85,7 +85,6 @@ export default {
 	methods: {
 		async init() {
 			this.config = await APIService.GETRequest("config");
-			console.log(this.config);
 			this.run_counts = this.config.runs.map((_) => _["name"]).length;
 			this.$store.config = this.config;
 
