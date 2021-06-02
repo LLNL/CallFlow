@@ -64,7 +64,7 @@ export default {
 				"metric": "time",
 			});
 
-			this.profiles = utils.swapKeysToArray(this.summary);
+			this.profiles = utils.swapKeysToArray(this.summary, ["ensemble"]);
 			this.setSummaryGlobalVariables();
 		},
 

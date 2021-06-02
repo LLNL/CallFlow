@@ -368,8 +368,8 @@ export function getKeyWithMaxValue(obj) {
 	return Object.keys(obj).reduce((a, b) => obj[a] > obj[b] ? a : b);
 }
 
-export function swapKeysToArray(data) {
-	return Object.keys(data).map((_) =>  { return {"run": _, ...data[_]};});
+export function swapKeysToArray(data, skipElements) {
+	return Object.keys(data).filter((_) => !skipElements.includes(_)).map((_) =>  { return {"run": _, ...data[_]};});
 }
 
 export function swapKeysToDict(data, key) {
