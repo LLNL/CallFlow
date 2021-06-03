@@ -11,12 +11,10 @@ from functools import partial
 from callflow import SuperGraph, EnsembleGraph
 from callflow import get_logger
 from callflow.operations import Filter, Group, Unify
-from callflow.modules import Auxiliary
 
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
-from callflow.modules import ParameterProjection, DiffView
 from callflow.utils.sanitizer import Sanitizer
-from callflow.modules import Histogram
+from callflow.modules import Histogram, Scatterplot, Boxplot, ParameterProjection, DiffView
 
 LOGGER = get_logger(__name__)
 
@@ -318,6 +316,15 @@ class BaseProvider:
         operation_name = operation["name"]
         sg = self.supergraphs[operation["dataset"]]
 
+        if "ntype" in operation:
+            ntype = operation["ntype"]
+
+            if operation_name in ['histogram', 'scatterplot', 'boxplot']
+                if ntype == "callsite":
+                    aux_dict = sg.callsite_aux_dict
+                elif ntype == "module":
+                    aux_dict = sg.module_aux_dict
+
         if operation_name == "cct":
             nll = NodeLinkLayout(sg=sg, selected_runs=operation["dataset"])
             return nll.nxg
@@ -343,33 +350,30 @@ class BaseProvider:
             pass
     
         elif operation_name == "histogram":
-            dataset = operation["dataset"]
             node = operation["node"]
-            ntype = operation["ntype"]
-            metric = operation["metric"]
             nbins = operation["nbins"]
 
-            if ntype == "callsite":
-                aux_dict = self.sg[dataset].callsite_aux_dict
-            elif ntype == "module":
-                aux_dict = self.sg[dataset].module_aux_dict
-
-            hist = Histogram(aux_dict[node], relative_to_df=None,
+            hist = Histogram(df=aux_dict[node], relative_to_df=None,
                         histo_types=["rank"],
-                        proxy_columns=self.proxy_columns)
+                        node_type=ntype,
+                        proxy_columns=sg.proxy_columns)
 
-            return hist.unpack(fmt="JSON")
+            return hist.unpack()
+
+        elif operation_name == "scatterplot":
+            node = operation["node"]
+
+            scatterplot = Scatterplot(df=df, proxy_columns=proxy_columns)
+
+            return scatterplot.unpack()
         
         elif operation_name == "boxplot":
             dataset = operation["dataset"]
             metric = operation["metric"]
 
-            if ntype == "callsite":
-                aux_dict = self.sg[dataset].callsite_aux_dict
-            elif ntype == "module":
-                aux_dict = self.sg[dataset].module_aux_dict
+            boxplot = BoxPlot(df=df, proxy_columns=sg.proxy_columns)
 
-            boxplot = Boxplot(aux_dict[node])
+            return boxplot.unpack()
 
     def request_ensemble(self, operation):
         """

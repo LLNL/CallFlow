@@ -6,24 +6,20 @@
 """
 CallFlow's operations API.
 """
-from .auxiliary import Auxiliary
 from .boxplot import BoxPlot
 from .histogram import Histogram
 from .gradients import Gradients
-from .runtime_scatterplot import RuntimeScatterplot
+from .scatterplot import Scatterplot
 from .parameter_projection import ParameterProjection
 from .diff_view import DiffView
-from .unpack_auxiliary import UnpackAuxiliary
 
 __all__ = [
-    "Auxiliary",
     "BoxPlot",
     "Histogram",
     "Gradients",
-    "RuntimeScatterplot",
+    "Scatterplot",
     "ParameterProjection",
     "DiffView",
-    "UnpackAuxiliary"
 ]
 
 

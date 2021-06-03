@@ -123,6 +123,9 @@ export default {
 			// Set the metric to sort the call site information
 			this.$store.selectedRuntimeSortBy = "time (inc)";
 			this.$store.selectedMetric = "time (inc)";
+			
+			// Histogram properties
+			this.$store.selectedScale = "Linear";
 		},
 
 		setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {

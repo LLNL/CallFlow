@@ -22,30 +22,34 @@ LOGGER = callflow.get_logger(__name__)
 # ------------------------------------------------------------------------------
 class Histogram:
     """
-    Calculate Histogram (Per rank, All ranks, Per dataset)
+    Calculate Histogram based on the mode, "rank" (per rank), "name" (all ranks), "dataset" (per dataset) modes.
     """
 
-    HISTO_TYPES = ["rank"]#, "name", "dataset"]
+    HISTO_TYPES = ["rank", "name", "dataset"]
 
-    def __init__(self, dataframe, relative_to_df=None, bins=20,
-                 histo_types = [], proxy_columns={}):
+    def __init__(self, df, relative_to_df=None, bins=20,
+                 histo_types = [], node_type="", proxy_columns={}):
         """
 
-        :param dataframe:
-        :param histo_types:
-        :param bins:
-        :param proxy_columns:
+        :param df: (Pandas.dataframe) dataframe from the target dataset
+        :param relative_to_df: (Pandas.dataframe) dataframe from the background dataset
+        :param histo_types: (list) Histogram types (e.g., name, rank, and dataset)
+        :param bins: (int) Number of bins in the histogram
+        :param node_type: (str) Node's type (e.g., callsite or module)
+        :param proxy_columns: (dict) Proxies for the column names.
         """
-        assert isinstance(dataframe, pd.DataFrame)
+        assert isinstance(df, pd.DataFrame)
         if relative_to_df is not None:
             assert isinstance(relative_to_df, pd.DataFrame)
         assert isinstance(bins, int)
         assert isinstance(proxy_columns, dict)
         assert isinstance(histo_types, list)
         assert bins > 0
+        assert node_type in ['callsite', 'module']
 
         self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
         self.result = {_: {} for _ in TIME_COLUMNS}
+        self.histo_types = histo_types
 
         if len(histo_types) == 0:
             histo_types = Histogram.HISTO_TYPES
@@ -54,7 +58,7 @@ class Histogram:
         for h,(tk,tv) in itertools.product(histo_types, zip(TIME_COLUMNS, self.time_columns)):
 
             # compute the range of the actual data
-            df = self._get_data_by_histo_type(dataframe, h)[tv]
+            df = self._get_data_by_histo_type(df, h)[tv]
             drng = [df.min(), df.max()]
 
             # compute the range df relative to the provided relative_to_df.
@@ -85,18 +89,30 @@ class Histogram:
                 hist = hist[1]              # dont's store the bins
             self.result[tk][h] = hist
 
-    def unpack(self, hists, metric):
-        data = hists[metric]
+            if node_type == "callsite":
+                _data = df.to_numpy()
+            elif node_type == "module":
+                _data = df.groupby(["rank"]).mean().to_numpy()
+            else:
+                assert False
+
+            self.result[tk]["d"] = _data
+
+    def unpack(self):
         result = {}
-        for histo_type in data.keys():
-            result[histo_type] = {
-                "x": data[histo_type][0].tolist(),
-                "y": data[histo_type][1].tolist(),
-                "x_min": float(data[histo_type][0][0]),
-                "x_max": float(data[histo_type][0][-1]),
-                "y_min": float(data[histo_type][1].min()),
-                "y_max": float(data[histo_type][1].max()),
-            }
+        for metric in self.time_columns:
+            data = self.result[metric]
+            result[metric] = {}
+            for histo_type in self.histo_types:
+                result[metric][histo_type] = {
+                    "x": data[histo_type][0].tolist(),
+                    "y": data[histo_type][1].tolist(),
+                    "x_min": float(data[histo_type][0][0]),
+                    "x_max": float(data[histo_type][0][-1]),
+                    "y_min": float(data[histo_type][1].min()),
+                    "y_max": float(data[histo_type][1].max()),
+                }
+                result[metric]["d"] = data["d"].tolist()
         
         return result
 

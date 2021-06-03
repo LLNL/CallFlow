@@ -103,11 +103,12 @@ export default {
 				height: this.boxHeight,
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
+
+			EventHandler.$emit("single-histogram", "LagrangeElements");
 		},
 
 		setupScale() {
-			// const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
-			const _data = this.data[this.$store.selectedMetric]["hists"][this.$store.selectedProp];
+			const _data = this.data[this.$store.selectedMetric][this.$store.selectedProp];
 			const _mpiData = this.data[this.$store.selectedMetric]["d"];
 
 			let temp = this.dataProcess(_data, _mpiData);
@@ -151,21 +152,14 @@ export default {
 		},
 
 		async visualize(callsite) {
-			if(!this.firstRender) {
-				this.clear();
-			}
-			else {
-				this.init();
-			}
-			this.firstRender = false;
-			console.log("here");
 			this.data = await APIService.POSTRequest("single_histogram", {
 				dataset: this.$store.selectedTargetDataset,
 				node: callsite,
-				ntype: "super-node",
+				ntype: "callsite",
 				metric: this.$store.selectedMetric,
 				nbins: this.$store.selectedMPIBinCount,
 			});
+
 			this.setupScale();
 			this.bars();
 			this.xAxis();
@@ -286,12 +280,8 @@ export default {
 				.append("rect")
 				.attrs({
 					class: "single-histogram-bar",
-					x: (d, i) => {
-						return this.xScale(this.xVals[i]);
-					},
-					y: (d, i) => {
-						return this.yScale(d);
-					},
+					x: (d, i) => this.xScale(this.xVals[i]),
+					y: (d, i) => this.yScale(d),
 					width: this.xScale.bandwidth(),
 					height: (d) => {
 						return Math.abs(this.yAxisHeight - this.yScale(d));
@@ -447,9 +437,8 @@ export default {
 				.style("font-weight", "lighter");
 		},
 
-		rankLineScale(data) {
-			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
-			let rankCount = store[this.$store.selectedMetric].d.length;
+		rankLineScale() {
+			let rankCount = this.data[this.$store.selectedMetric].d.length;
 
 			this.ranklinescale = d3
 				.scaleLinear()

@@ -86,6 +86,9 @@ class SuperGraph(ht.GraphFrame):
         self.module_callsite_map = {}
         self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
+        self.callsite_aux_dict = {}
+        self.module_aux_dict = {}
+
         self.profiler = Profiler()
 
     # --------------------------------------------------------------------------
@@ -237,12 +240,6 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_column("callers", apply_dict=self.callers, dict_default=[], apply_on="nid")
         self.df_add_column("path", apply_dict=self.paths, dict_default=[], apply_on="nid")
 
-        self.callsite_aux_dict = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
-        self.module_aux_dict = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
-
-        self.rel_callsite_aux_dict = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
-        self.rel_module_aux_dict = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean()) 
-
     # --------------------------------------------------------------------------
     def load(
         self, path, read_graph=False, read_parameter=False, read_aux=False
@@ -277,6 +274,13 @@ class SuperGraph(ht.GraphFrame):
         # effect. Beware!!
         self.roots = self.nxg_get_roots(self.nxg)
         self.add_callsites_and_modules_maps()
+
+        self.callsite_aux_dict = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+        self.module_aux_dict = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+
+        # self.rel_callsite_aux_dict = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
+        # self.rel_module_aux_dict = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean()) 
+
         
     # --------------------------------------------------------------------------
     def add_callsites_and_modules_maps(self, module_callsite_map={}):
