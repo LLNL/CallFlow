@@ -13,8 +13,9 @@ from callflow import get_logger
 from callflow.operations import Filter, Group, Unify
 
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
+
 from callflow.utils.sanitizer import Sanitizer
-from callflow.modules import Histogram, Scatterplot, Boxplot, ParameterProjection, DiffView
+from callflow.modules import Histogram, Scatterplot, ParameterProjection, DiffView
 
 LOGGER = get_logger(__name__)
 
@@ -98,7 +99,7 @@ class BaseProvider:
             
             self.supergraphs[name] = eg
 
-        self.aux = { dataset: Auxiliary(self.supergraphs[dataset]) for dataset in all_runs } 
+        # self.aux = { dataset: Auxiliary(self.supergraphs[dataset]) for dataset in all_runs } 
 
     def mp_dataset_load(self, dataset, save_path):
         """
@@ -307,7 +308,7 @@ class BaseProvider:
         Handles requests connected to Single CallFlow.
         """
         assert isinstance(operation, dict)
-        _OPERATIONS = ["cct", "supergraph", "split_mpi_distribution", "histogram", "boxplot"]
+        _OPERATIONS = ["cct", "supergraph", "split_mpi_distribution", "histogram", "scatterplot", "boxplot"]
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
 
@@ -319,7 +320,7 @@ class BaseProvider:
         if "ntype" in operation:
             ntype = operation["ntype"]
 
-            if operation_name in ['histogram', 'scatterplot', 'boxplot']
+            if operation_name in ['histogram', 'scatterplot', 'boxplot']:
                 if ntype == "callsite":
                     aux_dict = sg.callsite_aux_dict
                 elif ntype == "module":
@@ -353,7 +354,7 @@ class BaseProvider:
             node = operation["node"]
             nbins = operation["nbins"]
 
-            hist = Histogram(df=aux_dict[node], relative_to_df=None,
+            hist = Histogram(dataframe=aux_dict[node], relative_to_df=None,
                         histo_types=["rank"],
                         node_type=ntype,
                         proxy_columns=sg.proxy_columns)
@@ -362,8 +363,12 @@ class BaseProvider:
 
         elif operation_name == "scatterplot":
             node = operation["node"]
+            orientation = operation["orientation"]
 
-            scatterplot = Scatterplot(df=df, proxy_columns=proxy_columns)
+            scatterplot = Scatterplot(df=aux_dict[node], relative_to_df=None,
+                        node_type=ntype,
+                        orientation=orientation,
+                        proxy_columns=sg.proxy_columns)
 
             return scatterplot.unpack()
         
@@ -371,7 +376,7 @@ class BaseProvider:
             dataset = operation["dataset"]
             metric = operation["metric"]
 
-            boxplot = BoxPlot(df=df, proxy_columns=sg.proxy_columns)
+            boxplot = BoxPlot(df=aux_dict[node], proxy_columns=sg.proxy_columns)
 
             return boxplot.unpack()
 

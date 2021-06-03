@@ -20,6 +20,7 @@ import * as d3 from "d3";
 // Local library imports
 import EventHandler from "lib/routing/EventHandler";
 import * as utils from "lib/utils";
+import APIService from "lib/routing/APIService";
 
 import InfoChip from "../general/infoChip";
 
@@ -64,8 +65,8 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("single-scatterplot", function (data) {
-			self.visualize(data);
+		EventHandler.$on("single-scatterplot", function (callsite) {
+			self.visualize(callsite);
 		});
 	},
 
@@ -88,24 +89,26 @@ export default {
 
 			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
 			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
+
+			EventHandler.$emit("single-scatterplot", "LagrangeElements");
 		},
 
-		visualize(data) {
-			if (!this.firstRender) {
-				this.clear();
-			}
-			else {
-				this.init();
-			}
-			this.firstRender = false;
+		async visualize(callsite) {
+			this.data = await APIService.POSTRequest("single_scatterplot", {
+				dataset: this.$store.selectedTargetDataset,
+				node: callsite,
+				ntype: "callsite",
+				orientation: ["time", "time (inc)"],
+			});
+			console.log(this.data);
 
-			let temp = this.process(data);
-			this.xMin = temp[0];
-			this.yMin = temp[1];
-			this.xMax = temp[2];
-			this.yMax = temp[3];
-			this.xArray = temp[4];
-			this.yArray = temp[5];
+			// let temp = this.process(callsite);
+			this.xMin = this.data.xMin;
+			this.yMin = this.data.yMin;
+			this.xMax = this.data.xMax;
+			this.yMax = this.data.yMax;
+			this.xArray = this.data.x;
+			this.yArray = this.data.y;
 
 			this.xScale = d3
 				.scaleLinear()

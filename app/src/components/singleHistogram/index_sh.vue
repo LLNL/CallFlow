@@ -156,7 +156,6 @@ export default {
 				dataset: this.$store.selectedTargetDataset,
 				node: callsite,
 				ntype: "callsite",
-				metric: this.$store.selectedMetric,
 				nbins: this.$store.selectedMPIBinCount,
 			});
 

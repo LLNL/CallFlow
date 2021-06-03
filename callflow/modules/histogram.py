@@ -27,18 +27,18 @@ class Histogram:
 
     HISTO_TYPES = ["rank", "name", "dataset"]
 
-    def __init__(self, df, relative_to_df=None, bins=20,
+    def __init__(self, dataframe, relative_to_df=None, bins=20,
                  histo_types = [], node_type="", proxy_columns={}):
         """
 
-        :param df: (Pandas.dataframe) dataframe from the target dataset
+        :param dataframe: (Pandas.dataframe) dataframe from the target dataset
         :param relative_to_df: (Pandas.dataframe) dataframe from the background dataset
         :param histo_types: (list) Histogram types (e.g., name, rank, and dataset)
         :param bins: (int) Number of bins in the histogram
         :param node_type: (str) Node's type (e.g., callsite or module)
         :param proxy_columns: (dict) Proxies for the column names.
         """
-        assert isinstance(df, pd.DataFrame)
+        assert isinstance(dataframe, pd.DataFrame)
         if relative_to_df is not None:
             assert isinstance(relative_to_df, pd.DataFrame)
         assert isinstance(bins, int)
@@ -49,16 +49,17 @@ class Histogram:
 
         self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
         self.result = {_: {} for _ in TIME_COLUMNS}
-        self.histo_types = histo_types
 
         if len(histo_types) == 0:
-            histo_types = Histogram.HISTO_TYPES
+            self.histo_types = Histogram.HISTO_TYPES
+        else:
+            self.histo_types = histo_types
 
         # for each type of histogram and each time column
-        for h,(tk,tv) in itertools.product(histo_types, zip(TIME_COLUMNS, self.time_columns)):
+        for h,(tk,tv) in itertools.product(self.histo_types, zip(TIME_COLUMNS, self.time_columns)):
 
             # compute the range of the actual data
-            df = self._get_data_by_histo_type(df, h)[tv]
+            df = self._get_data_by_histo_type(dataframe, h)[tv]
             drng = [df.min(), df.max()]
 
             # compute the range df relative to the provided relative_to_df.
@@ -121,10 +122,10 @@ class Histogram:
     def _get_data_by_histo_type(self, df, histo_type):
         """
 
-        :param data:
-        :param prop:
+        :param df:
         :return:
         """
+        assert isinstance(df, pd.DataFrame)
         ndatasets = df_count(df, 'dataset')
         nranks = df_count(df, 'rank')
 

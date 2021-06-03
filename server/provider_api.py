@@ -193,12 +193,25 @@ class APIProvider(BaseProvider):
             result = self.request_ensemble({"name": "compare", **data})
             return APIProvider.emit_json("compare", result)
 
-
         @app.route("/single_histogram", methods=["POST"])
         @cross_origin()
         def single_histogram():
             data = request.json
             result = self.request_single({"name": "histogram", **data})
             return APIProvider.emit_json("single_histogram", result)
-        
+
+        @app.route("/single_scatterplot", methods=["POST"])
+        @cross_origin()
+        def single_scatterplot():
+            data = request.json
+            result = self.request_single({"name": "scatterplot", **data})
+            return APIProvider.emit_json("single_scatterplot", result)
+
+        @app.route("/single_boxplot", methods=["POST"])
+        @cross_origin()
+        def single_boxplot():
+            data = request.json
+            result = self.request_single({"name": "boxplot", **data})
+            return APIProvider.emit_json("single_boxplot", result)
+
 # ------------------------------------------------------------------------------
