@@ -303,7 +303,7 @@ class ArgParser:
 
         # Set the datasets key, according to the format.
         scheme["runs"] = ArgParser._scheme_dataset_map(
-            self.args.get("profile_format", "default"), scheme["data_path"]
+            self.args.get("profile_format", "default"), os.path.join(scheme["data_path"], scheme["append_path"])
         )
 
         return scheme

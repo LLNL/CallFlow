@@ -15,7 +15,7 @@ from callflow.operations import Filter, Group, Unify
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 
 from callflow.utils.sanitizer import Sanitizer
-from callflow.modules import Histogram, Scatterplot, ParameterProjection, DiffView
+from callflow.modules import Histogram, Scatterplot, BoxPlot, ParameterProjection, DiffView
 
 LOGGER = get_logger(__name__)
 
@@ -308,7 +308,7 @@ class BaseProvider:
         Handles requests connected to Single CallFlow.
         """
         assert isinstance(operation, dict)
-        _OPERATIONS = ["cct", "supergraph", "split_mpi_distribution", "histogram", "scatterplot", "boxplot"]
+        _OPERATIONS = ["cct", "supergraph", "split_mpi_distribution", "histogram", "scatterplot", "boxplots"]
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
 
@@ -320,7 +320,7 @@ class BaseProvider:
         if "ntype" in operation:
             ntype = operation["ntype"]
 
-            if operation_name in ['histogram', 'scatterplot', 'boxplot']:
+            if operation_name in ['histogram', 'scatterplot', 'boxplots']:
                 if ntype == "callsite":
                     aux_dict = sg.callsite_aux_dict
                 elif ntype == "module":
@@ -372,11 +372,11 @@ class BaseProvider:
 
             return scatterplot.unpack()
         
-        elif operation_name == "boxplot":
+        elif operation_name == "boxplots":
             dataset = operation["dataset"]
             metric = operation["metric"]
 
-            boxplot = BoxPlot(df=aux_dict[node], proxy_columns=sg.proxy_columns)
+            boxplot = BoxPlot(df=aux_dict, proxy_columns=sg.proxy_columns)
 
             return boxplot.unpack()
 

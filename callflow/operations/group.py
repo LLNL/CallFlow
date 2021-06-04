@@ -44,7 +44,6 @@ class Group:
 
     def _format_node_name(self, module_idx, name):
         return f'({module_idx}, {name})'
-        #return self.sg.modules[module_idx] + "=" + name
 
     def _format_callsite(self, module_idx, name):
         return (module_idx, name)
@@ -66,25 +65,12 @@ class Group:
                entry_functions =  [M3.e], this is a list since a call site can multiple entry points.
         :return: None
         """
-        #LOGGER.debug('computing grouping')
-
-        # no need to recompute. should use the one available in supergraph
-        #self.callsite_module_map = self.sg.df_get_column("module", "name").to_dict()
-        #LOGGER.profile(f'computed callsite_module_map: {len(self.callsite_module_map)}')
-
-        #self.callsite_path_map = self.sg.df_get_column("path", "name").to_dict()
-        #LOGGER.profile(f'computed callsite_path_map: {len(self.callsite_path_map)}')
-
         LOGGER.debug(
             f"Nodes: {len(self.sg.nxg.nodes())}, Edges: {len(self.sg.nxg.edges())}"
         )
 
         group_path = {}
         component_path = {}
-        #component_level = {}
-        #entry_func = {}
-        #show_node = {}
-        #node_name = {}
 
         # construct group and component paths
         def _construct_paths(path):
@@ -159,7 +145,6 @@ class Group:
         # ----------------------------------------------------------------------
         for idx, edge in enumerate(self.sg.nxg.edges()):
 
-            #LOGGER.info(f'starting {idx}, {edge}')
             snode = self.sg.get_idx(edge[0], 'callsite')
             tnode = self.sg.get_idx(edge[1], 'callsite')
 
@@ -168,7 +153,8 @@ class Group:
 
             # should remove this condition. this should always be true?
             # TODO: adding this here ensures that the source and target nodes are present in the map. Might have to reconsider if this needs to be here.
-            if snode in self.sg.paths and tnode in self.sg.paths:
+            # TODO: Some of the nodes have no inverse mappings (i.e., inv_callsite and inv_modules) so we filter them out here.
+            if snode in self.sg.paths and tnode in self.sg.paths and snode is not None and tnode is not None:
                 spath = self.sg.paths[snode]
                 tpath = self.sg.paths[tnode]
 

@@ -207,11 +207,11 @@ class APIProvider(BaseProvider):
             result = self.request_single({"name": "scatterplot", **data})
             return APIProvider.emit_json("single_scatterplot", result)
 
-        @app.route("/single_boxplot", methods=["POST"])
+        @app.route("/single_boxplots", methods=["POST"])
         @cross_origin()
         def single_boxplot():
             data = request.json
-            result = self.request_single({"name": "boxplot", **data})
-            return APIProvider.emit_json("single_boxplot", result)
+            result = self.request_single({"name": "boxplots", **data})
+            return APIProvider.emit_json("single_boxplots", result)
 
 # ------------------------------------------------------------------------------
