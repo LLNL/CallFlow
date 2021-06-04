@@ -57,10 +57,10 @@
     <v-container
       class="ml-4 callsite-information-node"
       v-for="callsite in callsites"
-      :key="getID(callsite.id)"
+      :key="getID(callsite.nid)"
     >
       <v-row class="pt-2">
-        <v-col cols="1" >
+        <!-- <v-col cols="1" >
           <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
               <template v-slot:activator="{on}">
@@ -79,7 +79,7 @@
               </span>
             </v-tooltip>
           </v-card>
-        </v-col>
+        </v-col> -->
 
         <v-col cols="11">
           <v-tooltip bottom>
@@ -94,9 +94,9 @@
       </v-row>
 
       <v-row class="information">
-        <v-col class="pa-0 subtitle-2">
+        <!-- <v-col class="pa-0 subtitle-2">
           Module: {{ formatModule(callsite) }}
-        </v-col>
+        </v-col> -->
       </v-row>
       <v-row wrap class="information">
 		<v-col class="pa-0 subtitle-2">Min : {{ min[callsite.name] }}</v-col>
@@ -123,7 +123,7 @@
         </v-col>
       </v-row>
 
-      <BoxPlot :ref="callsite.id" :callsite="callsite" />
+      <BoxPlot :ref="callsite.nid" :data="boxplot[callsite.name]" />
     </v-container>
   </v-layout>
 </template>
@@ -135,6 +135,7 @@ import * as d3 from "d3";
 // Local library imports
 import * as utils from "lib/utils";
 import EventHandler from "lib/routing/EventHandler";
+import APIService from "lib/routing/APIService";
 
 import InfoChip from "../general/infoChip";
 
@@ -192,22 +193,27 @@ export default {
 		imb: {},
 		kurt: {},
 		skew: {},
+		boxplot: {},
 	}),
 
 	mounted() {
 		let self = this;
 
+		EventHandler.$on("single-boxplots", () =>  {
+			self.visualize();
+		});
+
 		/**
-     * Event handler when a user selects a supernode.
-     */
+	     * Event handler when a user selects a supernode.
+    	 */
 		EventHandler.$on("single-select-module", (data) => {
 			this.isModuleSelected = true;
 			self.selectModule(data["module"]);
 		});
 
 		/**
-     * Event handler for sorting the callsites by a metric.
-     */
+     	* Event handler for sorting the callsites by a metric.
+     	*/
 		EventHandler.$on("callsite-information-sort", (val) => {
 			self.$store.selectedRuntimeSortBy = val;
 			self.callsites = self.sortByAttribute(self.callsites, val);
@@ -216,8 +222,8 @@ export default {
 
 	methods: {
 		/**
-     * Set up the view.
-     */
+		 * Set up the view.
+		 */
 		init() {
 			if (this.firstRender) {
 				this.width = document.getElementById(this.id).clientWidth;
@@ -228,32 +234,39 @@ export default {
 				this.informationHeight = 50;
 				this.firstRender = false;
 			}
-			this.visualize();
+
+			// Initiate the data fetching. 
+			EventHandler.$emit("single-boxplots");
 		},
 
 		/**
-     * Visualizes the callsite information in the view.
-     * Three things are performed.
-     */
-		visualize() {
-			this.setStates();
-			this.borderColorByMetric();
-			this.boxplotByMetric();
-		},
+		 * Visualizes the callsite information in the view.
+		 * Three things are performed.
+		 */
+		async visualize() {
+			this.callsites = await APIService.POSTRequest("single_boxplots", {
+				dataset: this.$store.selectedTargetDataset,
+				metric: this.$store.selectedMetric,
+				callsites: [
+					"LagrangeElements",
+					"UpdateVolumesForElems",
+					"CalcLagrangeElements",
+					"CalcKinematicsForElems",
+					"CalcQForElems",
+					"CalcMonotonicQGradientsForElems",
+					"CalcMonotonicQRegionForElems",
+					"ApplyMaterialPropertiesForElems",
+					"EvalEOSForElems",
+					"CalcEnergyForElems",
+					"CalcPressureForElems",
+					"CalcSoundSpeedForElems",
+					"IntegrateStressForElems",
+					"UpdateVolumesForElems"
+				],
+				ntype: "callsite",
+			});
 
-		/**
-     * Create ID for each callsite's div.
-     * @param {*} callsiteID
-     */
-		getID(callsiteID) {
-			return "callsite-information-" + callsiteID;
-		},
-
-		/**
-     * Set the states for the variables at the UI level.
-     * Similar to how React.useState().
-     */
-		setStates() {
+			this.numberOfcallsites = Object.keys(this.callsites).length;
 			// Set from Application store.
 			this.selectedModule = this.$store.selectedModule;
 			this.selectedMode = this.$store.selectedMode;
@@ -261,42 +274,48 @@ export default {
 			this.selectedMetric = this.$store.selectedMetric;
 			this.targetColor = this.$store.runtimeColor.textColor;
 
-			// this.callsites store the callsites in the current context.
-			// this.numberOfCallsites is used to show the number of callsites in
-			// the view.
-			this.callsites = this.$store.data_cs[this.$store.selectedTargetDataset];
-			this.numberOfcallsites = Object.keys(this.callsites).length;
-
 			this.info = this.numberOfcallsites + " call sites";
 
+			this.process();
+		},
+
+		/**
+		 * Create ID for each callsite's div.
+		 * @param {*} callsiteID
+		 */
+		getID(callsiteID) {
+			return "callsite-information-" + callsiteID;
+		},
+
+		/**
+	     * Color the border of the callsite information block by a metric.
+    	 */
+		borderColorByMetric(data) {
+			const id = "#callsite-information-node-" + data.nid;
+			const mean_time = data["mean"];
+			const strokeColor = this.$store.runtimeColor.getColorByValue(mean_time);
+			d3.select(id).style("stroke", strokeColor);
+		
+		},
+
+		/**
+		 * Process the data for callsites
+		 */
+		process() {
 			// Sort the callsites.
 			this.callsites = this.sortByAttribute(
 				this.callsites,
 				this.$store.selectedMetric,
+				"mean"
 			);
-		},
 
-		/**
-     * Color the border of the callsite information block by a metric.
-     */
-		borderColorByMetric() {
 			for (let callsite in this.callsites) {
-				let data = this.callsites[callsite];
-				const id = "#callsite-information-node-" + data.id;
-				const mean_time = data[this.$store.selectedMetric]["mean"];
-				const strokeColor = this.$store.runtimeColor.getColorByValue(mean_time);
+				const data = this.callsites[callsite][this.selectedMetric];
 
-				d3.select(id).style("stroke", strokeColor);
-			}
-		},
+				// Set the border color of the container.
+				this.borderColorByMetric(data);
 
-		/**
-     * Draws a boxplot for the callsites.
-     */
-		boxplotByMetric() {
-			// TODO: Generalize this for all the possible metrics.
-			for (let callsite in this.callsites) {
-				let data = this.callsites[callsite][this.selectedMetric];
+				// Set the dictionaries for metadata information. 
 				this.min[callsite] = utils.formatRuntimeWithoutUnits(data["min"]);
 				this.max[callsite] = utils.formatRuntimeWithoutUnits(data["max"]);
 				this.mean[callsite] = utils.formatRuntimeWithoutUnits(data["mean"]);
@@ -304,23 +323,29 @@ export default {
 				this.imb[callsite] = utils.formatRuntimeWithoutUnits(data["imb"]);
 				this.kurt[callsite] = utils.formatRuntimeWithoutUnits(data["kurt"]);
 				this.skew[callsite] = utils.formatRuntimeWithoutUnits(data["skew"]);
+				
+				// Set the data for the boxplot.
+				this.boxplot[callsite] = {"q": data["q"], "outliers": data["outliers"], "nid": data["nid"]};
+
+				// Set the selection for a callsite. 
 				this.selectClassName[callsite] = "unselect-callsite";
 			}
 		},
 
 		/**
-     * Sort the callsite ordering based on the attribute.
-     *
-     * @param {Array} callsites - Callsites as a list.
-     * @param {String} attribute - Attribute to sort by.
-     */
-		sortByAttribute(callsites, attribute) {
+		 * Sort the callsite ordering based on the attribute.
+		 *
+		 * @param {Array} callsites - Callsites as a list.
+		 * @param {Stirng} metric - Metric (e.g., time or time (inc))
+		 * @param {String} attribute - Attribute to sort by.
+		 */
+		sortByAttribute(callsites, metric, attribute) {
 			let items = Object.keys(callsites).map(function (key) {
 				return [key, callsites[key]];
 			});
 
 			items = items.sort( (first, second) => {
-				return second[1][this.$store.selectedMetric][attribute] - first[1][this.$store.selectedMetric][attribute];
+				return second[1][metric][attribute] - first[1][metric][attribute];
 			});
 
 			callsites = items.reduce(function (map, obj) {
@@ -332,9 +357,9 @@ export default {
 		},
 
 		/**
-     * Selection feature.
-     * Code to select the callsite by the component-level button
-     */
+		 * Selection feature.
+		 * Code to select the callsite by the component-level button
+		 */
 		changeSelectedClassName() {
 			event.stopPropagation();
 			let callsite = event.currentTarget.id;
@@ -357,33 +382,34 @@ export default {
 		},
 
 		/**
-     *
-     */
+		 *
+		 */
 		switchIsSelectedCallsite(val) {
 			this.isCallsiteSelected = val;
 		},
 
 		/**
-     *
-     */
+		 *
+		 */
 		switchIsSelectedModule(val) {
 			this.isModuleSelected = val;
 		},
 
 		/**
-     *
-     * @param {*} callsite
-     */
+		 *
+		 * @param {*} callsite
+		 */
 		selectedClassName(callsite) {
 			return this.selectClassName[callsite];
 		},
 
 		/**
-     *
-     * @param {*} callsite
-     */
+		 *
+		 * @param {*} callsite
+		 */
 		formatModule(callsite) {
-			const _m = this.$store.c2m[this.$store.selectedTargetDataset][callsite["name"]];
+			console.log(this.$store, callsite);
+			const _m = this.$store.summary[this.$store.selectedTargetDataset]["c2m"][callsite["name"]];
 			const splice = 15;
 			if (_m.length < splice) {
 				return _m;

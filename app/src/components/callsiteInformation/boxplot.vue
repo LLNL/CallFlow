@@ -30,7 +30,8 @@ import ToolTip from "./tooltip";
 export default {
 	name: "BoxPlot",
 	props: [
-		"callsite",
+		"data",
+		"nid",
 		"width",
 		"height",
 		"showTarget"
@@ -79,7 +80,7 @@ export default {
 	},
 
 	created() {
-		this.id = "boxplot-" + this.callsite.id;
+		this.id = "boxplot-" + this.data.nid;
 	},
 
 	methods: {
@@ -96,9 +97,9 @@ export default {
 			this.centerLinePosition = (this.boxHeight - this.informationHeight / 4) / 2;
 			this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4;
 
-			this.process(this.callsite);
+			this.targetq = this.qFormat(this.data["q"]);
 
-			this.svg = d3.select("#boxplot-" + this.callsite.id)
+			this.svg = d3.select("#boxplot-" + this.data.nid)
 				.attrs({
 					"class": "boxplot",
 					"width": this.containerWidth,
@@ -114,12 +115,11 @@ export default {
 
 		/**
 		 * Visualize the boxplot for the callsites.
-		 * @param {*} callsite 
 		 */
-		visualize(callsite) {
-			this.$refs.Box.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Markers.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget);
+		visualize() {
+			this.$refs.Box.init(this.data, this.q, this.targetq, this.xScale, this.showTarget);
+			this.$refs.Markers.init(this.data, this.q, this.targetq, this.xScale, this.showTarget);
+			this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.data, this.showTarget);
 		},
 
 		/**
@@ -131,19 +131,6 @@ export default {
 			this.$refs.Outliers.clear();
 		},
 
-		/**
-		 * 
-		 * @param {*} callsite 
-		 */
-		process(callsite) {
-			if (this.$store.data_cs[this.$store.selectedTargetDataset][callsite.name] != undefined) {
-				this.target_data = callsite[this.$store.selectedMetric]["boxplots"]["q"];
-			}
-			else {
-				this.target_data = [0, 0, 0, 0, 0];
-			}
-			this.targetq = this.qFormat(this.target_data);
-		},
 
 		/**
 		 * 

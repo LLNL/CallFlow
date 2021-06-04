@@ -375,10 +375,14 @@ class BaseProvider:
         elif operation_name == "boxplots":
             dataset = operation["dataset"]
             metric = operation["metric"]
+            callsites = operation["callsites"]
 
-            boxplot = BoxPlot(df=aux_dict, proxy_columns=sg.proxy_columns)
-
-            return boxplot.unpack()
+            result = {}
+            for callsite in callsites:
+                bp = BoxPlot(sg=sg, name=callsite, ntype=ntype, proxy_columns=sg.proxy_columns)
+                result[callsite] = bp.unpack()
+            
+            return result
 
     def request_ensemble(self, operation):
         """

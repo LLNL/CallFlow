@@ -100,7 +100,6 @@ export default {
 				ntype: "callsite",
 				orientation: ["time", "time (inc)"],
 			});
-			console.log(this.data);
 
 			// let temp = this.process(callsite);
 			this.xMin = this.data.xMin;

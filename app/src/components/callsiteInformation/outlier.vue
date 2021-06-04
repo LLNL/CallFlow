@@ -50,7 +50,7 @@ export default {
 			this.callsite = callsite;
 
 			// Get the SVG belonging to this callsite.
-			this.svg = d3.select("#boxplot-" + callsite.id);
+			this.svg = d3.select("#boxplot-" + callsite.nid);
 			this.g = this.svg
 				.select(".outlier")
 				.attrs({
@@ -65,7 +65,7 @@ export default {
 			this.boxWidth = this.width;
 
 			this.targetOutliers();
-			this.$parent.$refs.ToolTip.init("boxplot-" + callsite.id);
+			this.$parent.$refs.ToolTip.init("boxplot-" + callsite.nid);
 		},
 
 		/**
@@ -256,7 +256,7 @@ export default {
 		 */
 		targetOutliers() {
 			let self = this;
-			let callsite_data = this.callsite[this.$store.selectedMetric]["boxplots"]["outliers"][this.callsite.name];
+			let callsite_data = this.callsite["outliers"][this.callsite.name];
 			let data = [];
 			if (callsite_data != undefined) {
 				data = callsite_data[this.$store.selectedMetric]["outliers"];

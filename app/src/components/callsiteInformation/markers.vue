@@ -38,7 +38,7 @@ export default {
 			this.xScale = xScale;
 
 			// Get the SVG belonging to this callsite.
-			this.svg = d3.select("#boxplot-" + callsite.id);
+			this.svg = d3.select("#boxplot-" + callsite.nid);
 
 			this.g = this.svg
 				.select(".marker")

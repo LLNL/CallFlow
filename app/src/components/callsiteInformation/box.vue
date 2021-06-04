@@ -42,7 +42,7 @@ export default {
 			this.xScale = xScale;
 
 			// Get the SVG belonging to this callsite.
-			this.svg = d3.select("#boxplot-" + callsite.id);
+			this.svg = d3.select("#boxplot-" + callsite.nid);
 			this.id = "box-" + callsite.id;
 
 			this.g = this.svg
@@ -54,7 +54,7 @@ export default {
 			this.box();
 			this.axis();
 			this.centerLine();
-			this.$parent.$refs.ToolTip.init("boxplot-" + callsite.id);
+			this.$parent.$refs.ToolTip.init("boxplot-" + callsite.nid);
 		},
 
 		/**
