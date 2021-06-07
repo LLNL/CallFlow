@@ -85,6 +85,7 @@ export default {
 	methods: {
 		async init() {
 			this.config = await APIService.GETRequest("config");
+			console.log(this.config);
 			this.run_counts = this.config.runs.map((_) => _["name"]).length;
 			this.$store.config = this.config;
 
@@ -246,7 +247,7 @@ export default {
 
 body {
 	font-family: "Open Sans", sans-serif;
-	font-size: 16px;
+	font-size: 1em;
 }
 
 
@@ -260,9 +261,9 @@ body {
 	stroke-width: 3px;
 }
 
-.big_text {
+/* .big_text {
 	font-size: 32px;
-}
+} */
 
 .ui.vis {
 	height: 98% !important;
@@ -278,7 +279,7 @@ body {
 
 .v-chip__content {
 	color: white;
-	font-size: 125%;
+	font-size: 1.25em;
 }
 
 .scroll {
@@ -287,7 +288,7 @@ body {
 
 .tooltip {
 	padding-left: 10px;
-	font-size: 14px;
+	font-size: 0.75em;
 	font-weight: 500;
 }
 
@@ -295,7 +296,7 @@ body {
 	border: 0px solid !important;
 	right: 0px !important;
 	color: #009688 !important;
-	font-size: 36px !important;
+	font-size: 2em !important;
 	background-color: white !important;
 }
 
@@ -309,10 +310,6 @@ body {
 
 .md-theme-default a:not(.md-button) {
 	color: #009687 !important;
-}
-
-.valueText {
-	font-weight: 700 !important;
 }
 
 /* Over write the primary text to avoid blue color change on selection*/
