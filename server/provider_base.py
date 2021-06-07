@@ -284,6 +284,7 @@ class BaseProvider:
             return { sg: self.supergraphs[sg].summary() for sg in self.supergraphs }
             
         elif operation_name == "timeline":
+            operation["ncount"] = int(operation["ncount"])
             assert operation["ntype"] in ["module", "callsite"]
             assert isinstance(operation["ncount"], int)
             assert operation["metric"] in ["time", "time (inc)"]
