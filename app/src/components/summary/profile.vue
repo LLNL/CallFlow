@@ -15,7 +15,7 @@
 				:loading="isLoading"
 				:footer-props="footerProps"
 				loading-text="Loading... Please wait"
-				:pagination.sync="pagination"
+				:options.sync="pagination"
 				:sort-by.sync="sortBy"
 				:sort-desc.sync="sortDesc"
 			>

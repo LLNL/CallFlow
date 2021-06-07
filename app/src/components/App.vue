@@ -226,7 +226,7 @@ export default {
 			}
 
 			this.$store.viewWidth = window.innerWidth;
-			this.$store.viewHeight = window.innerHeight - footerHeight;
+			this.$store.viewHeight = window.innerHeight - toolbarHeight - footerHeight;
 		},
 	},
 };

@@ -5,12 +5,17 @@
  * SPDX-License-Identifier: MIT
  */
 <template>
-  <v-container fluid class="px-3">
+  <v-container fluid>
 	<v-card tile>
-		<v-row class="pl-8">
-			<v-card-title class="pa-2 pt-0"> Timeline View </v-card-title>
-			<v-flex xs2 class="ma-1">
+		<v-row id="settings">
+			<v-col cols="2">
+				<v-card-title class="pa-2 pt-0"> Timeline View
+				</v-card-title>
+			</v-col>
+			<v-col cols="2"></v-col>
+			<v-col cols="2">
 				<v-select
+					dense
 					label="Chart Type"
 					:items="chartTypes"
 					v-model="selectedChartType"
@@ -18,9 +23,10 @@
 					persistent-hint
 				>
 				</v-select>
-			</v-flex>
-			<v-flex xs2 class="ma-1">
+			</v-col>
+			<v-col cols="2">
 				<v-select
+					dense
 					label="Y axis bandwidth"
 					:items="seriesTypes"
 					v-model="selectedSeriesType"
@@ -28,9 +34,10 @@
 					persistent-hint
 				>
 				</v-select>
-			</v-flex>
-			<v-flex xs2 class="ma-1">
+			</v-col>
+			<v-col cols="2">
 				<v-select
+					dense
 					label="Metric"
 					:items="metrics"
 					v-model="selectedMetric"
@@ -38,9 +45,10 @@
 					persistent-hint
 				>
 				</v-select>
-			</v-flex>
-			<v-flex xs2 class="ma-1">
+			</v-col>
+			<v-col cols="2">
 				<v-text-field
+					dense
 					label="Top N-callsites"
 					type="number"
 					v-model="selectedTopCallsiteCount"
@@ -48,9 +56,9 @@
 					persistent-hint
 				>
 				</v-text-field>
-			</v-flex>
+			</v-col>
 		</v-row>
-		<v-row class="ml-3 pa-1">
+		<v-row class="ml-3">
 			<svg :id="id" :width="width" :height="height"></svg>
 		</v-row>
 	</v-card>
@@ -60,12 +68,14 @@
 <script>
 import * as d3 from "d3";
 import * as utils from "lib/utils";
+import EventHandler from "lib/routing/EventHandler";
+import APIService from "lib/routing/APIService";
 
 export default {
 	name: "TimeSeries",
-	props: ["data"],
 	data: () => ({
 		id: null,
+		data: {},
 		height: 0,
 		width: 0,
 		yMin: 0,
@@ -73,8 +83,8 @@ export default {
 		padding: {
 			top: 10,
 			bottom: 40,
-			left: 100,
-			right: 0,
+			left: 20,
+			right: 20,
 		},
 		dimension: {
 			chartTitle: 20,
@@ -85,66 +95,62 @@ export default {
 		},
 		chartTypes: ["STACKED_BAR_CHART", "STACKED_AREA_CHART"],
 		selectedChartType: "STACKED_BAR_CHART",
-		chartXAttr: "root_time_inc",
+		chartXAttr: "datasets",
 		seriesTypes: ["STACKED", "NORMALIZED"],
 		selectedSeriesType: "STACKED",
 		metrics: ["time", "time (inc)"],
 		selectedMetric: "time (inc)",
-		selectedTopCallsiteCount: 10,
+		selectedTopCallsiteCount: 5,
 	}),
 
 	mounted() {
 		this.id = "timeline-overview";
-	},
-	
-	watch: {
-		data: function(newVal, oldVal) {
-			if(newVal != oldVal) {
-				this.init();
-			}
-		}
+		
+		let self = this;
+		EventHandler.$on("visualize-timeline", function () {
+			self.visualize();
+		});
 	},
 
 	methods: {
 		init() {
-			this.width = this.$store.viewWidth;
-			this.height = this.$store.viewHeight / 2 - this.padding.bottom - this.padding.top;
+			this.width = this.$store.viewWidth - this.padding.left - this.padding.right;
+			const settingsHeight = document.getElementById("settings").clientHeight;
+			const topHalfSummaryHeight = document.getElementById("top-half").clientHeight;
+			this.height = this.$store.viewHeight - settingsHeight - topHalfSummaryHeight;
 
-			this.nodes = this.data.nodes;
-
-			this.timeline = Object.values(this.data.d).map((d) => d);
-
-			this.initSVG();
-			this.plot();
-			this.axis();
-			this.label();
-			this.colorMap();
-		},
-
-		initSVG() {
 			this.svg = d3.select("#" + this.id).attrs({
 				width: this.width,
 				height: this.height,
 				"pointer-events": "all",
-				border: "1px solid lightgray",
 			});
 
+			const leftOffset = 100;
+			const topOffset = 0;
 			this.mainSvg = this.svg.append("g").attrs({
 				id: "mainSVG",
-				transform: `translate(${this.padding.left}, ${this.padding.top})`,
+				transform: `translate(${leftOffset}, ${topOffset})`,
 			});
 
-			this.mainSvg
-				.append("defs")
-				.append("clipPath")
-				.attr("id", "clip")
-				.append("rect")
-				.attrs({
-					x: 0,
-					y: 0,
-					width: this.width - this.padding.left - this.padding.right,
-					height: this.height - this.padding.top - this.padding.bottom,
-				});
+			this.selectedMetric = this.$store.selectedMetric;
+
+			EventHandler.$emit("visualize-timeline");
+		},
+
+		async visualize() {
+			this.data = await APIService.POSTRequest("timeline", {
+				"ntype": "module",
+				"ncount": this.selectedTopCallsiteCount,
+				"metric": "time",
+			});
+
+			this.nodes = this.data.nodes;
+			this.timeline = Object.values(this.data.d).map((d) => d);
+
+			this.plot();
+			this.axis();
+			this.label();
+			this.colorMap();
 		},
 
 		plot() {
@@ -184,7 +190,7 @@ export default {
 					.nice()
 					.range([
 						this.height - 2 * this.padding.bottom, 
-						2 * this.padding.top
+						1 * this.padding.top
 					]);
 
 				this.mainSvg
@@ -259,7 +265,7 @@ export default {
 				.append("g")
 				.attrs({
 					transform: `translate(${0}, ${
-						this.height - 2.0 * this.padding.bottom
+						this.height - 1.5 * this.padding.bottom
 					})`,
 					class: "x-axis",
 					"stroke-width": "1.5px",
@@ -283,8 +289,8 @@ export default {
 				.append("text")
 				.attrs({
 					class: "axis-labels",
-					transform: `translate(${this.width - 0.5 * this.padding.left}, ${
-						this.height - this.padding.top * 1.5
+					transform: `translate(${this.width - 2 * this.padding.left}, ${
+						this.height - this.padding.top
 					})`,
 				})
 				.style("text-anchor", "middle")
@@ -315,7 +321,7 @@ export default {
 			let svg = this.svg
 				.append("g")
 				.attrs({
-					transform: `translate(${20}, ${-30})`,
+					transform: `translate(${20}, ${-2 * this.padding.top})`,
 					width: this.width,
 					height: height,
 					class: "colorMapSVG",
@@ -352,7 +358,7 @@ export default {
 					},
 					y: 0.5 * radius + padding + y_offset,
 					"font-family": "sans-serif",
-					"font-size": 1.5* radius + "px",
+					"font-size": 1.5 * radius + "px",
 					fill: "black",
 				});
 		},
