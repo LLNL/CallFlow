@@ -93,14 +93,15 @@ export default {
 			xTitle: 20,
 			yTitle: 20,
 		},
-		chartTypes: ["bar chart", "area chart"],
-		selectedChartType: "bar chart",
+		chartTypes: ["bar", "area", "line"],
+		selectedChartType: "area",
 		chartXAttr: "datasets",
 		seriesTypes: ["stacked", "normalized"],
 		selectedSeriesType: "normalized",
 		metrics: ["time", "time (inc)"],
 		selectedMetric: "time (inc)",
 		selectedTopCallsiteCount: 5,
+		selectedXDomain: "normal",
 	}),
 
 	mounted() {
@@ -187,7 +188,6 @@ export default {
 					.keys(this.nodes)(this.timeline)
 					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
 				yDomain = [d3.min(series, (d) => d3.min(d, (d) => d[1])), d3.max(series, (d) => d3.max(d, (d) => d[1]))];
-				console.log(yDomain);
 			}
 			else if (this.selectedSeriesType == "normalized") {
 				series = d3
@@ -206,29 +206,34 @@ export default {
 				.range(d3.schemeSpectral[series.length])
 				.unknown("#ccc");
 
-			if (this.selectedChartType == "bar chart") {
-				this.barChart(series, yDomain);
+			if (this.selectedXDomain == "normal") {
+				this.x = d3
+					.scaleBand()
+					.domain(this.timeline.map((d) => d.name))
+					.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
+			} else if (this.selectedXDomain == "time") {
+				this.x = d3
+					.scaleUtc()
+					.domain(d3.extent(this.timeline, d => d[this.chartXAttr]))
+					.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
 			}
-			else if(this.selectedChartType == "area chart") {
-				this.areaChart(series, yDomain);
-			}
-		},
 
-		barChart(series, yDomain) {
-			this.x = d3
-				.scaleBand()
-				.domain(this.timeline.map((d) => d.name))
-				.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
-					
 			this.y = d3
 				.scaleLinear()
 				.domain(yDomain)
 				.nice(5)
-				.range([
-					this.height - 2 * this.padding.bottom, 
-					2 * this.padding.top
-				]);
+				.range([this.height - 2 * this.padding.bottom, 2 * this.padding.top]);
 
+			if (this.selectedChartType == "bar") {
+				this.barChart(series, yDomain);
+			} else if(this.selectedChartType == "area") {
+				this.areaChart(series, yDomain);
+			} else if(this.selectedChartType == "line") {
+				this.lineChart(series, yDomain);
+			}
+		},
+
+		barChart(series) {
 			this.mainSvg
 				.append("g")
 				.selectAll("g")
@@ -238,7 +243,7 @@ export default {
 				.selectAll("rect")
 				.data((d) => d)
 				.join("rect")
-				.attr("x", (d, i) => this.x(d.data.name))
+				.attr("x", (d) => this.x(d.data.name))
 				.attr("y", (d) => this.y(d[1]))
 				.attr("height", (d) => this.y(d[0]) - this.y(d[1]))
 				.attr("width", this.x.bandwidth())
@@ -246,17 +251,9 @@ export default {
 				.text((d) => `[${d.data.name}] ${d.key} - ${utils.formatRuntimeWithoutUnits(d.data[d.key])}`);
 		},
 
-		areaChart(series, yDomain) {
-			this.x = d3.scaleUtc()
-				.domain(d3.extent(this.timeline, d => d[this.chartXAttr]))
-				.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
-				
-			this.y = d3.scaleLinear()
-				.domain(yDomain).nice()
-				.range([this.height - 2 * this.padding.bottom, 2 * this.padding.top]);
-
+		areaChart(series) {			
 			const area = d3.area()
-				.x(d => this.x(d.data.root_time_inc))
+				.x(d => this.x(d.data.name) + this.x.bandwidth()/2)
 				// .y(d => this.y(d[0]))
 				.y0(d => this.y(d[0]))
 				.y1(d => this.y(d[1]));
@@ -266,10 +263,27 @@ export default {
 				.data(series)
 				.join("path")
 				.attr("stroke", ({key}) => this.color(key))
-				.attr("fill", "transparent")
-				// .attr("fill", ({key}) => this.color(key))
+				// .attr("fill", "transparent")
+				.attr("fill", ({key}) => this.color(key))
 				.attr("stroke-width", 5)
 				.attr("d", area)
+				.append("title")
+				.text(({key}) => key);
+		},
+
+		lineChart(series) {
+			const line = d3.line()
+				.x(d => this.x(d.data.name) + this.x.bandwidth()/2)
+				.y(d => this.y(d[0]));
+
+			this.mainSvg.append("g")
+				.selectAll("path")
+				.data(series)
+				.join("path")
+				.attr("stroke", ({key}) => this.color(key))
+				.attr("fill", "transparent")
+				.attr("stroke-width", 2)
+				.attr("d", line)
 				.append("title")
 				.text(({key}) => key);
 		},
