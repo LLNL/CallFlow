@@ -148,7 +148,7 @@ export default {
 			d3.selectAll(".brush").remove();
 			d3.selectAll(".tick").remove();
 			d3.selectAll(".histogram-rank-axis").remove();
-			// this.$refs.ToolTip.clear();
+			this.$refs.ToolTip.clear();
 		},
 
 		async visualize(callsite) {
@@ -165,7 +165,7 @@ export default {
 			this.yAxis();
 			this.rankLineScale(callsite);
 			this.brushes();
-			// this.$refs.ToolTip.init(this.svgID); // TODO: CAL-87
+			this.$refs.ToolTip.init(this.svgID); 
 		},
 
 		array_unique(arr) {

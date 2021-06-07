@@ -70,7 +70,7 @@ export default {
 
 			return {
 				"width": this.containerWidth,
-				"height": rows * measure.height
+				"height": (rows + 0.5) * measure.height
 			};
 		},
 
