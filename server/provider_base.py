@@ -93,7 +93,7 @@ class BaseProvider:
         if not is_not_ensemble:
             name = "ensemble"
             eg = EnsembleGraph(name)
-            eg.load(os.path.join(load_path, name),
+            eg.load(os.path.join(load_path, name), module_callsite_map=self.config.get("module_callsite_map", {}),
                     read_parameter=read_param)
             eg.supergraphs = self.supergraphs
             
@@ -109,7 +109,7 @@ class BaseProvider:
         read_param = self.config["read_parameter"]
 
         sg = SuperGraph(name)
-        sg.load(os.path.join(save_path, name),
+        sg.load(os.path.join(save_path, name), module_callsite_map=self.config.get("module_callsite_map", {}),
             read_parameter=read_param) 
         return sg
 
@@ -293,8 +293,7 @@ class BaseProvider:
             top_nodes_idx = self.supergraphs["ensemble"].df_get_top_by_attr(operation["ntype"], operation["ncount"], operation["metric"])
             
             # Convert the indexs to the modules. 
-            top_nodes = [ self.supergraphs["ensemble"].get_name(module_idx, operation["ntype"]) for module_idx in top_nodes_idx]
-
+            top_nodes = [ self.supergraphs["ensemble"].get_name(node_idx, operation["ntype"]) for node_idx in top_nodes_idx]
             # Construct the per-supergraph timeline data. 
             data = {}
             data['d'] = { sg: self.supergraphs[sg].timeline(top_nodes, operation["ntype"], operation["metric"]) for sg in self.supergraphs if sg != "ensemble"}
@@ -339,7 +338,7 @@ class BaseProvider:
 
             ssg = SankeyLayout(
                 sg=sg,
-                path="group_path",
+                path_column="group_path",
                 selected_runs=selected_runs,
                 reveal_callsites=reveal_callsites,
                 split_entry_module=split_entry_module,

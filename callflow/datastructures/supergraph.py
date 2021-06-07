@@ -149,9 +149,9 @@ class SuperGraph(ht.GraphFrame):
         :return (float): runtime of a node
         """
         if ntype == 'callsite':
-            return self.df_lookup_with_column("name", node_idx)[metric].apply(apply_func)
+            return self.df_lookup_with_column("name", node_idx)[metric].mean()
         elif ntype == 'module':
-            return self.df_lookup_with_column("module", node_idx)[metric].apply(apply_func)
+            return self.df_lookup_with_column("module", node_idx)[metric].mean()
 
     def get_name_by_nid(self, nid):
         """
@@ -242,7 +242,7 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def load(
-        self, path, read_graph=False, read_parameter=False, read_aux=False
+        self, path,  module_callsite_map: dict = {}, read_graph=False, read_parameter=False, read_aux=False
     ) -> None:
         """
         Load the SuperGraph class from reading .callflow data.
@@ -273,7 +273,7 @@ class SuperGraph(ht.GraphFrame):
         self.df_reset_index() # TODO: This might be cause a possible side
         # effect. Beware!!
         self.roots = self.nxg_get_roots(self.nxg)
-        self.add_callsites_and_modules_maps()
+        self.add_callsites_and_modules_maps(module_callsite_map)
 
         self.callsite_aux_dict = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns + ["nid"], group_by=["rank"], apply_func=lambda _: _.mean())
         self.module_aux_dict = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns + ["nid"], group_by=["rank"], apply_func=lambda _: _.mean())
@@ -287,7 +287,7 @@ class SuperGraph(ht.GraphFrame):
 
         has_modules_in_df = "module" in self.dataframe.columns
         has_modules_in_map = len(module_callsite_map) > 0
-        assert not (has_modules_in_df and has_modules_in_map)
+        # assert not (has_modules_in_df and has_modules_in_map)
 
         # ----------------------------------------------------------------------
         LOGGER.info('Creating \"module-callsite\" and \"callsite-module\" maps')
@@ -297,7 +297,7 @@ class SuperGraph(ht.GraphFrame):
 
         # ----------------------------------------------------------------------
         # if the dataframe already has columns
-        if 'module' in self.dataframe.columns and self.dataframe['module'].dtype != "int64":
+        if has_modules_in_df and self.dataframe['module'].dtype != "int64":
             LOGGER.debug('Extracting the module map from the dataframe')
 
             # create a map of module-indexes

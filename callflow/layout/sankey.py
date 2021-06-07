@@ -9,7 +9,7 @@ CallFlow's layout - Sankey.
 import networkx as nx
 import numpy as np
 from ast import literal_eval as make_list
-from callflow.utils.df import df_group_by
+from callflow.utils.df import df_group_by, df_as_dict
 
 # CallFlow imports
 import callflow
@@ -28,7 +28,7 @@ class SankeyLayout:
     def __init__(
         self,
         sg,
-        path,
+        path_column,
         selected_runs=None,
         reveal_callsites=[],
         split_entry_module="",
@@ -45,13 +45,13 @@ class SankeyLayout:
         :param split_callee_module: array of callees to split
         """
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
-        assert isinstance(path, str)
-        assert path in ["path", "group_path", "component_path"]
+        assert isinstance(path_column, str)
+        assert path_column in ["path", "group_path", "component_path"]
 
         LOGGER.info(f"Creating the Single SankeyLayout for {sg.name}.")
 
         # Set the current graph being rendered.
-        self.path = path
+        self.path_column = path_column
         self.sg = sg
 
         self.time_exc = self.sg.df_get_proxy("time")
@@ -72,6 +72,9 @@ class SankeyLayout:
         else:
             self.runs = selected_runs # Do not filter
 
+        self.cp_dict = df_as_dict(self.sg.dataframe, 'name', 'component_path')
+
+
         self.reveal_callsites = reveal_callsites
         self.split_entry_module = split_entry_module
         self.split_callee_module = split_callee_module
@@ -90,19 +93,19 @@ class SankeyLayout:
             ],
         )
 
-
         self.nxg = self._create_nxg_from_paths()
-        print(self.nxg.nodes())
-        self.add_reveal_paths(self.reveal_callsites)
+        
+        if len(self.reveal_callsites) > 0:
+            self.add_reveal_paths(self.reveal_callsites)
 
         if len(self.split_entry_module) > 0:
             self.add_entry_callsite_paths(self.split_entry_module)
+
         if len(self.split_callee_module) > 0:
-            # TODO: Find why the implementation is missing.
             SankeyLayout.add_exit_callees_paths(self.split_callee_module)
 
-        self._add_node_attributes()
-        self._add_edge_attributes()
+        # self._add_node_attributes()
+        # self._add_edge_attributes()
 
     @staticmethod
     def create_source_targets(component_path):
@@ -370,11 +373,11 @@ class SankeyLayout:
 
         :return:
         """
-        ensemble_mapping = self._ensemble_map(
-            sg=self.sg, nxg=self.nxg, columns=self._COLUMNS
-        )
-        for idx, key in enumerate(ensemble_mapping):
-            nx.set_node_attributes(self.nxg, name=key, values=ensemble_mapping[key])
+        # ensemble_mapping = self._ensemble_map(
+        #     sg=self.sg, nxg=self.nxg, columns=self._COLUMNS
+        # )
+        # for idx, key in enumerate(ensemble_mapping):
+        #     nx.set_node_attributes(self.nxg, name=key, values=ensemble_mapping[key])
 
         dataset_mapping = {}
         for run in self.runs:
@@ -455,62 +458,51 @@ class SankeyLayout:
         Note: Current logic constructs two graphs (one for cct, and one for supergraph)
         and later uses them to construct a module level supergraph.
         """
-        print(self.sg.dataframe['path'])
-        paths_df = df_group_by(self.sg.dataframe, [SankeyLayout._PRIMARY_GROUPBY_COLUMN, self.path])
+        gp_dict = df_as_dict(self.sg.dataframe, 'name', self.path_column)
+
         nxg = nx.DiGraph()
 
-        for callsite in paths_df.groups:
-            path = paths_df.get_group(callsite).columns
+        for idx, path in gp_dict.items():
+            if isinstance(path, str):
+                continue
+            
+            if path.shape[0] > 2:
+                for depth in range(0, len(path) - 1):
+                    src = int(path[depth])
+                    tgt = int(path[depth + 1])
 
+                    src_name, src_dict = self.node_construct(src, "module")
+                    tgt_name, tgt_dict = self.node_construct(tgt, 'module') 
 
-            print(f"callsite: {callsite}, path: {path}")
-            # Break cycles, if any.
-            # path_list = SankeyLayout._break_cycles_in_paths(path)
+                    if not nxg.has_node(src_name):
+                        nxg.add_node(src_name, attr_dict=src_dict)
+                    if not nxg.has_node(tgt):
+                        nxg.add_node(tgt_name, attr_dict=tgt_dict)
 
-            # # loop through the path lists for each callsite.
-            # for callsite_idx, callsite2 in enumerate(path_list):
-            #     if callsite_idx != len(path_list) - 1:
-            #         source = path_list[callsite_idx]
-            #         target = path_list[callsite_idx + 1]
+                    has_callback_edge = nxg.has_edge(src_name, tgt_name)
 
-            #         # has_caller_edge = nxg.has_edge(source["module"], target["module"])
-            #         has_callback_edge = nxg.has_edge(target["module"], source["module"])
-            #         # has_cct_edge = cct.has_edge(source["callsite"], target["callsite"])
+                    if has_callback_edge:
+                        edge_type = "callback"
+                    else:
+                        edge_type = "caller"
 
-            #         if has_callback_edge:
-            #             edge_type = "callback"
-            #         else:
-            #             edge_type = "caller"
+                    edge_dict = {
+                        "edge_type": edge_type,
+                        "weight": self.sg.get_runtime(tgt, "module", "time (inc)", lambda _: _),
+                    }  
 
-            #         edge_dict = {
-            #             "source_callsite": source["callsite"],
-            #             "target_callsite": target["callsite"],
-            #             "edge_type": edge_type,
-            #             "weight": self.sg.get_runtime(target, "time (inc)", lambda x: x.mean()),
-            #             "dataset": self.sg.name,
-            #         }
-
-            #         if source["type"] == "super-node":
-            #             source_id = source["module"]
-
-            #         elif source["type"] == "component-node":
-            #             source_id = source["module"] + "=" + source["callsite"]
-
-            #         if target["type"] == "super-node":
-            #             target_id = target["module"]
-
-            #         elif target["type"] == "component-node":
-            #             target_id = target["module"] + "=" + target["callsite"]
-
-            #         if not nxg.has_node(source_id):
-            #             nxg.add_node(source_id, attr_dict=source)
-            #         if not nxg.has_node(target_id):
-            #             nxg.add_node(target_id, attr_dict=target)
-
-            #         if not nxg.has_edge(source_id, target_id) and edge_dict["weight"] > 0:
-            #             nxg.add_edge(source_id, target_id, attr_dict=edge_dict)
+                    if not nxg.has_edge(src_name, tgt_name) and edge_dict["weight"] > 0:
+                        nxg.add_edge(src_name, tgt_name, attr_dict=edge_dict)
 
         return nxg
+
+    def node_construct(self, node_id, node_type):
+        name = self.sg.get_name(node_id, node_type)
+        return name, {
+            "type": node_type,
+            "level": len(self.cp_dict[name]),
+            "cp_path": self.cp_dict[name],
+        }
 
     @staticmethod
     def _break_cycles_in_paths(path):
@@ -644,85 +636,35 @@ class SankeyLayout:
         """
         ret = {}
 
-        # Reduce the entire_df to respective target dfs.
-        if isinstance(sg, callflow.SuperGraph):
-            target_df = sg.dataframe
-        else:
-            target_df = sg["ensemble"].dataframe
-
-        # Unique modules in the target run
-        # target_modules = target_df["module"].unique()
-
-        # Group the dataframe in two ways.
-        # 1. by module
-        # 2. by module and callsite
-        target_module_group_df = target_df.groupby(["module"])
-        target_module_name_group_df = target_df.groupby(["module", "name"])
-
-        # Module map for target run {'module': [Array of callsites]}
-        target_module_callsite_map = target_module_group_df["name"].unique().to_dict()
-
-        # Inclusive time maps for the module level and callsite level.
-        target_module_time_inc_map = target_module_group_df[self.time_inc].max().to_dict()
-        target_name_time_inc_map = target_module_name_group_df[self.time_inc].max().to_dict()
-
-        # Exclusive time maps for the module level and callsite level.
-        target_module_time_exc_map = target_module_group_df[self.time_exc].max().to_dict()
-        target_name_time_exc_map = target_module_name_group_df[self.time_exc].max().to_dict()
-
         for node in nxg.nodes(data=True):
             node_name, node_dict = SankeyLayout.nx_deconstruct_node(node)
-            if node_name in target_module_callsite_map.keys():
-                if node_dict["type"] == "component-node":
-                    module = node_name.split("=")[0]
-                    callsite = node_name.split("=")[1]
-                    agg_time = self.callsite_time(
-                        group_df=target_module_group_df,
-                        module=module,
-                        callsite=callsite,
-                    )
-                    time_inc = target_name_time_inc_map[(module, callsite)]
-                    time_exc = target_name_time_exc_map[(module, callsite)]
 
-                elif node_dict["type"] == "super-node":
-                    module = node_name
-                    callsite = target_module_callsite_map[module].tolist()
-                    agg_time = self.module_time(
-                        group_df=target_module_name_group_df,
-                        module_callsite_map=target_module_callsite_map,
-                        module=module,
-                    )
+            print(node_name, node_dict)
 
-                    time_inc = target_module_time_inc_map[module]
-                    time_exc = target_module_time_exc_map[module]
+            if node_name not in ret:
+                ret[node_name] = {}
 
-                if node_name not in ret:
-                    ret[node_name] = {}
+            # for column in columns:
+            #     if column == "time (inc)":
+            #         ret[node_name][column] = time_inc
 
-                for column in columns:
-                    if column == "time (inc)":
-                        ret[node_name][column] = time_inc
+            #     elif column == "time":
+            #         ret[node_name][column] = time_exc
 
-                    elif column == "time":
-                        ret[node_name][column] = time_exc
+            #     elif column == "module":
+            #         ret[node_name][column] = module
 
-                    elif column == "module":
-                        ret[node_name][column] = module
+            #     elif column == "name":
+            #         ret[node_name][column] = callsite
 
-                    elif column == "actual_time":
-                        ret[node_name][column] = agg_time
+            #     elif column == "type":
+            #         ret[node_name][column] = node_dict["type"]
 
-                    elif column == "name":
-                        ret[node_name][column] = callsite
-
-                    elif column == "type":
-                        ret[node_name][column] = node_dict["type"]
-
-                    elif column == "entry_function":
-                        module_idx = sg.get_idx(node_name, "module")
-                        ret[node_name][column] = SankeyLayout.get_entry_functions(
-                            target_module_group_df, module_idx
-                        )
+            #     elif column == "entry_function":
+            #         module_idx = sg.get_idx(node_name, "module")
+            #         ret[node_name][column] = SankeyLayout.get_entry_functions(
+            #             target_module_group_df, module_idx
+            #         )
 
         return ret
 
