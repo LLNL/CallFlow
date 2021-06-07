@@ -121,15 +121,10 @@ export default {
 				.nice(5)
 				.range([this.yAxisHeight, this.padding.top]);
 
-			this.regression = this.leastSquares(this.xArray, this.yArray);
-			const corr_coef = Math.round(this.regression["corr_coef"] * 100) / 100;
-			this.info = "Correlation : " + corr_coef;
-
-
 			this.xAxis();
 			this.yAxis();
 			this.dots();
-			// this.trendline();
+			this.trendline();
 		},
 
 		process(data) {
@@ -159,77 +154,26 @@ export default {
 			return [xMin, yMin, xMax, yMax, xArray, yArray];
 		},
 
-		// returns slope, intercept and r-square of the line
 		leastSquares(xSeries, ySeries) {
-			var n = xSeries.length;
-			var x_mean = 0;
-			var y_mean = 0;
-			var term1 = 0;
-			var term2 = 0;
+			const reduceSumFunc = (prev, cur) => prev + cur;
+			
+			const xBar = xSeries.reduce(reduceSumFunc) * 1.0 / xSeries.length;
+			const yBar = ySeries.reduce(reduceSumFunc) * 1.0 / ySeries.length;
 
-			for (var i = 0; i < n; i++) {
-				x_mean += xSeries[i];
-				y_mean += ySeries[i];
-			}
-
-			// calculate mean x and y
-			x_mean /= n;
-			y_mean /= n;
-
-			// calculate coefficients
-			var xr = 0;
-			var yr = 0;
-			for (i = 0; i < xSeries.length; i++) {
-				xr = xSeries[i] - x_mean;
-				yr = ySeries[i] - y_mean;
-				term1 += xr * yr;
-				term2 += xr * xr;
-			}
-
-			var b1 = term1 / term2;
-			var b0 = y_mean - b1 * x_mean;
-			// perform regression
-
-			let yhat = [];
-			// fit line using coeffs
-			for (i = 0; i < xSeries.length; i++) {
-				yhat.push(b0 + xSeries[i] * b1);
-			}
-
-			//compute correlation coef
-			var xy = [];
-			var x2 = [];
-			var y2 = [];
-
-			for (let i = 0; i < n; i++) {
-				xy.push(xSeries[i] * ySeries[i]);
-				x2.push(xSeries[i] * xSeries[i]);
-				y2.push(ySeries[i] * ySeries[i]);
-			}
-
-			var sum_x = 0;
-			var sum_y = 0;
-			var sum_xy = 0;
-			var sum_x2 = 0;
-			var sum_y2 = 0;
-
-			for (let i = 0; i < n; i++) {
-				sum_x += xSeries[i];
-				sum_y += ySeries[i];
-				sum_xy += xy[i];
-				sum_x2 += x2[i];
-				sum_y2 += y2[i];
-			}
-			var step1 = n * sum_xy - sum_x * sum_y;
-			var step2 = n * sum_x2 - sum_x * sum_x;
-			var step3 = n * sum_y2 - sum_y * sum_y;
-			var step4 = Math.sqrt(step2 * step3);
-
-			let corr_coef = step1 / step4;
-			return {
-				y_res: yhat,
-				corr_coef: corr_coef,
-			};
+			const ssXX = xSeries.map(function(d) { return Math.pow(d - xBar, 2); })
+				.reduce(reduceSumFunc);
+			
+			const ssYY = ySeries.map(function(d) { return Math.pow(d - yBar, 2); })
+				.reduce(reduceSumFunc);
+				
+			const ssXY = xSeries.map(function(d, i) { return (d - xBar) * (ySeries[i] - yBar); })
+				.reduce(reduceSumFunc);
+				
+			const slope = ssXY / ssXX;
+			const intercept = yBar - (xBar * slope);
+			const rSquare = Math.pow(ssXY, 2) / (ssXX * ssYY);
+			
+			return [slope, intercept, rSquare];
 		},
 
 		addxAxisLabel() {
@@ -356,28 +300,31 @@ export default {
 		},
 
 		trendline() {
-			let self = this;
-			let line = d3
-				.line()
-				.x(function (d, i) {
-					return self.xScale(self.xArray[i]);
-				})
-				.y(function (d, i) {
-					return self.yScale(self.yArray[i]);
-				});
+			const leastSquaresCoeff = this.leastSquares(this.xArray, this.yArray);
+			this.info = "Correlation : " + Math.round(leastSquaresCoeff[2]*1000)/1000;
 
-			this.svg
-				.append("g")
-				.attr("class", "trend-line")
-				.append("path")
-				.datum(this.regression["y_res"])
-				.attr("d", line)
-				.style("fill", "#f00")
-				.style("stroke-width", "1px")
-				.style("opacity", 0.5)
+			// apply the reults of the least squares regression
+			var x1 = this.xMin;
+			var y1 = leastSquaresCoeff[0] * this.xMin + leastSquaresCoeff[1];
+			var x2 = this.xMax;
+			var y2 = leastSquaresCoeff[0] * this.xMax + leastSquaresCoeff[1];
+			var trendData = [[x1,y1,x2,y2]];
+			
+			var trendline = this.svg.selectAll(".trendline")
+				.data(trendData);
+			
+			trendline.enter()
+				.append("line")
+				.attr("class", "trendline")
+				.attr("x1", (d) => this.xScale(d[0]))
+				.attr("y1", (d) => this.yScale(d[1]))
+				.attr("x2", (d) => this.xScale(d[2]))
+				.attr("y2", (d) => this.yScale(d[3]))
+				.attr("stroke", "red")
+				.attr("stroke-width", 1)
 				.attr(
 					"transform",
-					"translate(" + this.paddingFactor * this.padding.left + ", 0)"
+					"translate(" + 3 * this.padding.left + "," + this.padding.top + ")"
 				);
 		},
 
