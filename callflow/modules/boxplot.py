@@ -27,11 +27,12 @@ class BoxPlot:
     Boxplot computation for a dataframe segment
     """
 
-    def __init__(self, sg, name="", ntype="", proxy_columns={}):
+    def __init__(self, sg, realtive_sg=None,  name="", ntype="", proxy_columns={}):
         """
-        Boxplot for 
+        Boxplot for callsite or module
         
         :param sg: (callflow.SuperGraph) 
+        :param realtive_sg: (callflow.SuperGraph) Relative supergraph
         :param name: (str) Node name
         :param ntype: (str) Node type (e.g., "callsite" or "module")
         :param proxy_columns: (dict) Proxy for names.
@@ -87,6 +88,9 @@ class BoxPlot:
                 self.result["module"] = sg.get_module(sg.get_idx(name, ntype))
 
     def unpack(self):
+        """
+        Unpack the boxplot data.
+        """
         result = {}
         for metric in self.time_columns:
             box = self.result[metric]

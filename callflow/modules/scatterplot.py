@@ -62,6 +62,11 @@ class Scatterplot:
             }
 
     def unpack(self):
+        """
+        Unpack the data into JSON-supported format. 
+
+        :return: (JSON) 
+        """
         x = self.result[self.orientation[0]]
         y = self.result[self.orientation[1]]
 

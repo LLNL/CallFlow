@@ -474,8 +474,6 @@ class SankeyLayout:
                     src_name, src_dict = self.node_construct(c_name, src, "module")
                     tgt_name, tgt_dict = self.node_construct(c_name, tgt, 'module') 
 
-
-
                     if not nxg.has_node(src_name):
                         nxg.add_node(src_name, attr_dict=src_dict)
                     if not nxg.has_node(tgt):
@@ -504,6 +502,8 @@ class SankeyLayout:
             "type": node_type,
             "level": len(self.cp_dict[callsite_name]),
             "cp_path": self.cp_dict[callsite_name],
+            "time (inc)": self.sg.get_runtime(node_id, node_type, "time (inc)"),
+            "time": self.sg.get_runtime(node_id, node_type, "time")
         }
 
     @staticmethod

@@ -115,7 +115,6 @@ export default {
 			let data = {};
 			const payload = {
 				selected_runs: [this.$store.selectedTargetDataset],
-				groupBy: "module",
 			};
 			if (this.$store.selectedMode == "Single") {
 				payload["dataset"] = this.$store.selectedTargetDataset;

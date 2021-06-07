@@ -29,6 +29,7 @@ class Histogram:
     def __init__(self, dataframe, relative_to_df=None, bins=20,
                  histo_types = [], node_type="", proxy_columns={}):
         """
+        Constructor for the histogram computation.
 
         :param dataframe: (Pandas.dataframe) dataframe from the target dataset
         :param relative_to_df: (Pandas.dataframe) dataframe from the background dataset
@@ -100,6 +101,11 @@ class Histogram:
             self.result[tk]["d"] = _data
 
     def unpack(self):
+        """
+        Unpack the data into JSON-supported format. 
+
+        :return: (JSON) 
+        """
         result = {}
         for metric in self.time_columns:
             data = self.result[metric]
@@ -118,12 +124,12 @@ class Histogram:
         return result
 
     # --------------------------------------------------------------------------
-    # Return the histogram in the required form.
     def _get_data_by_histo_type(self, df, histo_type):
         """
 
-        :param df:
-        :return:
+        :param df: (pandas.DataFrame) df
+        :param histo_type: (str) histogram type to work with
+        :return: (np.array) data for the histogram computation based on the histo_type
         """
         assert isinstance(df, pd.DataFrame)
         if histo_type == "dataset":

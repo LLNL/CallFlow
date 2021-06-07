@@ -22,20 +22,20 @@ class DiffView:
     Calculate differences from sections of dataframe
     """
 
-    def __init__(self, ensemble_graph, dataset1, dataset2, col):
+    def __init__(self, esg, dataset1, dataset2, col):
         """
-        Constructor.
-        :param ensemble_graph:
-        :param dataset1:
-        :param dataset2:
-        :param col:
+        Constructor for the class.
+        :param esg: (callflow.EnsembleSuperGraph) Ensemble supergraph
+        :param dataset1: (str) 1st dataset name
+        :param dataset2: (str) 2nd dataset name
+        :param col: (str) column to compare. (e.g., time or time (inc))
         """
-        assert isinstance(ensemble_graph, callflow.EnsembleGraph)
+        assert isinstance(esg, callflow.EnsembleGraph)
         assert isinstance(dataset1, str) and isinstance(dataset2, str)
         assert isinstance(col, str)
 
-        self.df1 = ensemble_graph.df_lookup_with_column("dataset", dataset1)
-        self.df2 = ensemble_graph.df_lookup_with_column("dataset", dataset2)
+        self.df1 = esg.df_lookup_with_column("dataset", dataset1)
+        self.df2 = esg.df_lookup_with_column("dataset", dataset2)
         self.dataset1 = dataset1
         self.dataset2 = dataset2
         self.col = col
@@ -43,17 +43,18 @@ class DiffView:
         # Calculate the max_rank.
         self.max_rank = max(df_count(self.df1, "rank"), df_count(self.df2, "rank"))
 
-        modules = ensemble_graph.df_unique("module")
+        modules = esg.df_unique("module")
         self.result = [self.compute(_) for _ in modules]
 
     # --------------------------------------------------------------------------
     @staticmethod
     def _mean_difference(df1, df2, module):
         """
+        Calculate the mean_difference between two dataframes. 
 
-        :param df1:
-        :param df2:
-        :param module:
+        :param df1: (pd.DataFrame) dataframe 1
+        :param df2: (pd.DataFrame) dataframe 2
+        :param module: (str) module name.
         :return:
         """
 
@@ -78,9 +79,10 @@ class DiffView:
     # --------------------------------------------------------------------------
     def compute(self, module):
         """
+        Compute the required information for a particular module.
 
-        :param module:
-        :return:
+        :param module: (str) module name.
+        :return: (JSON) data
         """
 
         def _insertZeroRuntime(_arr, _rank_arr):

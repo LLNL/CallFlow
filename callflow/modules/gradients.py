@@ -27,7 +27,8 @@ class Gradients:
 
     def __init__(self, df, callsiteOrModule: str, grp_type: str="name", bins: int = 20, proxy_columns={}):
         """
-        Constructor function
+        Constructor function for the class
+
         :param df: Dictinary of dataframes keyed by the dataset_name. For e.g., { "dataset_name": df }.
         :param callsiteOrModule: callsiteOrModule (can be a moddule) of a given call graph
         :param bins: Number of bins to distribute the runtime information.
@@ -62,17 +63,21 @@ class Gradients:
     @staticmethod
     def convert_dictmean_to_list(dictionary):
         """
+        Convert a dictionary by taking its mean and converting to a list. 
 
-        :return:
+        :param dictionary: (dict) Input dictionary
+        :return: (list) mean of all values in the dictionary
         """
         return [np.mean(np.array(list(dictionary[_].values()))) for _ in dictionary]
 
     @staticmethod
     def convert_dictmean_to_dict(dictionary):
         """
+        Convert a dictionary by taking its mean and converting to a list. 
 
-        :param dictionary:
-        :return:
+        :param dictionary: (dict) Input dictionary
+        :return: (dict) Dictionary of mean values indexed by the keys in the
+        input dictionary.
         """
         return {_: np.mean(np.array(list(dictionary[_].values()))) for _ in dictionary}
 
@@ -80,9 +85,10 @@ class Gradients:
     @staticmethod
     def map_datasets_to_bins(bins, dataset_dict={}):
         """
+        Map dataset information to the corresponding bins.
 
-        :param bins:
-        :param dataset_dict:
+        :param bins: (int) Bin size
+        :param dataset_dict: 
         :return:
         """
         # TODO: previously, this logic applied to bin edges
@@ -104,11 +110,11 @@ class Gradients:
         return dataset_position_dict
 
     # --------------------------------------------------------------------------
-    def compute(self, columnName="name"):
+    def compute(self):
         """
+        Compute the required results. 
 
-        :param columnName:
-        :return:
+        :return: (JSON) data
         """
         dists = {tk: {} for tk,tv in zip(TIME_COLUMNS, self.time_columns)}
 

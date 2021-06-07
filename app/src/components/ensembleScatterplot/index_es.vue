@@ -21,7 +21,7 @@ import * as d3 from "d3";
 import * as utils from "lib/utils";
 
 import InfoChip from "../general/infoChip";
-
+import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
 
 // Local components
@@ -69,9 +69,9 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("ensemble-scatterplot", function (data) {
-			console.log("Ensemble Scatterplot: ", data["node"]);
-			self.visualize(data);
+		EventHandler.$on("ensemble-scatterplot", function (callsite) {
+			console.log("Ensemble Scatterplot: ", callsite);
+			self.visualize(callsite);
 		});
 
 		// this.init();
@@ -89,7 +89,7 @@ export default {
 				.attr("height", this.boxHeight - this.padding.top)
 				.attr("transform", "translate(" + this.padding.left + "," + this.padding.top + ")");
 			
-			// this.visualize(this.$store.selectedNode);
+			EventHandler.$emit("ensemble-scatterplot", "LagrangeElements");
 		},
 
 		preprocess(data, dataset_name) {
@@ -103,26 +103,27 @@ export default {
 			}
 		},
 
-		visualize(data) {
-			if (!this.firstRender) {
-				this.clear();
-			}
-			else {
-				this.init();
-			}
+		async visualize(callsite) {
+			this.data = await APIService.POSTRequest("ensemble_scatterplot", {
+				dataset: this.$store.selectedTargetDataset,
+				node: callsite,
+				ntype: "callsite",
+				orientation: ["time", "time (inc)"],
+			});
+
 			this.firstRender = false;
 			this.maxVarianceCallsite = "";
 			this.maxUndesirability = 0;
 			this.selectedModule = this.$store.selectedNode["id"];
 
-			const _e_store = utils.getDataByNodeType(this.$store, "ensemble", data["node"])[this.$store.selectedMetric];
+			const _e_store = utils.getDataByNodeType(this.$store, "ensemble", callsite)[this.$store.selectedMetric];
 			this.ensembleProcess();
 
 
 			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
 			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
 			if (this.$store.data_mod[this.$store.selectedTargetDataset][this.selectedModule] != undefined) {
-				this.selectedTargetModuleData = utils.getDataByNodeType(this.$store, "ensemble", data["node"])[this.$store.selectedMetric];
+				this.selectedTargetModuleData = utils.getDataByNodeType(this.$store, "ensemble", callsite)[this.$store.selectedMetric];
 				this.targetProcess();
 
 				let xScaleMax = Math.max(this.xMax, this.xtargetMax);
@@ -133,7 +134,7 @@ export default {
 				this.xScale = d3.scaleLinear().domain([xScaleMin, xScaleMax]).range([this.padding.left, this.xAxisHeight]);
 				this.yScale = d3.scaleLinear().domain([yScaleMin, yScaleMax]).range([this.yAxisHeight, this.padding.top]);
 			}
-			else{
+			else {
 				this.xScale = d3.scaleLinear().domain([this.xMin, this.xMax]).range([this.padding.left, this.xAxisHeight]);
 				this.yScale = d3.scaleLinear().domain([this.yMin, this.yMax]).range([this.yAxisHeight, this.padding.top]);
 			}

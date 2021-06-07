@@ -21,7 +21,6 @@ import Summary from "./components/Summary";
 import CCT from "./components/CCT";
 import SuperGraph from "./components/SuperGraph";
 import EnsembleSuperGraph from "./components/SuperGraphEnsemble";
-import TimelineSuperGraph from "./components/SuperGraphTimeline";
 import vuetify from "./lib/plugins/vuetify";
 
 Vue.use(Vuex);
@@ -49,12 +48,6 @@ const router = new Router({
 			component: EnsembleSuperGraph,
 			props: true
 		},
-		{
-			path: "/timeline_super_graph",
-			name: "TimeLineSuperGraph",
-			component: TimelineSuperGraph,
-			props: true
-		}
 	]
 });
 

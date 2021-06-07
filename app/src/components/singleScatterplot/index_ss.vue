@@ -129,7 +129,7 @@ export default {
 			this.xAxis();
 			this.yAxis();
 			this.dots();
-			// this.trendline()
+			// this.trendline();
 		},
 
 		process(data) {
@@ -258,7 +258,7 @@ export default {
 				.ticks(10)
 				.tickFormat((d, i) => {
 					let runtime = utils.formatRuntimeWithExponent(d, self.x_max_exponent);
-					return `${runtime[0]}`;
+					return `${Math.round(runtime[0] * 100) / 100}`;
 				});
 
 			let xAxisLine = this.svg
@@ -372,7 +372,7 @@ export default {
 				.append("path")
 				.datum(this.regression["y_res"])
 				.attr("d", line)
-				.style("stroke", this.$store.color.intermediate)
+				.style("fill", "#f00")
 				.style("stroke-width", "1px")
 				.style("opacity", 0.5)
 				.attr(
