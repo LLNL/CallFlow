@@ -36,9 +36,6 @@ class Group:
         self.sg = sg
         self.group_by = group_by
 
-        #self.callsite_module_map = self.sg.df_get_column("module", "name").to_dict()
-        #self.callsite_path_map = self.sg.df_get_column("path", "name").to_dict()
-
         LOGGER.info(f'Grouping ({self.sg}) by "{self.group_by}"')
         self.compute()
 
@@ -159,32 +156,6 @@ class Group:
                 tpath = self.sg.paths[tnode]
 
                 group_path[snode], component_path[snode] = _construct_paths(spath)
-
-                #LOGGER.info(f'src: group path[{snode}]: {group_path[snode]}')
-                #LOGGER.info(f'src: component path[{snode}]: {component_path[snode]}')
-
-                '''
-                # --------------------------------------------------------------
-                # Mappers for the source node, snode.
-                group_path[snode] = self._construct_group_path(spath)
-                component_path[snode] = self._construct_component_path(
-                    spath, group_path[snode]
-                )
-
-                #LOGGER.info(f'group path[{snode}]: {group_path[snode]}')
-                #LOGGER.info(f'component path[{snode}]: {component_path[snode]}')
-
-                component_level[snode] = len(component_path[snode])
-                if component_level[snode] == 2:
-                    entry_func[snode] = True
-                    show_node[snode] = True
-                else:
-                    entry_func[snode] = False
-                    show_node[snode] = False
-                node_name[snode] = self._format_node_name(
-                    self.callsite_module_map[snode], snode
-                )
-                '''
                 # --------------------------------------------------------------
                 # no need to reprocess if this has already been added
                 if tnode in group_path:
@@ -192,40 +163,9 @@ class Group:
 
                 group_path[tnode], component_path[tnode] = _construct_paths(tpath)
 
-                #LOGGER.info(f'dst: group path[{tnode}]: {group_path[tnode]}')
-                #LOGGER.info(f'dst: component path[{tnode}]: {component_path[tnode]}')
-
-                '''
-                # Mappers for the target node, tnode.
-                group_path[tnode] = self._construct_group_path(tpath)
-                component_path[tnode] = self._construct_component_path(
-                    tpath, group_path[tnode]
-                )
-                component_level[tnode] = len(component_path[tnode])
-                if component_level[tnode] == 2:
-                    entry_func[tnode] = True
-                    show_node[tnode] = True
-                else:
-                    entry_func[tnode] = False
-                    show_node[tnode] = False
-                node_name[tnode] = self._format_node_name(
-                    self.callsite_module_map[snode], tnode
-                )
-                '''
-
-        # ----------------------------------------------------------------------
-        #LOGGER.debug('done with the loop')
-        #LOGGER.profile(df_info(self.sg.dataframe))
-
-        # update the graph
+        # update the dataframe
         self.sg.df_add_column("group_path", apply_dict=group_path, dict_default='', apply_on="nid")
         self.sg.df_add_column("component_path", apply_dict=component_path, dict_default='', apply_on="nid")
-        # self.sg.df_add_column("component_level", apply_dict=component_level, dict_default='')
-        # self.sg.df_add_column("entry_function", apply_dict=entry_func, dict_default='')
-        # TODO: Remove the below columns
-        # self.sg.df_add_column("show_node", apply_dict=entry_func, dict_default='')
-        # self.sg.df_add_column("vis_name", apply_dict=node_name, dict_default='')
-        # LOGGER.debug('finished grouping')
         LOGGER.profile(f'Finished Grouping: {df_info(self.sg.dataframe)}')
 
     def _construct_group_path(self, path):  # noqa: C901
