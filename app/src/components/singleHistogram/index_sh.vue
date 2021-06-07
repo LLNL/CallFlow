@@ -83,7 +83,7 @@ export default {
 	methods: {
 		init() {
 			this.width = window.innerWidth * 0.25;
-			this.height = this.$store.viewHeight * 0.45;
+			this.height = this.$store.viewHeight * 0.5;
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;

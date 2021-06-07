@@ -360,10 +360,6 @@ export default {
 				EventHandler.$emit("ensemble-supergraph-reset");
 			}
 		},
-
-		clear() {
-			// This should always be empty.
-		},
 	}
 };
 </script>

@@ -374,8 +374,6 @@ class BaseProvider:
             return scatterplot.unpack()
         
         elif operation_name == "boxplots":
-            dataset = operation["dataset"]
-            metric = operation["metric"]
             callsites = operation["callsites"]
 
             result = {}

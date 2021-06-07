@@ -73,7 +73,7 @@ export default {
 	methods: {
 		init() {
 			this.width = this.$store.viewWidth * 0.25;
-			this.height = this.$store.viewHeight * 0.45;
+			this.height = this.$store.viewHeight * 0.5;
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
@@ -112,11 +112,13 @@ export default {
 			this.xScale = d3
 				.scaleLinear()
 				.domain([this.xMin, this.xMax])
+				.nice(5)
 				.range([0, this.xAxisHeight]);
 
 			this.yScale = d3
 				.scaleLinear()
 				.domain([this.yMin, this.yMax])
+				.nice(5)
 				.range([this.yAxisHeight, this.padding.top]);
 
 			this.regression = this.leastSquares(this.xArray, this.yArray);

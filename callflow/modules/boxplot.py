@@ -38,7 +38,7 @@ class BoxPlot:
         """
         assert isinstance(sg, callflow.SuperGraph)
         assert isinstance(name, str)
-        assert all(ntype in ["callsite", "module"])
+        # assert ntype in ["callsite", "module"]
         assert isinstance(proxy_columns, dict)
 
         if ntype == "callsite":
@@ -83,8 +83,8 @@ class BoxPlot:
 
             self.result["name"] = name
 
-            if ntype != "module":
-                self.result["module"] = sg.get_module(name)
+            if ntype == "callsite":
+                self.result["module"] = sg.get_module(sg.get_idx(name, ntype))
 
     def unpack(self):
         result = {}

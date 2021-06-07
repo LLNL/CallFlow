@@ -94,7 +94,7 @@ export default {
 			yTitle: 20,
 		},
 		chartTypes: ["bar", "area", "line"],
-		selectedChartType: "area",
+		selectedChartType: "bar",
 		chartXAttr: "datasets",
 		seriesTypes: ["stacked", "normalized"],
 		selectedSeriesType: "normalized",
