@@ -203,8 +203,9 @@ class BaseProvider:
 
             sg.write(os.path.join(save_path, name))
 
-            self.supergraphs[name] = sg
+            # self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
+
 
     def load_single(self, load_datasets):
         append_path = self.config.get("append_path", "")
@@ -313,7 +314,7 @@ class BaseProvider:
         Handles requests connected to Single CallFlow.
         """
         assert isinstance(operation, dict)
-        _OPERATIONS = ["cct", "supergraph", "split_mpi_distribution", "histogram", "scatterplot", "boxplots"]
+        _OPERATIONS = ["cct", "supergraph", "split_ranks", "histogram", "scatterplot", "boxplots"]
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
 
@@ -321,6 +322,7 @@ class BaseProvider:
 
         operation_name = operation["name"]
         sg = self.supergraphs[operation["dataset"]]
+        # e_sg = self.supergraphs["ensemble"]
 
         if "ntype" in operation:
             ntype = operation["ntype"]
@@ -347,8 +349,27 @@ class BaseProvider:
             )
             return ssg.nxg
 
-        elif operation_name == "split_mpi_distribution":
-            assert 0
+        elif operation_name == "split_ranks":
+            selected_ranks = operation["ranks"]
+
+            selected_sg = SankeyLayout(
+                sg=sg,
+                path_column="group_path",
+                selected_runs=[operation["dataset"]],
+                ranks=selected_ranks
+            )
+
+            non_selected_sg =  SankeyLayout(
+                sg=sg,
+                path_column="group_path",
+                selected_runs=[operation["dataset"]],
+                ranks=selected_ranks
+            )
+
+            return {
+                selected_nxg: selected_sg.nxg,
+                non_selected_sg: non_selected_sg.nxg
+            }
 
         elif operation_name == "histogram":
             node = operation["node"]

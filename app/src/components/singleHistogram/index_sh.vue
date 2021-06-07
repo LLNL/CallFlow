@@ -7,7 +7,7 @@
 
 <template>
   <v-layout row wrap :id="id">
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" />
+	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info"/>
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
   </v-layout>
@@ -63,6 +63,7 @@ export default {
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
 		title: "MPI Runtime Distribution",
 		summary: "MPI runtime distribution view shows the sampled distribution of the process-based metrics for a selected node. To connect the processes (e.g., MPI ranks) to the physical domain, we use shadow lines to visualize the rank-to-bin mapping. Shadow lines map the bins in the histogram to the process/rank id laid out on an ordered line at the bottom of the histogram.",
+		info: "",
 	}),
 
 	mounted() {
@@ -152,6 +153,7 @@ export default {
 		},
 
 		async visualize(callsite) {
+			this.info = callsite;
 			this.data = await APIService.POSTRequest("single_histogram", {
 				dataset: this.$store.selectedTargetDataset,
 				node: callsite,
@@ -609,7 +611,7 @@ export default {
 			}
 		},
 
-		brushend() {
+		async brushend() {
 			let self = this;
 			const processIDList = [];
 			for (let i = this.localBrushStart; i < this.localBrushEnd; i++) {
@@ -620,10 +622,13 @@ export default {
 					});
 				}
 			}
-			self.$socket.emit("split-mpi-rank", {
-				dataset: self.$store.selectedDataset,
+
+			const split_sgs = await APIService.POSTRequest("split_ranks", {
+				dataset: this.$store.selectedTargetDataset,
 				ranks: processIDList,
+				ntype: "callsite",
 			});
+			console.log(split_sgs);
 		},
 	},
 };

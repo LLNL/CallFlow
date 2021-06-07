@@ -144,13 +144,13 @@ class APIProvider(BaseProvider):
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("cct", result)
 
-        @app.route("/split_mpi_distribution", methods=["POST"])
+        @app.route("/split_ranks", methods=["POST"])
         @cross_origin()
         def split_mpi_distribution():
             data = request.json
             result = self.request_single(
                 {
-                    "name": "split_mpi_distribution",
+                    "name": "split_ranks",
                     **data,
                 }
             )
@@ -213,7 +213,6 @@ class APIProvider(BaseProvider):
             data = request.json
             result = self.request_single({"name": "boxplots", **data})
             return APIProvider.emit_json("single_boxplots", result)
-
 
         @app.route("/ensemble_histogram", methods=["POST"])
         @cross_origin()
