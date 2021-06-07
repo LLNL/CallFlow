@@ -20,6 +20,7 @@ import "d3-selection-multi";
 
 // Local library imports
 import * as utils from "lib/utils";
+import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
 
 import InfoChip from "../general/infoChip";
@@ -91,7 +92,30 @@ export default {
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
 
-			// this.visualize(this.$store.selectedNode);
+			EventHandler.$emit("ensemble-histogram", "LagrangeElements");
+		},
+
+		async visualize(callsite) {
+			this.data = await APIService.POSTRequest("ensemble_histogram", {
+				dataset: this.$store.selectedTargetDataset,
+				node: callsite,
+				ntype: "callsite",
+				nbins: this.$store.selectedMPIBinCount,
+			});
+
+			console.log(this.data);
+
+			this.clear();
+			let isTargetThere = this.setupScale(callsite);
+			this.ensembleBars();
+			this.xAxis();
+			this.yAxis();
+			this.setTitle();
+
+			if (this.$store.showTarget && isTargetThere) {
+				this.targetBars();
+			}
+			// this.$refs.ToolTip.init(this.svgID);
 		},
 
 		dataProcess(data) {
@@ -163,20 +187,6 @@ export default {
 			return isTargetThere;
 		},
 
-		visualize(callsite) {
-			this.clear();
-			let isTargetThere = this.setupScale(callsite);
-			this.ensembleBars();
-			this.xAxis();
-			this.yAxis();
-			this.setTitle();
-
-			if (this.$store.showTarget && isTargetThere) {
-				this.targetBars();
-			}
-			// this.$refs.ToolTip.init(this.svgID);
-		},
-
 		setTitle() {
 			if (this.$store.selectedProp == "rank") {
 				this.selectedPropLabel = "Ranks";
@@ -191,7 +201,6 @@ export default {
 			});
 
 			this.info = "Number of " + this.selectedPropLabel + "= "+ this.selectedPropSum;
-			
 		},
 
 		clear() {

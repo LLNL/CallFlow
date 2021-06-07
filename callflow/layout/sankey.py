@@ -462,7 +462,7 @@ class SankeyLayout:
 
         nxg = nx.DiGraph()
 
-        for idx, path in gp_dict.items():
+        for c_name, path in gp_dict.items():
             if isinstance(path, str):
                 continue
             
@@ -471,8 +471,10 @@ class SankeyLayout:
                     src = int(path[depth])
                     tgt = int(path[depth + 1])
 
-                    src_name, src_dict = self.node_construct(src, "module")
-                    tgt_name, tgt_dict = self.node_construct(tgt, 'module') 
+                    src_name, src_dict = self.node_construct(c_name, src, "module")
+                    tgt_name, tgt_dict = self.node_construct(c_name, tgt, 'module') 
+
+
 
                     if not nxg.has_node(src_name):
                         nxg.add_node(src_name, attr_dict=src_dict)
@@ -496,12 +498,12 @@ class SankeyLayout:
 
         return nxg
 
-    def node_construct(self, node_id, node_type):
+    def node_construct(self, callsite_name, node_id, node_type):
         name = self.sg.get_name(node_id, node_type)
         return name, {
             "type": node_type,
-            "level": len(self.cp_dict[name]),
-            "cp_path": self.cp_dict[name],
+            "level": len(self.cp_dict[callsite_name]),
+            "cp_path": self.cp_dict[callsite_name],
         }
 
     @staticmethod

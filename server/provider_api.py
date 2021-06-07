@@ -140,9 +140,9 @@ class APIProvider(BaseProvider):
         @cross_origin()
         def single_cct():
             data = request.json
-            nxg = self.request_single({"name": "cct", **data})
+            nxg = self.request_general({"name": "cct", **data})
             result = json_graph.node_link_data(nxg)
-            return APIProvider.emit_json("single_cct", result)
+            return APIProvider.emit_json("cct", result)
 
         @app.route("/split_mpi_distribution", methods=["POST"])
         @cross_origin()
@@ -213,5 +213,27 @@ class APIProvider(BaseProvider):
             data = request.json
             result = self.request_single({"name": "boxplots", **data})
             return APIProvider.emit_json("single_boxplots", result)
+
+
+        @app.route("/ensemble_histogram", methods=["POST"])
+        @cross_origin()
+        def ensemble_histogram():
+            data = request.json
+            result = self.request_ensemble({"name": "histogram", **data})
+            return APIProvider.emit_json("ensemble_histogram", result)
+
+        @app.route("/ensemble_scatterplot", methods=["POST"])
+        @cross_origin()
+        def ensemble_scatterplot():
+            data = request.json
+            result = self.request_single({"name": "scatterplot", **data})
+            return APIProvider.emit_json("ensemble_scatterplot", result)
+
+        @app.route("/ensemble_boxplots", methods=["POST"])
+        @cross_origin()
+        def ensemble_boxplot():
+            data = request.json
+            result = self.request_single({"name": "boxplots", **data})
+            return APIProvider.emit_json("ensemble_boxplots", result)
 
 # ------------------------------------------------------------------------------

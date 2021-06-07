@@ -7,7 +7,6 @@
 """
 CallFlow's operation to calculate the rank and dataset histograms.
 """
-import numpy as np
 import pandas as pd
 import itertools
 from callflow.utils.df import df_count
@@ -75,8 +74,9 @@ class Histogram:
                 # e.g., comparing two datasets. 
                 # I think we should rather just consider the bounds to be more
                 # flexible.
-                #assert rrng[0] <= drng[0]
+                # assert rrng[0] <= drng[0]
                 #assert rrng[1] >= drng[1]
+                print(rrng, drng)
                 if drng[0] < rrng[0] or drng[1] > rrng[1]:
                     LOGGER.error(list(df.to_numpy()))
                     LOGGER.error(list(rdf.to_numpy()))
@@ -126,6 +126,8 @@ class Histogram:
         :return:
         """
         assert isinstance(df, pd.DataFrame)
+        if histo_type == "dataset":
+            assert "dataset" in df.columns
         ndatasets = df_count(df, 'dataset')
         nranks = df_count(df, 'rank')
 
@@ -138,22 +140,11 @@ class Histogram:
             else:                            # single case and multiple ranks
                 _df = df.groupby(["rank"])
 
-        # TODO: check with Suraj reg this
         # otherwise, group by the type
         else:
-            # return df
             _df = df.groupby([histo_type])
 
         # confused about this
         return _df[self.time_columns].mean()
-
-    @staticmethod
-    def _format_data(histo):
-        """
-
-        :param histo:
-        :return:
-        """
-        return {"b": histo[0], "h": histo[1]}
 
 # ------------------------------------------------------------------------------

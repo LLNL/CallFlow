@@ -270,7 +270,7 @@ class BaseProvider:
         """
         Handles general requests
         """
-        _OPERATIONS = ["init", "summary", "timeline"]
+        _OPERATIONS = ["init", "summary", "timeline", "cct"]
 
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
@@ -302,6 +302,11 @@ class BaseProvider:
             data['nodes'] = top_nodes
 
             return data
+
+        elif operation_name == "cct":
+            sg = self.supergraphs[operation["dataset"]]
+            nll = NodeLinkLayout(sg=sg, selected_runs=operation["dataset"])
+            return nll.nxg
             
     def request_single(self, operation):
         """
@@ -326,11 +331,7 @@ class BaseProvider:
                 elif ntype == "module":
                     aux_dict = sg.module_aux_dict
 
-        if operation_name == "cct":
-            nll = NodeLinkLayout(sg=sg, selected_runs=operation["dataset"])
-            return nll.nxg
-
-        elif operation_name == "supergraph":
+        if operation_name == "supergraph":
             reveal_callsites = operation.get("reveal_callsites", [])
             split_entry_module = operation.get("split_entry_module", [])
             split_callee_module = operation.get("split_callee_module", [])
@@ -347,9 +348,8 @@ class BaseProvider:
             return ssg.nxg
 
         elif operation_name == "split_mpi_distribution":
-            assert False
-            pass
-    
+            assert 0
+
         elif operation_name == "histogram":
             node = operation["node"]
             nbins = operation["nbins"]
@@ -386,34 +386,47 @@ class BaseProvider:
         """
         Handles all the socket requests connected to Single CallFlow.
         """
-        _OPERATIONS = ["cct", "supergraph", "module_hierarchy", "projection", "compare"]
+        _OPERATIONS = ["supergraph", "module_hierarchy", "projection", "compare", "histogram", "boxplots", "scatterplot", "gradients"]
 
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
+        assert "dataset" in operation
 
         LOGGER.info(f"[Ensemble Mode] {operation}")
 
         operation_name = operation["name"]
-        sg = self.supergraphs["ensemble"]
+        e_sg = self.supergraphs["ensemble"]
+        e_aux_dict = {}
 
-        if operation_name == "init":
-            return self.config
+        if "ntype" in operation:
+            ntype = operation["ntype"]
 
-        elif operation_name == "cct":
-            nll = NodeLinkLayout(
-                supergraph=sg, callsite_count=operation["functionsInCCT"]
-            )
-            return nll.nxg
+            if operation_name in ['histogram', 'scatterplot', 'boxplots']:
+                if ntype == "callsite":
+                    e_aux_dict = e_sg.callsite_aux_dict
+                elif ntype == "module":
+                    e_aux_dict = e_sg.module_aux_dict
 
-        elif operation_name == "supergraph":
+        if "dataset" in operation:
+            t_aux_dict = {}
+            tgt_dataset = operation["dataset"]
+            t_sg = self.supergraphs[tgt_dataset]
+
+            if operation_name in ['histogram', 'scatterplot', 'boxplots']:
+                if ntype == "callsite":
+                    t_aux_dict = t_sg.callsite_aux_dict
+                elif ntype == "module":
+                    t_aux_dict = t_sg.module_aux_dict
+
+        if operation_name == "supergraph":
             reveal_callsites = operation.get("reveal_callsites", [])
             split_entry_module = operation.get("split_entry_module", [])
             split_callee_module = operation.get("split_callee_module", [])
             selected_runs = operation.get("selected_runs", None)
 
             ssg = SankeyLayout(
-                sg=sg,
-                path="group_path",
+                sg=e_sg,
+                path_column="group_path",
                 selected_runs=selected_runs,
                 reveal_callsites=reveal_callsites,
                 split_entry_module=split_entry_module,
@@ -422,7 +435,7 @@ class BaseProvider:
             return ssg.nxg
 
         elif operation_name == "module_hierarchy":
-            hl = HierarchyLayout(sg, operation["module"])
+            hl = HierarchyLayout(e_sg, operation["module"])
             return hl.nxg
 
         elif operation_name == "projection":
@@ -430,7 +443,7 @@ class BaseProvider:
             n_cluster = operation.get("n_cluster", 3)
 
             pp = ParameterProjection(
-                sg=sg,
+                sg=e_sg,
                 selected_runs=selected_runs,
                 n_cluster=n_cluster,
             )
@@ -446,5 +459,37 @@ class BaseProvider:
             elif operation["selectedMetric"] == "Exclusive":
                 selected_metric = "time"
 
-            dv = DiffView(sg, compare_dataset, target_dataset, selected_metric)
+            dv = DiffView(e_sg, compare_dataset, target_dataset, selected_metric)
             return dv.result
+
+        elif operation_name == "histogram":
+            node = operation["node"]
+            nbins = operation["nbins"]
+
+            hist = Histogram(dataframe=t_aux_dict[node], relative_to_df=e_aux_dict[node],
+                        histo_types=["rank"],
+                        node_type=ntype,
+                        proxy_columns=t_sg.proxy_columns)
+
+            return hist.unpack()
+
+        elif operation_name == "scatterplot":
+            node = operation["node"]
+            orientation = operation["orientation"]
+
+            scatterplot = Scatterplot(df=t_aux_dict[node], relative_to_df=e_aux_dict[node],
+                        node_type=ntype,
+                        orientation=orientation,
+                        proxy_columns=t_sg.proxy_columns)
+
+            return scatterplot.unpack()
+        
+        elif operation_name == "boxplots":
+            callsites = operation["callsites"]
+
+            result = {}
+            for callsite in callsites:
+                bp = BoxPlot(sg=e_sg, name=callsite, ntype=ntype, proxy_columns=t_sg.proxy_columns)
+                result[callsite] = bp.unpack()
+            
+            return result
