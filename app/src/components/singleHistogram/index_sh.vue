@@ -300,7 +300,7 @@ export default {
 						.style("fill-opacity", 1);
 					let groupProcStr = self.groupProcess(self.binContainsProcID[i])
 						.string;
-					groupProcStr = self.sanitizeGroupProc(groupProcStr);
+					groupProcStr =  "Processes (MPI ranks):" + self.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseover", function (d, i) {
@@ -310,7 +310,7 @@ export default {
 						.style("fill-opacity", 1);
 					let groupProcStr = self.groupProcess(self.binContainsProcID[i])
 						.string;
-					groupProcStr = self.sanitizeGroupProc(groupProcStr);
+					groupProcStr = "Processes (MPI ranks):" + self.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseout", function (d, i) {

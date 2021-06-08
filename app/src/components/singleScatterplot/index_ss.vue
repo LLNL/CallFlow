@@ -25,7 +25,7 @@ import APIService from "lib/routing/APIService";
 import InfoChip from "../general/infoChip";
 
 // Local components
-import ToolTip from "./tooltip";
+import ToolTip from "../singleHistogram/tooltip";
 
 export default {
 	name: "SingleScatterplot",
@@ -101,6 +101,7 @@ export default {
 				orientation: ["time", "time (inc)"],
 			});
 			this.data = data["abs"];
+			console.log(data);
 
 			this.xMin = this.data.xMin;
 			this.yMin = this.data.yMin;
@@ -108,6 +109,7 @@ export default {
 			this.yMax = this.data.yMax;
 			this.xArray = this.data.x;
 			this.yArray = this.data.y;
+			this.ranks = this.data.ranks;
 
 			this.xScale = d3
 				.scaleLinear()
@@ -125,6 +127,7 @@ export default {
 			this.yAxis();
 			this.dots();
 			this.trendline();
+			this.$refs.ToolTip.init(this.svgID);
 		},
 
 		leastSquares(xSeries, ySeries) {
@@ -302,23 +305,43 @@ export default {
 		},
 
 		dots() {
+			let d = [];
+			for(let i=0; i < this.yArray.length; i += 1) {
+				d.push({
+					"x": this.xArray[i],
+					"y": this.yArray[i],
+					"rank": this.ranks[i],
+				});
+			}
+
 			let self = this;
 			this.svg
 				.selectAll(".dot")
-				.data(this.yArray)
+				.data(d)
 				.enter()
 				.append("circle")
 				.attr("class", "dot")
 				.attr("r", 5)
-				.attr("cx", function (d, i) {
-					return self.xScale(self.xArray[i]) + 3 * self.padding.left;
-				})
-				.attr("cy", function (d, i) {
-					return self.yScale(self.yArray[i]);
-				})
+				.attr("cx", (d, i) => this.xScale(this.xArray[i]) + 3 * this.padding.left)
+				.attr("cy", (d, i) => this.yScale(this.yArray[i]))
 				.style("fill", this.$store.runtimeColor.intermediate)
 				.style("stroke", "#202020")
-				.style("stroke-width", 0.5);
+				.style("stroke-width", 0.5)
+				.on("mouseover", function (d, i) {
+					d3.select(this).attr("fill", "orange");
+					d3.selectAll(".dot")
+						.style("fill", self.$store.runtimeColor.intermediate)
+						.style("fill-opacity", 0.5);
+					const text = "rank " + d.rank;
+					self.$refs.ToolTip.render(text, d);
+				})
+				.on("mouseout", function (d, i) {
+					// d3.select(this).attr("fill", self.$store.runtimeColor.intermediate);
+					d3.selectAll(".dot")
+						.style("fill", self.$store.runtimeColor.intermediate)
+						.style("fill-opacity", 1);
+					self.$refs.ToolTip.clear();
+				});
 		},
 
 		clear() {
@@ -326,6 +349,7 @@ export default {
 			d3.selectAll(".axis").remove();
 			d3.selectAll(".trend-line").remove();
 			d3.selectAll(".ss-axis-label").remove();
+			this.$refs.ToolTip.clear();
 		},
 	},
 };
