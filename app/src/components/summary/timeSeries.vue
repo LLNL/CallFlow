@@ -286,6 +286,19 @@ export default {
 				.attr("d", line)
 				.append("title")
 				.text(({key}) => key);
+
+			console.log(series);
+
+			this.mainSvg.append("g")
+				.selectAll("path")
+				.data(series)
+				.enter()
+				.append("circle")
+				.attr("fill", "red")
+				.attr("stroke", "none")
+				.attr("cx", (d) => this.x(d.data.name))
+				.attr("cy", (d) => this.y(d[1]))
+				.attr("r", 3);
 		},
 
 		// Axis for timeline view
@@ -346,7 +359,7 @@ export default {
 					transform: `translate(${15}, ${this.height / 2}) rotate(${-90})`,
 				})
 				.style("text-anchor", "middle")
-				.text((d, i) => this.$store.selectedMetric);
+				.text((d, i) => this.selectedMetric);
 		},
 
 		colorMap() {
@@ -408,6 +421,7 @@ export default {
 
 		clear() {
 			d3.selectAll("#container").remove();
+			d3.selectAll(".axis-labels").remove();
 		},
 	},
 };

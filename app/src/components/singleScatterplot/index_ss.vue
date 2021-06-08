@@ -66,6 +66,7 @@ export default {
 	mounted() {
 		let self = this;
 		EventHandler.$on("single-scatterplot", function (callsite) {
+			console.log("here");
 			self.visualize(callsite);
 		});
 	},
@@ -101,7 +102,6 @@ export default {
 				orientation: ["time", "time (inc)"],
 			});
 
-			// let temp = this.process(callsite);
 			this.xMin = this.data.xMin;
 			this.yMin = this.data.yMin;
 			this.xMax = this.data.xMax;
@@ -127,33 +127,7 @@ export default {
 			this.trendline();
 		},
 
-		process(data) {
-			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
-			let mean_time_inc = store["time (inc)"]["d"];
-			let mean_time = store["time"]["d"];
-
-			let xArray = [];
-			let yArray = [];
-			let yMin = 0;
-			let xMin = 0;
-			let xMax = 0;
-			let yMax = 0;
-
-			for (const [idx, d] of Object.entries(mean_time)) {
-				xMin = Math.min(xMin, d);
-				xMax = Math.max(xMax, d);
-				xArray.push(d);
-			}
-
-			for (const [idx, d] of Object.entries(mean_time_inc)) {
-				yMin = Math.min(yMin, d);
-				yMax = Math.max(yMax, d);
-				yArray.push(d);
-			}
-
-			return [xMin, yMin, xMax, yMax, xArray, yArray];
-		},
-
+		
 		leastSquares(xSeries, ySeries) {
 			const reduceSumFunc = (prev, cur) => prev + cur;
 			
@@ -352,7 +326,6 @@ export default {
 			d3.selectAll(".dot").remove();
 			d3.selectAll(".axis").remove();
 			d3.selectAll(".trend-line").remove();
-			// d3.selectAll('.axis-label"').remove();
 			d3.selectAll(".ss-axis-label").remove();
 		},
 	},
