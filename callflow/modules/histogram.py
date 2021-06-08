@@ -71,25 +71,31 @@ class Histogram:
                 # ensemble_df. 
                 rdf = self._get_data_by_histo_type(relative_to_df, h)[tv]
                 rrng = [rdf.min(), rdf.max()]
-                # TODO: Why can't relative df's min or max go beyond the bound?
-                # e.g., comparing two datasets. 
-                # I think we should rather just consider the bounds to be more
-                # flexible.
-                # assert rrng[0] <= drng[0]
-                #assert rrng[1] >= drng[1]
-                print(rrng, drng)
-                if drng[0] < rrng[0] or drng[1] > rrng[1]:
-                    LOGGER.error(list(df.to_numpy()))
-                    LOGGER.error(list(rdf.to_numpy()))
-                    LOGGER.error(f'Found incorrect ranges for hist=({h},{tk})'
-                                 f' drng = {drng}, rrng = {rrng}')
-                    assert False
+
+            rng = []
+            if rrng[0] < drng[0]:
+                rng.append(rrng[0])
+            else: 
+                rng.append(drng[0])
+
+            if rrng[1] < drng[1]:
+                rng.append(drng[1])
+            else:
+                rng.append(rrng[1])
 
             # compute the histograms
-            hist = histogram(df, rrng, bins=bins)
+            dhist = histogram(df, rng, bins=bins)
+
             if relative_to_df is not None:
-                hist = hist[1]              # dont's store the bins
-            self.result[tk][h] = hist
+                rhist = histogram(rdf, rng, bins=bins)
+            else:
+                rhist = [None, None]
+
+            self.result[tk][h] = {
+                'abs': dhist[1],
+                'rel': rhist[1],
+                'rng': dhist[0],
+            }
 
             if node_type == "callsite":
                 _data = df.to_numpy()
@@ -112,13 +118,18 @@ class Histogram:
             result[metric] = {}
             for histo_type in self.histo_types:
                 result[metric][histo_type] = {
-                    "x": data[histo_type][0].tolist(),
-                    "y": data[histo_type][1].tolist(),
-                    "x_min": float(data[histo_type][0][0]),
-                    "x_max": float(data[histo_type][0][-1]),
-                    "y_min": float(data[histo_type][1].min()),
-                    "y_max": float(data[histo_type][1].max()),
+                    "x": data[histo_type]['rng'].tolist(),
+                    "y": data[histo_type]['abs'].tolist(),
+                    "x_min": float(data[histo_type]['rng'][0]),
+                    "x_max": float(data[histo_type]['rng'][-1]),
+                    "y_min": float(data[histo_type]['abs'].min()),
+                    "y_max": float(data[histo_type]['abs'].max()),
                 }
+                if 'rel' in data[histo_type].keys() and data[histo_type]["rel"] is not None:
+                    result[metric][histo_type]["rel_y"] = data[histo_type]['rel'].tolist()
+                    result[metric][histo_type]['rel_y_min'] = data[histo_type]['rel'].min()
+                    result[metric][histo_type]['rel_y_max'] = data[histo_type]['rel'].max()
+                    
                 result[metric]["d"] = data["d"].tolist()
         
         return result

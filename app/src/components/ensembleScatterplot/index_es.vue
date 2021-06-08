@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: MIT
  */
 <template>
-	<v-layout row wrap :id="id">
-		<InfoChip ref="InfoChip" :title="title" :summary="summary" />
-		<svg :id="svgID"></svg>
-		<ToolTip ref="ToolTip" />
-	</v-layout>
+  <div :id="id">
+	<InfoChip ref="InfoChip" :title="title" :summary="summary" />
+	<svg :id="svgID"></svg>
+	<ToolTip ref="ToolTip" />
+  </div>
 </template>
 
 

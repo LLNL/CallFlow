@@ -106,13 +106,13 @@ export default {
 			console.log(this.data);
 
 			this.clear();
-			let isTargetThere = this.setupScale(callsite);
+			this.setupScale();
 			this.ensembleBars();
 			this.xAxis();
 			this.yAxis();
 			this.setTitle();
 
-			if (this.$store.showTarget && isTargetThere) {
+			if (this.$store.showTarget) {
 				this.targetBars();
 			}
 			// this.$refs.ToolTip.init(this.svgID);
@@ -138,53 +138,29 @@ export default {
 			return [data["x"], data["y"], axis_x];
 		},
 
-		setupScale(data) {
-			const _e_store = utils.getDataByNodeType(this.$store, "ensemble", data["node"]);
-			const _t_store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
-			
-			let ensembleData = _e_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp];
-			let temp = this.dataProcess(ensembleData);
-			this.xVals = temp[0];
-			this.freq = temp[1];
-			this.axis_x = temp[2];
-			this.binContainsProcID = temp[3];
-			this.logScaleBool = false;
-			let isTargetThere = true;
-
-			// If the module is not present in the target run.
-			if (_t_store == undefined) {
-				isTargetThere = false;
-			} else {
-				const targetData = _t_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp];
-				const targetTemp = this.dataProcess(targetData);
-				this.targetXVals = targetTemp[0];
-				this.targetFreq = targetTemp[1];
-				this.target_axis_x = targetTemp[2];
-				this.target_binContainsProcID = targetTemp[3];
-				isTargetThere = true;
-			}
-
+		setupScale() {
+			this.hist_data = this.data[this.$store.selectedMetric][this.$store.selectedProp];
 			this.rankCount = parseInt(this.$store.summary["ensemble"].nranks);
+			this.leftPadding = this.paddingFactor * this.padding.left;
 
 			this.xScale = d3
 				.scaleBand()
-				.domain(this.xVals)
+				.domain(this.hist_data["x"])
 				.rangeRound([0, this.xAxisHeight]);
 
 			if (this.$store.selectedScale == "Linear") {
 				this.yScale = d3
 					.scaleLinear()
-					.domain([0, d3.max(this.freq)])
+					.domain([0, this.hist_data["rel_y_max"]])
 					.range([this.yAxisHeight, this.padding.top]);
 				this.logScaleBool = false;
 			} else if (this.$store.selectedScale == "Log") {
 				this.yScale = d3
 					.scaleLog()
-					.domain([0.1, d3.max(this.freq)])
+					.domain([0.1, this.hist_data["rel_y_max"]])
 					.range([this.yAxisHeight, this.padding.top]);
 				this.logScaleBool = true;
 			}
-			return isTargetThere;
 		},
 
 		setTitle() {
@@ -196,7 +172,7 @@ export default {
 				this.selectedPropLabel = "Runs";
 			}
 
-			this.selectedPropSum = this.freq.reduce((acc, val) => {
+			this.selectedPropSum = this.hist_data["y"].reduce((acc, val) => {
 				return acc + val;
 			});
 
@@ -221,33 +197,20 @@ export default {
 			let self = this;
 			this.svg
 				.selectAll(".dist-target")
-				.data(this.targetFreq)
+				.data(this.hist_data["y"])
 				.enter()
 				.append("rect")
 				.attr("class", "dist-histogram-bar dist-target")
 				.attrs({
-					x: (d, i) => {
-						return this.xScale(this.targetXVals[i]);
-					},
-					y: (d, i) => {
-						return this.yScale(d);
-					},
-					width: (d) => {
-						return this.xScale.bandwidth();
-					},
-					height: (d) => {
-						return Math.abs(this.yAxisHeight - this.yScale(d));
-					},
+					x: (d, i) => this.xScale(this.hist_data["x"][i]),
+					y: (d, i) => this.yScale(d),
+					width: this.xScale.bandwidth(),
+					height: (d) => Math.abs(this.yAxisHeight - this.yScale(d)),
 					fill: this.$store.distributionColor.target,
 					opacity: 1,
 					"stroke-width": "0.2px",
 					stroke: "#202020",
-					transform:
-            "translate(" +
-            this.paddingFactor * this.padding.left +
-            "," +
-            0 +
-            ")",
+					transform: "translate(" + this.leftPadding + "," + 0 + ")",
 				})
 				.on("mouseover", function (d, i) {
 					self.$refs.ToolTip.render(d);
@@ -261,36 +224,20 @@ export default {
 			let self = this;
 			this.svg
 				.selectAll(".dist-ensemble")
-				.data(this.freq)
+				.data(this.hist_data["rel_y"])
 				.enter()
 				.append("rect")
 				.attr("class", "dist-histogram-bar dist-ensemble")
 				.attrs({
-					x: (d, i) => {
-						return this.xScale(this.xVals[i]);
-					},
-					y: (d, i) => {
-						return this.yScale(d);
-					},
-					width: (d) => {
-						return this.xScale.bandwidth();
-					},
-					height: (d) => {
-						return Math.abs(this.yAxisHeight - this.yScale(d));
-					},
-					fill: (d) => {
-						let color = self.$store.distributionColor.ensemble;
-						return color;
-					},
+					x: (d, i) => this.xScale(this.hist_data["x"][i]),
+					y: (d, i) => this.yScale(d),
+					width: this.xScale.bandwidth(),
+					height: (d) => Math.abs(this.yAxisHeight - this.yScale(d)),
+					fill: this.$store.distributionColor.ensemble,
 					opacity: 1,
 					"stroke-width": "0.2px",
 					stroke: "#202020",
-					transform:
-            "translate(" +
-            this.paddingFactor * this.padding.left +
-            "," +
-            0 +
-            ")",
+					transform: "translate(" + this.leftPadding + "," + 0 + ")",
 				})
 				.on("mouseover", function (d, i) {
 					self.$refs.ToolTip.render(d);

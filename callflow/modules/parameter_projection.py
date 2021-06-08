@@ -28,8 +28,6 @@ class ParameterProjection:
         :param selected_runs:
         :param n_cluster:
         """
-        # sg.nxg_filter_by_datasets(selected_runs)
-
         self.projection = "MDS"
         self.clustering = "k_means"
         self.n_cluster = int(n_cluster)
