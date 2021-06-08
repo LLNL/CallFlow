@@ -263,7 +263,6 @@ export default {
 				.data(series)
 				.join("path")
 				.attr("stroke", ({key}) => this.color(key))
-				// .attr("fill", "transparent")
 				.attr("fill", ({key}) => this.color(key))
 				.attr("stroke-width", 5)
 				.attr("d", area)
@@ -282,23 +281,19 @@ export default {
 				.join("path")
 				.attr("stroke", ({key}) => this.color(key))
 				.attr("fill", "transparent")
-				.attr("stroke-width", 2)
+				.attr("stroke-width", 2.5)
 				.attr("d", line)
 				.append("title")
-				.text(({key}) => key);
-
-			console.log(series);
+				.text((d, i) => `[${d[i].data.name}] ${d[i].key} - ${utils.formatRuntimeWithoutUnits(d[i].data[d[i].key])}`);
 
 			this.mainSvg.append("g")
-				.selectAll("path")
 				.data(series)
-				.enter()
 				.append("circle")
-				.attr("fill", "red")
-				.attr("stroke", "none")
-				.attr("cx", (d) => this.x(d.data.name))
-				.attr("cy", (d) => this.y(d[1]))
-				.attr("r", 3);
+				.attr("fill", "transparent")
+				.attr("stroke", "red")
+				.attr("cx", (d, i) => this.x(d[i].data.name))
+				.attr("cy", (d, i) => this.y(d[i][1]))
+				.attr("r", 4);
 		},
 
 		// Axis for timeline view
