@@ -66,7 +66,6 @@ export default {
 	mounted() {
 		let self = this;
 		EventHandler.$on("single-scatterplot", function (callsite) {
-			console.log("here");
 			self.visualize(callsite);
 		});
 	},
@@ -95,12 +94,13 @@ export default {
 		},
 
 		async visualize(callsite) {
-			this.data = await APIService.POSTRequest("single_scatterplot", {
+			const data = await APIService.POSTRequest("single_scatterplot", {
 				dataset: this.$store.selectedTargetDataset,
 				node: callsite,
 				ntype: "callsite",
 				orientation: ["time", "time (inc)"],
 			});
+			this.data = data["abs"];
 
 			this.xMin = this.data.xMin;
 			this.yMin = this.data.yMin;
@@ -127,7 +127,6 @@ export default {
 			this.trendline();
 		},
 
-		
 		leastSquares(xSeries, ySeries) {
 			const reduceSumFunc = (prev, cur) => prev + cur;
 			

@@ -104,12 +104,13 @@ export default {
 		},
 
 		async visualize(callsite) {
-			this.data = await APIService.POSTRequest("ensemble_scatterplot", {
+			const data = await APIService.POSTRequest("ensemble_scatterplot", {
 				dataset: this.$store.selectedTargetDataset,
 				node: callsite,
 				ntype: "callsite",
 				orientation: ["time", "time (inc)"],
 			});
+			
 
 			this.firstRender = false;
 			this.maxVarianceCallsite = "";

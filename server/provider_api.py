@@ -225,14 +225,14 @@ class APIProvider(BaseProvider):
         @cross_origin()
         def ensemble_scatterplot():
             data = request.json
-            result = self.request_single({"name": "scatterplot", **data})
+            result = self.request_ensemble({"name": "scatterplot", **data})
             return APIProvider.emit_json("ensemble_scatterplot", result)
 
         @app.route("/ensemble_boxplots", methods=["POST"])
         @cross_origin()
         def ensemble_boxplot():
             data = request.json
-            result = self.request_single({"name": "boxplots", **data})
+            result = self.request_ensemble({"name": "boxplots", **data})
             return APIProvider.emit_json("ensemble_boxplots", result)
 
 # ------------------------------------------------------------------------------
