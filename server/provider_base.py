@@ -411,7 +411,10 @@ class BaseProvider:
 
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
-        assert "dataset" in operation
+
+        _OPERATIONS_WO_DATASET = ["projection"]
+        if not (operation["name"] in _OPERATIONS_WO_DATASET):
+            assert "dataset" in operation
 
         LOGGER.info(f"[Ensemble Mode] {operation}")
 

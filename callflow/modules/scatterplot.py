@@ -9,6 +9,7 @@ CallFlow's operation to calculate runtime scatterplot (inclusive vs exclusive).
 """
 
 import pandas as pd
+import numpy as np
 
 import callflow
 from callflow.datastructures.metrics import TIME_COLUMNS
@@ -65,8 +66,14 @@ class Scatterplot:
 
             _min, _mean, _max = _data.min(), _data.mean(), _data.max()
 
+            if "rank" in df.columns:
+                _ranks = df["rank"].to_numpy()
+            else: 
+                _ranks = np.array([])
+
             ret[tv] = {
                 "d": _data,
+                "ranks": _ranks,
                 "min": _min,
                 "max": _max,
                 "mean": _mean
@@ -88,6 +95,7 @@ class Scatterplot:
             ret[scat_type] = {
                 "x": x["d"].tolist(),
                 "y": y["d"].tolist(),
+                "ranks": x["ranks"].tolist(),
                 "xMin": x["min"],
                 "xMax": x["max"],
                 "yMin": y["min"],

@@ -7,9 +7,7 @@
 
 <template>
   <v-card :id="id">
-    <v-layout class="chip-container">
-		<InfoChip ref="InfoChip" :title="title" :summary="summary" />
-    </v-layout>
+	<InfoChip ref="InfoChip" :title="title" :summary="summary" />
     <svg :id="svgId"></svg>
   </v-card>
 </template>
