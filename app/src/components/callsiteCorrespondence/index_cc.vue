@@ -7,55 +7,6 @@
 <template>
   <v-layout row wrap :id="id">
     <InfoChip ref="InfoChip" :title="title" :summary="summary" />
-    <v-layout row wrap v-if="isCallsiteSelected == true">
-      <v-btn
-        class="ma-1 reveal-button"
-        small
-        tile
-        outlined
-        color="white"
-        @click="clickCallsite"
-      >
-        Reveal
-      </v-btn>
-    </v-layout>
-
-    <v-layout row wrap v-if="isModuleSelected == true">
-      <v-btn
-        class="ma-1 reveal-button"
-        small
-        tile
-        outlined
-        color="white"
-        :class="isEntryFunctionSelected"
-        @click="showEntryFunctions"
-      >
-        Entry call sites
-      </v-btn>
-      <v-btn
-        class="ma-1 reveal-button"
-        small
-        tile
-        outlined
-        color="white"
-        :class="isCalleeSelected"
-        @click="showExitFunctions"
-      >
-        Callees
-      </v-btn>
-      <v-spacer></v-spacer>
-      <v-btn
-        class="ma-1 reveal-button"
-        small
-        tile
-        outlined
-        color="white"
-        v-if="showSplitButton == 'true'"
-        @click="split"
-      >
-        Split
-      </v-btn>
-    </v-layout>
 
 	<v-row class="ml-4">
 		<v-col>
@@ -71,7 +22,7 @@
 		</v-col>
 	</v-row>
 
-    <v-container
+    <!-- <v-container
       class="ml-4 callsite-information-node"
       v-for="callsite in differenceCallsites"
       :key="getID(callsite.id)"
@@ -91,30 +42,7 @@
 
       <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget="false" />
 
-	<v-row wrap class="information">
-		<v-col class="pa-0 subtitle-2">Min : {{ eMin[callsite.name] }}</v-col>
-		<v-col class="pa-0 subtitle-2">Max : {{ eMax[callsite.name] }}</v-col>
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2">Mean : {{ eMean[callsite.name] }}</v-col>
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2"
-          >Variance : {{ eVariance[callsite.name] }}</v-col
-        >
-        <v-col class="pa-0 subtitle-2"
-          >Imbalance : {{ eImb[callsite.name] }}</v-col
-        >
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2">
-          Kurtosis : {{ eKurt[callsite.name] }}
-        </v-col>
-        <v-col class="pa-0 subtitle-2">
-          Skewness : {{ eSkew[callsite.name] }}
-        </v-col>
-      </v-row>
-    </v-container>
+    </v-container> -->
 
     <v-container
       class="ml-4 callsite-information-node"
@@ -122,7 +50,7 @@
       :key="getID(callsite.id)"
     >
       <v-row  class="pt-2">
-        <v-col cols="1">
+        <!-- <v-col cols="1">
           <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
               <template v-slot:activator="{on}">
@@ -142,7 +70,7 @@
               </span>
             </v-tooltip>
           </v-card>
-        </v-col>
+        </v-col> -->
 
         <v-col cols="11">
           <v-tooltip bottom>
@@ -156,56 +84,12 @@
         </v-col>
       </v-row>
 
-     <v-row wrap class="information">
-		<v-col class="pa-0 subtitle-2">Min : {{ tMin[callsite.name] }}</v-col>
-		<v-col class="pa-0 subtitle-2">Max : {{ tMax[callsite.name] }}</v-col>
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2">Mean : {{ tMean[callsite.name] }}</v-col>
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2"
-          >Variance : {{ tVariance[callsite.name] }}</v-col
-        >
-        <v-col class="pa-0 subtitle-2"
-          >Imbalance : {{ tImb[callsite.name] }}</v-col
-        >
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2">
-          Kurtosis : {{ tKurt[callsite.name] }}
-        </v-col>
-        <v-col class="pa-0 subtitle-2">
-          Skewness : {{ tSkew[callsite.name] }}
-        </v-col>
-      </v-row>
-
-      <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget="false" />
-      
-
-	<v-row wrap class="information">
-		<v-col class="pa-0 subtitle-2">Min : {{ eMin[callsite.name] }}</v-col>
-		<v-col class="pa-0 subtitle-2">Max : {{ eMax[callsite.name] }}</v-col>
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2">Mean : {{ eMean[callsite.name] }}</v-col>
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2"
-          >Variance : {{ eVariance[callsite.name] }}</v-col
-        >
-        <v-col class="pa-0 subtitle-2"
-          >Imbalance : {{ eImb[callsite.name] }}</v-col
-        >
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2">
-          Kurtosis : {{ eKurt[callsite.name] }}
-        </v-col>
-        <v-col class="pa-0 subtitle-2">
-          Skewness : {{ eSkew[callsite.name] }}
-        </v-col>
-      </v-row>
+		<v-row wrap class="pa-2">
+			<Statistics :tData="intersectionCallsites[callsite.name]['tStats']" :bData="intersectionCallsites[callsite.name]['bStats']" />
+		</v-row>
+		<v-row class="pa-2">
+			<!-- <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget="false" /> -->
+		</v-row>      
     </v-container>
   </v-layout>
 </template>
@@ -217,17 +101,20 @@ import * as d3 from "d3";
 // Local library imports
 import * as utils from "lib/utils";
 import EventHandler from "lib/routing/EventHandler";
+import APIService from "lib/routing/APIService";
 
 import InfoChip from "../general/infoChip";
 
 // Local component imports
 import BoxPlot from "./boxplot";
+import Statistics from "../callsiteInformation/statistics";
 
 export default {
 	name: "CallsiteCorrespondence",
 	components: {
-		BoxPlot,
+		// BoxPlot,
 		InfoChip,
+		Statistics
 	},
 	data: () => ({
 		selected: {},
@@ -274,20 +161,10 @@ export default {
 		showKNCCallsite: {},
 		showuKNCCallsite: {},
 		selectedMode: "Single",
-		tMin: {},
-		tMax: {},
-		tMean: {},
-		tVariance: {},
-		tImb: {},
-		tKurt: {},
-		tSkew: {},
-		eMin: {},
-		eMax: {},
-		eMean: {},
-		eVariance: {},
-		eImb: {},
-		eKurt: {},
-		eSkew: {},
+		tStats: {},
+		bStats: {},
+		tBoxplot: {},
+		bBoxplot: {}
 	}),
 	mounted() {
 		let self = this;
@@ -322,6 +199,10 @@ export default {
 				val,
 			);
 		});
+
+		EventHandler.$on("ensemble-boxplots", () =>  {
+			self.visualize();
+		});
 	},
 
 	methods: {
@@ -334,11 +215,54 @@ export default {
 				document.getElementById(this.id).style.maxHeight = this.height + "px";
 				this.firstRender = false;
 			}
-			this.visualize();
+
+			// Initiate the data fetching. 
+			EventHandler.$emit("ensemble-boxplots");		
 		},
 
-		visualize() {
-			this.setStates();
+		async visualize() {
+			const data = await APIService.POSTRequest("ensemble_boxplots", {
+				dataset: this.$store.selectedTargetDataset,
+				metric: this.$store.selectedMetric,
+				callsites: [
+					"LagrangeElements",
+					"UpdateVolumesForElems",
+					"CalcLagrangeElements",
+					"CalcKinematicsForElems",
+					"CalcQForElems",
+					"CalcMonotonicQGradientsForElems",
+					"CalcMonotonicQRegionForElems",
+					"ApplyMaterialPropertiesForElems",
+					"EvalEOSForElems",
+					"CalcEnergyForElems",
+					"CalcPressureForElems",
+					"CalcSoundSpeedForElems",
+					"IntegrateStressForElems",
+					"UpdateVolumesForElems"
+				],
+				ntype: "callsite",
+			});
+
+			this.tCallsites = this.sortByAttribute(data, this.$store.selectedMetric, "mean", "tgt");
+			this.bCallsites = this.sortByAttribute(data, this.$store.selectedMetric, "mean", "bkg");
+			
+			this.knc = this.KNC(this.tCallsites, this.bCallsites);
+
+			
+
+			this.selectedModule = this.$store.selectedModule;
+			this.selectedMode = this.$store.selectedMode;
+			this.selectedCallsite = this.$store.selectedCallsite;
+			this.selectedMetric = this.$store.selectedMetric;
+			
+			this.ensembleColor = d3
+				.rgb(this.$store.distributionColor.ensemble)
+				.darker(1);
+			this.targetColor = d3
+				.rgb(this.$store.distributionColor.target)
+				.darker(1);
+
+			// this.setStates();
 			this.boxplotByMetric();
 			// this.borderColorByMetric()
 		},
@@ -372,57 +296,78 @@ export default {
 				this.differenceCallsites,
 			);
 
-			this.selectedModule = this.$store.selectedModule;
-			this.selectedMode = this.$store.selectedMode;
-			this.selectedCallsite = this.$store.selectedCallsite;
-			this.selectedMetric = this.$store.selectedMetric;
-			if (this.$store.selectedMetric == "Ensemble") {
-				this.ensembleColor = d3
-					.rgb(this.$store.distributionColor.ensemble)
-					.darker(1);
-				this.targetColor = d3
-					.rgb(this.$store.distributionColor.target)
-					.darker(1);
-			} else {
-				// There is actually no target for single run. But we just set the value.
-				this.ensembleColor = this.$store.runtimeColor.textColor;
-				this.targetColor = this.$store.runtimeColor.textColor;
-			}
+		},
+
+		/**
+		 * Sort the callsite ordering based on the attribute.
+		 *
+		 * @param {Array} callsites - Callsites as a list.
+		 * @param {Stirng} metric - Metric (e.g., time or time (inc))
+		 * @param {String} attribute - Attribute to sort by.
+		 */
+		sortByAttribute(callsites, metric, attribute, boxplot_type) {
+			let items = Object.keys(callsites).map(function (key) {
+				return [key, callsites[key][boxplot_type]];
+			});
+
+			items = items.sort( (first, second) => {
+				return second[1][metric][attribute] - first[1][metric][attribute];
+			});
+
+			callsites = items.reduce(function (map, obj) {
+				map[obj[0]] = obj[1][metric];
+				return map;
+			}, {});
+
+			return callsites;
 		},
 
 		boxplotByMetric() {
-			for (let callsite in this.callsites) {
-				const e_data = this.callsites[callsite][this.selectedMetric];
+			for (let callsite_name of this.knc["intersection"]) {
+				let tCallsite = this.tCallsites[callsite_name];
+				let bCallsite = this.bCallsites[callsite_name];
 
-				if (this.targetCallsites[callsite] != undefined) {
-					const t_data = this.targetCallsites[callsite][this.selectedMetric];
-
-					this.tMin[callsite] = utils.formatRuntimeWithoutUnits(t_data["min"]);
-					this.tMax[callsite] = utils.formatRuntimeWithoutUnits(t_data["max"]);
-					this.tMean[callsite] = utils.formatRuntimeWithoutUnits(t_data["mean"]);
-					this.tVariance[callsite] = utils.formatRuntimeWithoutUnits(t_data["var"]);
-					this.tImb[callsite] = utils.formatRuntimeWithoutUnits(t_data["imb"]);
-					this.tKurt[callsite] = utils.formatRuntimeWithoutUnits(t_data["kurt"]);
-					this.tSkew[callsite] = utils.formatRuntimeWithoutUnits(t_data["skew"]);
-				} else {
-					this.tMin[callsite] = 0;
-					this.tMax[callsite] = 0;
-					this.tMean[callsite] = 0;
-					this.tVariance[callsite] = 0;
-					this.tImb[callsite] = 0;
-					this.tKurt[callsite] = 0;
-					this.tSkew[callsite] = 0;
-				}
-
-				this.eMin[callsite] = utils.formatRuntimeWithoutUnits(e_data["min"]);
-				this.eMax[callsite] = utils.formatRuntimeWithoutUnits(e_data["max"]);
-				this.eMean[callsite] = utils.formatRuntimeWithoutUnits(e_data["mean"]);
-				this.eVariance[callsite] = utils.formatRuntimeWithoutUnits(e_data["var"]);
-				this.eImb[callsite] = utils.formatRuntimeWithoutUnits(e_data["imb"]);
-				this.eKurt[callsite] = utils.formatRuntimeWithoutUnits(e_data["kurt"]);
-				this.eSkew[callsite] = utils.formatRuntimeWithoutUnits(e_data["skew"]);
-				this.selectClassName[callsite] = "unselect-callsite";
+				this.intersectionCallsites[callsite_name] = {
+					"id": tCallsite.nid,
+					"name": tCallsite.name,
+					"tStats": this.getStatistics(tCallsite),
+					"bStats": this.getStatistics(bCallsite),
+					"tBoxplot": this.getBoxplot(tCallsite),
+					"bBoxplot": this.getBoxplot(bCallsite)
+				};
 			}
+
+			for (let callsite_name of this.knc["difference"]) {
+				let bCallsite = this.bCallsites[callsite_name];
+
+				this.intersectionCallsites[callsite_name] = {
+					"bStats": this.getStatistics(bCallsite),
+					"bBoxplot": this.getBoxplot(bCallsite)
+				};
+			}
+
+			console.log(this.intersectionCallsites);
+		},
+
+		getStatistics(callsite) {
+			console.log(callsite);
+			return { 
+				"min": utils.formatRuntimeWithoutUnits(callsite["min"]),
+				"max": utils.formatRuntimeWithoutUnits(callsite["max"]),
+				"mean": utils.formatRuntimeWithoutUnits(callsite["mean"]),
+				"var": utils.formatRuntimeWithoutUnits(callsite["var"]),
+				"imb": utils.formatRuntimeWithoutUnits(callsite["imb"]),
+				"kurt": utils.formatRuntimeWithoutUnits(callsite["kurt"]),
+				"skew": utils.formatRuntimeWithoutUnits(callsite["skew"]),
+			};
+		},
+
+		getBoxplot(callsite) {
+			return {
+				"q": callsite["q"],
+				"outliers": callsite["outliers"], 
+				"nid": callsite["nid"]
+			};
 		},
 
 		borderColorByMetric() {
@@ -504,17 +449,15 @@ export default {
 		},
 
 		// Find the known node correspondence.
-		KNC() {
-			let callsites = new Set(Object.keys(this.$store.data_cs["ensemble"]));
-			let targetCallsites = new Set(
-				Object.keys(this.$store.data_cs[this.$store.selectedTargetDataset]),
-			);
+		KNC(tCallsites, bCallsites) {
+			let bSet = new Set(Object.keys(bCallsites));
+			let tSet = new Set(Object.keys(tCallsites));
 			let difference = new Set(
-				[...callsites].filter((x) => !targetCallsites.has(x)),
+				[...bSet].filter((x) => !tSet.has(x)),
 			);
 
 			let intersection = new Set(
-				[...callsites].filter((x) => targetCallsites.has(x)),
+				[...bSet].filter((x) => tSet.has(x)),
 			);
 
 			return {
@@ -663,26 +606,6 @@ export default {
 					).style.borderStyle = "dotted";
 				}
 			}
-		},
-
-		// Sort the callsite information view by the attribute.
-		sortByAttribute(callsites, attribute) {
-			// Create items array
-			let self = this;
-			let items = callsites.map(function (key) {
-				return [key, self.callsites[key]];
-			});
-
-			items = items.sort( (first, second) => {
-				return second[1][this.$store.selectedMetric][attribute] - first[1][this.$store.selectedMetric][attribute];
-			});
-
-			callsites = items.reduce(function (map, obj) {
-				map[obj[0]] = obj[1];
-				return map;
-			}, {});
-
-			return callsites;
 		},
 
 		// Outlier interactions

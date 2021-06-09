@@ -420,6 +420,10 @@ class BaseProvider:
 
         operation_name = operation["name"]
         e_sg = self.supergraphs["ensemble"]
+
+        if "dataset" in operation:
+            sg = self.supergraphs[operation["dataset"]]
+            
         e_aux_dict = {}
 
         if "ntype" in operation:
@@ -513,7 +517,7 @@ class BaseProvider:
 
             result = {}
             for callsite in callsites:
-                bp = BoxPlot(sg=e_sg, name=callsite, ntype=ntype, proxy_columns=t_sg.proxy_columns)
+                bp = BoxPlot(sg=sg, realtive_sg=e_sg, name=callsite, ntype=ntype, proxy_columns=t_sg.proxy_columns)
                 result[callsite] = bp.unpack()
             
             return result

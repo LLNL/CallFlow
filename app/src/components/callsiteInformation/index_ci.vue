@@ -8,60 +8,15 @@
 <template>
   <v-layout row wrap :id="id">
     <InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
-    <v-layout row wrap v-if="isCallsiteSelected == true">
-      <v-btn
-        class="ma-1 reveal-button"
-        small
-        tile
-        color="white"
-        @click="revealCallsite"
-      >
-        Reveal
-      </v-btn>
-    </v-layout>
-
-    <v-layout row wrap v-if="isModuleSelected == true">
-      <v-btn
-        class="ma-1 reveal-button"
-        small
-        tile
-        color="white"
-        :class="isEntryFunctionSelected"
-        @click="showEntryFunctions"
-      >
-        Entry call sites
-      </v-btn>
-      <v-btn
-        class="ma-1 reveal-button"
-        small
-        tile
-        color="white"
-        :class="isCalleeSelected"
-        @click="showExitFunctions"
-      >
-        Callees
-      </v-btn>
-      <v-spacer></v-spacer>
-      <v-btn
-        class="ma-1 reveal-button"
-        small
-        tile
-        color="white"
-        v-if="showSplitButton == 'true'"
-        @click="split"
-      >
-        Split
-      </v-btn>
-    </v-layout>
-
+    
     <v-container
       class="ml-4 callsite-information-node"
       v-for="callsite in callsites"
       :key="getID(callsite.nid)"
     >
-      <v-row class="pt-2">
-        <!-- <v-col cols="1" >
-          <v-card class="ma-2 ml-4" tile outlined>
+      <v-row>
+         <v-col cols="1">
+          <!-- <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
               <template v-slot:activator="{on}">
                 <v-row
@@ -78,52 +33,31 @@
                 Callsite depth:{{ formatNumberOfHops(callsite.component_path) }}
               </span>
             </v-tooltip>
-          </v-card>
-        </v-col> -->
+          </v-card> -->
+        </v-col>
 
-        <v-col cols="11">
+        <v-col cols="5">
           <v-tooltip bottom>
             <template v-slot:activator="{on}">
-              <v-row class="mt-0 ml-2 pl-2 subtitle-2 font-weight-black" v-on="on">
+              <v-row class="mt-0 pl-2 subtitle-2 font-weight-black" v-on="on">
                 {{ formatName(callsite.name) }}
               </v-row>
             </template>
             <span>{{ callsite.name }}</span>
           </v-tooltip>
         </v-col>
+
+		<!-- <v-col cols="5">
+			{{ callsite.module }}
+		</v-col> -->
       </v-row>
 
-      <v-row class="information">
-        <!-- <v-col class="pa-0 subtitle-2">
-          Module: {{ formatModule(callsite) }}
-        </v-col> -->
-      </v-row>
-      <v-row wrap class="information">
-		<v-col class="pa-0 subtitle-2">Min : {{ min[callsite.name] }}</v-col>
-		<v-col class="pa-0 subtitle-2">Max : {{ max[callsite.name] }}</v-col>
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2">Mean : {{ mean[callsite.name] }}</v-col>
-        <v-spacer></v-spacer>
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2"
-          >Variance : {{ variance[callsite.name] }}</v-col
-        >
-        <v-col class="pa-0 subtitle-2"
-          >Imbalance : {{ imb[callsite.name] }}</v-col
-        >
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2">
-          Kurtosis : {{ kurt[callsite.name] }}
-        </v-col>
-        <v-col class="pa-0 subtitle-2">
-          Skewness : {{ skew[callsite.name] }}
-        </v-col>
-      </v-row>
-
-      <BoxPlot :ref="callsite.nid" :data="boxplot[callsite.name]" />
+		<v-row wrap class="pa-2">
+			<Statistics :tData="stats[callsite.name]" />
+		</v-row>
+		<v-row class="pa-2">
+			<BoxPlot :data="boxplot[callsite.name]" /> 
+		</v-row>
     </v-container>
   </v-layout>
 </template>
@@ -141,12 +75,14 @@ import InfoChip from "../general/infoChip";
 
 // Local component imports
 import BoxPlot from "./boxplot";
+import Statistics from "./statistics";
 
 export default {
 	name: "CallsiteInformation",
 	components: {
 		BoxPlot,
 		InfoChip,
+		Statistics,
 	},
 	data: () => ({
 		id: "callsite-information-overview",
@@ -174,10 +110,6 @@ export default {
 		informationHeight: 0,
 		revealCallsites: [],
 		selectedMetric: "",
-		targetMeans: {},
-		targetVariance: {},
-		targetStandardDeviation: {},
-		intersectionCallsites: {},
 		isModuleSelected: false,
 		isCallsiteSelected: false,
 		isEntryFunctionSelected: "unselect-callsite",
@@ -186,14 +118,8 @@ export default {
 		selectClassName: {},
 		selectedOutlierRanks: {},
 		selectedOutlierDatasets: {},
-		min: {},
-		max: {},
-		mean: {},
-		variance: {},
-		imb: {},
-		kurt: {},
-		skew: {},
 		boxplot: {},
+		stats: {},
 	}),
 
 	mounted() {
@@ -249,19 +175,19 @@ export default {
 				metric: this.$store.selectedMetric,
 				callsites: [
 					"LagrangeElements",
-					"UpdateVolumesForElems",
-					"CalcLagrangeElements",
-					"CalcKinematicsForElems",
-					"CalcQForElems",
-					"CalcMonotonicQGradientsForElems",
-					"CalcMonotonicQRegionForElems",
-					"ApplyMaterialPropertiesForElems",
-					"EvalEOSForElems",
-					"CalcEnergyForElems",
-					"CalcPressureForElems",
-					"CalcSoundSpeedForElems",
-					"IntegrateStressForElems",
-					"UpdateVolumesForElems"
+					// "UpdateVolumesForElems",
+					// "CalcLagrangeElements",
+					// "CalcKinematicsForElems",
+					// "CalcQForElems",
+					// "CalcMonotonicQGradientsForElems",
+					// "CalcMonotonicQRegionForElems",
+					// "ApplyMaterialPropertiesForElems",
+					// "EvalEOSForElems",
+					// "CalcEnergyForElems",
+					// "CalcPressureForElems",
+					// "CalcSoundSpeedForElems",
+					// "IntegrateStressForElems",
+					// "UpdateVolumesForElems"
 				],
 				ntype: "callsite",
 			});
@@ -273,8 +199,6 @@ export default {
 				"mean",
 				"tgt"
 			);
-
-			console.log(this.callsites);
 
 			this.numberOfcallsites = Object.keys(this.callsites).length;
 			// Set from Application store.
@@ -294,7 +218,6 @@ export default {
 		 * @param {*} callsiteID
 		 */
 		getID(callsiteID) {
-			console.log(callsiteID);
 			return "callsite-information-node-" + callsiteID;
 		},
 
@@ -319,13 +242,15 @@ export default {
 				this.borderColorByMetric(callsite);
 
 				// Set the dictionaries for metadata information. 
-				this.min[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["min"]);
-				this.max[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["max"]);
-				this.mean[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["mean"]);
-				this.variance[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["var"]);
-				this.imb[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["imb"]);
-				this.kurt[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["kurt"]);
-				this.skew[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["skew"]);
+				this.stats[callsite.name] = { 
+					"min": utils.formatRuntimeWithoutUnits(callsite["min"]),
+					"max": utils.formatRuntimeWithoutUnits(callsite["max"]),
+					"mean": utils.formatRuntimeWithoutUnits(callsite["mean"]),
+					"var": utils.formatRuntimeWithoutUnits(callsite["var"]),
+					"imb": utils.formatRuntimeWithoutUnits(callsite["imb"]),
+					"kurt": utils.formatRuntimeWithoutUnits(callsite["kurt"]),
+					"skew": utils.formatRuntimeWithoutUnits(callsite["skew"]),
+				};
 				
 				// Set the data for the boxplot.
 				this.boxplot[callsite.name] = {"q": callsite["q"], "outliers": callsite["outliers"], "nid": callsite["nid"]};
@@ -424,7 +349,6 @@ export default {
      * @param {*} name
      */
 		formatName(name) {
-			console.log(name);
 			if (name.length < 25) {
 				return name;
 			}
@@ -682,10 +606,5 @@ export default {
 .component-data {
   color: #009688;
   padding: 0px;
-}
-
-.information {
-  margin-left: 15px;
-  font-size: 16px;
 }
 </style>
