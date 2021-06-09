@@ -374,3 +374,25 @@ export function swapKeysToDict(data, key) {
 		return {...acc, [post]: data[post][key]};	
 	}, {});
 }
+
+export function leastSquares(xSeries, ySeries) {
+	const reduceSumFunc = (prev, cur) => prev + cur;
+
+	const xBar = xSeries.reduce(reduceSumFunc) * 1.0 / xSeries.length;
+	const yBar = ySeries.reduce(reduceSumFunc) * 1.0 / ySeries.length;
+
+	const ssXX = xSeries.map(function(d) { return Math.pow(d - xBar, 2); })
+		.reduce(reduceSumFunc);
+
+	const ssYY = ySeries.map(function(d) { return Math.pow(d - yBar, 2); })
+		.reduce(reduceSumFunc);
+		
+	const ssXY = xSeries.map(function(d, i) { return (d - xBar) * (ySeries[i] - yBar); })
+		.reduce(reduceSumFunc);
+		
+	const slope = ssXY / ssXX;
+	const intercept = yBar - (xBar * slope);
+	const rSquare = Math.pow(ssXY, 2) / (ssXX * ssYY);
+
+	return [slope, intercept, rSquare];
+}

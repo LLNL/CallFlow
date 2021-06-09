@@ -17,7 +17,6 @@ from ast import literal_eval as make_list
 try:
     from pyinstrument import Profiler
 except Exception:
-    #print('Did not find pytinstrument')
     class Profiler:
         def __init__(self):
             pass
@@ -278,8 +277,9 @@ class SuperGraph(ht.GraphFrame):
         self.callsite_aux_dict = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns + ["nid"], group_by=["rank"], apply_func=lambda _: _.mean())
         self.module_aux_dict = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns + ["nid"], group_by=["rank"], apply_func=lambda _: _.mean())
 
-        # self.rel_callsite_aux_dict = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
-        # self.rel_module_aux_dict = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean()) 
+        if self.name == "ensemble" and "dataset" in self.dataframe.columns:
+            self.rel_callsite_aux_dict = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
+            self.rel_module_aux_dict = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean()) 
 
         
     # --------------------------------------------------------------------------
