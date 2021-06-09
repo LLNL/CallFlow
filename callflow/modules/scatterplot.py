@@ -40,18 +40,18 @@ class Scatterplot:
         assert all([o in TIME_COLUMNS for o in orientation])
 
         self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
-        SCAT_TYPES = ["abs"]
+        SCAT_TYPES = ["tgt"]
         if relative_to_df is not None:
-            SCAT_TYPES = ["abs", "rel"]
+            SCAT_TYPES = ["tgt", "bkg"]
         self.result = {_: {} for _ in SCAT_TYPES}
         self.orientation = [proxy_columns.get(_, _) for _ in orientation]
         self.node_type = node_type
 
         # now, append the data
-        self.result["abs"] = self.compute(df)
+        self.result["tgt"] = self.compute(df)
 
         if relative_to_df is not None:
-            self.result["rel"] = self.compute(relative_to_df)
+            self.result["bkg"] = self.compute(relative_to_df)
 
     def compute(self, df):
         assert isinstance(df, pd.DataFrame)
@@ -99,6 +99,7 @@ class Scatterplot:
                 "xMin": x["min"],
                 "xMax": x["max"],
                 "yMin": y["min"],
-                "yMax": y["max"]
+                "yMax": y["max"],
+                "orientation": self.orientation,
             }
         return ret

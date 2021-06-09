@@ -8,11 +8,10 @@
 CallFlow's module to get the dataframe's boxplot (for inclusive and exclusive runtime).
 """
 import numpy as np
-import pandas as pd
 from scipy.stats import kurtosis, skew
 
 import callflow
-from callflow.utils.df import df_count, df_unique
+from callflow.utils.df import df_count
 from callflow.utils.utils import outliers
 from callflow.datastructures.metrics import TIME_COLUMNS
 
@@ -42,15 +41,34 @@ class BoxPlot:
         # assert ntype in ["callsite", "module"]
         assert isinstance(proxy_columns, dict)
 
+        self.box_types = ["tgt"]
+        if realtive_sg is not None:
+            self.box_types = ["tgt", "bkg"]
+
         if ntype == "callsite":
             df = sg.callsite_aux_dict[name]
+            if realtive_sg is not None:
+                rel_df = realtive_sg.callsite_aux_dict[name]
         elif ntype == "module":
             df = sg.module_aux_dict
+            if realtive_sg is not None:
+                rel_df = realtive_sg.module_aux_dict[name]
         
         self.ndatasets = df_count(df, 'dataset')
         self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
-        self.result = {_: {} for _ in TIME_COLUMNS}
+        self.result = {}
+        self.ntype = ntype
 
+        self.result["name"] = name
+        if ntype == "callsite":
+            self.result["module"] = sg.get_module(sg.get_idx(name, ntype))
+
+        if realtive_sg is not None:
+            self.result["bkg"] = self.compute(rel_df)
+        self.result["tgt"] = self.compute(df)
+        
+    def compute(self, df):
+        ret = {_: {} for _ in TIME_COLUMNS}
         for tk, tv in zip(TIME_COLUMNS, self.time_columns):
 
             q = np.percentile(df[tv], [0.0, 25.0, 50.0, 75.0, 100.0])
@@ -69,7 +87,7 @@ class BoxPlot:
             _skew = skew(_data)
             _kurt = kurtosis(_data)
 
-            self.result[tk] = {"q": q,
+            ret[tk] = {"q": q,
                                "oval": df[tv].to_numpy()[mask],
                                "orank": rank,
                                "d": _data,
@@ -80,39 +98,39 @@ class BoxPlot:
                                 "nid": df["nid"].unique(),
                             }
             if self.ndatasets > 1:
-                self.result[tk]['odset'] = df['dataset'].to_numpy()[mask]
+                ret[tk]['odset'] = df['dataset'].to_numpy()[mask]
 
-            self.result["name"] = name
-
-            if ntype == "callsite":
-                self.result["module"] = sg.get_module(sg.get_idx(name, ntype))
-
+        return ret
+            
     def unpack(self):
         """
         Unpack the boxplot data.
         """
         result = {}
-        for metric in self.time_columns:
-            box = self.result[metric]
-            result[metric] = {
-                "q": box["q"].tolist(),
-                "outliers": {
-                    "values": box["oval"].tolist(),
-                    "ranks": box["orank"].tolist()
-                },
-                "min": box["rng"][0],
-                "max": box["rng"][1],
-                "mean": box["uv"][0],
-                "var": box["uv"][1],
-                "imb": box["imb"],
-                "kurt": box["ks"][0],
-                "skew": box["ks"][1],
-                "nid": box["nid"][0],
-            }
-            result["name"] = self.result["name"]
-            
-            if self.ndatasets > 1:
-                result[metric]['odset'] = box['odset'].tolist()
+        for box_type in self.box_types:
+            result[box_type] = {}
+            for metric in self.time_columns:
+                box = self.result[box_type][metric]
+                result[box_type][metric] = {
+                    "q": box["q"].tolist(),
+                    "outliers": {
+                        "values": box["oval"].tolist(),
+                        "ranks": box["orank"].tolist()
+                    },
+                    "min": box["rng"][0],
+                    "max": box["rng"][1],
+                    "mean": box["uv"][0],
+                    "var": box["uv"][1],
+                    "imb": box["imb"],
+                    "kurt": box["ks"][0],
+                    "skew": box["ks"][1],
+                    "nid": box["nid"][0],
+                    "name": self.result["name"],
+                }
+                result["name"] = self.result["name"]
+                
+                if self.ndatasets > 1:
+                    result[box_type][metric]['odset'] = box['odset'].tolist()
         
         return result
 

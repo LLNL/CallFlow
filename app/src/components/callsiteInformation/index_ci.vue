@@ -244,7 +244,7 @@ export default {
 		 * Three things are performed.
 		 */
 		async visualize() {
-			this.callsites = await APIService.POSTRequest("single_boxplots", {
+			const data = await APIService.POSTRequest("single_boxplots", {
 				dataset: this.$store.selectedTargetDataset,
 				metric: this.$store.selectedMetric,
 				callsites: [
@@ -266,6 +266,16 @@ export default {
 				ntype: "callsite",
 			});
 
+			// Sort the callsites.
+			this.callsites = this.sortByAttribute(
+				data,
+				this.$store.selectedMetric,
+				"mean",
+				"tgt"
+			);
+
+			console.log(this.callsites);
+
 			this.numberOfcallsites = Object.keys(this.callsites).length;
 			// Set from Application store.
 			this.selectedModule = this.$store.selectedModule;
@@ -284,7 +294,8 @@ export default {
 		 * @param {*} callsiteID
 		 */
 		getID(callsiteID) {
-			return "callsite-information-" + callsiteID;
+			console.log(callsiteID);
+			return "callsite-information-node-" + callsiteID;
 		},
 
 		/**
@@ -295,40 +306,32 @@ export default {
 			const mean_time = data["mean"];
 			const strokeColor = this.$store.runtimeColor.getColorByValue(mean_time);
 			d3.select(id).style("stroke", strokeColor);
-		
 		},
 
 		/**
 		 * Process the data for callsites
 		 */
 		process() {
-			// Sort the callsites.
-			this.callsites = this.sortByAttribute(
-				this.callsites,
-				this.$store.selectedMetric,
-				"mean"
-			);
-
-			for (let callsite in this.callsites) {
-				const data = this.callsites[callsite][this.selectedMetric];
+			for (let callsite_name in this.callsites) {
+				let callsite = this.callsites[callsite_name];
 
 				// Set the border color of the container.
-				this.borderColorByMetric(data);
+				this.borderColorByMetric(callsite);
 
 				// Set the dictionaries for metadata information. 
-				this.min[callsite] = utils.formatRuntimeWithoutUnits(data["min"]);
-				this.max[callsite] = utils.formatRuntimeWithoutUnits(data["max"]);
-				this.mean[callsite] = utils.formatRuntimeWithoutUnits(data["mean"]);
-				this.variance[callsite] = utils.formatRuntimeWithoutUnits(data["var"]);
-				this.imb[callsite] = utils.formatRuntimeWithoutUnits(data["imb"]);
-				this.kurt[callsite] = utils.formatRuntimeWithoutUnits(data["kurt"]);
-				this.skew[callsite] = utils.formatRuntimeWithoutUnits(data["skew"]);
+				this.min[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["min"]);
+				this.max[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["max"]);
+				this.mean[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["mean"]);
+				this.variance[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["var"]);
+				this.imb[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["imb"]);
+				this.kurt[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["kurt"]);
+				this.skew[callsite_name] = utils.formatRuntimeWithoutUnits(callsite["skew"]);
 				
 				// Set the data for the boxplot.
-				this.boxplot[callsite] = {"q": data["q"], "outliers": data["outliers"], "nid": data["nid"]};
+				this.boxplot[callsite.name] = {"q": callsite["q"], "outliers": callsite["outliers"], "nid": callsite["nid"]};
 
 				// Set the selection for a callsite. 
-				this.selectClassName[callsite] = "unselect-callsite";
+				this.selectClassName[callsite.name] = "unselect-callsite";
 			}
 		},
 
@@ -339,9 +342,9 @@ export default {
 		 * @param {Stirng} metric - Metric (e.g., time or time (inc))
 		 * @param {String} attribute - Attribute to sort by.
 		 */
-		sortByAttribute(callsites, metric, attribute) {
+		sortByAttribute(callsites, metric, attribute, boxplot_type) {
 			let items = Object.keys(callsites).map(function (key) {
-				return [key, callsites[key]];
+				return [key, callsites[key][boxplot_type]];
 			});
 
 			items = items.sort( (first, second) => {
@@ -349,7 +352,7 @@ export default {
 			});
 
 			callsites = items.reduce(function (map, obj) {
-				map[obj[0]] = obj[1];
+				map[obj[0]] = obj[1][metric];
 				return map;
 			}, {});
 
@@ -408,7 +411,6 @@ export default {
 		 * @param {*} callsite
 		 */
 		formatModule(callsite) {
-			console.log(this.$store, callsite);
 			const _m = this.$store.summary[this.$store.selectedTargetDataset]["c2m"][callsite["name"]];
 			const splice = 15;
 			if (_m.length < splice) {
@@ -422,6 +424,7 @@ export default {
      * @param {*} name
      */
 		formatName(name) {
+			console.log(name);
 			if (name.length < 25) {
 				return name;
 			}
