@@ -25,20 +25,20 @@ export default {
 	methods: {
 		/**
 		 * Init function, sets up the svg for rendering.
-		 * @param {*} callsite 
+		 * @param {*} nid 
 		 * @param {*} q 
 		 * @param {*} targetq 
 		 * @param {*} xScale 
 		 * @param {*} showTarget 
 		 */
-		init(callsite, q, targetq, xScale, showTarget) {
+		init(nid, q, targetq, xScale, showTarget) {
 			this.$store.selectedMarker = "target";
 			this.q = q;
 			this.targetq = targetq;
 			this.xScale = xScale;
 
 			// Get the SVG belonging to this callsite.
-			this.svg = d3.select("#boxplot-" + callsite.nid);
+			this.svg = d3.select("#boxplot-" + nid);
 
 			this.g = this.svg
 				.select(".marker")

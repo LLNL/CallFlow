@@ -117,8 +117,8 @@ export default {
 		 * Visualize the boxplot for the callsites.
 		 */
 		visualize() {
-			this.$refs.Box.init(this.data, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Markers.init(this.data, this.q, this.targetq, this.xScale, this.showTarget);
+			this.$refs.Box.init(this.data.nid, this.q, this.targetq, this.xScale, this.showTarget);
+			this.$refs.Markers.init(this.data.nid, this.q, this.targetq, this.xScale, this.showTarget);
 			this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.data, this.showTarget);
 		},
 

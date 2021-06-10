@@ -223,7 +223,7 @@ export default {
 
 		setComponentMap() {
 			return [
-				this.$refs.Sankey,
+				// this.$refs.Sankey,
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
 				this.$refs.CallsiteCorrespondence,

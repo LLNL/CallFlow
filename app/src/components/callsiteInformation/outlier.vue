@@ -36,10 +36,10 @@ export default {
 		 * @param {*} d 
 		 * @param {*} targetd 
 		 * @param {*} xScale 
-		 * @param {*} callsite 
+		 * @param {*} nid 
 		 * @param {*} showTarget 
 		 */
-		init(q, targetq, ensembleWhiskerIndices, targetWhiskerIndices, d, targetd, xScale, callsite) {
+		init(q, targetq, ensembleWhiskerIndices, targetWhiskerIndices, d, targetd, xScale, nid) {
 			this.q = q;
 			this.targetq = targetq;
 			this.ensembleWhiskerIndices = ensembleWhiskerIndices;
@@ -47,10 +47,9 @@ export default {
 			this.d = d;
 			this.targetd = targetd;
 			this.xScale = xScale;
-			this.callsite = callsite;
 
 			// Get the SVG belonging to this callsite.
-			this.svg = d3.select("#boxplot-" + callsite.nid);
+			this.svg = d3.select("#boxplot-" + nid);
 			this.g = this.svg
 				.select(".outlier")
 				.attrs({
@@ -65,7 +64,7 @@ export default {
 			this.boxWidth = this.width;
 
 			this.targetOutliers();
-			this.$parent.$refs.ToolTip.init("boxplot-" + callsite.nid);
+			this.$parent.$refs.ToolTip.init("boxplot-" + nid);
 		},
 
 		/**

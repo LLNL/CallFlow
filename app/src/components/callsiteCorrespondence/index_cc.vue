@@ -40,14 +40,22 @@
         </v-col>
       </v-row>
 
-      <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget="false" />
-
+		<v-row wrap class="pa-2">
+			<Statistics 
+				:bData="intersectionCallsites[callsite.name]['bStats']" />
+		</v-row>
+		<v-row class="pa-2">
+			<BoxPlot :ref="callsite.id" 
+				:bData="intersectionCallsites[callsite.name]['bBoxplot']" 
+				showTarget="false" />
+		</v-row>   
+		
     </v-container> -->
 
     <v-container
       class="ml-4 callsite-information-node"
       v-for="callsite in intersectionCallsites"
-      :key="getID(callsite.id)"
+      :key="getID(callsite.nid)"
     >
       <v-row  class="pt-2">
         <!-- <v-col cols="1">
@@ -85,10 +93,15 @@
       </v-row>
 
 		<v-row wrap class="pa-2">
-			<Statistics :tData="intersectionCallsites[callsite.name]['tStats']" :bData="intersectionCallsites[callsite.name]['bStats']" />
+			<Statistics 
+				:tData="intersectionCallsites[callsite.name]['tStats']" 
+				:bData="intersectionCallsites[callsite.name]['bStats']" />
 		</v-row>
 		<v-row class="pa-2">
-			<!-- <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget="false" /> -->
+			<BoxPlot :ref="callsite.id" 
+				:bData="intersectionCallsites[callsite.name]['bBoxplot']" 
+				:tData="intersectionCallsites[callsite.name]['tBoxplot']" 
+				showTarget="false" />
 		</v-row>      
     </v-container>
   </v-layout>
@@ -112,7 +125,7 @@ import Statistics from "../callsiteInformation/statistics";
 export default {
 	name: "CallsiteCorrespondence",
 	components: {
-		// BoxPlot,
+		BoxPlot,
 		InfoChip,
 		Statistics
 	},
@@ -247,8 +260,8 @@ export default {
 			this.bCallsites = this.sortByAttribute(data, this.$store.selectedMetric, "mean", "bkg");
 			
 			this.knc = this.KNC(this.tCallsites, this.bCallsites);
-
-			
+			this.numberOfIntersectionCallsites = this.knc["intersection"].length;
+			this.numberOfDifferenceCallsites = this.knc["difference"].length;
 
 			this.selectedModule = this.$store.selectedModule;
 			this.selectedMode = this.$store.selectedMode;
@@ -340,17 +353,15 @@ export default {
 			for (let callsite_name of this.knc["difference"]) {
 				let bCallsite = this.bCallsites[callsite_name];
 
-				this.intersectionCallsites[callsite_name] = {
+				this.differenceCallsites[callsite_name] = {
 					"bStats": this.getStatistics(bCallsite),
 					"bBoxplot": this.getBoxplot(bCallsite)
 				};
 			}
 
-			console.log(this.intersectionCallsites);
 		},
 
 		getStatistics(callsite) {
-			console.log(callsite);
 			return { 
 				"min": utils.formatRuntimeWithoutUnits(callsite["min"]),
 				"max": utils.formatRuntimeWithoutUnits(callsite["max"]),

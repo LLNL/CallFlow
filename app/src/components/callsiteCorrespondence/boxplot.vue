@@ -22,15 +22,16 @@ import * as d3 from "d3";
 import EventHandler from "lib/routing/EventHandler";
 
 // Local component imports
-import Box from "./box";
-import Markers from "./markers";
-import Outliers from "./outlier";
-import ToolTip from "./tooltip";
+import Box from "../callsiteInformation/box";
+import Markers from "../callsiteInformation/markers";
+import Outliers from "../callsiteInformation/outlier";
+import ToolTip from "../callsiteInformation/tooltip";
 
 export default {
 	name: "BoxPlot",
 	props: [
-		"callsite",
+		"tData",
+		"bData",
 		"width",
 		"height",
 		"showTarget"
@@ -78,7 +79,7 @@ export default {
 	},
 
 	created() {
-		this.id = "boxplot-" + this.callsite.id;
+		this.id = "boxplot-" + this.bData.nid;
 	},
 
 	methods: {
@@ -92,35 +93,23 @@ export default {
 			this.centerLinePosition = (this.boxHeight - this.informationHeight / 4) / 2;
 			this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4;
 
-			this.process(this.callsite);
+			this.bq = this.qFormat(this.bData.q);
+			this.tq = this.qFormat(this.tData.q);
 
-			this.svg = d3.select("#boxplot-" + this.callsite.id)
+			this.svg = d3.select("#boxplot-" + this.bData.nid)
 				.attrs({
 					"width": this.containerWidth,
 					"height": this.containerHeight
 				});
 
-			let min_x = Math.min(this.q.min, this.targetq.min);
-			let max_x = Math.max(this.q.max, this.targetq.max);
+			let min_x = Math.min(this.bq.min, this.tq.min);
+			let max_x = Math.max(this.bq.max, this.tq.max);
 
 			this.xScale = d3.scaleLinear()
 				.domain([min_x, max_x])
 				.range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
 
-			this.visualize(this.callsite);
-		},
-
-		process(callsite) {
-			this.ensemble_data = this.$store.data_cs["ensemble"][callsite.name][this.$store.selectedMetric]["boxplots"]["q"];
-			if (this.$store.data_cs[this.$store.selectedTargetDataset][callsite.name] != undefined) {
-				this.target_data = this.$store.data_cs[this.$store.selectedTargetDataset][callsite.name][this.$store.selectedMetric]["boxplots"]["q"];
-			}
-			else {
-				this.target_data = [0, 0, 0, 0, 0];
-			}
-
-			this.q = this.qFormat(this.ensemble_data);
-			this.targetq = this.qFormat(this.target_data);
+			this.visualize();
 		},
 
 		qFormat(arr) {
@@ -134,10 +123,10 @@ export default {
 			return result;
 		},
 
-		visualize(callsite) {
-			this.$refs.Box.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Markers.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget);
+		visualize() {
+			this.$refs.Box.init(this.tData.nid, this.bq, this.tq, this.xScale, this.showTarget);
+			this.$refs.Markers.init(this.tData.nid, this.q, this.tq, this.xScale, this.showTarget);
+			this.$refs.Outliers.init(this.bq, this.tq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget);
 		},
 
 		clear() {
