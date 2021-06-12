@@ -120,7 +120,7 @@ import InfoChip from "../general/infoChip";
 
 // Local component imports
 import BoxPlot from "./boxplot";
-import Statistics from "../callsiteInformation/statistics";
+import Statistics from "../boxplot/statistics";
 
 export default {
 	name: "CallsiteCorrespondence",

@@ -75,7 +75,7 @@ import InfoChip from "../general/infoChip";
 
 // Local component imports
 import BoxPlot from "./boxplot";
-import Statistics from "./statistics";
+import Statistics from "../boxplot/statistics";
 
 export default {
 	name: "CallsiteInformation",

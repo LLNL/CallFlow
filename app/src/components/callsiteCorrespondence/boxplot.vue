@@ -22,10 +22,10 @@ import * as d3 from "d3";
 import EventHandler from "lib/routing/EventHandler";
 
 // Local component imports
-import Box from "../callsiteInformation/box";
-import Markers from "../callsiteInformation/markers";
-import Outliers from "../callsiteInformation/outlier";
-import ToolTip from "../callsiteInformation/tooltip";
+import Box from "../boxplot/box";
+import Markers from "../boxplot/markers";
+import Outliers from "../boxplot/outlier";
+import ToolTip from "../boxplot/tooltip";
 
 export default {
 	name: "BoxPlot",
