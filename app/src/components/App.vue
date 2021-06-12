@@ -34,7 +34,7 @@
 // Local library imports
 import * as utils from "lib/utils";
 import Color from "lib/color/";
-import APIService from "lib/routing/APIService";
+import { mapGetters } from "vuex";
 import EventHandler from "lib/routing/EventHandler";
 
 // Local components
@@ -52,27 +52,29 @@ export default {
 		Loader,
 	},
 	data: () => ({
-		data: {},
-		config: {},
-		moduleMap: [],
 		run_counts: 0,
-		selectedIQRFactor: 0.15,
-		targetColorMap: {
-			Green: "#4EAF4A",
-			Blue: "#4681B4",
-			Brown: "#AF9B90",
-			Red: "#A90400",
-		},
 		footerText: "Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis",
 		year: "2021",
 		isDataReady: false,
-		moduleCallsiteMap: {},
 	}),
 
-	mounted() {
-		document.title = "CallFlow - ";
-		this.init();
+	computed: {
+		...mapGetters({ config: "getConfig"}),
+	},
 
+	watch: {
+		config: function (val) {
+			this.run_counts = this.config.runs.map((_) => _["name"]).length;
+			this.init();
+		}
+	},
+
+	beforeCreate() {
+		document.title = "CallFlow";
+		this.$store.dispatch("fetchConfig");
+	},
+
+	mounted() {
 		let self = this;
 		EventHandler.$on("setup-colors", () => {
 			self.setupColors(this.$store.selectedRuntimeColorMap, this.$store.selectedDistributionColorMap);
@@ -80,13 +82,8 @@ export default {
 	},
 
 	methods: {
-		async init() {
-			this.config = await APIService.GETRequest("config");
-			console.log(this.config);
-			this.run_counts = this.config.runs.map((_) => _["name"]).length;
-			this.$store.config = this.config;
-
-			document.title = "CallFlow - " + this.$store.config.experiment;
+		init() {
+			document.title = "CallFlow - " + this.config.experiment;
 
 			this.setGlobalVariables(); // Set the general variables in the store.
 			this.setViewDimensions(); // Set the view dimensions.
@@ -96,7 +93,6 @@ export default {
 		},
 
 		setGlobalVariables() {
-			this.$store.selectedScatterMode = "mean";
 			this.$store.selectedProp = "rank";
 
 			this.$store.selectedIQRFactor = 0.15;

@@ -23,9 +23,9 @@ import SuperGraph from "./components/SuperGraph";
 import EnsembleSuperGraph from "./components/SuperGraphEnsemble";
 import vuetify from "./lib/plugins/vuetify";
 
-Vue.use(Vuex);
-const store = new Vuex.Store();
-// import store from "./store";
+// Vue.use(Vuex);
+// const store = new Vuex.Store();
+import store from "./store";
 
 
 const router = new Router({

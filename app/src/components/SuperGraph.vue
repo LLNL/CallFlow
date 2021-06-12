@@ -101,8 +101,6 @@ export default {
 		selectedColorMax: null,
 		selectedColorMinText: "",
 		selectedColorMaxText: "",
-		scatterMode: ["mean", "all"],
-		selectedScatterMode: "all",
 		comparisonMode: false,
 		selectedOutlierBand: 4,
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),

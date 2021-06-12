@@ -69,13 +69,12 @@
 import * as d3 from "d3";
 import * as utils from "lib/utils";
 import EventHandler from "lib/routing/EventHandler";
-import APIService from "lib/routing/APIService";
+import { mapGetters } from "vuex";
 
 export default {
 	name: "TimeSeries",
 	data: () => ({
 		id: null,
-		data: {},
 		height: 0,
 		width: 0,
 		yMin: 0,
@@ -109,31 +108,41 @@ export default {
 		
 		let self = this;
 		EventHandler.$on("visualize-timeline", function () {
-			// self.clear();
-			self.visualize(true);
 		});
 	},
 
 	watch: {
+		timeline: function (val) {
+			this.nodes = val.nodes;
+			this.timeline = Object.values(val.data.d).map((d) => d);
+			this.visualize();
+		},
+
 		selectedTopCallsiteCount() {
 			this.clear();
-			EventHandler.$emit("visualize-timeline");
+			this.$store.dispatch("fetchTimeline");
 		},
 
 		selectedMetric() {
 			this.clear();
-			EventHandler.$emit("visualize-timeline");
+			this.$store.dispatch("fetchTimeline");
 		},
 
 		selectedSeriesType() {
 			this.clear();
-			EventHandler.$emit("visualize-timeline");
+			this.$store.dispatch("fetchTimeline");
 		},
 
 		selectedChartType() {
 			this.clear();
-			EventHandler.$emit("visualize-timeline");
+			this.$store.dispatch("fetchTimeline");
 		}
+	},
+
+	computed: {
+		...mapGetters({ 
+			timeline: "getTimeline",
+		}),
 	},
 
 	methods: {
@@ -143,12 +152,10 @@ export default {
 			const topHalfSummaryHeight = document.getElementById("top-half").clientHeight;
 			this.height = this.$store.viewHeight - settingsHeight - topHalfSummaryHeight;
 
-			this.selectedMetric = this.$store.selectedMetric;
-
-			EventHandler.$emit("visualize-timeline");
+			this.$store.dispatch("fetchTimeline");
 		},
-
-		async visualize(fetchData) {
+		
+		visualize() {
 			this.svg = d3.select("#" + this.id).attrs({
 				width: this.width,
 				height: this.height,
@@ -161,17 +168,6 @@ export default {
 				id: "container",
 				transform: `translate(${leftOffset}, ${topOffset})`,
 			});
-
-			if(fetchData){
-				this.data = await APIService.POSTRequest("timeline", {
-					"ntype": "module",
-					"ncount": this.selectedTopCallsiteCount,
-					"metric": this.selectedMetric,
-				});
-
-				this.nodes = this.data.nodes;
-				this.timeline = Object.values(this.data.d).map((d) => d);
-			}
 
 			this.plot();
 			this.axis();

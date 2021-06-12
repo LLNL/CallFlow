@@ -109,8 +109,6 @@ export default {
 		selectedColorMaxText: "",
 		groupModes: ["include callbacks", "exclude callbacks"],
 		selectedGroupMode: "include callbacks",
-		scatterMode: ["mean", "all"],
-		selectedScatterMode: "all",
 		selectedDiffNodeAlignment: "Top",
 		diffNodeAlignment: ["Middle", "Top"],
 		summaryChip: "Ensemble Super Graph",
@@ -211,7 +209,6 @@ export default {
 			this.$store.nodeInfo = {};
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
 
-			this.$store.selectedProp = "rank";
 			this.$store.selectedScale = "Linear";
 			this.$store.selectedIQRFactor = this.selectedIQRFactor;
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
