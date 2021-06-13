@@ -64,7 +64,7 @@ export default {
 
 	watch: {
 		config: function (val) {
-			this.run_counts = this.config.runs.map((_) => _["name"]).length;
+			this.run_counts = val.runs.map((_) => _["name"]).length;
 			this.init();
 		}
 	},

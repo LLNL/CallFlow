@@ -25,6 +25,7 @@ export default new Vuex.Store({
 		selectedNode: "",
 		selectedMetric: "time (inc)",
 		selectedTopCallsiteCount: 10, 
+		timeline: {},
 	},
 	mutations: {
 		setConfig(state, payload) {
@@ -80,13 +81,20 @@ export default new Vuex.Store({
 			commit("setSelectedNode", summary[selectedTargetRun]["roots"][0]);
 		},
 
-		async fetchTimeline({ commit, state }) {
-			const timeline = await APIService.POSTRequest("timeline", {
-				"ntype": "module",
-				"ncount": state.selectedTopCallsiteCount,
-				"metric": state.selectedMetric,
-			});
+		async fetchTimeline({ commit, state }, payload) {
+			const timeline = await APIService.POSTRequest("timeline", payload);
+			console.log(timeline);
 			commit("setTimeline", timeline);
+		},
+
+		async fetchSingleHistogram({ commit, state }, payload) {
+			const hist = await APIService.POSTRequest("single_histogram", {
+				dataset: state.selectedTargetDataset,
+				node: payload.node,
+				ntype: payload.ntype,
+				nbins: state.rankBinCount,
+			});
+			commit("setSingleHistogram", hist);
 		}
 	},
 	modules: {

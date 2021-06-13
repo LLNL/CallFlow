@@ -48,20 +48,6 @@ export default {
 			this.$store.dispatch("fetchSummary");
 			this.$refs.TimeSeries.init();
 		},
-
-		// /**
-		//  * Attaches properties to central storage based on the data from `this.auxiliary_data`.
-		//  */
-		// setSummaryGlobalVariables() { 
-		// 	this.$store.summary = this.summary;
-		// 	this.$store.metricTimeMap = utils.swapKeysToDict(this.summary, "meantime");
-
-		// 	this.$store.selectedTargetDataset = utils.getKeyWithMaxValue(this.$store.metricTimeMap);
-		// 	this.$store.selectedNode = this.$store.summary[this.$store.selectedTargetDataset]["roots"][0];
-
-		// 	this.$store.numOfRuns = this.runs.length;
-		// 	this.$store.selectedDatasets = this.runs;
-		// },
 	},
 };
 </script>

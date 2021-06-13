@@ -59,22 +59,24 @@
 			</v-col>
 		</v-row>
 		<v-row class="ml-3">
-			<svg :id="id" :width="width" :height="height"></svg>
+			<svg :id="id" :width="width" :height="height" pointer-events="all" ></svg>
 		</v-row>
 	</v-card>
   </v-container>
 </template>
 
 <script>
+import { mapGetters } from "vuex";
+
 import * as d3 from "d3";
 import * as utils from "lib/utils";
-import EventHandler from "lib/routing/EventHandler";
-import { mapGetters } from "vuex";
 
 export default {
 	name: "TimeSeries",
 	data: () => ({
-		id: null,
+		id: "timeline-overview",
+		data: [],
+		nodes: [],
 		height: 0,
 		width: 0,
 		yMin: 0,
@@ -101,43 +103,9 @@ export default {
 		selectedMetric: "time (inc)",
 		selectedTopCallsiteCount: 5,
 		selectedXDomain: "normal",
+		selectedntype: "module",
+		ntypes: ["module", "callsite"],
 	}),
-
-	mounted() {
-		this.id = "timeline-overview";
-		
-		let self = this;
-		EventHandler.$on("visualize-timeline", function () {
-		});
-	},
-
-	watch: {
-		timeline: function (val) {
-			this.nodes = val.nodes;
-			this.timeline = Object.values(val.data.d).map((d) => d);
-			this.visualize();
-		},
-
-		selectedTopCallsiteCount() {
-			this.clear();
-			this.$store.dispatch("fetchTimeline");
-		},
-
-		selectedMetric() {
-			this.clear();
-			this.$store.dispatch("fetchTimeline");
-		},
-
-		selectedSeriesType() {
-			this.clear();
-			this.$store.dispatch("fetchTimeline");
-		},
-
-		selectedChartType() {
-			this.clear();
-			this.$store.dispatch("fetchTimeline");
-		}
-	},
 
 	computed: {
 		...mapGetters({ 
@@ -145,22 +113,66 @@ export default {
 		}),
 	},
 
+	watch: {
+		timeline: function (val) {
+			this.nodes = val.nodes;
+			this.data = Object.values(val.d).map((d) => d);
+			this.visualize();
+		},
+
+		selectedTopCallsiteCount() {
+			this.clear();
+			this.$store.dispatch("fetchTimeline", {
+				"ntype": this.selectedntype,
+				"ncount": this.selectedTopCallsiteCount,
+				"metric": this.selectedMetric,
+			});
+		},
+
+		selectedMetric() {
+			this.clear();
+			this.$store.dispatch("fetchTimeline", {
+				"ntype": this.selectedntype,
+				"ncount": this.selectedTopCallsiteCount,
+				"metric": this.selectedMetric,
+			});
+		},
+
+		selectedSeriesType() {
+			this.clear();
+			this.$store.dispatch("fetchTimeline", {
+				"ntype": this.selectedntype,
+				"ncount": this.selectedTopCallsiteCount,
+				"metric": this.selectedMetric,
+			});
+		},
+
+		selectedChartType() {
+			this.clear();
+			this.$store.dispatch("fetchTimeline", {
+				"ntype": this.selectedntype,
+				"ncount": this.selectedTopCallsiteCount,
+				"metric": this.selectedMetric,
+			});
+		}
+	},
+
 	methods: {
-		init() {
+		init() {	
+			this.$store.dispatch("fetchTimeline", {
+				"ntype": this.selectedntype,
+				"ncount": this.selectedTopCallsiteCount,
+				"metric": this.selectedMetric,
+			});
+		},
+		
+		visualize() {
 			this.width = this.$store.viewWidth - this.padding.left - this.padding.right;
 			const settingsHeight = document.getElementById("settings").clientHeight;
 			const topHalfSummaryHeight = document.getElementById("top-half").clientHeight;
 			this.height = this.$store.viewHeight - settingsHeight - topHalfSummaryHeight;
-
-			this.$store.dispatch("fetchTimeline");
-		},
-		
-		visualize() {
-			this.svg = d3.select("#" + this.id).attrs({
-				width: this.width,
-				height: this.height,
-				"pointer-events": "all",
-			});
+			
+			this.svg = d3.select("#" + this.id);
 
 			const leftOffset = 100;
 			const topOffset = 0;
@@ -181,7 +193,7 @@ export default {
 			if(this.selectedSeriesType == "stacked") {
 				series = d3
 					.stack()
-					.keys(this.nodes)(this.timeline)
+					.keys(this.nodes)(this.data)
 					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
 				yDomain = [d3.min(series, (d) => d3.min(d, (d) => d[1])), d3.max(series, (d) => d3.max(d, (d) => d[1]))];
 			}
@@ -189,12 +201,12 @@ export default {
 				series = d3
 					.stack()
 					.keys(this.nodes)
-					.offset(d3.stackOffsetExpand)(this.timeline)
+					.offset(d3.stackOffsetExpand)(this.data)
 					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
 				yDomain = [0, 1];
 			}
 
-			this.timeline.reverse();
+			this.data.reverse();
 
 			this.color = d3
 				.scaleOrdinal()
@@ -205,12 +217,12 @@ export default {
 			if (this.selectedXDomain == "normal") {
 				this.x = d3
 					.scaleBand()
-					.domain(this.timeline.map((d) => d.name))
+					.domain(this.data.map((d) => d.name))
 					.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
 			} else if (this.selectedXDomain == "time") {
 				this.x = d3
 					.scaleUtc()
-					.domain(d3.extent(this.timeline, d => d[this.chartXAttr]))
+					.domain(d3.extent(this.data, d => d[this.chartXAttr]))
 					.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
 			}
 
