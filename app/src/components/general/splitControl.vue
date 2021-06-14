@@ -14,22 +14,22 @@
 
 <script>
 export default {
-    name: "SplitControl",
-    data: () => ({
+	name: "SplitControl",
+	data: () => ({
 
-    }),
-    methods: {
-      revealCallsite()  {
+	}),
+	methods: {
+		revealCallsite()  {
 
-      },
+		},
 
-      showEntryFunctions() {
+		showEntryFunctions() {
 
-      },
+		},
 
-      showCallees() {
+		showCallees() {
         
-      }
-    }
-}
+		}
+	}
+};
 </script>

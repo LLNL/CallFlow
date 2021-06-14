@@ -429,7 +429,10 @@ class SuperGraph(ht.GraphFrame):
                   "c2m": self.callsite_module_map,
                   "nmodules": self.df_count("module"), # if "module" in cols else 0,
                   "nranks": self.df_count("rank") if "rank" in cols else 1,
-                  "nedges": len(self.nxg.edges())}
+                  "nedges": len(self.nxg.edges()),
+                  "maxcallsite": self.df_get_top_by_attr("name", 1, "time")[0],
+                  "maxmodule": self.get_name(self.df_get_top_by_attr("module", 1, "time")[0], "module"),
+                  }
 
         for p in TIME_COLUMNS:
             result[p] = self.df_minmax(p)

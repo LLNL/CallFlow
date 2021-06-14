@@ -94,10 +94,11 @@ export default {
 
 	methods: {
 		init() {
+			console.log(this.selectedNode);
 			this.$store.dispatch("fetchSingleHistogram", {
 				dataset: this.selectedTargetRun,
-				node: this.selectedNode,
-				ntype: "callsite",
+				node: this.selectedNode["name"],
+				ntype: this.selectedNode["type"],
 				nbins: 20,
 			});
 

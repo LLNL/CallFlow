@@ -80,8 +80,8 @@ export default {
 		init() {
 			this.$store.dispatch("fetchSingleScatterplot", {
 				dataset: this.selectedTargetRun,
-				node: this.selectedNode,
-				ntype: "callsite",
+				node: this.selectedNode["name"],
+				ntype: this.selectedNode["type"],
 				orientation: ["time", "time (inc)"],
 			});
 

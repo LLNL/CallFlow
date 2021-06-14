@@ -95,7 +95,8 @@ export default {
 			summary: "getSummary",
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMetric: "getSelectedMetric",
-			metricTimeMap: "getMetricTimeMap"
+			metricTimeMap: "getMetricTimeMap",
+			// selectedMode: "getSelectedMode",
 		})
 	},
 
@@ -104,13 +105,10 @@ export default {
 	},
 
 	mounted() {
-		this.setupStore();
-
 		let self = this;
 		EventHandler.$on("supergraph-reset", () => {
 			self.reset();
 		});
-
 	},
 
 	watch: {
@@ -119,9 +117,15 @@ export default {
 		},
 
 		summary: function (val) {
+			console.log(val);
 			this.isDataReady = true;
+			this.setupStore();
 			this.init();
 		},
+
+		selectedMode: function (val) {
+			this.selectedMode = val;
+		}
 
 		// showTarget: function (val) {
 		// 	EventHandler.$emit("show-target-auxiliary");
@@ -130,7 +134,7 @@ export default {
 
 	methods: {
 		init() {
-			this.$store.commit("setSelectedMode", "CCT");
+			this.$store.commit("setSelectedMode", "SG");
 
 			console.log("[SG] Selected Run: ", this.selectedTargetRun);
 			console.log("[SG] Selected Mode: ", this.selectedMode);
@@ -148,9 +152,9 @@ export default {
 			return [
 				this.$refs.SingleHistogram,
 				this.$refs.SingleScatterplot,
-				this.$refs.Sankey,
-				this.$refs.CallsiteInformation,
-				this.$refs.VisualEncoding,
+				// this.$refs.Sankey,
+				// this.$refs.CallsiteInformation,
+				// this.$refs.VisualEncoding,
 			];
 		},
 
