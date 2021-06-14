@@ -2,17 +2,14 @@
   <v-flex>
     <v-row id="top-half">
       <v-col cols="5">
-        <ConfigInformation
-          v-if="Object.keys(config).length > 0"
-          :data="config"
-        />
+        <ConfigInformation />
       </v-col>
       <v-col cols="7">
-        <ProfileInformation v-if="profiles.length > 0" :data="profiles" />
+        <ProfileInformation />
       </v-col>
     </v-row>
     <v-row>
-      <TimeSeries ref="TimeSeries" />
+      <TimeSeries />
     </v-row>
   </v-flex>
 </template>
@@ -33,8 +30,6 @@ export default {
 		TimeSeries,
 	},
 
-	props: ["config"],
-
 	computed: {
 		...mapGetters({ 
 			summary: "getSummary",
@@ -43,11 +38,8 @@ export default {
 		}),
 	},
 
-	methods: {
-		init() {
-			this.$store.dispatch("fetchSummary");
-			this.$refs.TimeSeries.init();
-		},
+	beforeCreate() {
+		this.$store.dispatch("fetchSummary");
 	},
 };
 </script>

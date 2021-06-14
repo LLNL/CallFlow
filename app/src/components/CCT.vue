@@ -47,6 +47,7 @@
 
 <script>
 import Splitpanes from "splitpanes";
+import { mapGetters } from "vuex";
 import "splitpanes/dist/splitpanes.css";
 
 // Library imports.
@@ -57,6 +58,8 @@ import NodeLink from "./nodeLink/index_nl";
 
 // General components
 import Toolbar from "./general/toolbar";
+import Color from "lib/color/";
+import * as utils from "lib/utils";
 
 // Settings components
 // import Header from "./settings/header";
@@ -79,20 +82,28 @@ export default {
 		selectedComponents: [],
 	}),
 
+	computed: {
+		...mapGetters({ 
+			runs: "getRuns", 
+			summary: "getSummary",
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedMetric: "getSelectedMetric",
+		})
+	},
+
+	beforeCreate() {
+		this.$store.dispatch("fetchSummary");
+	},
+
 	mounted() {
 		this.setupStore();
-
-		// Push to '/' when `this.$store.selectedDatasets` is undefined.
-		if (this.$store.selectedDatasets === undefined) {
-			this.$router.push("/");
-		}
 
 		let self = this;
 		EventHandler.$on("cct-reset", () => {
 			self.reset();
 		});
 
-		this.init();
+		// this.init();
 	},
 
 	watch: {
@@ -100,23 +111,51 @@ export default {
 			this.$emit("update:isSettingsOpen", val);
 		},
 
-		
 		selectedTargetDataset: function (val) {
 			this.$store.selectedTargetDataset = val;
 			this.reset();
 		},
+
+		summary:  function (val) {
+			this.init();
+		}
 	},
 
 	methods: {
 		init() {
 			this.setComponentMap(); // Set component mapping for easy component tracking.
-
-			console.log("Components: ", this.selectedComponents);
-			console.log("Mode : ", this.selectedMode);
-			console.log("Number of runs :", this.$store.numOfRuns);
-			console.log("Dataset : ", this.$store.selectedTargetDataset);
-
+			this.setupColors();
 			this.initComponents(this.currentComponents);
+		}, 
+
+		setupColors() {
+			this.$store.runtimeColor = new Color();
+			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
+
+			console.log(this.summary);
+			const _d = this.summary[this.selectedTargetRun][this.selectedMetric];
+			const colorMin = parseFloat(_d[0]);
+			const colorMax = parseFloat(_d[1]);
+
+			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
+				parseFloat(colorMin)
+			);
+			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
+				parseFloat(colorMax)
+			);
+
+			this.$store.selectedColorMin = colorMin;
+			this.$store.selectedColorMax = colorMax;
+
+			this.$store.runtimeColor.setColorScale(
+				this.selectedMetric,
+				colorMin,
+				colorMax,
+				this.$store.selectedRuntimeColorMap,
+				this.$store.selectedColorPoint
+			);
+
+			
 		},
 
 		setupStore() {
@@ -156,7 +195,10 @@ export default {
 		// Initialize the relevant modules for respective Modes.
 		// ----------------------------------------------------------------
 		setComponentMap() {
-			this.currentComponents = [this.$refs.CCT1, this.$refs.VisualEncoding];
+			this.currentComponents = [
+				this.$refs.CCT1, 
+				// this.$refs.VisualEncoding
+			];
 		},
 
 		clear() {

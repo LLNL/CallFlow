@@ -27,6 +27,7 @@
 
 <script>
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 export default {
 	name: "SelectTargetRun",
@@ -34,15 +35,20 @@ export default {
 		metricTimeMap: {}
 	}),
 	props: ["datasets", "targetDataset"],
-	mounted() {
-		this.metricTimeMap = utils.swapKeysToDict(data, "meantime");
 
-		this.$store.selectedTargetDataset = utils.getKeyWithMaxValue(this.$store.metricTimeMap);
-		this.$store.selectedNode = this.$store.summary[this.$store.selectedTargetDataset]["roots"][0];
-		
+	computed: {
+		...mapGetters({ 
+			metricTimeMap: "getMetricTimeMap", 
+			selectedTargetRun: "getSelectedTargetRun",
+			runs: "getRuns",
+			selectedMetric: "getSelectedMetric"
+		})
+
+	},
+	mounted() {		
 		this.sortedDatasets = this.sortDatasetsByAttr(
-			this.$store.selectedDatasets,
-			"Inclusive"
+			this.runs,
+			this.selectedMetric
 		);
 	},
 	methods: {
@@ -53,6 +59,7 @@ export default {
 		},
 
 		sortDatasetsByAttr(datasets, attr) {
+			console.log(this.metricTimeMap);
 			let ret = datasets.sort((a, b) => {
 				let x = 0,
 					y = 0;

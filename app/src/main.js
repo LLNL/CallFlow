@@ -31,6 +31,12 @@ import store from "./store";
 const router = new Router({
 	routes: [
 		{
+			path: "/",
+			name: "Summary",
+			component: Summary,
+			props: true,
+		},
+		{
 			path: "/cct",
 			name: "CCT",
 			component: CCT,

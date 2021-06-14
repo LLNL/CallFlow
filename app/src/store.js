@@ -26,6 +26,7 @@ export default new Vuex.Store({
 		selectedMetric: "time (inc)",
 		selectedTopCallsiteCount: 10, 
 		timeline: {},
+		CCT: {},
 	},
 	mutations: {
 		setConfig(state, payload) {
@@ -58,6 +59,14 @@ export default new Vuex.Store({
 
 		setTimeline(state, payload) {
 			state.timeline = payload;
+		},
+		
+		setCCT(state, payload) {
+			state.CCT = payload;
+		},
+
+		setSelectedMetric(state, payload) {
+			state.selectedMetric = payload;
 		}
 	},
 	actions: {
@@ -68,10 +77,9 @@ export default new Vuex.Store({
 			commit("setConfig", config);
 		},
 
-		async fetchSummary({ commit, state }) {	
-			const summary = await APIService.POSTRequest("summary", {
-				datasets: state.runs,
-			});
+		async fetchSummary({ commit, state }, payload) {	
+			const summary = await APIService.POSTRequest("summary");
+			console.log("[Fetch] Summary :", summary);
 			commit("setSummary", summary);
 			commit("setProfiles", utils.swapKeysToArray(summary, ["ensemble"]));
 			const metricTimeMap = utils.swapKeysToDict(summary, "meantime");
@@ -81,20 +89,24 @@ export default new Vuex.Store({
 			commit("setSelectedNode", summary[selectedTargetRun]["roots"][0]);
 		},
 
-		async fetchTimeline({ commit, state }, payload) {
+		async fetchTimeline({ commit }, payload) {
 			const timeline = await APIService.POSTRequest("timeline", payload);
-			console.log(timeline);
 			commit("setTimeline", timeline);
 		},
 
 		async fetchSingleHistogram({ commit, state }, payload) {
 			const hist = await APIService.POSTRequest("single_histogram", {
-				dataset: state.selectedTargetDataset,
+				dataset: state.selectedTargetRun,
 				node: payload.node,
 				ntype: payload.ntype,
 				nbins: state.rankBinCount,
 			});
 			commit("setSingleHistogram", hist);
+		},
+
+		async fetchCCT({ commit, state }, payload) {
+			const cct = await APIService.POSTRequest("cct", payload);
+			commit("setCCT", cct);
 		}
 	},
 	modules: {
@@ -111,5 +123,7 @@ export default new Vuex.Store({
 		getSelectedTargetRun: state => state.selectedTargetRun,
 		getSelectedNode: state => state.selectedNode,
 		getTimeline: state => state.timeline,
+		getSelectedMetric: state => state.selectedMetric,
+		getCCT: state => state.CCT,
 	}
 });

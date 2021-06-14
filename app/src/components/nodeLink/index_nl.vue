@@ -10,7 +10,7 @@
 		<v-row>
 			<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
 			<Loader :isDataReady="isDataReady" />
-			<svg :id="id">
+			<svg :id="id" :width="width" :height="height" :left="margin.left" :top="margin.top">
 			<g id="container"></g>
 			<ColorMap ref="ColorMap" />
 			</svg>
@@ -21,8 +21,8 @@
 <script>
 import * as d3 from "d3";
 import dagreD3 from "dagre-d3/dist/dagre-d3";
+import { mapGetters } from "vuex";
 
-import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
 
 import InfoChip from "../general/infoChip";
@@ -47,8 +47,8 @@ export default {
 			bottom: 20,
 			left: 20,
 		},
-		width: null,
-		height: null,
+		width: 0,
+		height: 0,
 		zoom: null,
 		HAS_DATA_COLUMNS: ["module"], // Array of keys in incoming data to check for.
 		has_data_map: {}, // stores if the required data points are present in the incoming data.
@@ -70,35 +70,35 @@ export default {
 		});
 	},
 
+	computed: {
+		...mapGetters({ 
+			selectedMetric: "getSelectedMetric", 
+			data: "getCCT",
+			selectedTargetRun: "getSelectedTargetRun",
+		})
+	},
+
+	watch: {
+		data: function (val) {
+			this.visualize(val);
+		}
+	},
+
 	methods: {
-		/**
-		 * Send the request to /init endpoint
-		 * Parameters: {datasetPath: "path/to/dataset"}
-		 */
-		async fetchData() {
-			this.info = "Selected metric : " + this.$store.selectedMetric;
-			return await APIService.POSTRequest("cct", {
-				dataset: this.$store.selectedTargetDataset,
+		init() {
+			this.$store.dispatch("fetchCCT", {
+				dataset: this.selectedTargetRun
 			});
 		},
 
-		/**
-		 * Calls the socket to fetch data.
-		 */
-		async init() {
-			this.data = await this.fetchData();
+		visualize() {
 			this.isDataReady = true;
-			console.log("CCT data: ", this.data);
+			this.width = this.$store.viewWidth - this.margin.right;
+			this.height = this.$store.viewHeight - this.margin.bottom;
 
-			this.width = this.$store.viewWidth;
-			this.height = this.$store.viewHeight;
+			this.svg = d3.select("#" + this.id);
 
-			this.svg = d3.select("#" + this.id).attrs({
-				width: this.width - this.margin.right,
-				height: this.height - this.margin.bottom,
-				left: this.margin.left,
-				top: this.margin.top,
-			});
+			this.info = "Selected metric : " + this.selectedMetric;
 
 			this.g = this.createGraph();
 			this.setHasDataMap();

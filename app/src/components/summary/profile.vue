@@ -34,9 +34,9 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 export default {
 	name: "Summary",
-	props: ["data"],
 	data: () => ({
 		headers: [
 			{ text: "Run", value: "run" },
@@ -54,6 +54,9 @@ export default {
 			page: 1
 		}
 	}),
+	computed: {
+		...mapGetters({ data: "getProfiles"})
+	}
 };
 </script>
 

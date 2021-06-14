@@ -17,14 +17,12 @@
 			<v-btn class="mr-md-4">
 				<router-link to="/super_graph" replace>Super Graph</router-link>
 			</v-btn>
-			<v-btn class="mr-md-4" v-if="run_counts > 1">
+			<v-btn class="mr-md-4">
 				<router-link to="/ensemble_super_graph" replace>Ensemble Super Graph</router-link>
 			</v-btn>
 		</v-app-bar>
 		<v-main>
-			<Loader ref="Loader" :isDataReady="isDataReady" />
 			<router-view></router-view>
-			<Summary ref="Summary" v-if="$route.path == '/'" :config="config" />
 		</v-main>
 		<Footer ref="Footer" :text="footerText" :year="year"></Footer>
 	</v-app>
@@ -32,24 +30,16 @@
 
 <script>
 // Local library imports
-import * as utils from "lib/utils";
 import Color from "lib/color/";
-import { mapGetters } from "vuex";
 import EventHandler from "lib/routing/EventHandler";
 
 // Local components
 import Footer from "./general/footer";
-import Loader from "./general/loader";
-
-// General components
-import Summary from "./Summary";
 
 export default {
 	name: "App",
 	components: {
-		Summary,
 		Footer,
-		Loader,
 	},
 	data: () => ({
 		run_counts: 0,
@@ -58,41 +48,21 @@ export default {
 		isDataReady: false,
 	}),
 
-	computed: {
-		...mapGetters({ config: "getConfig"}),
-	},
-
-	watch: {
-		config: function (val) {
-			this.run_counts = val.runs.map((_) => _["name"]).length;
-			this.init();
-		}
-	},
-
-	beforeCreate() {
-		document.title = "CallFlow";
-		this.$store.dispatch("fetchConfig");
-	},
-
 	mounted() {
 		let self = this;
+		document.title = "CallFlow";
+
 		EventHandler.$on("setup-colors", () => {
 			self.setupColors(this.$store.selectedRuntimeColorMap, this.$store.selectedDistributionColorMap);
 		});
+
+		this.setGlobalVariables(); // Set the general variables in the store.
+		this.setViewDimensions(); // Set the view dimensions.	
 	},
 
 	methods: {
-		init() {
-			document.title = "CallFlow - " + this.config.experiment;
-
-			this.setGlobalVariables(); // Set the general variables in the store.
-			this.setViewDimensions(); // Set the view dimensions.
-
-			this.$refs.Summary.init();
-			this.isDataReady = true;
-		},
-
 		setGlobalVariables() {
+			console.log("[App] Set global variables.");
 			this.$store.selectedProp = "rank";
 
 			this.$store.selectedIQRFactor = 0.15;
@@ -120,6 +90,20 @@ export default {
 			
 			// Histogram properties
 			this.$store.selectedScale = "Linear";
+
+			// Color properties
+			this.$store.selectedRuntimeColorMap = "OrRd";
+			this.$store.selectedColorPoint = 9;
+			this.$store.runtimeColor = {};
+			this.$store.runtimeColor.intermediate = "#d9d9d9";
+			this.$store.runtimeColor.highlight = "#C0C0C0";
+			this.$store.runtimeColor.textColor = "#3a3a3a";
+			this.$store.runtimeColor.edgeStrokeColor = "#888888";
+
+			// Ensemble color properites
+			this.$store.distributionColor = {};
+			this.$store.distributionColor.ensemble = "#C0C0C0";
+			this.$store.distributionColor.compare = "#043060";
 		},
 
 		setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {
@@ -128,56 +112,25 @@ export default {
 			
 			this.setRuntimeColorScale(selectedRuntimeColorMap, this.$store.selectedMetric);
 
-			if(this.$store.numOfRuns > 1 && this.$store.selectedFormat == "EnsembleSuperGraph") {
-				// Create distribution color object
-				this.$store.distributionColor = new Color();
-				this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
+			// if(this.$store.numOfRuns > 1 && this.$store.selectedFormat == "EnsembleSuperGraph") {
+			// 	// Create distribution color object
+			// 	this.$store.distributionColor = new Color();
+			// 	this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
 				
-				// this.setDistributionColorScale(selectedDistributionColorMap);
+			// 	this.setDistributionColorScale(selectedDistributionColorMap);
 
-				this.selectedTargetColor = "Green";
-				this.$store.distributionColor.target = this.targetColorMap[
-					this.selectedTargetColor
-				];
-				this.$store.distributionColor.ensemble = "#C0C0C0";
-				this.$store.distributionColor.compare = "#043060";
+			// 	this.selectedTargetColor = "Green";
+			// 	this.$store.distributionColor.target = this.targetColorMap[
+			// 		this.selectedTargetColor
+			// 	];
+			// 	this.$store.distributionColor.ensemble = "#C0C0C0";
+			// 	this.$store.distributionColor.compare = "#043060";
 
-				// Create difference color object
-				this.$store.diffColor = new Color();
-				this.$store.selectedDistributionColorMap = selectedDistributionColorMap;
-			}
+			// 	// Create difference color object
+			// 	this.$store.diffColor = new Color();
+			// 	this.$store.selectedDistributionColorMap = selectedDistributionColorMap;
+			// }
 
-			// Set properties into store.
-			this.$store.selectedColorPoint = 9;
-			this.$store.runtimeColor.intermediate = "#d9d9d9";
-			this.$store.runtimeColor.highlight = "#C0C0C0";
-			this.$store.runtimeColor.textColor = "#3a3a3a";
-			this.$store.runtimeColor.edgeStrokeColor = "#888888";
-		},
-
-		// Set the min and max and assign color variables from Settings.
-		setRuntimeColorScale(selectedRuntimeColorMap, metric) {
-			const _d = this.$store.summary[this.$store.selectedTargetDataset][metric];
-			const colorMin = parseFloat(_d[0]);
-			const colorMax = parseFloat(_d[1]);
-
-			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMin)
-			);
-			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMax)
-			);
-
-			this.$store.selectedColorMin = colorMin;
-			this.$store.selectedColorMax = colorMax;
-
-			this.$store.runtimeColor.setColorScale(
-				metric,
-				colorMin,
-				colorMax,
-				selectedRuntimeColorMap,
-				this.$store.selectedColorPoint
-			);
 		},
 
 		setDistributionColorScale(selectedDistributionColorMap) {
@@ -205,6 +158,7 @@ export default {
 		},
 
 		setViewDimensions() {
+			console.log("[App] Set view dimensions.");
 
 			// Set toolbar height 
 			let toolbarHeight = 0;

@@ -115,6 +115,7 @@ export default {
 
 	watch: {
 		timeline: function (val) {
+			console.log("[Timeline] data:", val);
 			this.nodes = val.nodes;
 			this.data = Object.values(val.d).map((d) => d);
 			this.visualize();
@@ -157,21 +158,29 @@ export default {
 		}
 	},
 
-	methods: {
-		init() {	
-			this.$store.dispatch("fetchTimeline", {
-				"ntype": this.selectedntype,
-				"ncount": this.selectedTopCallsiteCount,
-				"metric": this.selectedMetric,
-			});
-		},
-		
+	mounted() {
+		this.$store.dispatch("fetchTimeline", {
+			"ntype": this.selectedntype,
+			"ncount": this.selectedTopCallsiteCount,
+			"metric": this.selectedMetric,
+		});	
+	},
+
+	methods: {		
 		visualize() {
 			this.width = this.$store.viewWidth - this.padding.left - this.padding.right;
+			
+			// Enforce height of the timeline view to be atleast half screen. 
+			// i.e., If height is less than half the screen, we set a constant height.
 			const settingsHeight = document.getElementById("settings").clientHeight;
 			const topHalfSummaryHeight = document.getElementById("top-half").clientHeight;
-			this.height = this.$store.viewHeight - settingsHeight - topHalfSummaryHeight;
-			
+			const retailHeight = this.$store.viewHeight - settingsHeight - topHalfSummaryHeight;
+			if (retailHeight < 0.5 * this.$store.viewHeight) {
+				this.height = 400;
+			} else {
+				this.height = retailHeight;
+			}
+
 			this.svg = d3.select("#" + this.id);
 
 			const leftOffset = 100;

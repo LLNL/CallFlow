@@ -15,7 +15,7 @@
 			<v-divider></v-divider>
 			<v-row class="ma-0 pa-0 pb-0 mb-0"> 
 				<v-col cols="5"><b>Number of Runs: </b></v-col> 
-				<v-col cols="7">{{ data.runs.length }} </v-col> 	
+				<v-col cols="7">{{ runs.length }} </v-col> 	
 			</v-row>
 			<v-divider></v-divider>
 			<v-row class="ma-0 pa-0 pb-0 mb-0"> 
@@ -50,17 +50,28 @@
 				<v-col cols="5"><b>Group by attribute: </b></v-col>
 				<v-col cols="7"> {{ data.group_by }} </v-col>
 			</v-row> -->
-			<v-divider></v-divider>
-			
 		</v-card>
 	</v-container>
 </template>
 
 
 <script>
+import { mapGetters } from "vuex";
+
 export default {
 	name: "ConfigInformation",
-	props: ["data"],
+	beforeCreate() {
+		this.$store.dispatch("fetchConfig");
+	},
+
+	mounted() {
+		document.title = "CallFlow - " + this.data.experiment;
+	},	
+
+	computed: {
+		...mapGetters({ data: "getConfig", runs: "getRuns"}),
+	},
+
 };
 </script>
 
