@@ -101,7 +101,7 @@ export function formatRuntimeWithoutUnits(val) {
 
 // Returns [mantessa, exponent, max_exponent]
 export function formatRuntimeWithExponent(val, min_exponent = 0) {
-	let format = d3.format(".2");
+	let format = d3.format(".3");
 	let ret = format(val);
 	if (ret == 0) {
 		return [0, 0, min_exponent];
@@ -114,7 +114,7 @@ export function formatRuntimeWithExponent(val, min_exponent = 0) {
 		let split_ret_by_e = ret.toString().split("e");
 		exponent = parseInt(split_ret_by_e[1].split("+")[1]);
 		multiplier = parseInt(exponent) - min_exponent;
-		mantessa = parseFloat(split_ret_by_e[0]); //* (10 ** multiplier));
+		mantessa = parseFloat(split_ret_by_e[0]);
 	}
 	return [mantessa.toFixed(2), exponent, min_exponent];
 }

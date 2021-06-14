@@ -111,7 +111,10 @@ export default new Vuex.Store({
 			commit("setMetricTimeMap", metricTimeMap);
 			const selectedTargetRun = utils.getKeyWithMaxValue(metricTimeMap);
 			commit("setSelectedTargetRun", selectedTargetRun);
-			commit("setSelectedNode", summary[selectedTargetRun]["roots"][0]);
+			commit("setSelectedNode", { 
+				"name": summary[selectedTargetRun]["maxmodule"],
+				"type": "module"
+			});
 		},
 
 		async fetchTimeline({ commit }, payload) {

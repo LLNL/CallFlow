@@ -155,7 +155,7 @@ export default {
 			this.addxAxisLabel();
 			const xAxis = d3
 				.axisBottom(this.xScale)
-				.ticks(10)
+				.ticks(5)
 				.tickFormat((d, i) => {
 					let runtime = utils.formatRuntimeWithExponent(d, self.x_max_exponent);
 					return `${Math.round(runtime[0] * 100) / 100}`;
@@ -215,14 +215,14 @@ export default {
 
 		yAxis() {
 			let self = this;
-			let tickCount = 10;
+			let tickCount = 5;
 			this.addyAxisLabel();
 			let yAxis = d3
 				.axisLeft(this.yScale)
 				.ticks(tickCount)
 				.tickFormat((d, i) => {
 					let runtime = utils.formatRuntimeWithExponent(d, self.y_max_exponent);
-					return `${runtime[0]}`;
+					return runtime[0];
 				});
 
 			const yAxisLine = this.svg

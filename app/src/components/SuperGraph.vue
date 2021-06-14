@@ -117,9 +117,7 @@ export default {
 		},
 
 		summary: function (val) {
-			console.log(val);
 			this.isDataReady = true;
-			this.setupStore();
 			this.init();
 		},
 
