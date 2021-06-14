@@ -7,7 +7,7 @@
 
 <template>
   <v-layout row wrap :id="id">
-    <InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
+    <InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
     
     <v-container
       class="ml-4 callsite-information-node"
@@ -70,7 +70,6 @@ import { mapGetters } from "vuex";
 // Local library imports
 import * as utils from "lib/utils";
 import EventHandler from "lib/routing/EventHandler";
-import APIService from "lib/routing/APIService";
 
 import InfoChip from "../general/infoChip";
 
@@ -88,7 +87,7 @@ export default {
 	data: () => ({
 		id: "callsite-information-overview",
 		title: "Call site Information",
-		summary: "Call site Information view provides an insight into the runtime distribution among its MPI ranks. Boxplots are calculated to represent the range of the distribution and outliers (dots) correspond to the ranks which are beyond the 1.5*IQR. Additionally, several statistical measures are also provided.",
+		infoSummary: "Call site Information view provides an insight into the runtime distribution among its MPI ranks. Boxplots are calculated to represent the range of the distribution and outliers (dots) correspond to the ranks which are beyond the 1.5*IQR. Additionally, several statistical measures are also provided.",
 		info: "",
 		callsites: [],
 		numberOfcallsites: 0,
@@ -106,11 +105,8 @@ export default {
 			{title: "Sort by Inclusive runtime"},
 			{title: "Sort by Exclusive Runtime"},
 		],
-		selectedModule: "",
-		selectedCallsite: "",
 		informationHeight: 50,
 		revealCallsites: [],
-		selectedMetric: "",
 		isModuleSelected: false,
 		isCallsiteSelected: false,
 		isEntryFunctionSelected: "unselect-callsite",
@@ -128,7 +124,8 @@ export default {
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedNode: "getSelectedNode",
 			selectedMetric: "getSelectedMetric",
-			data: "getSingleBoxplots"
+			data: "getSingleBoxplots",
+			summary: "getSummary",
 		})
 	},
 
@@ -136,7 +133,7 @@ export default {
 	watch: {
 		data: function () {
 			this.visualize();
-		}
+		},
 	},
 
 	mounted() {
@@ -168,26 +165,22 @@ export default {
 		 * Set up the view.
 		 */
 		init() {
+			const summary = this.summary[this.selectedTargetRun];
+			let callsites = [];
+			if (this.selectedNode["type"] == "module") {
+				const module_name = this.selectedNode["name"];
+				const module_idx = summary["invmodules"][module_name];
+				callsites = summary["m2c"][module_idx].map((cs) => summary["callsites"][cs]);
+			}
+			else if (this.selectedNode["type"] == "callsite") {
+				callsites = [this.selectedNode["name"]];
+			}
+
 			this.$store.dispatch("fetchSingleBoxplots", {
 				dataset: this.selectedTargetRun,
-				metric: this.$store.selectedMetric,
-				callsites: [
-					"LagrangeElements",
-					// "UpdateVolumesForElems",
-					// "CalcLagrangeElements",
-					// "CalcKinematicsForElems",
-					// "CalcQForElems",
-					// "CalcMonotonicQGradientsForElems",
-					// "CalcMonotonicQRegionForElems",
-					// "ApplyMaterialPropertiesForElems",
-					// "EvalEOSForElems",
-					// "CalcEnergyForElems",
-					// "CalcPressureForElems",
-					// "CalcSoundSpeedForElems",
-					// "IntegrateStressForElems",
-					// "UpdateVolumesForElems"
-				],
-				ntype: "module",
+				metric: this.selectedMetric,
+				callsites: callsites,
+				ntype: "callsite",
 			});
 
 			this.width = document.getElementById(this.id).clientWidth;
@@ -212,16 +205,31 @@ export default {
 			);
 
 			this.numberOfcallsites = Object.keys(this.callsites).length;
-			// Set from Application store.
-			this.selectedModule = this.$store.selectedModule;
-			this.selectedMode = this.$store.selectedMode;
-			this.selectedCallsite = this.$store.selectedCallsite;
-			this.selectedMetric = this.$store.selectedMetric;
-			this.targetColor = this.$store.runtimeColor.textColor;
-
 			this.info = this.numberOfcallsites + " call sites";
 
-			this.process();
+			for (let callsite_name in this.callsites) {
+				let callsite = this.callsites[callsite_name];
+
+				// Set the dictionaries for metadata information. 
+				this.stats[callsite_name] = { 
+					"min": utils.formatRuntimeWithoutUnits(callsite["min"]),
+					"max": utils.formatRuntimeWithoutUnits(callsite["max"]),
+					"mean": utils.formatRuntimeWithoutUnits(callsite["mean"]),
+					"var": utils.formatRuntimeWithoutUnits(callsite["var"]),
+					"imb": utils.formatRuntimeWithoutUnits(callsite["imb"]),
+					"kurt": utils.formatRuntimeWithoutUnits(callsite["kurt"]),
+					"skew": utils.formatRuntimeWithoutUnits(callsite["skew"]),
+				};
+				
+				// Set the data for the boxplot.
+				this.boxplot[callsite_name] = {"q": callsite["q"], "outliers": callsite["outliers"], "nid": callsite["nid"]};
+
+				// Set the selection for a callsite. 
+				this.selectClassName[callsite_name] = "unselect-callsite";
+
+				// Set the border color of the container.
+				this.borderColorByMetric(callsite);
+			}
 		},
 
 		/**
@@ -237,38 +245,11 @@ export default {
     	 */
 		borderColorByMetric(data) {
 			const id = "#callsite-information-node-" + data.nid;
-			const mean_time = data["mean"];
-			const strokeColor = this.$store.runtimeColor.getColorByValue(mean_time);
+			const mean_time = data.mean;
+			// const strokeColor =
+			// this.$store.runtimeColor.getColorByValue(mean_time);
+			const strokeColor = "#f00";
 			d3.select(id).style("stroke", strokeColor);
-		},
-
-		/**
-		 * Process the data for callsites
-		 */
-		process() {
-			for (let callsite_name in this.callsites) {
-				let callsite = this.callsites[callsite_name];
-
-				// Set the border color of the container.
-				this.borderColorByMetric(callsite);
-
-				// Set the dictionaries for metadata information. 
-				this.stats[callsite.name] = { 
-					"min": utils.formatRuntimeWithoutUnits(callsite["min"]),
-					"max": utils.formatRuntimeWithoutUnits(callsite["max"]),
-					"mean": utils.formatRuntimeWithoutUnits(callsite["mean"]),
-					"var": utils.formatRuntimeWithoutUnits(callsite["var"]),
-					"imb": utils.formatRuntimeWithoutUnits(callsite["imb"]),
-					"kurt": utils.formatRuntimeWithoutUnits(callsite["kurt"]),
-					"skew": utils.formatRuntimeWithoutUnits(callsite["skew"]),
-				};
-				
-				// Set the data for the boxplot.
-				this.boxplot[callsite.name] = {"q": callsite["q"], "outliers": callsite["outliers"], "nid": callsite["nid"]};
-
-				// Set the selection for a callsite. 
-				this.selectClassName[callsite.name] = "unselect-callsite";
-			}
 		},
 
 		/**
@@ -448,11 +429,11 @@ export default {
 		},
 
 		/**
-     * Interaction: On supernode click, the callsites belonging to the supernode
-     * are only shown in the callsite information view.
-     *
-     * @param {String} module
-     */
+		 * Interaction: On supernode click, the callsites belonging to the supernode
+		 * are only shown in the callsite information view.
+		 *
+		 * @param {String} module
+		 */
 		selectModule(module) {
 			let callsites_in_module = this.$store.moduleCallsiteMap[
 				this.$store.selectedTargetDataset

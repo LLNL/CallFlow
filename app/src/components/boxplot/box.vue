@@ -16,7 +16,6 @@ import * as utils from "lib/utils";
 export default {
 	name: "Box",
 	data: () => ({
-		id: "box",
 		paddingTop: 10,
 		textOffset: 40,
 		fontSize: 10,
@@ -24,41 +23,34 @@ export default {
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
 	}),
 
+	props: ["nid", "tq", "bq", "xScale"],
+
+	mounted() {
+		if (this.debug) {
+			console.log("Ensemble q: ", this.bq);
+			console.log("Target q: ", this.tq);
+		}
+
+		// Get the SVG belonging to this callsite.
+		this.svg = d3.select("#boxplot-" + this.nid);
+
+		this.g = this.svg
+			.select(".box")
+			.attrs({
+				"transform": "translate(0, " + this.$parent.boxPosition + ")"
+			});
+
+		if (this.bq) {
+			this.box(this.bq, this.$store.runtimeColor.intermediate);
+			this.centerLine(this.bq, this.$store.runtimeColor.intermediate);
+		}
+		this.box(this.tq, this.$store.runtimeColor.highlight);
+		this.axis();
+		this.centerLine(this.tq, this.$store.runtimeColor.highlight);
+		this.$parent.$refs.ToolTip.init("boxplot-" + this.nid);
+	},
+
 	methods: {
-		/**
-		 * 
-		 * @param {*} nid 
-		 * @param {*} q 
-		 * @param {*} targetq 
-		 * @param {*} xScale 
-		 */
-		init(nid, bq, tq, xScale) {
-			if (this.debug) {
-				console.log("Ensemble q: ", bq);
-				console.log("Target q: ", tq);
-			}
-			this.bq = bq;
-			this.tq = tq;
-			this.xScale = xScale;
-
-			// Get the SVG belonging to this callsite.
-			this.svg = d3.select("#boxplot-" + nid);
-			this.id = "box-" + nid;
-
-			this.g = this.svg
-				.select(".box")
-				.attrs({
-					"transform": "translate(0, " + this.$parent.boxPosition + ")"
-				});
-
-			this.box(tq, this.$store.runtimeColor.highlight);
-			this.box(bq, this.$store.runtimeColor.intermediate);
-			this.axis();
-			this.centerLine(tq, this.$store.runtimeColor.highlight);
-			this.centerLine(bq, this.$store.runtimeColor.intermediate);
-			this.$parent.$refs.ToolTip.init("boxplot-" + nid);
-		},
-
 		/**
 		 * Draw the quartile box in the boxplot.
 		 */

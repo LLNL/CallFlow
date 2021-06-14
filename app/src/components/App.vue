@@ -94,14 +94,14 @@ export default {
 			// Color properties
 			this.$store.selectedRuntimeColorMap = "OrRd";
 			this.$store.selectedColorPoint = 9;
-			this.$store.runtimeColor = {};
+			this.$store.runtimeColor = new Color("OrRd");
 			this.$store.runtimeColor.intermediate = "#d9d9d9";
 			this.$store.runtimeColor.highlight = "#C0C0C0";
 			this.$store.runtimeColor.textColor = "#3a3a3a";
 			this.$store.runtimeColor.edgeStrokeColor = "#888888";
 
 			// Ensemble color properites
-			this.$store.distributionColor = {};
+			this.$store.distributionColor = new Color("OrRd");
 			this.$store.distributionColor.ensemble = "#C0C0C0";
 			this.$store.distributionColor.compare = "#043060";
 		},

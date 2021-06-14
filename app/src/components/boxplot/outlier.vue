@@ -22,51 +22,32 @@ export default {
 		informationHeight: 70
 	}),
 
-	created() {
-		this.id = "outliers-" + this.callsiteID;
+	props: ["nid", "tOutliers", "bOutliers", "xScale"],
+
+	mounted() {
+		// Get the SVG belonging to this callsite.
+		this.svg = d3.select("#boxplot-" + this.nid);
+		this.g = this.svg
+			.select(".outlier")
+			.attrs({
+				"transform": "translate(0, " + this.paddingTop + ")"
+			});
+
+
+		this.height = this.$parent.containerHeight;
+		this.width = this.$parent.containerWidth;
+
+		this.boxHeight = this.height - this.paddingTop - this.informationHeight;
+		this.boxWidth = this.width;
+
+		this.outliers(this.tOutliers);
+		if (this.bOutliers) {
+			this.outliers(this.bOutliers);
+		}
+		this.$parent.$refs.ToolTip.init("boxplot-" + this.nid);
 	},
 
 	methods: {
-		/**
-		 * 
-		 * @param {*} q 
-		 * @param {*} targetq 
-		 * @param {*} ensembleWhiskerIndices 
-		 * @param {*} targetWhiskerIndices 
-		 * @param {*} d 
-		 * @param {*} targetd 
-		 * @param {*} xScale 
-		 * @param {*} nid 
-		 * @param {*} showTarget 
-		 */
-		init(q, targetq, ensembleWhiskerIndices, targetWhiskerIndices, d, targetd, xScale, nid) {
-			this.q = q;
-			this.targetq = targetq;
-			this.ensembleWhiskerIndices = ensembleWhiskerIndices;
-			this.targetWhiskerIndices = targetWhiskerIndices;
-			this.d = d;
-			this.targetd = targetd;
-			this.xScale = xScale;
-
-			// Get the SVG belonging to this callsite.
-			this.svg = d3.select("#boxplot-" + nid);
-			this.g = this.svg
-				.select(".outlier")
-				.attrs({
-					"transform": "translate(0, " + this.paddingTop + ")"
-				});
-
-
-			this.height = this.$parent.containerHeight;
-			this.width = this.$parent.containerWidth;
-
-			this.boxHeight = this.height - this.paddingTop - this.informationHeight;
-			this.boxWidth = this.width;
-
-			this.targetOutliers();
-			this.$parent.$refs.ToolTip.init("boxplot-" + nid);
-		},
-
 		/**
 		 * 
 		 * @param {*} data 
@@ -87,7 +68,7 @@ export default {
 					temp_x = d.x;
 					values = [];
 					x = [];
-					datasets = [];
+					// datasets = [];
 					ranks = [];
 				}
 
@@ -96,7 +77,7 @@ export default {
 				if (diff <= band) {
 					x.push(d.x);
 					values.push(d.value);
-					datasets.push(d.dataset);
+					// datasets.push(d.dataset);
 					ranks.push(d.rank);
 
 					count += 1;
@@ -109,7 +90,7 @@ export default {
 						x: x,
 						count: count,
 						ranks: ranks,
-						datasets: datasets
+						// datasets: datasets
 					});
 					if (count > max_count) {
 						max_count = count;
@@ -121,7 +102,7 @@ export default {
 
 					values.push(d.value);
 					x.push(d.x);
-					datasets.push(d.dataset);
+					// datasets.push(d.dataset);
 					ranks.push(d.rank);
 
 					count = 1;
@@ -134,7 +115,7 @@ export default {
 						ret.push({
 							values: values,
 							x: x,
-							datasets: datasets,
+							// datasets: datasets,
 							ranks: ranks,
 							count: count
 						});
@@ -148,12 +129,12 @@ export default {
 						values.push(d.value);
 						x.push(d.x);
 						ranks.push(d.rank);
-						datasets.push(d.dataset);
+						// datasets.push(d.dataset);
 						count = 1;
 						ret.push({
 							values: values,
 							x: x,
-							datasets: datasets,
+							// datasets: datasets,
 							ranks: ranks,
 							count: count
 						});
@@ -177,16 +158,14 @@ export default {
 			const radius2 = radius ** 2;
 
 			const circles = data.map(d => {
-				let x = this.xScale(d.value);
 				return {
-					x: x,
+					x: this.xScale(d.value),
 					value: d.value,
 					rank: d.rank,
-					dataset: d.dataset
+					// dataset: d.dataset
 				};
-			})
-				.sort((a, b) => a.x - b.x);
-
+			});
+		
 			const epsilon = 1e-3;
 			let head = null, tail = null;
 
@@ -226,14 +205,8 @@ export default {
 				if (head === null) { head = tail = b; }
 				else { tail = tail.next = b; }
 			}
-
-			let temp = this.groupByBand(circles, this.$store.bandWidth);
-			if (datatype == "ensemble") {
-				this.max_count = temp["max_count"];
-			}
-			let group_circles = temp["circles"];
-
-			return group_circles;
+			return circles;
+			// return this.groupByBand(circles, this.bandWidth);
 		},
 
 		/**
@@ -250,66 +223,47 @@ export default {
 			return ret;
 		},
 
-		/**
-		 * 
-		 */
-		targetOutliers() {
+		outliers(data) {
 			let self = this;
-			let callsite_data = this.callsite["outliers"][this.callsite.name];
-			let data = [];
-			if (callsite_data != undefined) {
-				data = callsite_data[this.$store.selectedMetric]["outliers"];
-
-				let targetOutlierList = [];
-				for (let idx = 0; idx < data["values"].length; idx += 1) {
-					if (data["values"][idx] != 0) {
-						targetOutlierList.push({
-							"value": data["values"][idx],
-							"dataset": data["datasets"][idx],
-							"rank": data["ranks"][idx]
-						});
-					}
-				}
-				this.target_outliers = this.groupOutliers(targetOutlierList, this.$store.bandWidth, "target");
-				this.outlier = this.g
-					.selectAll(".target-outlier")
-					.data(this.target_outliers)
-					.join("circle")
-					.attrs({
-						"r": d => {
-							if (this.max_count == 0) {
-								return 0;
-							}
-							else {
-								return (d.count / this.max_count) + 4;
-							}
-						},
-						"cx": d => d.x[0],
-						"cy": d => this.boxHeight / 2 - this.informationHeight / 4,
-						"class": "target-outlier"
-					})
-					.style("opacity", 1)
-					.style("fill", this.$store.runtimeColor.intermediate)
-					.on("click", (d) => {
-						// self.$parent.$parent.selectedOutlierRanks[self.callsite.name] = d['ranks'].sort((a, b) => a - b)
-						// self.$parent.$parent.selectedOutlierDatasets[self.callsite.name] = d['datasets'].filter((value, index, self) => {
-						//     return self.indexOf(value) === index;
-						// })
-						self.$parent.$parent.selectedOutlierRanks = d["ranks"].sort((a, b) => a - b);
-						self.$parent.$parent.selectedOutlierDatasets = d["datasets"].filter((value, index, self) => {
-							return self.indexOf(value) === index;
-						});
-					})
-					.on("mouseover", (d) => {
-						self.$parent.$refs.ToolTip.renderOutliers(d);
-					})
-					.on("mouseout", (d) => {
-						self.$parent.$refs.ToolTip.clear();
+			let targetOutlierList = [];
+			for (let idx = 0; idx < data["values"].length; idx += 1) {
+				if (data["values"][idx] != 0) {
+					targetOutlierList.push({
+						"value": data["values"][idx],
+						// "dataset": data["datasets"][idx],
+						"rank": data["ranks"][idx]
 					});
+				}
 			}
-			else {
-				this.target_outliers = [];
-			}
+			let circles = this.groupOutliers(targetOutlierList, this.bandWidth, "target");
+			circles.sort((a, b) => a.x - b.x);
+
+			this.g
+				.selectAll(".target-outlier")
+				.data(circles)
+				.join("circle")
+				.attrs({
+					"r": d => {
+						return 4;
+					},
+					"cx": d => d.x,
+					"cy": d => this.boxHeight / 2 - this.informationHeight / 4,
+					"class": "target-outlier"
+				})
+				.style("opacity", 1)
+				.style("fill", this.$store.runtimeColor.intermediate)
+				.on("click", (d) => {
+					// self.$parent.$parent.selectedOutlierRanks[self.callsite.name] = d['ranks'].sort((a, b) => a - b)
+					// self.$parent.$parent.selectedOutlierDatasets[self.callsite.name] = d['datasets'].filter((value, index, self) => {
+					//     return self.indexOf(value) === index;
+					// })
+					self.$parent.$parent.selectedOutlierRanks = d["ranks"].sort((a, b) => a - b);
+					self.$parent.$parent.selectedOutlierDatasets = d["datasets"].filter((value, index, self) => {
+						return self.indexOf(value) === index;
+					});
+				})
+				.on("mouseover", (d) => this.$parent.$refs.ToolTip.renderOutliers(d))
+				.on("mouseout", (d) => this.$parent.$refs.ToolTip.clear());
 		},
 
 		/**

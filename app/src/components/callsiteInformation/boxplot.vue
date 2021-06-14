@@ -7,9 +7,9 @@
 
 <template>
 	<svg :id="id" :width="containerWidth" :height="containerHeight" class='boxplot'>
-		<Box ref="Box" />
-		<Markers ref="Markers" />
-		<Outliers ref="Outliers" />
+		<Box ref="Box" :nid="nid" :tq="q" :xScale="xScale" v-if="dataReady" />
+		<Markers ref="Markers" :nid="nid" :tq="q" :xScale="xScale" v-if="dataReady" />
+		<Outliers ref="Outliers" :nid="nid" :tOutliers="outliers" :xScale="xScale" v-if="dataReady"/>
 		<ToolTip ref="ToolTip" />
 	</svg>
 </template>
@@ -31,9 +31,6 @@ export default {
 	name: "BoxPlot",
 	props: [
 		"data",
-		"nid",
-		"width",
-		"height",
 		"showTarget"
 	],
 	data: () => ({
@@ -60,7 +57,8 @@ export default {
 		rectHeight: 0,
 		centerLinePosition: 0,
 		boxHeight: 0,
-		boxWidth: 0
+		boxWidth: 0,
+		dataReady: false,
 	}),
 	components: {
 		Box,
@@ -79,10 +77,6 @@ export default {
 		});
 	},
 
-	created() {
-		this.id = "boxplot-" + this.data.nid;
-	},
-
 	methods: {
 		/**
 		 * Init function, Sets up the width, height and etc.
@@ -97,9 +91,12 @@ export default {
 			this.centerLinePosition = (this.boxHeight - this.informationHeight / 4) / 2;
 			this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4;
 
-			this.targetq = this.qFormat(this.data["q"]);
+			this.q = this.qFormat(this.data["q"]);
+			this.outliers = this.data["outliers"];
+			this.nid = this.data["nid"];
+			this.id = "boxplot-" + this.nid; // Set the id for the boxplot view.
 
-			this.svg = d3.select("#boxplot-" + this.data.nid)
+			this.svg = d3.select(this.id)
 				.attrs({
 					"class": "boxplot",
 					"width": this.containerWidth,
@@ -107,19 +104,10 @@ export default {
 				});
 
 			this.xScale = d3.scaleLinear()
-				.domain([this.targetq.min, this.targetq.max])
+				.domain([this.q.min, this.q.max])
 				.range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
 
-			this.visualize(this.callsite);
-		},
-
-		/**
-		 * Visualize the boxplot for the callsites.
-		 */
-		visualize() {
-			this.$refs.Box.init(this.data.nid, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Markers.init(this.data.nid, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.data, this.showTarget);
+			this.dataReady = true;
 		},
 
 		/**
@@ -130,7 +118,6 @@ export default {
 			this.$refs.Markers.clear();
 			this.$refs.Outliers.clear();
 		},
-
 
 		/**
 		 * 

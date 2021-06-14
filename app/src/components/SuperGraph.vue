@@ -151,7 +151,7 @@ export default {
 				this.$refs.SingleHistogram,
 				this.$refs.SingleScatterplot,
 				// this.$refs.Sankey,
-				// this.$refs.CallsiteInformation,
+				this.$refs.CallsiteInformation,
 				// this.$refs.VisualEncoding,
 			];
 		},

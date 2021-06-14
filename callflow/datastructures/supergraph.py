@@ -79,6 +79,7 @@ class SuperGraph(ht.GraphFrame):
         self.callsites = {}
         self.modules = {}
         self.modules_list = []
+        self.callsites_list = []
         self.inv_callsites = {}
         self.inv_modules = {}
         self.callsite_module_map = {}
@@ -359,6 +360,7 @@ class SuperGraph(ht.GraphFrame):
         self.inv_callsites = {v: i for i,v in self.callsites.items()}
         self.inv_modules = {v: i for i, v in self.modules.items()}
 
+        self.callsites_list = np.array(list(self.inv_callsites.keys()))
         self.modules_list = np.array(list(self.inv_modules.keys()))
         assert all([isinstance(m,int) for c,m in self.callsite_module_map.items()])
         assert all([isinstance(c,list) for m,c in self.module_callsite_map.items()])
@@ -424,7 +426,8 @@ class SuperGraph(ht.GraphFrame):
                   "meantime": self.df_root_max_mean_runtime(self.roots, "time (inc)"),
                   "roots": self.roots,
                   "ncallsites": self.df_count("name"),
-                  "modules": self.modules_list,
+                  "modules": self.modules,
+                  "callsites": self.callsites,
                   "m2c": self.module_callsite_map,
                   "c2m": self.callsite_module_map,
                   "nmodules": self.df_count("module"), # if "module" in cols else 0,
@@ -432,6 +435,8 @@ class SuperGraph(ht.GraphFrame):
                   "nedges": len(self.nxg.edges()),
                   "maxcallsite": self.df_get_top_by_attr("name", 1, "time")[0],
                   "maxmodule": self.get_name(self.df_get_top_by_attr("module", 1, "time")[0], "module"),
+                  "invcallsites": self.inv_callsites,
+                  "invmodules": self.inv_modules,
                   }
 
         for p in TIME_COLUMNS:

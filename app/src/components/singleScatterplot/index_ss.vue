@@ -7,7 +7,7 @@
 
 <template>
   <v-layout row wrap :id="id">
-    <InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
+    <InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
   </v-layout>
@@ -58,7 +58,7 @@ export default {
 		xAxisHeight: 0,
 		yAxisHeight: 0,
 		title: "MPI Runtime Scatterplot",
-		summary: "MPI Runtime Scatterplot view correlates between the inclusive and exclusive runtime metrics. Each dot or point in the view represents a process.",
+		infoSummary: "MPI Runtime Scatterplot view correlates between the inclusive and exclusive runtime metrics. Each dot or point in the view represents a process.",
 		info: ""
 	}),
 
@@ -66,7 +66,8 @@ export default {
 		...mapGetters({
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedNode: "getSelectedNode",
-			data: "getSingleScatterplot"
+			data: "getSingleScatterplot",
+			summary: "getSummary",
 		})
 	},
 
@@ -78,6 +79,7 @@ export default {
 
 	methods: {
 		init() {
+			console.log(this.summary);
 			this.$store.dispatch("fetchSingleScatterplot", {
 				dataset: this.selectedTargetRun,
 				node: this.selectedNode["name"],

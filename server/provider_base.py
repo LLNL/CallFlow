@@ -322,8 +322,7 @@ class BaseProvider:
 
         operation_name = operation["name"]
         sg = self.supergraphs[operation["dataset"]]
-        # e_sg = self.supergraphs["ensemble"]
-
+        
         if "ntype" in operation:
             ntype = operation["ntype"]
 
@@ -331,7 +330,7 @@ class BaseProvider:
                 if ntype == "callsite":
                     aux_dict = sg.callsite_aux_dict
                 elif ntype == "module":
-                    aux_dict = sg.module_aux_dict
+                    aux_dict = {sg.get_name(module_idx, "module"): sg.module_aux_dict[module_idx] for module_idx in sg.module_aux_dict.keys() }
 
         if operation_name == "supergraph":
             reveal_callsites = operation.get("reveal_callsites", [])
@@ -433,7 +432,7 @@ class BaseProvider:
                 if ntype == "callsite":
                     e_aux_dict = e_sg.callsite_aux_dict
                 elif ntype == "module":
-                    e_aux_dict = e_sg.module_aux_dict
+                    e_aux_dict = {e_sg.get_name(module_idx, "module"): e_sg.module_aux_dict[module_idx] for module_idx in e_sg.module_aux_dict.keys() }
 
         if "dataset" in operation:
             t_aux_dict = {}
@@ -444,7 +443,7 @@ class BaseProvider:
                 if ntype == "callsite":
                     t_aux_dict = t_sg.callsite_aux_dict
                 elif ntype == "module":
-                    t_aux_dict = t_sg.module_aux_dict
+                    t_aux_dict = {t_sg.get_name(module_idx, "module"): t_sg.module_aux_dict[module_idx] for module_idx in t_sg.module_aux_dict.keys() }
 
         if operation_name == "supergraph":
             reveal_callsites = operation.get("reveal_callsites", [])

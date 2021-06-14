@@ -27,10 +27,6 @@ export default {
 	}),
 
 	methods: {
-		/**
-		 * 
-		 * @param {*} id 
-		 */
 		init(id) {
 			this.id = id;
 			this.toolTipDiv = d3.select("#" + id);
@@ -80,7 +76,7 @@ export default {
 		 * 
 		 */
 		outliers() {
-			this.addText(this.data.count + " outliers");
+			this.addText("Rank: " + this.data["rank"]);
 		},
 
 		/**

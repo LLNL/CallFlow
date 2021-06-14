@@ -26,7 +26,7 @@ class BoxPlot:
     Boxplot computation for a dataframe segment
     """
 
-    def __init__(self, sg, realtive_sg=None,  name="", ntype="", proxy_columns={}):
+    def __init__(self, sg, relative_sg=None,  name="", ntype="", proxy_columns={}):
         """
         Boxplot for callsite or module
         
@@ -38,23 +38,26 @@ class BoxPlot:
         """
         assert isinstance(sg, callflow.SuperGraph)
         assert isinstance(name, str)
-        # assert ntype in ["callsite", "module"]
+        assert ntype in ["callsite", "module"]
         assert isinstance(proxy_columns, dict)
 
-        self.box_types = ["tgt"]
-        if realtive_sg is not None:
+        self.box_types = ["tgt"]        
+        if relative_sg is not None:
             self.box_types = ["tgt", "bkg"]
 
         if ntype == "callsite":
             df = sg.callsite_aux_dict[name]
-            if realtive_sg is not None:
-                rel_df = realtive_sg.callsite_aux_dict[name]
+            if relative_sg is not None:
+                rel_df = relative_sg.callsite_aux_dict[name]
         elif ntype == "module":
-            df = sg.module_aux_dict
-            if realtive_sg is not None:
-                rel_df = realtive_sg.module_aux_dict[name]
+            module_idx = sg.get_idx(name, "module")
+            df = sg.module_aux_dict[module_idx]
+            if relative_sg is not None:
+                rel_df = relative_sg.module_aux_dict[name]
         
-        self.ndatasets = df_count(df, 'dataset')
+        if relative_sg is not None and "dataset" in rel_df.columns:
+            self.ndataset = df_count(rel_df, 'dataset')
+
         self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
         self.result = {}
         self.ntype = ntype
@@ -63,14 +66,13 @@ class BoxPlot:
         if ntype == "callsite":
             self.result["module"] = sg.get_module(sg.get_idx(name, ntype))
 
-        if realtive_sg is not None:
+        if relative_sg is not None:
             self.result["bkg"] = self.compute(rel_df)
         self.result["tgt"] = self.compute(df)
         
     def compute(self, df):
         ret = {_: {} for _ in TIME_COLUMNS}
         for tk, tv in zip(TIME_COLUMNS, self.time_columns):
-
             q = np.percentile(df[tv], [0.0, 25.0, 50.0, 75.0, 100.0])
             mask = outliers(df[tv])
             mask = np.where(mask)[0]
@@ -97,7 +99,7 @@ class BoxPlot:
                                 "ks": (_kurt, _skew),
                                 "nid": df["nid"].unique(),
                             }
-            if self.ndatasets > 1:
+            if 'dataset' in df.columns:
                 ret[tk]['odset'] = df['dataset'].to_numpy()[mask]
 
         return ret
@@ -129,7 +131,7 @@ class BoxPlot:
                 }
                 result["name"] = self.result["name"]
                 
-                if self.ndatasets > 1:
+                if 'odset' in box:
                     result[box_type][metric]['odset'] = box['odset'].tolist()
         
         return result
