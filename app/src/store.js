@@ -21,10 +21,10 @@ export default new Vuex.Store({
 		summary: {},
 		profiles: [],
 		metricTimeMap: {},
-		selectedTargetRun: "",
-		selectedNode: "",
-		selectedMetric: "time (inc)",
-		selectedTopCallsiteCount: 10, 
+		selectedTargetRun: "", // Set the current target run.
+		selectedNode: "", // Set the current active node.
+		selectedMetric: "time (inc)", // Set the current metric of interest.
+		selectedMode: "", // Set the mode: can be CCT, SG, ESG
 		timeline: {},
 		CCT: {},
 	},
@@ -65,9 +65,9 @@ export default new Vuex.Store({
 			state.CCT = payload;
 		},
 
-		setSelectedMetric(state, payload) {
-			state.selectedMetric = payload;
-		}
+		setSelectedMode(state, payload) {
+			state.selectedMode = payload;
+		},
 	},
 	actions: {
 		async fetchConfig({ commit }) {
@@ -121,9 +121,11 @@ export default new Vuex.Store({
 		getProfiles: state => state.profiles,
 		getMetricTimeMap: state => state.metricTimeMap,
 		getSelectedTargetRun: state => state.selectedTargetRun,
+		getSelectedCompareRun: state => state.selectedCompareRun,
 		getSelectedNode: state => state.selectedNode,
 		getTimeline: state => state.timeline,
 		getSelectedMetric: state => state.selectedMetric,
 		getCCT: state => state.CCT,
+		getSelectedMode: state => state.selectedMode,
 	}
 });

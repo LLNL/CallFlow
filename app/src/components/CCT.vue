@@ -7,7 +7,8 @@
 
 <template>
   <div id="inspire">
-    <Toolbar ref="Toolbar" :isSettingsOpen.sync="isSettingsOpen" />
+    <Toolbar :isSettingsOpen.sync="isSettingsOpen"
+    v-if="Object.keys(metricTimeMap).length > 0" />
     <v-navigation-drawer v-model.lazy="isSettingsOpen" fixed>
       <v-card fill-height>
         <v-col>
@@ -50,9 +51,6 @@ import Splitpanes from "splitpanes";
 import { mapGetters } from "vuex";
 import "splitpanes/dist/splitpanes.css";
 
-// Library imports.
-import EventHandler from "lib/routing/EventHandler";
-
 // Local components
 import NodeLink from "./nodeLink/index_nl";
 
@@ -62,8 +60,8 @@ import Color from "lib/color/";
 import * as utils from "lib/utils";
 
 // Settings components
-// import Header from "./settings/header";
 import VisualEncoding from "./settings/visualEncoding";
+import EventHandler from "lib/routing/EventHandler";
 
 export default {
 	name: "CCT",
@@ -88,6 +86,7 @@ export default {
 			summary: "getSummary",
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMetric: "getSelectedMetric",
+			metricTimeMap: "getMetricTimeMap"
 		})
 	},
 
@@ -99,11 +98,10 @@ export default {
 		this.setupStore();
 
 		let self = this;
-		EventHandler.$on("cct-reset", () => {
-			self.reset();
+		EventHandler.$on("reset-runtime-color", () => {
+			console.log("[Color] Resetting color to", self.selectedTargetRun);
+			self.setupColors();
 		});
-
-		// this.init();
 	},
 
 	watch: {
@@ -111,18 +109,20 @@ export default {
 			this.$emit("update:isSettingsOpen", val);
 		},
 
-		selectedTargetDataset: function (val) {
-			this.$store.selectedTargetDataset = val;
-			this.reset();
-		},
-
-		summary:  function (val) {
+		summary: function (val) {
+			this.isDataReady = true;
 			this.init();
 		}
 	},
 
 	methods: {
 		init() {
+			this.$store.commit("setSelectedMode", "CCT");
+
+			console.log("[CCT] Selected Run: ", this.selectedTargetRun);
+			console.log("[CCT] Selected Mode: ", this.selectedMode);
+			console.log("[CCT] Selected Metric: ", this.selectedMetric);
+
 			this.setComponentMap(); // Set component mapping for easy component tracking.
 			this.setupColors();
 			this.initComponents(this.currentComponents);
@@ -132,7 +132,6 @@ export default {
 			this.$store.runtimeColor = new Color();
 			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
 
-			console.log(this.summary);
 			const _d = this.summary[this.selectedTargetRun][this.selectedMetric];
 			const colorMin = parseFloat(_d[0]);
 			const colorMax = parseFloat(_d[1]);
@@ -154,8 +153,6 @@ export default {
 				this.$store.selectedRuntimeColorMap,
 				this.$store.selectedColorPoint
 			);
-
-			
 		},
 
 		setupStore() {
@@ -197,7 +194,7 @@ export default {
 		setComponentMap() {
 			this.currentComponents = [
 				this.$refs.CCT1, 
-				// this.$refs.VisualEncoding
+				this.$refs.VisualEncoding
 			];
 		},
 
@@ -215,11 +212,6 @@ export default {
 			for (let i = 0; i < componentList.length; i++) {
 				componentList[i].clear();
 			}
-		},
-
-		reset() {
-			this.clear();
-			this.init();
 		},
 
 		closeSettings() {

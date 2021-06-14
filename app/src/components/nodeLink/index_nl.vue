@@ -64,9 +64,13 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("fetch-cct", () => {
+		EventHandler.$on("reset-cct", () => {
+			console.log("[CCT] Resetting dataset to :", this.selectedTargetRun);
 			self.clear();
-			self.init();
+			self.isDataReady = false;
+			self.$store.dispatch("fetchCCT", {
+				dataset: this.selectedTargetRun
+			});
 		});
 	},
 
