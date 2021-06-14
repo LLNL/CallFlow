@@ -7,7 +7,8 @@
 
 <template>
   <div id="inspire">
-    <Toolbar ref="ToolBar" :isSettingsOpen.sync="isSettingsOpen" />
+    <Toolbar ref="ToolBar" :isSettingsOpen.sync="isSettingsOpen"
+    v-if="Object.keys(metricTimeMap).length > 0" />
     <v-navigation-drawer v-model.lazy="isSettingsOpen" fixed>
       <v-card fill-height>
         <v-col>
@@ -53,6 +54,7 @@
 
 <script>
 // Library imports
+import { mapGetters } from "vuex";
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
@@ -82,53 +84,27 @@ export default {
 		VisualEncoding,
 	},
 
-	// Not used currently. 
-	props: {
-		aux_data: Object,
-	},
-
 	data: () => ({
 		isSettingsOpen: false,
-		groupBy: ["Name", "Module", "File"],
-		selectedGroupBy: "Module",
-		filterBy: ["Inclusive", "Exclusive"],
-		filterRange: [0, 100],
-		selectedFilterBy: "Inclusive",
-		selectedIncTime: 0,
-		filterPercRange: [0, 100],
-		selectedFilterPerc: 5,
-		selectedColorMin: null,
-		selectedColorMax: null,
-		selectedColorMinText: "",
-		selectedColorMaxText: "",
-		comparisonMode: false,
-		selectedOutlierBand: 4,
-		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
-		summary: "Super Graph View",
 		info: "",
-		selectedMode: "Single",
 	}),
 
-	watch: {
-		showTarget: function (val) {
-			EventHandler.$emit("show-target-auxiliary");
-		},
+	computed: {
+		...mapGetters({ 
+			runs: "getRuns", 
+			summary: "getSummary",
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedMetric: "getSelectedMetric",
+			metricTimeMap: "getMetricTimeMap"
+		})
+	},
 
-		isSettingsOpen: function (val) {
-			this.$emit("update:isSettingsOpen", val);
-		},
+	beforeCreate() {
+		this.$store.dispatch("fetchSummary");
 	},
 
 	mounted() {
 		this.setupStore();
-
-		// Push to '/' when `this.$store.selectedDatasets` is undefined.
-		if (this.$store.selectedDatasets === undefined) {
-			// this.requestAuxData();  // TODO: Fix the bug here.
-			this.$router.push("/");
-		} else {
-			this.init();
-		}
 
 		let self = this;
 		EventHandler.$on("supergraph-reset", () => {
@@ -137,30 +113,32 @@ export default {
 
 	},
 
-	methods: {
-		init() {
-			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
-			EventHandler.$emit("setup-colors");
-			this.initComponents(this.currentComponents);
+	watch: {
+		isSettingsOpen: function (val) {
+			this.$emit("update:isSettingsOpen", val);
 		},
 
-		setupStore() {
-			// Set the mode. (Either single or ensemble).
-			this.$store.selectedMode = this.selectedMode;
+		summary: function (val) {
+			this.isDataReady = true;
+			this.init();
+		},
 
-			// Comparison mode in histograms.
-			this.$store.comparisonMode = this.comparisonMode;
+		// showTarget: function (val) {
+		// 	EventHandler.$emit("show-target-auxiliary");
+		// },
+	},
 
-			// Set this.selectedTargetDataset (need to remove)
-			this.selectedTargetDataset = this.$store.selectedTargetDataset;
+	methods: {
+		init() {
+			this.$store.commit("setSelectedMode", "CCT");
 
-			// Set the datasets
-			this.datasets = this.$store.selectedDatasets;
+			console.log("[SG] Selected Run: ", this.selectedTargetRun);
+			console.log("[SG] Selected Mode: ", this.selectedMode);
+			console.log("[SG] Selected Metric: ", this.selectedMetric);
 
-			// Set encoding method.
-			this.$store.encoding = "MEAN";
-		
-			this.$store.selectedFormat = "SuperGraph";
+			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
+			EventHandler.$emit("reset-runtime-color");
+			this.initComponents(this.currentComponents);
 		},
 
 		// ----------------------------------------------------------------
@@ -199,16 +177,6 @@ export default {
 
 		closeSettings() {
 			this.isSettingsOpen = !this.isSettingsOpen;
-		},
-
-		async requestAuxData() {
-			const payload = {
-				datasets: this.$store.selectedDatasets,
-				rankBinCount: this.$store.selectedMPIBinCount,
-				runBinCount: this.$store.selectedRunBinCount,
-				reProcess: true,
-			};
-			return await this.$parent.$parent.fetchData(payload);
 		},
 	},
 };

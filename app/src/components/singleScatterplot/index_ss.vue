@@ -16,11 +16,10 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library imports
-import EventHandler from "lib/routing/EventHandler";
 import * as utils from "lib/utils";
-import APIService from "lib/routing/APIService";
 
 import InfoChip from "../general/infoChip";
 
@@ -63,15 +62,29 @@ export default {
 		info: ""
 	}),
 
-	mounted() {
-		let self = this;
-		EventHandler.$on("single-scatterplot", function (callsite) {
-			self.visualize(callsite);
-		});
+	computed: {
+		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedNode: "getSelectedNode",
+			data: "getSingleScatterplot"
+		})
+	},
+
+	watch: {
+		data: function () {
+			this.visualize();
+		}
 	},
 
 	methods: {
 		init() {
+			this.$store.dispatch("fetchSingleScatterplot", {
+				dataset: this.selectedTargetRun,
+				node: this.selectedNode,
+				ntype: "callsite",
+				orientation: ["time", "time (inc)"],
+			});
+
 			this.width = this.$store.viewWidth * 0.25;
 			this.height = this.$store.viewHeight * 0.5;
 
@@ -88,21 +101,10 @@ export default {
 				);
 
 			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
-			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
-
-			EventHandler.$emit("single-scatterplot", "LagrangeElements");
+			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;		
 		},
 
-		async visualize(callsite) {
-			const data = await APIService.POSTRequest("single_scatterplot", {
-				dataset: this.$store.selectedTargetDataset,
-				node: callsite,
-				ntype: "callsite",
-				orientation: ["time", "time (inc)"],
-			});
-			this.data = data["tgt"];
-			console.log(data);
-
+		visualize() {
 			this.xMin = this.data.xMin;
 			this.yMin = this.data.yMin;
 			this.xMax = this.data.xMax;

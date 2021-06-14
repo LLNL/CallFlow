@@ -7,7 +7,7 @@
 
 <template>
   <v-layout row wrap :id="id">
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info"/>
+	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info"/>
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
   </v-layout>
@@ -16,7 +16,8 @@
 <script>
 // Library imports
 import * as d3 from "d3";
-import "d3-selection-multi"; 
+import "d3-selection-multi";
+import { mapGetters } from "vuex";
 
 // Local library imports
 import * as utils from "lib/utils";
@@ -36,7 +37,6 @@ export default {
 	},
 	props: [],
 	data: () => ({
-		data: [],
 		width: null,
 		height: null,
 		histogramHeight: null,
@@ -62,27 +62,45 @@ export default {
 		x_max_exponent: 0,
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
 		title: "MPI Runtime Distribution",
-		summary: "MPI runtime distribution view shows the sampled distribution of the process-based metrics for a selected node. To connect the processes (e.g., MPI ranks) to the physical domain, we use shadow lines to visualize the rank-to-bin mapping. Shadow lines map the bins in the histogram to the process/rank id laid out on an ordered line at the bottom of the histogram.",
+		infoSummary: "MPI runtime distribution view shows the sampled distribution of the process-based metrics for a selected node. To connect the processes (e.g., MPI ranks) to the physical domain, we use shadow lines to visualize the rank-to-bin mapping. Shadow lines map the bins in the histogram to the process/rank id laid out on an ordered line at the bottom of the histogram.",
 		info: "",
+		selectedProp: "rank"
 	}),
+
+	computed: {
+		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedMetric: "getSelectedMetric",
+			selectedNode: "getSelectedNode",
+			rankBinCount: "getRankBinCount",
+			data: "getSingleHistogram"
+		})
+	},
+
+	watch: {
+		data: function (val) {
+			this.visualize(val);
+		}
+	},
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("single-histogram", function (data) {
-			self.visualize(data);
+		EventHandler.$on("update-rank-bin-size", function(data) {
+			self.clear();
+			EventHandler.$emit("single-histogram", data);		
 		});
-
-		// TODO: CAL-88: This code must return back once we fix the 
-		// // auxiliary processing.
-		// EventHandler.$on("update-rank-bin-size", function(data) {
-		// 	self.clear();
-		// 	EventHandler.$emit("single-histogram", data);		
-		// });
 
 	},
 
 	methods: {
 		init() {
+			this.$store.dispatch("fetchSingleHistogram", {
+				dataset: this.selectedTargetRun,
+				node: this.selectedNode,
+				ntype: "callsite",
+				nbins: 20,
+			});
+
 			this.width = window.innerWidth * 0.25;
 			this.height = this.$store.viewHeight * 0.5;
 
@@ -104,13 +122,11 @@ export default {
 				height: this.boxHeight,
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
-
-			EventHandler.$emit("single-histogram", "LagrangeElements");
 		},
 
 		setupScale() {
-			const _data = this.data[this.$store.selectedMetric][this.$store.selectedProp];
-			const _mpiData = this.data[this.$store.selectedMetric]["d"];
+			const _data = this.data[this.selectedMetric][this.selectedProp];
+			const _mpiData = this.data[this.selectedMetric]["d"];
 
 			let temp = this.dataProcess(_data, _mpiData);
 			this.xVals = temp[0];
@@ -152,20 +168,14 @@ export default {
 			this.$refs.ToolTip.clear();
 		},
 
-		async visualize(callsite) {
-			this.info = callsite;
-			this.data = await APIService.POSTRequest("single_histogram", {
-				dataset: this.$store.selectedTargetDataset,
-				node: callsite,
-				ntype: "callsite",
-				nbins: this.$store.selectedMPIBinCount,
-			});
+		visualize() {
+			this.info = this.selectedNode;
 
 			this.setupScale();
 			this.bars();
 			this.xAxis();
 			this.yAxis();
-			this.rankLineScale(callsite);
+			this.rankLineScale();
 			this.brushes();
 			this.$refs.ToolTip.init(this.svgID); 
 		},

@@ -7,7 +7,7 @@
 
 <template>
   <div>
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
+	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
     <v-layout>
       <svg :id="id">
         <g id="container">
@@ -77,7 +77,7 @@ export default {
 		title: "Super Graph View",
 		message: "",
 		info: "",
-		summary: "Super Graphs provides an overview of the application's control during execution using a Sankey Diagram. The Sankey diagram incorporates a flow-based metaphor to the call graph by show the resource flow from left to right. Each node's performance is mapped based on the runtime colormap. The mini-histograms (on top of the node) provides an overview of each node's runtime distribution across processes",
+		infoSummary: "Super Graphs provides an overview of the application's control during execution using a Sankey Diagram. The Sankey diagram incorporates a flow-based metaphor to the call graph by show the resource flow from left to right. Each node's performance is mapped based on the runtime colormap. The mini-histograms (on top of the node) provides an overview of each node's runtime distribution across processes",
 	}),
 
 	mounted() {

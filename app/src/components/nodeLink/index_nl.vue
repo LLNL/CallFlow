@@ -8,7 +8,7 @@
 <template>
 	<v-col>
 		<v-row>
-			<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
+			<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
 			<Loader :isDataReady="isDataReady" />
 			<svg :id="id" :width="width" :height="height" :left="margin.left" :top="margin.top">
 			<g id="container"></g>
@@ -53,7 +53,7 @@ export default {
 		HAS_DATA_COLUMNS: ["module"], // Array of keys in incoming data to check for.
 		has_data_map: {}, // stores if the required data points are present in the incoming data.
 		title: "CCT view",
-		summary:
+		infoSummary:
       "CCT view visualizes the unique call paths of a sampled profile. Each call site is colored based on the selected metric (use settings to change the metric). On click, each node's callers (green) and callees (purple) are highlighted using the links.",
 		info: "",
 		b_node_height: 50,

@@ -95,8 +95,6 @@ export default {
 	},
 
 	mounted() {
-		this.setupStore();
-
 		let self = this;
 		EventHandler.$on("reset-runtime-color", () => {
 			console.log("[Color] Resetting color to", self.selectedTargetRun);
@@ -118,12 +116,13 @@ export default {
 	methods: {
 		init() {
 			this.$store.commit("setSelectedMode", "CCT");
+			this.$store.commit("setEncoding", "MEAN");
 
 			console.log("[CCT] Selected Run: ", this.selectedTargetRun);
 			console.log("[CCT] Selected Mode: ", this.selectedMode);
 			console.log("[CCT] Selected Metric: ", this.selectedMetric);
 
-			this.setComponentMap(); // Set component mapping for easy component tracking.
+			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
 			this.setupColors();
 			this.initComponents(this.currentComponents);
 		}, 
@@ -155,44 +154,11 @@ export default {
 			);
 		},
 
-		setupStore() {
-			// Set the mode. (Either single or ensemble).
-			this.selectedMode = this.$store.selectedMode;
-
-			// Set the number of callsites in the CCT
-			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
-
-			// Set this.selectedTargetDataset (need to remove)
-			this.selectedTargetDataset = this.$store.selectedTargetDataset;
-
-			// Set the datasets
-			this.datasets = this.$store.selectedDatasets;
-
-			// Set encoding method.
-			this.$store.encoding = "MEAN";
-
-			this.isComparisonMode = this.$store.isComparisonMode;
-
-			// TODO: Move this to viewSelection component
-			this.$store.selectedFormat = this.$route.name;
-		},
-
-		updateStore() {
-			// TODO: Update only if there is a change in variable.
-			this.$store.selectedTargetDataset = this.selectedTargetDataset;
-
-			this.$store.runtimeColorMap = this.runtimeColorMap;
-
-			this.$store.selectedColorPoint = this.selectedColorPoint;
-
-			this.$store.selectedMetric = this.selectedMetric;
-		},
-
 		// ----------------------------------------------------------------
 		// Initialize the relevant modules for respective Modes.
 		// ----------------------------------------------------------------
 		setComponentMap() {
-			this.currentComponents = [
+			return [
 				this.$refs.CCT1, 
 				this.$refs.VisualEncoding
 			];

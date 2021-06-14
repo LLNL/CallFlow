@@ -27,6 +27,11 @@ export default new Vuex.Store({
 		selectedMode: "", // Set the mode: can be CCT, SG, ESG
 		timeline: {},
 		CCT: {},
+		SG: {},
+		ESG: {},
+		singleHistogram: {},
+		singleScatterplot: {},
+		singleBoxplots: [],
 	},
 	mutations: {
 		setConfig(state, payload) {
@@ -68,6 +73,26 @@ export default new Vuex.Store({
 		setSelectedMode(state, payload) {
 			state.selectedMode = payload;
 		},
+
+		setSG(state, payload) {
+			state.SG = payload;
+		},
+
+		setESG(state, payload) {
+			state.ESG = payload;
+		},
+
+		setSingleHistogram(state, payload) {
+			state.singleHistogram = payload;
+		},
+
+		setSingleScatterplot(state, payload) {
+			state.singleScatterplot = payload;
+		},
+
+		setSingleBoxplots(state, payload) {
+			state.singleBoxplots = payload;
+		}
 	},
 	actions: {
 		async fetchConfig({ commit }) {
@@ -95,19 +120,40 @@ export default new Vuex.Store({
 		},
 
 		async fetchSingleHistogram({ commit, state }, payload) {
-			const hist = await APIService.POSTRequest("single_histogram", {
-				dataset: state.selectedTargetRun,
-				node: payload.node,
-				ntype: payload.ntype,
-				nbins: state.rankBinCount,
-			});
+			const hist = await APIService.POSTRequest("single_histogram", payload);
+			console.log("[Data] Single Histogram: ", hist);
 			commit("setSingleHistogram", hist);
+		},
+		
+		async fetchSingleScatterplot({ commit, state }, payload) {
+			const scat = await APIService.POSTRequest("single_scatterplot", payload);
+			console.log("[Data] Single Scatterplot: ", scat);
+			commit("setSingleScatterplot", scat["tgt"]);
+		},
+
+		async fetchSingleBoxplots({ commit, state }, payload) {
+			const bps = await APIService.POSTRequest("single_boxplots", payload);
+			console.log("[Data] Single boxplots: ", bps);
+			commit("setSingleBoxplots", bps);
 		},
 
 		async fetchCCT({ commit, state }, payload) {
 			const cct = await APIService.POSTRequest("cct", payload);
 			commit("setCCT", cct);
-		}
+		},
+
+		async fetchSG({ commit, state }, payload) {
+			const sg = await APIService.POSTRequest("single_supergraph", payload);
+			commit("setSG", sg);
+		},
+
+		async fetchESG({ commit, state }, payload) {
+			const esg = await APIService.POSTRequest("ensemble_supergraph", payload);
+			commit("setESG", esg);
+		},
+
+		
+
 	},
 	modules: {
 
@@ -127,5 +173,10 @@ export default new Vuex.Store({
 		getSelectedMetric: state => state.selectedMetric,
 		getCCT: state => state.CCT,
 		getSelectedMode: state => state.selectedMode,
+		getSG: state => state.SG,
+		getESG: state => state.ESG,
+		getSingleHistogram: state => state.singleHistogram,
+		getSingleScatterplot: state => state.singleScatterplot,
+		getSingleBoxplots: state => state.singleBoxplots,
 	}
 });

@@ -65,6 +65,7 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library imports
 import * as utils from "lib/utils";
@@ -107,7 +108,7 @@ export default {
 		],
 		selectedModule: "",
 		selectedCallsite: "",
-		informationHeight: 0,
+		informationHeight: 50,
 		revealCallsites: [],
 		selectedMetric: "",
 		isModuleSelected: false,
@@ -121,6 +122,22 @@ export default {
 		boxplot: {},
 		stats: {},
 	}),
+
+	computed: {
+		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedNode: "getSelectedNode",
+			selectedMetric: "getSelectedMetric",
+			data: "getSingleBoxplots"
+		})
+	},
+
+
+	watch: {
+		data: function () {
+			this.visualize();
+		}
+	},
 
 	mounted() {
 		let self = this;
@@ -151,27 +168,8 @@ export default {
 		 * Set up the view.
 		 */
 		init() {
-			if (this.firstRender) {
-				this.width = document.getElementById(this.id).clientWidth;
-				let heightRatio = this.$store.selectedMode == "Ensemble" ? 0.66 : 1.0;
-				this.height = heightRatio * this.$store.viewHeight;
-				this.boxplotWidth = this.width - this.padding.left - this.padding.right;
-				document.getElementById(this.id).style.maxHeight = this.height + "px";
-				this.informationHeight = 50;
-				this.firstRender = false;
-			}
-
-			// Initiate the data fetching. 
-			EventHandler.$emit("single-boxplots");
-		},
-
-		/**
-		 * Visualizes the callsite information in the view.
-		 * Three things are performed.
-		 */
-		async visualize() {
-			const data = await APIService.POSTRequest("single_boxplots", {
-				dataset: this.$store.selectedTargetDataset,
+			this.$store.dispatch("fetchSingleBoxplots", {
+				dataset: this.selectedTargetRun,
 				metric: this.$store.selectedMetric,
 				callsites: [
 					"LagrangeElements",
@@ -189,13 +187,26 @@ export default {
 					// "IntegrateStressForElems",
 					// "UpdateVolumesForElems"
 				],
-				ntype: "callsite",
+				ntype: "module",
 			});
 
+			this.width = document.getElementById(this.id).clientWidth;
+			this.boxplotWidth = this.width - this.padding.left - this.padding.right;
+			
+			let heightRatio = this.$store.selectedMode == "Ensemble" ? 0.66 : 1.0;
+			this.height = heightRatio * this.$store.viewHeight;
+			document.getElementById(this.id).style.maxHeight = this.height + "px";
+		},
+
+		/**
+		 * Visualizes the callsite information in the view.
+		 * Three things are performed.
+		 */
+		visualize() {
 			// Sort the callsites.
 			this.callsites = this.sortByAttribute(
-				data,
-				this.$store.selectedMetric,
+				this.data,
+				this.selectedMetric,
 				"mean",
 				"tgt"
 			);
