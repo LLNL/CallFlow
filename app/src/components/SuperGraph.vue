@@ -106,7 +106,7 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("supergraph-reset", () => {
+		EventHandler.$on("reset-sg", () => {
 			self.reset();
 		});
 	},
@@ -124,10 +124,6 @@ export default {
 		selectedMode: function (val) {
 			this.selectedMode = val;
 		}
-
-		// showTarget: function (val) {
-		// 	EventHandler.$emit("show-target-auxiliary");
-		// },
 	},
 
 	methods: {
@@ -150,9 +146,9 @@ export default {
 			return [
 				this.$refs.SingleHistogram,
 				this.$refs.SingleScatterplot,
-				// this.$refs.Sankey,
+				this.$refs.Sankey,
 				this.$refs.CallsiteInformation,
-				// this.$refs.VisualEncoding,
+				this.$refs.VisualEncoding,
 			];
 		},
 

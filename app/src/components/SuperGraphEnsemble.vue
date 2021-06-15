@@ -55,11 +55,13 @@
 
 <script>
 // Library imports
+import { mapGetters } from "vuex";
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
 // Local library imports
 import EventHandler from "lib/routing/EventHandler";
+import Color from "lib/color/";
 
 // Ensemble super graph dashboard imports
 import CallsiteCorrespondence from "./callsiteCorrespondence/index_cc";
@@ -93,35 +95,26 @@ export default {
 	},
 
 	data: () => ({
-		left: false,
-		datasets: [],
-		groupBy: ["Name", "Module", "File"],
-		selectedGroupBy: "Module",
-		filterBy: ["Inclusive", "Exclusive"],
-		filterRange: [0, 100],
-		selectedFilterBy: "Inclusive",
-		selectedIncTime: 0,
-		filterPercRange: [0, 100],
-		selectedFilterPerc: 5,
-		selectedColorMin: null,
-		selectedColorMax: null,
-		selectedColorMinText: "",
-		selectedColorMaxText: "",
-		groupModes: ["include callbacks", "exclude callbacks"],
-		selectedGroupMode: "include callbacks",
-		selectedDiffNodeAlignment: "Top",
-		diffNodeAlignment: ["Middle", "Top"],
 		summaryChip: "Ensemble Super Graph",
 		info:"",
 		// comparisonMode: false,
-		selectedOutlierBand: 4,
-		parameter_analysis: true,		
-		showTarget: true,
-		targetInfo: "Target Guides",
-		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
 		isSettingsOpen: false,
-		selectedMode: "Ensemble",
 	}),
+
+	computed: {
+		...mapGetters({
+			runs: "getRuns",
+			summary: "getSummary",
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedCompareRun: "getSelectedCompareRun",
+			selectedMetric: "getSelectedMetric",
+			metricTimeMap: "getMetricTimeMap"
+		})
+	},
+
+	beforeCreate() {
+		this.$store.dispatch("fetchSummary");
+	},
 
 	watch: {
 		showTarget: function (val) {
@@ -131,19 +124,15 @@ export default {
 		isSettingsOpen: function (val) {
 			this.$emit("update:isSettingsOpen", val);
 		},
+
+		summary: function (val) {
+			this.isDataReady = true;
+			this.init();
+		},
 	},
 
 	mounted() {
 		this.setupStore();
-
-		// Push to '/' when `this.$store.selectedDatasets` is undefined.
-		if (this.$store.selectedDatasets === undefined) {
-			// TODO: Instead of pushing to /, we should populate the variables. 
-			this.$router.push("/");
-		}
-		else {
-			this.init();
-		}
 
 		EventHandler.$on("lasso-selection", (selectedDatasets) => {
 			this.$store.resetTargetDataset = true;
@@ -156,28 +145,75 @@ export default {
 			});
 			this.reset();
 		});
+
+		EventHandler.$on("reset-esg", () => {
+			self.reset();
+		});
 	},
 
 	methods: {
 		init() {
-			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
-			EventHandler.$emit("setup-colors");
+			this.$store.commit("setSelectedMode", "CCT");
+			this.$store.commit("setEncoding", "MEAN");
 
-			// TODO: need to rework on this.
-			this.$store.datasetMap = {};
-			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
-				this.$store.datasetMap[this.$store.selectedDatasets[i]] = "run-" + i;
-			}
-			
-			console.log("Mode : ", this.selectedMode);
-			console.log("Number of runs :", this.$store.selectedDatasets.length);
-			console.log("Datasets : ", this.$store.selectedDatasets);
-			console.log("Node: ", this.$store.selectedNode);
-			console.log("Run Bin size", this.$store.selectedRunBinCount);
-			console.log("MPI Bin size", this.$store.selectedMPIBinCount);
+			console.log("[ESG] Selected Run: ", this.selectedTargetRun);
+			console.log("[ESG] Selected Mode: ", this.selectedMode);
+			console.log("[ESG] Selected Metric: ", this.selectedMetric);
+
+			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
+			// this.setupColors();
+
+			// // TODO: need to rework on this.
+			// this.$store.datasetMap = {};
+			// for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
+			// 	this.$store.datasetMap[this.$store.selectedDatasets[i]] = "run-" + i;
+			// }
 
 			// Call the appropriate socket to query the server.
 			this.initComponents(this.currentComponents);
+		},
+
+		setupColors(selectedDistributionColorMap) {
+			// Create distribution color object
+			this.$store.distributionColor = new Color();
+			this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
+			
+			this.setDistributionColorScale(selectedDistributionColorMap);
+
+			this.selectedTargetColor = "Green";
+			this.$store.distributionColor.target = this.targetColorMap[
+				this.selectedTargetColor
+			];
+			this.$store.distributionColor.ensemble = "#C0C0C0";
+			this.$store.distributionColor.compare = "#043060";
+
+			// Create difference color object
+			this.$store.diffColor = new Color();
+			this.$store.selectedDistributionColorMap = selectedDistributionColorMap;
+		},
+
+		setDistributionColorScale(selectedDistributionColorMap) {
+			let hist_min = 0;
+			let hist_max = 0;
+			for (let module in this.$store.data_mod[this.$store.selectedTargetDataset]) {
+				let node = this.$store.data_mod[this.$store.selectedTargetDataset][module];
+				const vals = node[this.$store.selectedMetric]["gradients"]["hist"]["h"];
+				hist_min = Math.min(
+					hist_min,
+					Math.min(...vals)
+				);
+				hist_max = Math.max(
+					hist_max,
+					Math.max(...vals)
+				);
+			}
+			this.$store.distributionColor.setColorScale(
+				"MeanGradients",
+				hist_min,
+				hist_max,
+				selectedDistributionColorMap,
+				this.$store.selectedColorPoint
+			);
 		},
 
 		setupStore() {
@@ -221,12 +257,12 @@ export default {
 		setComponentMap() {
 			return [
 				// this.$refs.Sankey,
-				this.$refs.EnsembleHistogram,
-				this.$refs.EnsembleScatterplot,
-				this.$refs.CallsiteCorrespondence,
-				this.$refs.ParameterProjection,
+				// this.$refs.EnsembleHistogram,
+				// this.$refs.EnsembleScatterplot,
+				// this.$refs.CallsiteCorrespondence,
+				// this.$refs.ParameterProjection,
 				// this.$refs.ModuleHierarchy,
-				this.$refs.VisualEncoding
+				// this.$refs.VisualEncoding
 			];
 		},
 
@@ -253,16 +289,6 @@ export default {
 
 		closeSettings() {
 			this.isSettingsOpen = !this.isSettingsOpen;
-		},
-
-		async requestAuxData() {
-			const payload = {
-				datasets: this.$store.selectedDatasets,
-				rankBinCount: this.$store.selectedMPIBinCount,
-				runBinCount: this.$store.selectedRunBinCount,
-				reProcess: true,
-			};
-			return await this.$parent.$parent.fetchData(payload);
 		},
 	},
 };

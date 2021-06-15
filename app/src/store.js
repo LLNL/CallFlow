@@ -104,7 +104,7 @@ export default new Vuex.Store({
 
 		async fetchSummary({ commit, state }, payload) {	
 			const summary = await APIService.POSTRequest("summary");
-			console.log("[Fetch] Summary :", summary);
+			console.log("[Data] Summary :", summary);
 			commit("setSummary", summary);
 			commit("setProfiles", utils.swapKeysToArray(summary, ["ensemble"]));
 			const metricTimeMap = utils.swapKeysToDict(summary, "meantime");
@@ -142,16 +142,19 @@ export default new Vuex.Store({
 
 		async fetchCCT({ commit, state }, payload) {
 			const cct = await APIService.POSTRequest("cct", payload);
+			console.log("[Data] CCT: ", cct);
 			commit("setCCT", cct);
 		},
 
 		async fetchSG({ commit, state }, payload) {
 			const sg = await APIService.POSTRequest("single_supergraph", payload);
+			console.log("[Data] SG: ", sg);
 			commit("setSG", sg);
 		},
 
 		async fetchESG({ commit, state }, payload) {
 			const esg = await APIService.POSTRequest("ensemble_supergraph", payload);
+			console.log("[Data] ESG: ", esg);
 			commit("setESG", esg);
 		},
 
