@@ -35,7 +35,6 @@ export default {
 		ToolTip,
 		InfoChip
 	},
-	props: [],
 	data: () => ({
 		width: null,
 		height: null,
@@ -89,7 +88,6 @@ export default {
 			self.clear();
 			EventHandler.$emit("single-histogram", data);		
 		});
-
 	},
 
 	methods: {
@@ -122,6 +120,18 @@ export default {
 				height: this.boxHeight,
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
+		},
+
+		visualize() {
+			this.info = this.selectedNode["name"] + " (" + this.selectedNode["type"][0].toUpperCase() + ")";
+
+			this.setupScale();
+			this.bars();
+			this.xAxis();
+			this.yAxis();
+			this.rankLineScale();
+			this.brushes();
+			this.$refs.ToolTip.init(this.svgID); 
 		},
 
 		setupScale() {
@@ -168,17 +178,7 @@ export default {
 			this.$refs.ToolTip.clear();
 		},
 
-		visualize() {
-			this.info = this.selectedNode;
-
-			this.setupScale();
-			this.bars();
-			this.xAxis();
-			this.yAxis();
-			this.rankLineScale();
-			this.brushes();
-			this.$refs.ToolTip.init(this.svgID); 
-		},
+		
 
 		array_unique(arr) {
 			return arr.filter(function (value, index, self) {

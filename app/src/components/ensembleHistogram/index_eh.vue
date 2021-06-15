@@ -7,7 +7,7 @@
 
  <template>
   <div :id="id">
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info"/>
+	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info"/>
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
   </div>
@@ -17,11 +17,10 @@
 // Library imports
 import * as d3 from "d3";
 import "d3-selection-multi";
+import { mapGetters } from "vuex";
 
 // Local library imports
 import * as utils from "lib/utils";
-import APIService from "lib/routing/APIService";
-import EventHandler from "lib/routing/EventHandler";
 
 import InfoChip from "../general/infoChip";
 
@@ -34,9 +33,7 @@ export default {
 		ToolTip,
 		InfoChip
 	},
-	props: [],
 	data: () => ({
-		data: [],
 		width: null,
 		height: null,
 		padding: {
@@ -54,7 +51,7 @@ export default {
 		selectedColorBy: "Inclusive",
 		MPIcount: 0,
 		title: "Runtime Distribution",
-		summary: "MPI runtime distribution view shows the sampled distribution of the process-based metrics for a selected node. To connect the processes (e.g., MPI ranks) to the physical domain, we use shadow lines to visualize the rank-to-bin mapping. Shadow lines map the bins in the histogram to the process/rank id laid out on an ordered line at the bottom of the histogram.",
+		infoSummary: "MPI runtime distribution view shows the sampled distribution of the process-based metrics for a selected node. To connect the processes (e.g., MPI ranks) to the physical domain, we use shadow lines to visualize the rank-to-bin mapping. Shadow lines map the bins in the histogram to the process/rank id laid out on an ordered line at the bottom of the histogram.",
 		info: "",
 		paddingFactor: 3.5,
 		thisNode: "",
@@ -62,18 +59,35 @@ export default {
 		selectedPropSum: 0,
 		x_max_exponent: 0,
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
+		selectedProp: "rank",
 	}),
 
-	mounted() {
-		let self = this;
-		EventHandler.$on("ensemble-histogram", function (data) {
-			console.log("Ensemble Histogram: ", data);
-			self.visualize(data);
-		});
+	computed: {
+		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedNode: "getSelectedNode",
+			summary: "getSummary",
+			selectedMetric: "getSelectedMetric",
+			data: "getEnsembleHistogram",
+			showTarget: "getShowTarget"
+		})
+	},
+
+	watch: {
+		data: function () {
+			this.visualize();
+		}
 	},
 
 	methods: {
 		init() {
+			this.$store.dispatch("fetchEnsembleHistogram", {
+				dataset: this.selectedTargetRun,
+				node: this.selectedNode["name"],
+				ntype: this.selectedNode["type"],
+				nbins: 20,
+			});
+
 			// Assign the height and width of container
 			this.width = window.innerWidth * 0.25;
 			this.height = this.$store.viewHeight * 0.33;
@@ -91,19 +105,10 @@ export default {
 				height: this.boxHeight,
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
-
-			EventHandler.$emit("ensemble-histogram", "LagrangeElements");
 		},
 
-		async visualize(callsite) {
-			this.data = await APIService.POSTRequest("ensemble_histogram", {
-				dataset: this.$store.selectedTargetDataset,
-				node: callsite,
-				ntype: "callsite",
-				nbins: this.$store.selectedMPIBinCount,
-			});
-
-			console.log(this.data);
+		visualize() {
+			this.info = this.selectedNode["name"] + " (" + this.selectedNode["type"][0].toUpperCase() + ")";
 
 			this.clear();
 			this.setupScale();
@@ -112,7 +117,7 @@ export default {
 			this.yAxis();
 			this.setTitle();
 
-			if (this.$store.showTarget) {
+			if (this.showTarget) {
 				this.targetBars();
 			}
 			// this.$refs.ToolTip.init(this.svgID);
@@ -139,8 +144,9 @@ export default {
 		},
 
 		setupScale() {
-			this.hist_data = this.data[this.$store.selectedMetric][this.$store.selectedProp];
-			this.rankCount = parseInt(this.$store.summary["ensemble"].nranks);
+			this.hist_data = this.data[this.selectedMetric][this.selectedProp];
+
+			this.rankCount = parseInt(this.summary["ensemble"].nranks);
 			this.leftPadding = this.paddingFactor * this.padding.left;
 
 			this.xScale = d3

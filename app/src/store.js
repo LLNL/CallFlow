@@ -32,6 +32,11 @@ export default new Vuex.Store({
 		singleHistogram: {},
 		singleScatterplot: {},
 		singleBoxplots: [],
+		ensembleHistogram: {},
+		ensembleScatterplot: {},
+		ensembleBoxplots: {},
+		encoding: "",
+		showTarget: true,
 	},
 	mutations: {
 		setConfig(state, payload) {
@@ -92,6 +97,26 @@ export default new Vuex.Store({
 
 		setSingleBoxplots(state, payload) {
 			state.singleBoxplots = payload;
+		},
+
+		setEnsembleHistogram(state, payload) {
+			state.ensembleHistogram = payload;
+		},
+
+		setEnsembleScatterplot(state, payload) {
+			state.ensembleScatterplot = payload;
+		},
+
+		setEnsembleBoxplots(state, payload) {
+			state.ensembleBoxplots = payload;
+		},
+
+		setEncoding(state, payload) {
+			state.encoding = payload;
+		},
+
+		setShowTarget(state, payload) {
+			state.showTarget = payload;
 		}
 	},
 	actions: {
@@ -158,8 +183,23 @@ export default new Vuex.Store({
 			commit("setESG", esg);
 		},
 
+		async fetchEnsembleHistogram({ commit, state }, payload) {
+			const esh = await APIService.POSTRequest("ensemble_histogram", payload);
+			console.log("[Data] ESG Histogram: ", esh);
+			commit("setEnsembleHistogram", esh);
+		},
 		
+		async fetchEnsembleScatterplot({ commit, state }, payload) {
+			const ess = await APIService.POSTRequest("ensemble_scatterplot", payload);
+			console.log("[Data] ESG Scatterplot: ", ess);
+			commit("setEnsembleScatterplot", ess);
+		},
 
+		async fetchEnsembleBoxplots({ commit, state }, payload) {
+			const esb = await APIService.POSTRequest("ensemble_boxplots", payload);
+			console.log("[Data] ESG Boxplots: ", esb);
+			commit("setEnsembleBoxplots", esb);
+		}
 	},
 	modules: {
 
@@ -184,5 +224,10 @@ export default new Vuex.Store({
 		getSingleHistogram: state => state.singleHistogram,
 		getSingleScatterplot: state => state.singleScatterplot,
 		getSingleBoxplots: state => state.singleBoxplots,
+		getEnsembleHistogram: state => state.ensembleHistogram,
+		getEnsembleScatterplot: state => state.ensembleScatterplot,
+		getEnsembleBoxplots: state => state.ensembleBoxplots,
+		getShowTarget: state => state.showTarget,
+		getTargetColorMap: state => state.targetColorMap,
 	}
 });

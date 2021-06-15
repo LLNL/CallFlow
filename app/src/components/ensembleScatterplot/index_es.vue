@@ -6,7 +6,7 @@
  */
 <template>
   <div :id="id">
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" />
+	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" />
 	<svg :id="svgID"></svg>
 	<ToolTip ref="ToolTip" />
   </div>
@@ -16,12 +16,12 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library
 import * as utils from "lib/utils";
 
 import InfoChip from "../general/infoChip";
-import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
 
 // Local components
@@ -63,22 +63,35 @@ export default {
 		undesirability: {},
 		maxUndesirability: 0,
 		maxVarianceCallsite: "",
-		summary: "MPI Runtime Scatterplot view correlates between the inclusive and exclusive runtime metrics across the ensemble. Each dot or point in the view represents a process.",
+		infoSummary: "MPI Runtime Scatterplot view correlates between the inclusive and exclusive runtime metrics across the ensemble. Each dot or point in the view represents a process.",
 		svg: undefined,
 	}),
 
-	mounted() {
-		let self = this;
-		EventHandler.$on("ensemble-scatterplot", function (callsite) {
-			console.log("Ensemble Scatterplot: ", callsite);
-			self.visualize(callsite);
-		});
+	computed: {
+		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedNode: "getSelectedNode",
+			data: "getEnsembleScatterplot",
+			summary: "getSummary",
+			showTarget: "getShowTarget",
+		})
+	},
 
-		// this.init();
+	watch: {
+		data: function () {
+			this.visualize();
+		}
 	},
 
 	methods: {
 		init() {
+			this.$store.dispatch("fetchEnsembleScatterplot", {
+				dataset: this.selectedTargetRun,
+				node: this.selectedNode["name"],
+				ntype: this.selectedNode["type"],
+				orientation: ["time", "time (inc)"],
+			});
+
 			this.width = window.innerWidth * 0.25;
 			this.height = (this.$store.viewHeight) * 0.33;
 
@@ -88,8 +101,6 @@ export default {
 				.attr("width", this.boxWidth)
 				.attr("height", this.boxHeight - this.padding.top)
 				.attr("transform", "translate(" + this.padding.left + "," + this.padding.top + ")");
-			
-			EventHandler.$emit("ensemble-scatterplot", "LagrangeElements");
 		},
 
 		preprocess(data, dataset_name) {
@@ -103,34 +114,24 @@ export default {
 			}
 		},
 
-		async visualize(callsite) {
-			const data = await APIService.POSTRequest("ensemble_scatterplot", {
-				dataset: this.$store.selectedTargetDataset,
-				node: callsite,
-				ntype: "callsite",
-				orientation: ["time", "time (inc)"],
-			});
-
+		visualize() {
 			this.firstRender = false;
 			this.maxVarianceCallsite = "";
 			this.maxUndesirability = 0;
-			this.selectedModule = this.$store.selectedNode["id"];
 
-			this.scat_data = data;
+			this.xMin = this.data["bkg"]["xMin"];
+			this.yMin = this.data["bkg"]["yMin"];
+			this.xMax = this.data["bkg"]["xMax"];
+			this.yMax = this.data["bkg"]["yMax"];
+			this.xArray = this.data["bkg"]["x"];
+			this.yArray = this.data["bkg"]["y"];
 
-			this.xMin = this.scat_data["bkg"]["xMin"];
-			this.yMin = this.scat_data["bkg"]["yMin"];
-			this.xMax = this.scat_data["bkg"]["xMax"];
-			this.yMax = this.scat_data["bkg"]["yMax"];
-			this.xArray = this.scat_data["bkg"]["x"];
-			this.yArray = this.scat_data["bkg"]["y"];
-
-			this.xtargetMin = this.scat_data["tgt"]["xMin"];
-			this.ytargetMin = this.scat_data["tgt"]["yMin"];
-			this.xtargetMax = this.scat_data["tgt"]["xMax"];
-			this.ytargetMax = this.scat_data["tgt"]["yMax"];
-			this.xtargetArray = this.scat_data["tgt"]["x"];
-			this.ytargetArray = this.scat_data["tgt"]["y"];
+			this.xtargetMin = this.data["tgt"]["xMin"];
+			this.ytargetMin = this.data["tgt"]["yMin"];
+			this.xtargetMax = this.data["tgt"]["xMax"];
+			this.ytargetMax = this.data["tgt"]["yMax"];
+			this.xtargetArray = this.data["tgt"]["x"];
+			this.ytargetArray = this.data["tgt"]["y"];
 
 			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
 			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
@@ -150,13 +151,13 @@ export default {
 				.nice(5)
 				.range([this.yAxisHeight, this.padding.top]);
 			
-			this.drawXAxis(this.svg);
-			this.drawYAxis(this.svg);
+			this.drawXAxis();
+			this.drawYAxis();
 
 			this.ensembleDots();
 			this.trendline(this.xArray, this.yArray, "red", "bkg");
 
-			if (this.$store.showTarget) {
+			if (this.showTarget) {
 				this.trendline(this.xtargetArray, this.ytargetArray, "blue", "tgt");
 				this.targetDots();
 			}
@@ -170,93 +171,12 @@ export default {
 			this.moduleUnDesirability = this.maxUndesirability;
 		},
 
-		// ensembleProcess() {
-		// 	let mean_time = [];
-		// 	let mean_time_inc = [];
-		// 	// TODO: Expensivee!!!!
-		// 	for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
-		// 		let callsites_in_module = this.$store.m2c["ensemble"][this.selectedModule];
-		// 		for (let j = 0; j < callsites_in_module.length; j += 1) {
-		// 			let _c = callsites_in_module[j];
-		// 			let _d = this.$store.data_cs[this.$store.selectedDatasets[i]][_c];
-		// 			mean_time.push({
-		// 				"callsite": _c,
-		// 				"val": _d["time"]["mean"],
-		// 				"run": this.$store.selectedDatasets[i]
-		// 			});
-		// 			mean_time_inc.push({
-		// 				"callsite": _c,
-		// 				"val": _d["time (inc)"]["mean"],
-		// 				"run": this.$store.selectedDatasets[i]
-		// 			});
-		// 		}
-		// 	}
-
-		// 	let all_data = this.$store.data_mod["ensemble"][this.selectedModule];
-		// 	let temp;
-		// 	if (this.$store.selectedScatterMode == "mean") {
-		// 		temp = this.scatter(mean_time, mean_time_inc);
-		// 	}
-		// 	else if (this.$store.selectedScatterMode == "all") {
-		// 		temp = this.scatter(all_data["time"], all_data["time (inc)"]);
-		// 	}
-
-		// 	this.xMin = temp[0];
-		// 	this.yMin = temp[1];
-		// 	this.xMax = temp[2];
-		// 	this.yMax = temp[3];
-		// 	this.xArray = temp[4];
-		// 	this.yArray = temp[5];
-
-		// 	this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice());
-		// 	this.regressionY = this.leastSquaresCoeff["y_res"];
-		// 	this.corre_coef = this.leastSquaresCoeff["corre_coef"];
-		// },
-
-		// targetProcess() {
-		// 	let mean_time = [];
-		// 	let mean_time_inc = [];
-
-		// 	let callsites_in_module = this.$store.m2c[this.$store.selectedTargetDataset][this.selectedModule];
-		// 	for (let i = 0; i < callsites_in_module.length; i += 1) {
-		// 		let thiscallsite = callsites_in_module[i];
-		// 		let thisdata = this.$store.data_cs[this.$store.selectedTargetDataset][thiscallsite];
-		// 		mean_time.push({
-		// 			"callsite": thiscallsite,
-		// 			"val": thisdata["time"]["mean"],
-		// 			"run": this.$store.selectedTargetDataset
-		// 		});
-		// 		mean_time_inc.push({
-		// 			"callsite": thiscallsite,
-		// 			"val": thisdata["time (inc)"]["mean"],
-		// 			"run": this.$store.selectedTargetDataset
-		// 		});
-		// 	}
-
-		// 	let temp;
-		// 	this.$store.selectedScatterMode = "mean";
-		// 	if (this.$store.selectedScatterMode == "mean") {
-		// 		temp = this.scatter(mean_time, mean_time_inc);
-		// 	}
-		// 	else if (this.$store.selectedScatterMode == "all") {
-		// 		let data = this.$store.data_mod[this.$store.selectedTargetDataset][this.selectedModule];
-		// 		temp = this.scatter(data["time"], data["time (inc)"]);
-		// 	}
-
-		// 	this.xtargetMin = temp[0];
-		// 	this.ytargetMin = temp[1];
-		// 	this.xtargetMax = temp[2];
-		// 	this.ytargetMax = temp[3];
-		// 	this.xtargetArray = temp[4];
-		// 	this.ytargetArray = temp[5];
-		// },
-
-		addxAxisLabel(svg) {
+		addxAxisLabel() {
 			let max_value = this.xScale.domain()[1];
 			this.x_max_exponent = utils.formatExponent(max_value);
 			let exponent_string = this.superscript[this.x_max_exponent];
 			let label = "(e+" + this.x_max_exponent + ") " + "Exclusive Runtime (" + "\u03BCs)";
-			svg.append("text")
+			this.svg.append("text")
 				.attr("class", "scatterplot-axis-label")
 				.attr("x", this.boxWidth - 1 * this.padding.right)
 				.attr("y", this.yAxisHeight + 3 * this.padding.top)
@@ -265,8 +185,8 @@ export default {
 				.text(label);
 		},
 
-		drawXAxis(svg) {
-			this.addxAxisLabel(svg);
+		drawXAxis() {
+			this.addxAxisLabel();
 			const xAxis = d3.axisBottom(this.xScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
@@ -276,7 +196,7 @@ export default {
 					}
 				});
 
-			var xAxisLine = svg.append("g")
+			var xAxisLine = this.svg.append("g")
 				.attr("class", "axis")
 				.attr("id", "xAxis")
 				.attr("transform", "translate(" + 3 * this.padding.left + "," + this.yAxisHeight + ")")
@@ -298,12 +218,12 @@ export default {
 				.style("font-weight", "lighter");
 		},
 
-		addyAxisLabel(svg) {
+		addyAxisLabel() {
 			let max_value = this.yScale.domain()[1];
 			this.y_max_exponent = utils.formatExponent(max_value);
 			let exponent_string = this.superscript[this.y_max_exponent];
 			let label = "(e+" + this.y_max_exponent + ") " + "Inclusive Runtime (" + "\u03BCs)";
-			svg.append("text")
+			this.svg.append("text")
 				.attr("class", "scatterplot-axis-label")
 				.attr("transform", "rotate(-90)")
 				.attr("x", -this.padding.top)
@@ -313,9 +233,9 @@ export default {
 				.text(label);
 		},
 
-		drawYAxis(svg) {
+		drawYAxis() {
 			let tickCount = 10;
-			this.addyAxisLabel(svg);
+			this.addyAxisLabel();
 			let yAxis = d3.axisLeft(this.yScale)
 				.ticks(tickCount)
 				.tickFormat((d, i) => {
@@ -325,7 +245,7 @@ export default {
 					}
 				});
 
-			var yAxisLine = svg.append("g")
+			var yAxisLine = this.svg.append("g")
 				.attr("id", "yAxis")
 				.attr("class", "axis")
 				.attr("transform", "translate(" + 4 * this.padding.left + ", 0)")

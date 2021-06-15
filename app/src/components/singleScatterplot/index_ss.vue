@@ -79,7 +79,6 @@ export default {
 
 	methods: {
 		init() {
-			console.log(this.summary);
 			this.$store.dispatch("fetchSingleScatterplot", {
 				dataset: this.selectedTargetRun,
 				node: this.selectedNode["name"],
@@ -329,7 +328,7 @@ export default {
 		clear() {
 			d3.selectAll(".dot").remove();
 			d3.selectAll(".axis").remove();
-			d3.selectAll(".trend-line").remove();
+			d3.selectAll(".trendline").remove();
 			d3.selectAll(".ss-axis-label").remove();
 			this.$refs.ToolTip.clear();
 		},

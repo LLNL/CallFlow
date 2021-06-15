@@ -108,7 +108,8 @@ export default {
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedCompareRun: "getSelectedCompareRun",
 			selectedMetric: "getSelectedMetric",
-			metricTimeMap: "getMetricTimeMap"
+			metricTimeMap: "getMetricTimeMap",
+			targetColorMap: "getTargetColorMap",
 		})
 	},
 
@@ -161,7 +162,7 @@ export default {
 			console.log("[ESG] Selected Metric: ", this.selectedMetric);
 
 			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
-			// this.setupColors();
+			this.setupColors();
 
 			// // TODO: need to rework on this.
 			// this.$store.datasetMap = {};
@@ -178,7 +179,7 @@ export default {
 			this.$store.distributionColor = new Color();
 			this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
 			
-			this.setDistributionColorScale(selectedDistributionColorMap);
+			// this.setDistributionColorScale(selectedDistributionColorMap);
 
 			this.selectedTargetColor = "Green";
 			this.$store.distributionColor.target = this.targetColorMap[
@@ -257,8 +258,8 @@ export default {
 		setComponentMap() {
 			return [
 				// this.$refs.Sankey,
-				// this.$refs.EnsembleHistogram,
-				// this.$refs.EnsembleScatterplot,
+				this.$refs.EnsembleHistogram,
+				this.$refs.EnsembleScatterplot,
 				// this.$refs.CallsiteCorrespondence,
 				// this.$refs.ParameterProjection,
 				// this.$refs.ModuleHierarchy,

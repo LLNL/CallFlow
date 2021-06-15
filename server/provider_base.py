@@ -336,12 +336,11 @@ class BaseProvider:
             reveal_callsites = operation.get("reveal_callsites", [])
             split_entry_module = operation.get("split_entry_module", [])
             split_callee_module = operation.get("split_callee_module", [])
-            selected_runs = operation.get("selected_runs", None)
 
             ssg = SankeyLayout(
                 sg=sg,
                 path_column="group_path",
-                selected_runs=selected_runs,
+                selected_runs=[operation["dataset"]],
                 reveal_callsites=reveal_callsites,
                 split_entry_module=split_entry_module,
                 split_callee_module=split_callee_module,

@@ -112,24 +112,24 @@ export default {
 			
 			this.setRuntimeColorScale(selectedRuntimeColorMap, this.$store.selectedMetric);
 
-			// if(this.$store.numOfRuns > 1 && this.$store.selectedFormat == "EnsembleSuperGraph") {
-			// 	// Create distribution color object
-			// 	this.$store.distributionColor = new Color();
-			// 	this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
+			if(this.$store.numOfRuns > 1 && this.$store.selectedFormat == "EnsembleSuperGraph") {
+				// Create distribution color object
+				this.$store.distributionColor = new Color();
+				this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
 				
-			// 	this.setDistributionColorScale(selectedDistributionColorMap);
+				this.setDistributionColorScale(selectedDistributionColorMap);
 
-			// 	this.selectedTargetColor = "Green";
-			// 	this.$store.distributionColor.target = this.targetColorMap[
-			// 		this.selectedTargetColor
-			// 	];
-			// 	this.$store.distributionColor.ensemble = "#C0C0C0";
-			// 	this.$store.distributionColor.compare = "#043060";
+				this.selectedTargetColor = "Green";
+				this.$store.distributionColor.target = this.targetColorMap[
+					this.selectedTargetColor
+				];
+				this.$store.distributionColor.ensemble = "#C0C0C0";
+				this.$store.distributionColor.compare = "#043060";
 
-			// 	// Create difference color object
-			// 	this.$store.diffColor = new Color();
-			// 	this.$store.selectedDistributionColorMap = selectedDistributionColorMap;
-			// }
+				// Create difference color object
+				this.$store.diffColor = new Color();
+				this.$store.selectedDistributionColorMap = selectedDistributionColorMap;
+			}
 
 		},
 
