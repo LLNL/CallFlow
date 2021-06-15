@@ -7,10 +7,12 @@
 
 <template>
 	<svg :id="id" :width="containerWidth" :height="containerHeight" class='boxplot'>
-		<Box ref="Box" :nid="nid" :tq="q" :xScale="xScale" v-if="dataReady" />
-		<Markers ref="Markers" :nid="nid" :tq="q" :xScale="xScale" v-if="dataReady" />
+		<Box ref="Box" :nid="nid" :tq="q" :xScale="xScale" v-if="dataReady"
+		:tColor="color" :idPrefix="idPrefix" />
+		<Markers ref="Markers" :nid="nid" :tq="q" :xScale="xScale"
+		v-if="dataReady" :tColor="color" :idPrefix="idPrefix"/>
 		<Outliers ref="Outliers" :nid="nid" :tOutliers="outliers"
-		:xScale="xScale" v-if="dataReady" />
+		:xScale="xScale" v-if="dataReady" :tColor="tColor" :idPrefix="idPrefix"/>
 		<ToolTip ref="ToolTip" />
 	</svg>
 </template>
@@ -18,6 +20,7 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library imports
 import EventHandler from "lib/routing/EventHandler";
@@ -60,6 +63,8 @@ export default {
 		boxHeight: 0,
 		boxWidth: 0,
 		dataReady: false,
+		idPrefix: "boxplot-",
+
 	}),
 	components: {
 		Box,
@@ -76,6 +81,12 @@ export default {
 			self.clear();
 			self.init();
 		});
+	},
+
+	computed: {
+		...mapGetters({
+			generalColors: "getGeneralColors",
+		})
 	},
 
 	methods: {
@@ -95,7 +106,8 @@ export default {
 			this.q = this.qFormat(this.data["q"]);
 			this.outliers = this.data["outliers"];
 			this.nid = this.data["nid"];
-			this.id = "boxplot-" + this.nid; // Set the id for the boxplot view.
+			this.id = this.idPrefix + this.nid; // Set the id for the boxplot view.
+			this.color = this.generalColors.gainsboro;
 
 			this.svg = d3.select(this.id)
 				.attrs({
