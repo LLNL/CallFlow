@@ -16,6 +16,13 @@ export default new Vuex.Store({
 			Brown: "#AF9B90",
 			Red: "#A90400",
 		},
+		generalColors: {
+			gainsboro: "#d9d9d9",
+			silver: "#c0c0c0",
+			darkGrey: "#3a3a3a",
+			lightGrey: "#888888",
+			blue: "#043060"
+		},
 		rankBinCount: 20,
 		runBinCount: 20,
 		summary: {},
@@ -37,6 +44,8 @@ export default new Vuex.Store({
 		ensembleBoxplots: {},
 		encoding: "",
 		showTarget: true,
+		parameterProjection: {},
+		numOfClusters: 3,
 	},
 	mutations: {
 		setConfig(state, payload) {
@@ -117,6 +126,14 @@ export default new Vuex.Store({
 
 		setShowTarget(state, payload) {
 			state.showTarget = payload;
+		},
+
+		setParameterProjection(state, payload) {
+			state.parameterProjection = payload;
+		},
+
+		setNumOfClusters(state, payload) {
+			state.numOfClusters = payload;
 		}
 	},
 	actions: {
@@ -199,6 +216,12 @@ export default new Vuex.Store({
 			const esb = await APIService.POSTRequest("ensemble_boxplots", payload);
 			console.log("[Data] ESG Boxplots: ", esb);
 			commit("setEnsembleBoxplots", esb);
+		},
+
+		async fetchParameterProjection({commit, state}, payload) {
+			const pp = await APIService.POSTRequest("projection", payload);
+			console.log("[Data] ESG Projection: ", pp);
+			commit("setParameterProjection", pp);
 		}
 	},
 	modules: {
@@ -229,5 +252,8 @@ export default new Vuex.Store({
 		getEnsembleBoxplots: state => state.ensembleBoxplots,
 		getShowTarget: state => state.showTarget,
 		getTargetColorMap: state => state.targetColorMap,
+		getParameterProjection: state => state.parameterProjection,
+		getNumOfClusters: state => state.numOfClusters,
+		getGeneralColors: state => state.generalColors,
 	}
 });

@@ -7,7 +7,7 @@
 
 <template>
   <v-card :id="id">
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" />
+	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" />
     <svg :id="svgId"></svg>
   </v-card>
 </template>
@@ -15,6 +15,7 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library
 import { lasso } from "lib/interactions/lasso";
@@ -34,18 +35,12 @@ export default {
 	data: () => ({
 		id: "parameter-projection-view",
 		svgId: "parameter-projection-view-svg",
-		ts: null,
-		config: null,
-		vis: null,
-		colorBy: null,
 		zoomed: false,
 		xMin: 0,
 		xMax: 0,
 		yMin: 0,
 		yMax: 0,
 		title: "Parameter Projection",
-		summary: "",
-		showMessage: false,
 		colorset: [
 			"#FF7F00",
 			"#16BECF",
@@ -57,7 +52,24 @@ export default {
 			"#4daf4a",
 			"#D62728",
 		],
+		infoSummary: ""
 	}),
+
+	computed: {
+		...mapGetters({ 
+			data: "getParameterProjection",
+			runs: "getRuns",
+			nclusters: "getnumOfClusters",
+			summary: "getSummary",
+		})
+	},
+
+	watch: {
+		data: function (val) {
+			console.log(val);
+			this.visualize(val);
+		}
+	},
 	
 	mounted() {
 		let self = this;
@@ -68,16 +80,19 @@ export default {
 
 		EventHandler.$on("update_number_of_clusters", (data) => {
 			self.clear();
-			APIService.POSTRequest("projection", {
-				datasets: self.$store.selectedDatasets,
-				targetDataset: self.$store.selectedTargetDataset,
-				groupBy: "module",
-				numOfClusters: self.$store.selectedNumOfClusters,
+			this.$store.dispatch("fetchParameterProjection", {
+				selected_runs: this.runs,
+				n_cluster: this.selectedNumOfClusters,
 			});
 		});
 	},
 	methods: {
-		async init() {
+		init() {
+			this.$store.dispatch("fetchParameterProjection", {
+				selected_runs: this.runs,
+				n_cluster: this.selectedNumOfClusters,
+			});
+
 			let visContainer = document.getElementById(this.id);
 
 			this.width = visContainer.clientWidth;
@@ -89,13 +104,10 @@ export default {
 			this.x = d3.scaleLinear().range([0, this.width]);
 			this.y = d3.scaleLinear().range([this.height, 0]);
 
-			let data = await APIService.POSTRequest("projection", {
-				selected_runs: this.$store.selectedDatasets,
-				n_cluster: this.$store.selectedNumOfClusters,
-			});
-			data = JSON.parse(data);
-			console.debug("[/projection] data: ", data);
-			this.visualize(data);
+			// let data = await APIService.POSTRequest("projection", );
+			// data = JSON.parse(data);
+			// console.debug("[/projection] data: ", data);
+			// this.visualize(data);
 		},
 
 		axis() {
@@ -211,8 +223,8 @@ export default {
 				ret[id].push(data["dataset"][id]);
 				ret[id].push(id);
 				ret[id].push(data["label"][id]);
-				ret[id].push(this.$store.summary[dataset]["time (inc)"][1]);
-				ret[id].push(this.$store.summary[dataset]["time"][1]);
+				ret[id].push(this.summary[dataset]["time (inc)"][1]);
+				ret[id].push(this.summary[dataset]["time"][1]);
 
 				let x = data["x"][id];
 				let y = data["y"][id];
@@ -375,8 +387,8 @@ export default {
 			this.addTooltipTextBlock();
 
 			this.addLassoFeature();
-			this.highlight(this.$store.selectedTargetDataset);
-			this.showDetails(this.$store.selectedTargetDataset);
+			this.highlight(this.selectedTargetRun);
+			this.showDetails(this.selectedTargetRun);
 		},
 
 		showDetails(dataset) {
@@ -385,10 +397,10 @@ export default {
           dataset +
           "<br/>" +
           "[PC1] Inc. time (max): " +
-          utils.formatRuntimeWithUnits(this.$store.summary[dataset]["time (inc)"][1]) +
+          utils.formatRuntimeWithUnits(this.summary[dataset]["time (inc)"][1]) +
           "<br/>" +
           "[PC2] Exc. time (max): " +
-          utils.formatRuntimeWithUnits(this.$store.summary[dataset]["time"][1])
+          utils.formatRuntimeWithUnits(this.summary[dataset]["time"][1])
 			);
 		},
 
@@ -432,7 +444,7 @@ export default {
 			this.$socket.emit("compare", {
 				targetDataset: self.$store.selectedTargetDataset,
 				compareDataset: this.compareDataset,
-				selectedMetric: this.$store.selectedMetric,
+				selectedMetric: this.selectedMetric,
 			});
 		},
 
@@ -514,9 +526,11 @@ export default {
 			// Reset the style of the not selected dots
 			this.lasso.notSelectedItems().attr("r", 4.5).attr("opacity", 0.3);
 
-			this.$store.selectedDatasets = this.selectedDatasets;
+			this.$store.commit("runs", this.selectedDatasets);
+
+			// this.$store.selectedDatasets = this.selectedDatasets;
 			// EventHandler.$emit('highlight_datasets', this.selectedDatasets)
-			EventHandler.$emit("lasso-selection", this.$store.selectedDatasets);
+			EventHandler.$emit("lasso-selection", this.runs);
 		},
 
 		zoom() {
