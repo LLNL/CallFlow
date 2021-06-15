@@ -260,7 +260,7 @@ export default {
 				// this.$refs.Sankey,
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
-				// this.$refs.CallsiteCorrespondence,
+				this.$refs.CallsiteCorrespondence,
 				// this.$refs.ParameterProjection,
 				// this.$refs.ModuleHierarchy,
 				// this.$refs.VisualEncoding

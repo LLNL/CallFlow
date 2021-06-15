@@ -9,7 +9,8 @@
 	<svg :id="id" :width="containerWidth" :height="containerHeight" class='boxplot'>
 		<Box ref="Box" :nid="nid" :tq="q" :xScale="xScale" v-if="dataReady" />
 		<Markers ref="Markers" :nid="nid" :tq="q" :xScale="xScale" v-if="dataReady" />
-		<Outliers ref="Outliers" :nid="nid" :tOutliers="outliers" :xScale="xScale" v-if="dataReady"/>
+		<Outliers ref="Outliers" :nid="nid" :tOutliers="outliers"
+		:xScale="xScale" v-if="dataReady" />
 		<ToolTip ref="ToolTip" />
 	</svg>
 </template>

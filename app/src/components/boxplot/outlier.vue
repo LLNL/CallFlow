@@ -22,11 +22,11 @@ export default {
 		informationHeight: 70
 	}),
 
-	props: ["nid", "tOutliers", "bOutliers", "xScale"],
+	props: ["nid", "tOutliers", "bOutliers", "xScale", "idPrefix"],
 
 	mounted() {
 		// Get the SVG belonging to this callsite.
-		this.svg = d3.select("#boxplot-" + this.nid);
+		this.svg = d3.select("#" + this.idPrefix + this.nid);
 		this.g = this.svg
 			.select(".outlier")
 			.attrs({
@@ -44,7 +44,7 @@ export default {
 		if (this.bOutliers) {
 			this.outliers(this.bOutliers);
 		}
-		this.$parent.$refs.ToolTip.init("boxplot-" + this.nid);
+		this.$parent.$refs.ToolTip.init(this.idPrefix + this.nid);
 	},
 
 	methods: {

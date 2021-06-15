@@ -28,11 +28,10 @@ export default {
 
 	methods: {
 		init(id) {
-			this.id = id;
 			this.toolTipDiv = d3.select("#" + id);
 			this.height = 80;
-			this.halfWidth = document.getElementById(this.id).clientWidth / 2;
-			this.halfHeight = document.getElementById(this.id).clientHeight / 2;
+			this.halfWidth = document.getElementById(id).clientWidth / 2;
+			this.halfHeight = document.getElementById(id).clientHeight / 2;
 		},
 
 		/**
@@ -88,7 +87,7 @@ export default {
 			this.clear();
 			this.width = widthCount * this.fontSize;
 			var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
-			this.mousePos = d3.mouse(d3.select("#" + this.id).node());
+			this.mousePos = d3.mouse(this.toolTipDiv.node());
 			this.mousePosX = this.mousePos[0];
 			this.mousePosY = this.mousePos[1];
 

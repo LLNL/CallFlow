@@ -7,9 +7,12 @@
 
 <template>
 	<svg :id="id" :width="containerWidth" :height="containerHeight" class='boxplot'>
-		<Box ref="Box" />
-		<Markers ref="Markers" />
-		<Outliers ref="Outliers" />
+		<Box ref="Box" :nid="nid" :tq="tq" :bq="bq" :xScale="xScale"
+		v-if="dataReady" :idPrefix="idPrefix" :tColor="tColor" :bColor="bColor" />
+		<Markers ref="Markers" :nid="nid" :tq="tq" :bq="bq" :xScale="xScale"
+		v-if="dataReady" :idPrefix="idPrefix" tColor="tColor" :bColor="bColor" />
+		<Outliers ref="Outliers" :nid="nid" :tOutliers="tOutliers" :bOutliers="bOutliers"
+		:xScale="xScale" v-if="dataReady" :idPrefix="idPrefix" tColor="tColor" :bColor="bColor" />
 		<ToolTip ref="ToolTip" />
 	</svg>
 </template>
@@ -60,7 +63,9 @@ export default {
 		rectHeight: 0,
 		centerLinePosition: 0,
 		boxHeight: 0,
-		boxWidth: 0
+		boxWidth: 0,
+		dataReady: false,
+		idPrefix: "ensemble-boxplot-",
 	}),
 	components: {
 		Box,
@@ -78,10 +83,6 @@ export default {
 		});
 	},
 
-	created() {
-		this.id = "boxplot-" + this.bData.nid;
-	},
-
 	methods: {
 		init() {
 			this.containerHeight = 150;
@@ -96,7 +97,16 @@ export default {
 			this.bq = this.qFormat(this.bData.q);
 			this.tq = this.qFormat(this.tData.q);
 
-			this.svg = d3.select("#boxplot-" + this.bData.nid)
+			this.tOutliers = this.tData["outliers"];
+			this.bOutliers = this.bData["outliers"];
+
+			this.tColor = this.$store.distributionColor.target;
+			this.bColor = this.$store.distributionColor.ensemble;
+
+			this.nid = this.tData["nid"];
+			this.id = this.idPrefix + this.nid;
+
+			this.svg = d3.select("#ensemble-boxplot-" + this.bData.nid)
 				.attrs({
 					"width": this.containerWidth,
 					"height": this.containerHeight
@@ -109,7 +119,8 @@ export default {
 				.domain([min_x, max_x])
 				.range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
 
-			this.visualize();
+			this.dataReady = true;
+			// this.visualize();
 		},
 
 		qFormat(arr) {
@@ -123,11 +134,11 @@ export default {
 			return result;
 		},
 
-		visualize() {
-			this.$refs.Box.init(this.tData.nid, this.bq, this.tq, this.xScale, this.showTarget);
-			this.$refs.Markers.init(this.tData.nid, this.q, this.tq, this.xScale, this.showTarget);
-			this.$refs.Outliers.init(this.bq, this.tq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget);
-		},
+		// visualize() {
+		// 	this.$refs.Box.init(this.tData.nid, this.bq, this.tq, this.xScale, this.showTarget);
+		// 	this.$refs.Markers.init(this.tData.nid, this.q, this.tq, this.xScale, this.showTarget);
+		// 	this.$refs.Outliers.init(this.bq, this.tq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget);
+		// },
 
 		clear() {
 			this.$refs.Box.clear();

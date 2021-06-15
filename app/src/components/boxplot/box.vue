@@ -23,7 +23,7 @@ export default {
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
 	}),
 
-	props: ["nid", "tq", "bq", "xScale"],
+	props: ["nid", "tq", "bq", "xScale", "idPrefix", "tColor", "bColor"],
 
 	mounted() {
 		if (this.debug) {
@@ -32,7 +32,7 @@ export default {
 		}
 
 		// Get the SVG belonging to this callsite.
-		this.svg = d3.select("#boxplot-" + this.nid);
+		this.svg = d3.select("#" + this.idPrefix + this.nid);
 
 		this.g = this.svg
 			.select(".box")
@@ -41,13 +41,13 @@ export default {
 			});
 
 		if (this.bq) {
-			this.box(this.bq, this.$store.runtimeColor.intermediate);
-			this.centerLine(this.bq, this.$store.runtimeColor.intermediate);
+			this.box(this.bq, this.bColor);
+			this.centerLine(this.bq, this.bColor);
 		}
-		this.box(this.tq, this.$store.runtimeColor.highlight);
+		this.box(this.tq, this.tColor);
 		this.axis();
-		this.centerLine(this.tq, this.$store.runtimeColor.highlight);
-		this.$parent.$refs.ToolTip.init("boxplot-" + this.nid);
+		this.centerLine(this.tq, this.tColor);
+		this.$parent.$refs.ToolTip.init(this.idPrefix + this.nid);
 	},
 
 	methods: {

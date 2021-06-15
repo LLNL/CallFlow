@@ -110,7 +110,7 @@ export default {
 		visualize() {
 			this.info = this.selectedNode["name"] + " (" + this.selectedNode["type"][0].toUpperCase() + ")";
 
-			this.clear();
+			// this.clear();
 			this.setupScale();
 			this.ensembleBars();
 			this.xAxis();

@@ -19,11 +19,11 @@ export default {
 		bottomPosition: 0.7,
 	}),
 
-	props: ["tq", "bq", "xScale", "nid"],
+	props: ["tq", "bq", "xScale", "nid", "idPrefix"],
 
 	mounted() {
 		// Get the SVG belonging to this callsite.
-		this.svg = d3.select("#boxplot-" + this.nid);
+		this.svg = d3.select("#" + this.idPrefix + this.nid);
 
 		this.g = this.svg.select(".marker").attrs({
 			transform: "translate(0, " + this.$parent.boxPosition + ")",

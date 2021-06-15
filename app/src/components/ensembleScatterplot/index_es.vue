@@ -22,7 +22,6 @@ import { mapGetters } from "vuex";
 import * as utils from "lib/utils";
 
 import InfoChip from "../general/infoChip";
-import EventHandler from "lib/routing/EventHandler";
 
 // Local components
 import ToolTip from "./tooltip";
