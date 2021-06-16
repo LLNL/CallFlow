@@ -164,12 +164,6 @@ export default {
 			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
 			this.setupColors();
 
-			// // TODO: need to rework on this.
-			// this.$store.datasetMap = {};
-			// for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
-			// 	this.$store.datasetMap[this.$store.selectedDatasets[i]] = "run-" + i;
-			// }
-
 			// Call the appropriate socket to query the server.
 			this.initComponents(this.currentComponents);
 		},

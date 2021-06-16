@@ -59,14 +59,14 @@ export default {
 		...mapGetters({ 
 			data: "getParameterProjection",
 			runs: "getRuns",
-			nclusters: "getnumOfClusters",
+			nclusters: "getNumOfClusters",
 			summary: "getSummary",
+			selectedTargetRun: "getSelectedTargetRun"
 		})
 	},
 
 	watch: {
 		data: function (val) {
-			console.log(val);
 			this.visualize(val);
 		}
 	},
@@ -88,6 +88,7 @@ export default {
 	},
 	methods: {
 		init() {
+			console.log(this.runs, this.selectedNumOfClusters);
 			this.$store.dispatch("fetchParameterProjection", {
 				selected_runs: this.runs,
 				n_cluster: this.selectedNumOfClusters,
@@ -103,11 +104,6 @@ export default {
 			this.padding = { left: 50, top: 0, right: 50, bottom: 30 };
 			this.x = d3.scaleLinear().range([0, this.width]);
 			this.y = d3.scaleLinear().range([this.height, 0]);
-
-			// let data = await APIService.POSTRequest("projection", );
-			// data = JSON.parse(data);
-			// console.debug("[/projection] data: ", data);
-			// this.visualize(data);
 		},
 
 		axis() {
@@ -287,7 +283,8 @@ export default {
 						return "dot";
 					},
 					id: (d) => {
-						return "dot-" + this.$store.datasetMap[d[2]];
+						console.log(d);
+						return "dot-" + d[2];
 					},
 					r: (d) => {
 						return 6.0;
@@ -325,7 +322,7 @@ export default {
 						return "outer-circle";
 					},
 					id: (d) => {
-						return "outer-circle-" + self.$store.datasetMap[d[2]];
+						return "outer-circle-" + d[2];
 					},
 					r: 8.0,
 					"stroke-width": 3.0,
@@ -392,6 +389,7 @@ export default {
 		},
 
 		showDetails(dataset) {
+			console.log(dataset, this.summary);
 			this.tooltip.html(
 				"Run: " +
           dataset +
@@ -424,11 +422,11 @@ export default {
 				.attr("stroke", self.$store.distributionColor.ensemble)
 				.attr("stroke-width", 3);
 
-			d3.select("#dot-" + self.$store.datasetMap[d[2]])
+			d3.select("#dot-" + this.selectedRun)
 				.attr("stroke", self.$store.distributionColor.compare)
 				.attr("stroke-width", 3);
 			d3.select(
-				"#outer-dot" + self.$store.datasetMap[self.$store.selectedTargetDataset]
+				"#outer-dot" + this.selectedRun
 			)
 				.attr("stroke", self.$store.distributionColor.target)
 				.attr("stroke-width", 3);
@@ -627,7 +625,7 @@ export default {
 		},
 
 		highlight(dataset) {
-			let datasetID = this.$store.datasetMap[dataset];
+			let datasetID = this.selectedTargetRun;
 
 			this.circles = this.svg.selectAll("#dot-" + datasetID).attrs({
 				opacity: 1.0,

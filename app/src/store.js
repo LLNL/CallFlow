@@ -139,8 +139,6 @@ export default new Vuex.Store({
 	actions: {
 		async fetchConfig({ commit }) {
 			const config = await APIService.GETRequest("config");
-			const runs = config.runs.map((_) => _["name"]);
-			commit("setRuns", runs);
 			commit("setConfig", config);
 		},
 
@@ -157,6 +155,8 @@ export default new Vuex.Store({
 				"name": summary[selectedTargetRun]["maxmodule"],
 				"type": "module"
 			});
+			const runs = Object.keys(summary).filter((item) => item !== "ensemble");
+			commit("setRuns", runs);
 		},
 
 		async fetchTimeline({ commit }, payload) {
@@ -220,8 +220,8 @@ export default new Vuex.Store({
 
 		async fetchParameterProjection({commit, state}, payload) {
 			const pp = await APIService.POSTRequest("projection", payload);
-			console.log("[Data] ESG Projection: ", pp);
-			commit("setParameterProjection", pp);
+			console.log("[Data] ESG Projection: ", JSON.parse(pp));
+			commit("setParameterProjection", JSON.parse(pp));
 		}
 	},
 	modules: {

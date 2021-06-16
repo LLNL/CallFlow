@@ -106,7 +106,7 @@ export default {
 			this.nid = this.tData["nid"];
 			this.id = this.idPrefix + this.nid;
 
-			this.svg = d3.select("#ensemble-boxplot-" + this.bData.nid)
+			this.svg = d3.select("#" + this.idPrefix + this.bData.nid)
 				.attrs({
 					"width": this.containerWidth,
 					"height": this.containerHeight
