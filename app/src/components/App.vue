@@ -52,9 +52,9 @@ export default {
 		let self = this;
 		document.title = "CallFlow";
 
-		EventHandler.$on("setup-colors", () => {
-			self.setupColors(this.$store.selectedRuntimeColorMap, this.$store.selectedDistributionColorMap);
-		});
+		// EventHandler.$on("setup-colors", () => {
+		// 	self.setupColors(this.$store.selectedRuntimeColorMap, this.$store.selectedDistributionColorMap);
+		// });
 
 		this.setGlobalVariables(); // Set the general variables in the store.
 		this.setViewDimensions(); // Set the view dimensions.	
@@ -106,56 +106,56 @@ export default {
 			this.$store.distributionColor.compare = "#043060";
 		},
 
-		setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {
-			this.$store.runtimeColor = new Color();
-			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
+		// setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {
+		// 	this.$store.runtimeColor = new Color();
+		// 	this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
 			
-			this.setRuntimeColorScale(selectedRuntimeColorMap, this.$store.selectedMetric);
+		// 	this.setRuntimeColorScale(selectedRuntimeColorMap, this.$store.selectedMetric);
 
-			if(this.$store.numOfRuns > 1 && this.$store.selectedFormat == "EnsembleSuperGraph") {
-				// Create distribution color object
-				this.$store.distributionColor = new Color();
-				this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
+		// 	if(this.$store.numOfRuns > 1 && this.$store.selectedFormat == "EnsembleSuperGraph") {
+		// 		// Create distribution color object
+		// 		this.$store.distributionColor = new Color();
+		// 		this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
 				
-				this.setDistributionColorScale(selectedDistributionColorMap);
+		// 		this.setDistributionColorScale(selectedDistributionColorMap);
 
-				this.selectedTargetColor = "Green";
-				this.$store.distributionColor.target = this.targetColorMap[
-					this.selectedTargetColor
-				];
-				this.$store.distributionColor.ensemble = "#C0C0C0";
-				this.$store.distributionColor.compare = "#043060";
+		// 		this.selectedTargetColor = "Green";
+		// 		this.$store.distributionColor.target = this.targetColorMap[
+		// 			this.selectedTargetColor
+		// 		];
+		// 		this.$store.distributionColor.ensemble = "#C0C0C0";
+		// 		this.$store.distributionColor.compare = "#043060";
 
-				// Create difference color object
-				this.$store.diffColor = new Color();
-				this.$store.selectedDistributionColorMap = selectedDistributionColorMap;
-			}
+		// 		// Create difference color object
+		// 		this.$store.diffColor = new Color();
+		// 		this.$store.selectedDistributionColorMap = selectedDistributionColorMap;
+		// 	}
 
-		},
+		// },
 
-		setDistributionColorScale(selectedDistributionColorMap) {
-			let hist_min = 0;
-			let hist_max = 0;
-			for (let module in this.$store.data_mod[this.$store.selectedTargetDataset]) {
-				let node = this.$store.data_mod[this.$store.selectedTargetDataset][module];
-				const vals = node[this.$store.selectedMetric]["gradients"]["hist"]["h"];
-				hist_min = Math.min(
-					hist_min,
-					Math.min(...vals)
-				);
-				hist_max = Math.max(
-					hist_max,
-					Math.max(...vals)
-				);
-			}
-			this.$store.distributionColor.setColorScale(
-				"MeanGradients",
-				hist_min,
-				hist_max,
-				selectedDistributionColorMap,
-				this.$store.selectedColorPoint
-			);
-		},
+		// setDistributionColorScale(selectedDistributionColorMap) {
+		// 	let hist_min = 0;
+		// 	let hist_max = 0;
+		// 	for (let module in this.$store.data_mod[this.$store.selectedTargetDataset]) {
+		// 		let node = this.$store.data_mod[this.$store.selectedTargetDataset][module];
+		// 		const vals = node[this.$store.selectedMetric]["gradients"]["hist"]["h"];
+		// 		hist_min = Math.min(
+		// 			hist_min,
+		// 			Math.min(...vals)
+		// 		);
+		// 		hist_max = Math.max(
+		// 			hist_max,
+		// 			Math.max(...vals)
+		// 		);
+		// 	}
+		// 	this.$store.distributionColor.setColorScale(
+		// 		"MeanGradients",
+		// 		hist_min,
+		// 		hist_max,
+		// 		selectedDistributionColorMap,
+		// 		this.$store.selectedColorPoint
+		// 	);
+		// },
 
 		setViewDimensions() {
 			console.log("[App] Set view dimensions.");

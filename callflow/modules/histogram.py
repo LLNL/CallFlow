@@ -164,4 +164,13 @@ class Histogram:
         # confused about this
         return _df[self.time_columns].mean()
 
+    
+    @staticmethod
+    def _format_data(histo):
+        """
+        :param histo:
+        :return:
+        """
+        return {"b": histo[0], "h": histo[1]}
+
 # ------------------------------------------------------------------------------

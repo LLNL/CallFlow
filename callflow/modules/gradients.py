@@ -25,7 +25,7 @@ class Gradients:
     Computes the ensemble gradients for the a given dictionary of dataframes.
     """
 
-    def __init__(self, df, callsiteOrModule: str, grp_type: str="name", bins: int = 20, proxy_columns={}):
+    def __init__(self, df, node_id: str, node_type: str="callsite", bins: int = 20, proxy_columns={}):
         """
         Constructor function for the class
 
@@ -34,7 +34,8 @@ class Gradients:
         :param bins: Number of bins to distribute the runtime information.
         """
         assert isinstance(df, pd.DataFrame)
-        assert isinstance(callsiteOrModule, str) or isinstance(callsiteOrModule, int)
+        assert isinstance(node_id, int)
+        assert node_type in ["callsite", "module"]
         assert isinstance(bins, int)
         assert isinstance(proxy_columns, dict)
         assert bins > 0
@@ -45,7 +46,7 @@ class Gradients:
         assert len(datasets) >= 1
 
         self.bins = bins
-        self.callsiteOrModule = callsiteOrModule
+        self.callsiteOrModule = node_id
 
         self.proxy_columns = proxy_columns
         self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
@@ -58,7 +59,13 @@ class Gradients:
                           for _d, _df in self.df_dict.items()}
         self.max_ranks = max(self.rank_dict.values())
 
-        self.result = self.compute(grp_type)
+        # TODO: Generalize this.
+        if node_type == "callsite":
+            grp_type = "name"
+        elif node_type == "module":
+            grp_type = "module"
+        
+        self.result = self.compute()
 
     @staticmethod
     def convert_dictmean_to_list(dictionary):
@@ -151,5 +158,13 @@ class Gradients:
             }
 
         return results
+
+    @staticmethod
+    def _format_data(histo):
+        """
+        :param histo:
+        :return:
+        """
+        return {"b": histo[0], "h": histo[1]}
 
 # ------------------------------------------------------------------------------

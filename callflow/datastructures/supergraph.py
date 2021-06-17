@@ -30,6 +30,7 @@ from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.utils import NumpyEncoder
 from callflow.utils.df import *
 from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
+from callflow.modules import Gradients
 
 LOGGER = get_logger(__name__)
 
@@ -163,6 +164,19 @@ class SuperGraph(ht.GraphFrame):
         unique_names = self.df_lookup_with_column("nid", nid)['name'].unique()
         assert len(unique_names) == 1
         return unique_names[0]
+
+    def get_datasets(self):
+        """
+        Getter to obtain the datasets in the ensemble.
+        """
+        if "dataset" in self.df_columns():
+            return self.df_unique('dataset')
+
+    def get_gradients(self, node, nbins):
+        return Gradients(self.dataframe, bins=nbins,
+            node_id=node.get("id"),
+            node_type=node.get("type"),
+            proxy_columns=self.proxy_columns).result
 
     # --------------------------------------------------------------------------
     def create(self, path, profile_format, module_callsite_map: dict = {},  filter_by="time (inc)", filter_perc=10.0) -> None: 

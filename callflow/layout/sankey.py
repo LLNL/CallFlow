@@ -6,6 +6,7 @@
 """
 CallFlow's layout - Sankey.
 """
+from callflow.modules.gradients import Gradients
 import networkx as nx
 import numpy as np
 from ast import literal_eval as make_list
@@ -27,9 +28,10 @@ class SankeyLayout:
 
     def __init__(
         self,
+        grp_column,
         sg,
-        path_column,
-        selected_runs=None,
+        esg=None,
+        nbins=20,
         reveal_callsites=[],
         split_entry_module="",
         split_callee_module="",
@@ -37,46 +39,42 @@ class SankeyLayout:
         """
         Construct the Sankey layout.
 
+        :param grp_column: grouped column to consider, e.g., path, group_path, component_path
         :param sg: SuperGraph
-        :param path: path column to consider, e.g., path, group_path, component_path
-        :param selected_runs: array of selected SuperGraph names.
+        :param esg: 
         :param reveal_callsites: array of callsites to reveal
         :param split_entry_module: array of entry modules to split
         :param split_callee_module: array of callees to split
         """
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
-        assert isinstance(path_column, str)
-        assert path_column in ["path", "group_path", "component_path"]
+        if esg is not None:
+            assert isinstance(esg, (callflow.SuperGraph, callflow.EnsembleGraph))
+        assert isinstance(grp_column, str)
+        assert grp_column in ["path", "group_path", "component_path"]
 
         LOGGER.info(f"Creating the Single SankeyLayout for {sg.name}.")
 
         # Set the current graph being rendered.
-        self.path_column = path_column
         self.sg = sg
+        self.esg = esg
+        self.reveal_callsites = reveal_callsites
+        self.split_entry_module = split_entry_module
+        self.split_callee_module = split_callee_module
+        self.nbins = nbins
 
         self.time_exc = self.sg.df_get_proxy("time")
         self.time_inc = self.sg.df_get_proxy("time (inc)")
 
-        self._COLUMNS = [
-            "module",
-            "name",
-            "type",
-            "module",
-            "entry_function",
-            "time",
-            "time (inc)"
-        ]
-
-        if len(selected_runs) > 1:
-            self.runs = sg.nxg_filter_by_datasets(selected_runs) # Filter based on the sub set asked by the client
+        if esg:
+            self.df = self.esg.dataframe
+            self.runs = self.esg.get_datasets()
+            self.mode = "ESG"
         else:
-            self.runs = selected_runs # Do not filter
+            self.df = self.sg.dataframe
+            self.mode = "SG"
 
-        self.cp_dict = df_as_dict(self.sg.dataframe, 'name', 'component_path')
-
-        self.reveal_callsites = reveal_callsites
-        self.split_entry_module = split_entry_module
-        self.split_callee_module = split_callee_module
+        self.gp_dict = df_as_dict(self.df, 'name', grp_column)
+        self.cp_dict = df_as_dict(self.df, 'name', 'component_path')
 
         self.nxg = self._create_nxg_from_paths()
         
@@ -346,11 +344,9 @@ class SankeyLayout:
         Note: Current logic constructs two graphs (one for cct, and one for supergraph)
         and later uses them to construct a module level supergraph.
         """
-        gp_dict = df_as_dict(self.sg.dataframe, 'name', self.path_column)
-
         nxg = nx.DiGraph()
 
-        for c_name, path in gp_dict.items():
+        for c_name, path in self.gp_dict.items():
             if isinstance(path, str):
                 continue
             
@@ -360,9 +356,13 @@ class SankeyLayout:
                     src = path[depth]
                     tgt = path[depth + 1]
 
-                    src_name, src_dict = self.node_construct(c_name, src)
-                    tgt_name, tgt_dict = self.node_construct(c_name, tgt) 
-
+                    if self.mode == "ESG":
+                        src_name, src_dict = self.esg_node_construct(c_name, src)
+                        tgt_name, tgt_dict = self.esg_node_construct(c_name, tgt) 
+                    else:
+                        src_name, src_dict = self.sg_node_construct(c_name, src)
+                        tgt_name, tgt_dict = self.sg_node_construct(c_name, tgt) 
+                        
                     if not nxg.has_node(src_name):
                         nxg.add_node(src_name, attr_dict=src_dict)
                     if not nxg.has_node(tgt):
@@ -385,14 +385,27 @@ class SankeyLayout:
 
         return nxg
 
-    def node_construct(self, callsite_name, node):
+    def sg_node_construct(self, callsite_name, node):
         name = self.sg.get_name(node.get("id"), node.get("type"))
         return name, {
             "type": node.get("type"),
             "level": node.get("level"),
             "cp_path": self.cp_dict[callsite_name],
-            "time (inc)": self.sg.get_runtime(node.get("id"), node.get("type"), "time (inc)"),
-            "time": self.sg.get_runtime(node.get("id"), node.get("type"), "time"),
+            self.time_inc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_inc),
+            self.time_exc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_exc),
+            "nid": node.get("id"),
+        }
+
+    def esg_node_construct(self, callsite_name, node):
+        name = self.esg.get_name(node.get("id"), node.get("type"))
+        print(node)
+        grads = self.esg.get_gradients(node, self.nbins)
+        return name, {
+            "type": node.get("type"),
+            "level": node.get("level"),
+            "cp_path": self.cp_dict[callsite_name],
+            self.time_inc: grads[self.time_inc],
+            self.time_exc: grads[self.time_exc],
             "nid": node.get("id"),
         }
 

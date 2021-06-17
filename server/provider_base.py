@@ -340,7 +340,6 @@ class BaseProvider:
             ssg = SankeyLayout(
                 sg=sg,
                 path_column="group_path",
-                selected_runs=[operation["dataset"]],
                 reveal_callsites=reveal_callsites,
                 split_entry_module=split_entry_module,
                 split_callee_module=split_callee_module,
@@ -445,18 +444,14 @@ class BaseProvider:
                     t_aux_dict = {t_sg.get_name(module_idx, "module"): t_sg.module_aux_dict[module_idx] for module_idx in t_sg.module_aux_dict.keys() }
 
         if operation_name == "supergraph":
-            reveal_callsites = operation.get("reveal_callsites", [])
-            split_entry_module = operation.get("split_entry_module", [])
-            split_callee_module = operation.get("split_callee_module", [])
-            selected_runs = operation.get("selected_runs", None)
-
             ssg = SankeyLayout(
-                sg=e_sg,
-                path_column="group_path",
-                selected_runs=selected_runs,
-                reveal_callsites=reveal_callsites,
-                split_entry_module=split_entry_module,
-                split_callee_module=split_callee_module,
+                grp_column="group_path",    
+                sg=sg,
+                esg=e_sg,
+                nbins=operation.get("nbins", 20),
+                reveal_callsites=operation.get("reveal_callsites", []),
+                split_entry_module=operation.get("split_entry_module", []),
+                split_callee_module= operation.get("split_callee_module", []),
             )
             return ssg.nxg
 

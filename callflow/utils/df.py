@@ -74,6 +74,7 @@ def df_filter_by_search_string(df, column, search_strings, proxy={}):
 def df_as_dict(df, from_col, to_col):
     assert isinstance(df, pd.DataFrame)
     assert isinstance(from_col, str) and isinstance(to_col, str)
+    assert from_col in df.columns and to_col in df.columns
     df = df[[from_col, to_col]]
     df.set_index(from_col, inplace=True)
     df = df[~df.index.duplicated(keep='first')]

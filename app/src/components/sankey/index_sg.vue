@@ -89,7 +89,8 @@ export default {
 			data: "getSG",
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMode: "getSelectedMode",
-			comparisonMode: "getComparisonMode"
+			comparisonMode: "getComparisonMode",
+			runBinCount: "getRunBinCount",
 		})
 	},
 
@@ -163,13 +164,15 @@ export default {
 		// },
 
 		init() {
+			console.log(this.selectedMode);
 			if (this.selectedMode == "SG") {
 				this.$store.dispatch("fetchSG", {
-					dataset: this.selectedTargetRun
+					dataset: this.selectedTargetRun,
 				});
 			} else if (this.selectedMode == "ESG") {
 				this.$store.dispatch("fetchESG", {
-					dataset: this.selectedTargetRun
+					dataset: this.selectedTargetRun,
+					nbins: this.runBinCount,
 				});
 			}
 		},
@@ -196,6 +199,7 @@ export default {
 				});
 			});
 			this.sankeySVG.call(zoom);
+			console.log("Before render");
 			this.render();
 		},
 
