@@ -22,11 +22,11 @@ export default function Sankey() {
 		minNodeScale = 0,
 		maxLevel = 1,
 		nodeMap = {},
-		store = {},
+		// store = {},
 		debug = true,
 		nodesByBreadth = [],
 		max_dy = 0,
-		fitNodeInWindowHeight = 5,
+		// fitNodeInWindowHeight = 5,
 		targetDataset = "";
 
 	let widthScale;
@@ -80,11 +80,11 @@ export default function Sankey() {
 		return sankey;
 	};
 
-	sankey.store = function (_) {
-		if (!arguments.length) {return store;}
-		store = _;
-		return sankey;
-	};
+	// sankey.store = function (_) {
+	// 	if (!arguments.length) {return store;}
+	// 	store = _;
+	// 	return sankey;
+	// };
 
 	sankey.layout = function (iterations) {
 		addLinkID();
@@ -97,7 +97,7 @@ export default function Sankey() {
 		computeNodeDepths(iterations);
 		console.debug("[Sankey] Computed node depths");
 		computeLinkDepths();
-		console.debug("[Sankey] Computed linke depths.");
+		console.debug("[Sankey] Computed link depths.");
 		return sankey;
 	};
 
@@ -175,12 +175,12 @@ export default function Sankey() {
 		});
 		links.forEach(function (link) {
 			link.source_data.sourceLinks.push(link);
-			link.source_data.maxLinkVal = Math.max(link.source_data.maxLinkVal, link["weight"]);
-			link.source_data.minLinkVal = Math.min(link.source_data.minLinkVal, link["weight"]);
+			link.source_data.maxLinkVal = Math.max(link.source_data.maxLinkVal, link["attr_dict"]["weight"]);
+			link.source_data.minLinkVal = Math.min(link.source_data.minLinkVal, link["attr_dict"]["weight"]);
 
 			link.target_data.targetLinks.push(link);
-			link.target_data.minLinkVal = Math.min(link.target_data.minLinkVal, link["weight"]);
-			link.target_data.maxLinkVal = Math.max(link.target_data.maxLinkVal, link["weight"]);
+			link.target_data.minLinkVal = Math.min(link.target_data.minLinkVal, link["attr_dict"]["weight"]);
+			link.target_data.maxLinkVal = Math.max(link.target_data.maxLinkVal, link["attr_dict"]["weight"]);
 		});
 
 		nodes.forEach(function (node) {
@@ -198,11 +198,11 @@ export default function Sankey() {
 	function computeNodeValues() {
 		nodes.forEach(function (node) {
 			let sourceSum = sum(node.sourceLinks, (link) => {
-				return link.weight;
+				return link["attr_dict"].weight;
 			});
 
 			let targetSum = sum(node.targetLinks, (link) => {
-				return link.weight;
+				return link["attr_dict"].weight;
 			});
 
 
@@ -220,19 +220,20 @@ export default function Sankey() {
 				// console.log(node.name, node.value, node.targetValue);
 			}
 			else {
-				node.value = node["time (inc)"];
+				node.value = node["attr_dict"]["time (inc)"];
 				node.type = node["attr_dict"]["type"];
 				node.level = node["attr_dict"]["level"];
+				console.log(node.level);
 				node.targetValue = 0;
-				if (node[store.selectedTargetDataset] != undefined) {
-					node.targetValue = node[store.selectedTargetDataset]["time (inc)"];
-				}
+				// if (node[store.selectedTargetDataset] != undefined) {
+				// 	node.targetValue = node[store.selectedTargetDataset]["time (inc)"];
+				// }
 			}
 			// Relaxing the edges a nodes a bit to account for the flow. But target edges arent correct.
 			// node.value = Math.max(node.value, Math.max(sourceSum, targetSum));
-			if (node[store.selectedTargetDataset] != undefined) {
-				node.targetValue = Math.max(node.targetValue, Math.max(sourceTargetSum, targetTargetSum));
-			}
+			// if (node[store.selectedTargetDataset] != undefined) {
+			// 	node.targetValue = Math.max(node.targetValue, Math.max(sourceTargetSum, targetTargetSum));
+			// }
 
 			// console.debug("[Compute node values] Adjusted flow", node.id, ": ", node.value);
 			// console.debug("[Compute node values] Adjusted target flow", node.id, ": ", node.targetValue);
@@ -253,6 +254,7 @@ export default function Sankey() {
 
 	function scaleNodeBreadths(kx) {
 		nodes.forEach(function (node) {
+			console.log(node.level);
 			let x = widthScale(node.level);
 			node.x = x;
 		});
@@ -288,29 +290,29 @@ export default function Sankey() {
 	}
 
 	//////////////////// Associated functions for : ComputeNodeDepths /////////////////
-	function resolveOutsidePositioning() {
-		for (let node of nodes) {
-			node.height *= (1 - max_dy / size[1]);
-		}
+	// function resolveOutsidePositioning() {
+	// 	for (let node of nodes) {
+	// 		node.height *= (1 - max_dy / size[1]);
+	// 	}
 
-		for (let link of links) {
-			link.height *= (1 - max_dy / size[1]);
-		}
+	// 	for (let link of links) {
+	// 		link.height *= (1 - max_dy / size[1]);
+	// 	}
 
-		nodesByBreadth.forEach(function (nodes) {
-			nodes.sort(ascendingDepth);
+	// 	nodesByBreadth.forEach(function (nodes) {
+	// 		nodes.sort(ascendingDepth);
 
-			for (let i = nodes.length - 1; i >= 0; --i) {
-				let node = nodes[i];
-				let dy = node.y - node.y * (1 - max_dy / size[1]);
-				node.y -= dy;
+	// 		for (let i = nodes.length - 1; i >= 0; --i) {
+	// 			let node = nodes[i];
+	// 			let dy = node.y - node.y * (1 - max_dy / size[1]);
+	// 			node.y -= dy;
 
-				if (i != 0) {
-					node.y += i * nodePadding;
-				}
-			}
-		});
-	}
+	// 			if (i != 0) {
+	// 				node.y += i * nodePadding;
+	// 			}
+	// 		}
+	// 	});
+	// }
 
 	function pushIntermediateNodeBottom(nodes) {
 		let tempNode;
@@ -403,18 +405,19 @@ export default function Sankey() {
 
 	function initializeNodeDepth() {
 		let scale = fixEnsembleScale();
+		let selectedSuperNodePositionMode = "Inclusive";
 
 		nodesByBreadth.forEach(function (nodes) {
-			if (store.selectedSuperNodePositionMode == "Minimal edge crossing") {
+			if (selectedSuperNodePositionMode == "Minimal edge crossing") {
 				// TODO: Minimize edge crossing.
 			}
 			else {
 				nodes.sort(function (a, b) {
-					if (store.selectedSuperNodePositionMode == "Inclusive") {
-						return b["time (inc)"] - a["time (inc)"];
+					if (selectedSuperNodePositionMode == "Inclusive") {
+						return b["attr_dict"]["time (inc)"] - a["attr_dict"]["time (inc)"];
 					}
-					else if (store.selectedSuperNodePositionMode == "Exclusive") {
-						return b["time"] - a["time"];
+					else if (selectedSuperNodePositionMode == "Exclusive") {
+						return b["attr_dict"]["time"] - a["attr_dict"]["time"];
 					}
 				});
 			}
@@ -427,9 +430,10 @@ export default function Sankey() {
 				// 	console.log("Source link: ", edge);
 				// 	nodeHeight = Math.max(nodeHeight, edge.source_data.y);
 				// });
+
 				links.forEach(function (edge) {
 					if (edge["target"] == node.id) {
-						if (edge["source"] != null && edge["source"]["y"] != null) {
+						if (edge["source_data"] != null && edge["source_data"]["y"] != null) {
 							nodeHeight = Math.max(nodeHeight, edge["source_data"]["y"]);
 						}
 					}
@@ -438,10 +442,10 @@ export default function Sankey() {
 				node.y = Math.max(nodeHeight, i);
 				node.parY = node.y;
 
-				// console.debug("[Compute node depths] Node: ", node.id);
-				// console.debug("[Compute node depths] value: ", node.value);
-				// console.debug("[Compute node depths] minNodeScale: ", minNodeScale);
-				// console.debug("[Compute node depths] Ensemble scaling: ", scale);
+				// console.log("[Compute node depths] Node: ", node.id);
+				// console.log("[Compute node depths] value: ", node.value);
+				// console.log("[Compute node depths] minNodeScale: ", minNodeScale);
+				// console.log("[Compute node depths] Ensemble scaling: ", scale);
 
 				node.height = node.value * minNodeScale * scale;
 				node.targetHeight = node.targetValue * minNodeScale * scale;
@@ -452,11 +456,11 @@ export default function Sankey() {
 
 		links.forEach(function (link) {
 			let flowScale = link.source_data.value / link.source_data.max_flow;
-			link.scaled_weight = link.weight * flowScale;
+			link.scaled_weight = link["attr_dict"].weight * flowScale;
 			link.height = link.scaled_weight * scale;
 
 			let targetEnsembleRatio = (link.source_data.targetValue / link.source_data.value);
-			link.targetWeight = link.weight * targetEnsembleRatio;
+			link.targetWeight = link["attr_dict"].weight * targetEnsembleRatio;
 			link.targetHeight = link.targetWeight * scale;
 
 			let heightRatio = link.targetHeight / link.height;
@@ -477,7 +481,7 @@ export default function Sankey() {
 		});
 
 		function weightedSource(link) {
-			return center(link.source) * link.weight;
+			return center(link.source) * link["attr_dict"].weight;
 		}
 	}
 
@@ -486,14 +490,13 @@ export default function Sankey() {
 			nodes.forEach(function (node) {
 				if (node.sourceLinks.length) {
 					var y = d3.sum(node.sourceLinks, weightedTarget) / d3.sum(node.sourceLinks, value);
-
 					node.y += (y + center(node)) * alpha;
 				}
 			});
 		});
 
 		function weightedTarget(link) {
-			return center(link.target) * link.weight;
+			return center(link.target) * link["attr_dict"].weight;
 		}
 	}
 
@@ -582,7 +585,7 @@ export default function Sankey() {
 	function computeNodeDepths(iterations) {
 		// Nodes by breadth does not consider the intermediate nodes.
 		nodesByBreadth = d3.nest()
-			.key(function (d) { return d.level; })
+			.key(function (d) { return d.attr_dict.level; })
 			.sortKeys(d3.ascending)
 			.entries(nodes)
 			.map(function (d) {
@@ -680,7 +683,7 @@ export default function Sankey() {
 	}
 
 	function value(link) {
-		return link.weight;
+		return link["attr_dict"].weight;
 	}
 
 	function targetValue(link) {

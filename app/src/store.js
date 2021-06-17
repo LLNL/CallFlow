@@ -8,8 +8,18 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
 	state: {
+		// CallFlow config.
 		config: {},
+
+		// State properties (/summary)
+		summary: {},
+		profiles: [],
+		metricTimeMap: {},
+		selectedTargetRun: "", // Set the current target run.
+		selectedNode: "", // Set the current active node.
 		runs: [],
+
+		// Color
 		targetColorMap: {
 			Green: "#4EAF4A",
 			Blue: "#4681B4",
@@ -17,33 +27,44 @@ export default new Vuex.Store({
 			Red: "#A90400",
 		},
 		generalColors: {
-			gainsboro: "#d9d9d9",
+			gainsboro: "#d9d9d9", //for intermediate nodes
 			silver: "#c0c0c0",
 			darkGrey: "#3a3a3a",
 			lightGrey: "#888888",
-			blue: "#043060"
+			blue: "#043060", 
+			target: "#4DAF4A",
 		},
-		rankBinCount: 20,
-		runBinCount: 20,
-		summary: {},
-		profiles: [],
-		metricTimeMap: {},
-		selectedTargetRun: "", // Set the current target run.
-		selectedNode: "", // Set the current active node.
+		selectedColorPoint: 5,
+		selectedRuntimeColorMap: "OrRd",
+		selectedDistributionColorMap: "Blues",
+
+		// General properties
 		selectedMetric: "time (inc)", // Set the current metric of interest.
-		selectedMode: "", // Set the mode: can be CCT, SG, ESG
+		selectedMode: "", // Set the mode: (i.e., CCT, SG, ESG)
+
+		// Single SuperGraph 
+		SG: {}, // stores the supergraph (sankey) data
+		rankBinCount: 20, // stores the nbins in the histogram
+		singleHistogram: {}, // stores histogram data
+		singleScatterplot: {}, // stores scatterplot data
+		singleBoxplots: [], // // stores scatterplot data
+
+		// Ensemble 
+		ESG: {}, // stores the supergraph (sankey) data
+		runBinCount: 20, // Ensemble histogram nbin count
+		ensembleHistogram: {}, // stores histogram data
+		ensembleScatterplot: {}, // stores scatterplot data
+		ensembleBoxplots: {}, // stores scatterplot data
+		showTarget: true, // show target in the view
+		ensembleGradients: {}, // stores the gradient data
+
+		// Timeline state
 		timeline: {},
+
+		// CCT states
 		CCT: {},
-		SG: {},
-		ESG: {},
-		singleHistogram: {},
-		singleScatterplot: {},
-		singleBoxplots: [],
-		ensembleHistogram: {},
-		ensembleScatterplot: {},
-		ensembleBoxplots: {},
-		encoding: "",
-		showTarget: true,
+
+		// Projection State
 		parameterProjection: {},
 		numOfClusters: 3,
 	},
@@ -222,6 +243,13 @@ export default new Vuex.Store({
 			const pp = await APIService.POSTRequest("projection", payload);
 			console.log("[Data] ESG Projection: ", JSON.parse(pp));
 			commit("setParameterProjection", JSON.parse(pp));
+		},
+
+		async fetchGradients({commit, state}, payload) {
+			const grad = await APIService.POSTRequest("gradients", payload);
+			console.log("[Data] ESG Gradients: ", grad);
+			commit("setParameterProjection", grad);
+
 		}
 	},
 	modules: {
@@ -229,31 +257,45 @@ export default new Vuex.Store({
 	},
 	getters: {
 		getConfig: state => state.config,
+
 		getRuns: state => state.runs,
 		getSummary: state => state.summary,
-		getRankBinCount: state => state.getRankBinCount,
-		getRunBinCount: state => state.getRunBinCount,
 		getProfiles: state => state.profiles,
 		getMetricTimeMap: state => state.metricTimeMap,
 		getSelectedTargetRun: state => state.selectedTargetRun,
-		getSelectedCompareRun: state => state.selectedCompareRun,
 		getSelectedNode: state => state.selectedNode,
+
 		getTimeline: state => state.timeline,
-		getSelectedMetric: state => state.selectedMetric,
+
 		getCCT: state => state.CCT,
+
+		getRankBinCount: state => state.getRankBinCount,
+		getRunBinCount: state => state.getRunBinCount,
+
+		getSelectedCompareRun: state => state.selectedCompareRun,
+		getSelectedMetric: state => state.selectedMetric,
 		getSelectedMode: state => state.selectedMode,
+		getComparisonMode: state => state.comparisonMode,
+
+
 		getSG: state => state.SG,
-		getESG: state => state.ESG,
 		getSingleHistogram: state => state.singleHistogram,
 		getSingleScatterplot: state => state.singleScatterplot,
 		getSingleBoxplots: state => state.singleBoxplots,
+
+		getESG: state => state.ESG,
 		getEnsembleHistogram: state => state.ensembleHistogram,
 		getEnsembleScatterplot: state => state.ensembleScatterplot,
 		getEnsembleBoxplots: state => state.ensembleBoxplots,
 		getShowTarget: state => state.showTarget,
 		getTargetColorMap: state => state.targetColorMap,
+
 		getParameterProjection: state => state.parameterProjection,
 		getNumOfClusters: state => state.numOfClusters,
+
 		getGeneralColors: state => state.generalColors,
+		getEncoding: state => state.encoding,
+		getSelectedRuntimeColorMap: state => state.selectedRuntimeColorMap,
+		getSelectedColorPoint: state => state.selectedColorPoint,	
 	}
 });

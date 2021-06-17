@@ -341,12 +341,12 @@ export default {
 				this.selectedRuntimeColorMap = "Blues";
 			} 
 
-			console.log("Mode : ", this.$store.selectedMode);
-			console.log("Number of runs :", this.$store.numOfRuns);
-			console.log("Target Dataset : ", this.$store.selectedTargetDataset);
-			console.log("Node: ", this.$store.selectedNode);
-			console.log("Run Bin size", this.$store.selectedRunBinCount);
-			console.log("MPI Bin size", this.$store.selectedMPIBinCount);
+			// console.log("Mode : ", this.$store.selectedMode);
+			// console.log("Number of runs :", this.$store.numOfRuns);
+			// console.log("Target Dataset : ", this.$store.selectedTargetDataset);
+			// console.log("Node: ", this.$store.selectedNode);
+			// console.log("Run Bin size", this.$store.selectedRunBinCount);
+			// console.log("MPI Bin size", this.$store.selectedMPIBinCount);
 		},
 
 		reset() {

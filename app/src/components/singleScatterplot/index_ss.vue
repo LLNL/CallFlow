@@ -68,6 +68,7 @@ export default {
 			selectedNode: "getSelectedNode",
 			data: "getSingleScatterplot",
 			summary: "getSummary",
+			generalColors: "getGeneralColors",
 		})
 	},
 
@@ -305,21 +306,21 @@ export default {
 				.attr("r", 5)
 				.attr("cx", (d, i) => this.xScale(this.xArray[i]) + 3 * this.padding.left)
 				.attr("cy", (d, i) => this.yScale(this.yArray[i]))
-				.style("fill", this.$store.runtimeColor.intermediate)
+				.style("fill", this.generalColors.gainsboro)
 				.style("stroke", "#202020")
 				.style("stroke-width", 0.5)
 				.on("mouseover", function (d, i) {
-					d3.select(this).attr("fill", "orange");
+					d3.select(this).style("fill", "orange");
 					d3.selectAll(".dot")
-						.style("fill", self.$store.runtimeColor.intermediate)
-						.style("fill-opacity", 0.5);
+						.style("fill", self.generalColors.gainsboro)
+						.style("fill-opacity", 0.5);	
 					const text = "rank " + d.rank;
 					self.$refs.ToolTip.render(text, d);
 				})
 				.on("mouseout", function (d, i) {
-					// d3.select(this).attr("fill", self.$store.runtimeColor.intermediate);
+					d3.select(this).attr("fill", self.generalColors.gainsboro);
 					d3.selectAll(".dot")
-						.style("fill", self.$store.runtimeColor.intermediate)
+						.style("fill", self.generalColors.gainsboro)
 						.style("fill-opacity", 1);
 					self.$refs.ToolTip.clear();
 				});

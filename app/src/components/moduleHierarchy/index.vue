@@ -7,7 +7,7 @@
 
 <template>
   <v-layout row wrap :id="id">
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info"/>
+	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info"/>
     <span class="component-info">
       Module = {{ formatModule(selectedModule) }}
     </span>
@@ -75,7 +75,7 @@ export default {
 		selectedModule: "",
 		svgID: "module-hierarchy-svg",
 		title: "Super node Hierarchy",
-		summary: "",
+		infoSummary: "",
 		info: "",
 	}),
 

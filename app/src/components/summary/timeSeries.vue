@@ -214,7 +214,6 @@ export default {
 					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
 				yDomain = [0, 1];
 			}
-
 			this.data.reverse();
 
 			this.color = d3

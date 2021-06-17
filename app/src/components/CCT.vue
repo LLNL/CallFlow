@@ -86,7 +86,9 @@ export default {
 			summary: "getSummary",
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMetric: "getSelectedMetric",
-			metricTimeMap: "getMetricTimeMap"
+			metricTimeMap: "getMetricTimeMap",
+			selectedRuntimeColorMap: "getSelectedRuntimeColorMap",
+			selectedColorPoint: "getSelectedColorPoint",
 		})
 	},
 
@@ -142,15 +144,12 @@ export default {
 				parseFloat(colorMax)
 			);
 
-			this.$store.selectedColorMin = colorMin;
-			this.$store.selectedColorMax = colorMax;
-
 			this.$store.runtimeColor.setColorScale(
 				this.selectedMetric,
 				colorMin,
 				colorMax,
-				this.$store.selectedRuntimeColorMap,
-				this.$store.selectedColorPoint
+				this.selectedRuntimeColorMap,
+				this.selectedColorPoint
 			);
 		},
 

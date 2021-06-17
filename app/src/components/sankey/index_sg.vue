@@ -7,14 +7,20 @@
 
 <template>
   <div>
-	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
-    <v-layout>
+	<v-row>
+		<v-col cols="4">
+			<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
+		</v-col>
+		<v-col cols="8">
+			<ColorMap ref="ColorMap" />
+		</v-col>
+	</v-row>
+	<v-layout>
       <svg :id="id">
         <g id="container">
           <Edges ref="Edges" />
           <Nodes ref="Nodes" />
           <MiniHistograms ref="MiniHistograms" />
-          <ColorMap ref="ColorMap" />
         </g>
       </svg>
     </v-layout>
@@ -24,16 +30,15 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library imports
 import EventHandler from "lib/routing/EventHandler.js";
 import Sankey from "lib/algorithms/sankey";
-import * as utils from "lib/utils";
 import Graph from "lib/datastructures/graph";
 import GraphVertex from "lib/datastructures/node";
 import GraphEdge from "lib/datastructures/edge";
 import detectDirectedCycle from "lib/algorithms/detectcycle";
-import APIService from "lib/routing/APIService.js";
 
 // General component imports
 import ColorMap from "../general/colormap";
@@ -69,10 +74,8 @@ export default {
 		width: null,
 		height: null,
 		treeHeight: null,
-		data: null,
 		sankeyWidth: 0,
 		sankeyHeight: 0,
-		selectedMetric: "",
 		existingIntermediateNodes: {},
 		title: "Super Graph View",
 		message: "",
@@ -80,8 +83,23 @@ export default {
 		infoSummary: "Super Graphs provides an overview of the application's control during execution using a Sankey Diagram. The Sankey diagram incorporates a flow-based metaphor to the call graph by show the resource flow from left to right. Each node's performance is mapped based on the runtime colormap. The mini-histograms (on top of the node) provides an overview of each node's runtime distribution across processes",
 	}),
 
+	computed: {
+		...mapGetters({ 
+			selectedMetric: "getSelectedMetric", 
+			data: "getSG",
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedMode: "getSelectedMode",
+			comparisonMode: "getComparisonMode"
+		})
+	},
+
+	watch: {
+		data: function (val) {
+			this.visualize(val);
+		}
+	},
+
 	mounted() {
-		this.id = "ensemble-supergraph-overview";
 		let self = this;
 		EventHandler.$on("clear_summary_view", function () {
 			console.log("Clearing Summary view");
@@ -106,56 +124,62 @@ export default {
 			self.clear();
 			self.init();
 		});
-
-		this.selectedMetric = this.$store.selectedMetric;		
 	},
 
 	methods: {
-		async fetchData() {
-			let data = {};
-			const payload = {
-				selected_runs: [this.$store.selectedTargetDataset],
-			};
-			if (this.$store.selectedMode == "Single") {
-				payload["dataset"] = this.$store.selectedTargetDataset;
-				data = await APIService.POSTRequest("single_supergraph", payload);
-				console.debug("[/single_supergraph]", data);
-			} else if (this.$store.selectedMode == "Ensemble") {
-				payload["selected_runs"] = this.$store.selectedDatasets;
-				data = await APIService.POSTRequest("ensemble_supergraph", payload);
-				console.debug("[/ensemble_supergraph]", data);
+		// fetchData() {
+		// 	let data = {};
+		// 	const payload = {
+		// 		selected_runs: [this.$store.selectedTargetDataset],
+		// 	};
+		// 	if (this.$store.selectedMode == "Single") {
+		// 		payload["dataset"] = this.$store.selectedTargetDataset;
+		// 		data = await APIService.POSTRequest("single_supergraph", payload);
+		// 		console.debug("[/single_supergraph]", data);
+		// 	} else if (this.$store.selectedMode == "Ensemble") {
+		// 		payload["selected_runs"] = this.$store.selectedDatasets;
+		// 		data = await APIService.POSTRequest("ensemble_supergraph", payload);
+		// 		console.debug("[/ensemble_supergraph]", data);
+		// 	}
+
+		// 	data = this._add_node_map(data);
+		// 	data.graph = this._construct_super_graph(data);
+
+		// 	// check cycle.
+		// 	// let detectcycle = detectDirectedCycle(data.graph);
+
+		// 	// for (let i = 0; i <data.links.length; i += 1) {
+		// 	// 	let link = data.links[i];
+		// 	// 	let source_callsite = link["source"];
+		// 	// 	let target_callsite = link["target"];
+		// 	// 	let weight = link["weight"];
+
+		// 	// 	console.debug("=============================================");
+		// 	// 	console.debug("[Ensemble SuperGraph] Source Name :", source_callsite);
+		// 	// 	console.debug("[Ensemble SuperGraph] Target Name :", target_callsite);
+		// 	// 	console.debug("[Ensemble SuperGraph] Weight: ", weight);
+		// 	// }
+		// 	return data;
+		// },
+
+		init() {
+			if (this.selectedMode == "SG") {
+				this.$store.dispatch("fetchSG", {
+					dataset: this.selectedTargetRun
+				});
+			} else if (this.selectedMode == "ESG") {
+				this.$store.dispatch("fetchESG", {
+					dataset: this.selectedTargetRun
+				});
 			}
-
-			data = this._add_node_map(data);
-			data.graph = this._construct_super_graph(data);
-
-			// check cycle.
-			// let detectcycle = detectDirectedCycle(data.graph);
-
-			// for (let i = 0; i <data.links.length; i += 1) {
-			// 	let link = data.links[i];
-			// 	let source_callsite = link["source"];
-			// 	let target_callsite = link["target"];
-			// 	let weight = link["weight"];
-
-			// 	console.debug("=============================================");
-			// 	console.debug("[Ensemble SuperGraph] Source Name :", source_callsite);
-			// 	console.debug("[Ensemble SuperGraph] Target Name :", target_callsite);
-			// 	console.debug("[Ensemble SuperGraph] Weight: ", weight);
-			// }
-			return data;
 		},
 
-		async init() {
+		visualize() {
 			// set the component info.
-			this.info = { 
-				"Metric": this.$store.selectedMetric + " runtime",
-				"Callsite": this.$store.selectedNode
-			};
-			
-			this.data = await this.fetchData();
+			// this.info = "Metric: " + this.selectedMetric;
+
 			this.width = this.$store.viewWidth;
-			this.height = this.$store.viewHeight - this.margin.top - this.margin.bottom;
+			this.height = this.$store.viewHeight - 2 * this.margin.top - this.margin.bottom;
 
 			this.sankeySVG = d3.select("#" + this.id).attrs({
 				width: this.width,
@@ -175,21 +199,6 @@ export default {
 			this.render();
 		},
 
-		_debug_data(data) {
-			console.debug("Data :", data);
-			for (let i = 0; i < data.nodes.length; i += 1) {
-				console.debug("Node name: ", data.nodes[i].id);
-				console.debug("Time (inc): ", data.nodes[i]["time (inc)"]);
-				console.debug("Time: ", data.nodes[i]["time"]);
-			}
-
-			for (let i = 0; i < data.links.length; i += 1) {
-				console.debug("Source: ", data.links[i].source);
-				console.debug("Target: ", data.links[i].target);
-				console.debug("Weight: ", data.links[i].weight);
-			}
-		},
-
 		clear() {
 			this.$refs.Nodes.clear();
 			this.$refs.Edges.clear();
@@ -199,7 +208,7 @@ export default {
 
 		render() {
 			this.sankeyWidth = 0.7 * this.$store.viewWidth;
-			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
+			this.sankeyHeight = 0.8 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
 			this._init_sankey(this.data);
 
@@ -207,7 +216,7 @@ export default {
 			this.data.nodes = postProcess["nodes"];
 			this.data.links = postProcess["links"];
 			
-			this._init_sankey();
+			// this._init_sankey();
 
 			this.$store.graph = this.data;
 
@@ -215,18 +224,15 @@ export default {
 			this.$refs.Edges.init(this.$store.graph, this.view);
 			// this.$refs.MiniHistograms.init(this.$store.graph, this.view);
 
-			const node_id = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "SuperGraph");
-			this.$store.selectedNode = this.$store.graph["nodes"].filter(d => d.id == node_id)[0];
-
-			const mode_lower = this.$store.selectedMode.toLowerCase();
+			const mode_lower = this.selectedMode.toLowerCase();
 			EventHandler.$emit(mode_lower + "-histogram", {
-				node: this.$store.selectedNode,
-				dataset: this.$store.selectedTargetDataset,
+				node: this.selectedNode,
+				dataset: this.selectedTargetRun,
 			});
 
 			EventHandler.$emit(mode_lower + "-scatterplot", {
-				node: this.$store.selectedNode,
-				dataset: this.$store.selectedTargetDataset,
+				node: this.selectedNode,
+				dataset: this.selectedTargetRun,
 			});
 
 			if (this.$store.selectedMode == "Single") {
@@ -238,21 +244,21 @@ export default {
 			}
 		},
 
-		/**
-		 * Add node map to maintain the index of the Sankey nodes.
-		 */
-		_add_node_map(graph) {
-			let nodeMap = {};
-			let idx = 0;
-			for (const node of graph.nodes) {
-				nodeMap[node.id] = idx;
+		// /**
+		//  * Add node map to maintain the index of the Sankey nodes.
+		//  */
+		// _add_node_map(graph) {
+		// 	let nodeMap = {};
+		// 	let idx = 0;
+		// 	for (const node of graph.nodes) {
+		// 		nodeMap[node.id] = idx;
 
-				// console.debug(`[Supergraph] Assigning ${node.id} with index ${idx}`);
-				idx += 1;
-			}
-			graph.nodeMap = nodeMap;
-			return graph;
-		},
+		// 		// console.debug(`[Supergraph] Assigning ${node.id} with index ${idx}`);
+		// 		idx += 1;
+		// 	}
+		// 	graph.nodeMap = nodeMap;
+		// 	return graph;
+		// },
 
 		/**
 		 * Internal function that construct the super graph structure.
@@ -280,11 +286,13 @@ export default {
 				.size([this.sankeyWidth, this.sankeyHeight])
 				.levelSpacing(this.levelSpacing)
 				.maxLevel(this.data.maxLevel)
-				.setMinNodeScale(this.nodeScale)
-				.targetDataset(this.$store.selectedTargetDataset)
-				.store(this.$store);
+				.setMinNodeScale(this.nodeScale);
+			// .targetDataset(this.$store.selectedTargetDataset)
+			// .store(this.$store);
 
 			this.sankey.link();
+
+			console.log(this.data.nodes);
 
 			this.sankey.nodes(this.data.nodes).links(this.data.links).layout(32);
 		},
@@ -332,8 +340,12 @@ export default {
 					if (this.existingIntermediateNodes[target_node.id] == undefined) {
 						// Add the intermediate node to the array
 						tempNode = {
+							attr_dict: {
+								nid: -1,
+								level: j - 1,
+
+							},
 							id: "intermediate_" + target_node.id,
-							level: j - 1,
 							value: temp_edges[i].weight,
 							targetValue: temp_edges[i].targetWeight,
 							height: temp_edges[i].height,

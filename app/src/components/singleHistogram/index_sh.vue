@@ -72,7 +72,8 @@ export default {
 			selectedMetric: "getSelectedMetric",
 			selectedNode: "getSelectedNode",
 			rankBinCount: "getRankBinCount",
-			data: "getSingleHistogram"
+			data: "getSingleHistogram",
+			generalColors: "getGeneralColors",
 		})
 	},
 
@@ -200,8 +201,8 @@ export default {
 			// TODO: Expensive !!!
 			mpiData.forEach((val, idx) => {
 				let pos = Math.floor((val - dataMin) / dataWidth);
-				if (pos >= this.$store.selectedMPIBinCount) {
-					pos = this.$store.selectedMPIBinCount;
+				if (pos >= this.rankBinCount) {
+					pos = this.rankBinCount;
 				}
 				if (pos < 0){
 					pos = 0;
@@ -297,14 +298,14 @@ export default {
 					height: (d) => {
 						return Math.abs(this.yAxisHeight - this.yScale(d));
 					},
-					fill: this.$store.runtimeColor.intermediate,
+					fill: this.generalColors.gainsboro,
 					opacity: 1,
 					"stroke-width": "0.2px",
 					stroke: "#202020",
 				})
 				.style("z-index", 1)
 				.on("click", function (d, i) {
-					d3.select(this).attr("fill", self.$store.runtimeColor.highlight);
+					d3.select(this).attr("fill", "orange");
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
@@ -314,7 +315,7 @@ export default {
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseover", function (d, i) {
-					d3.select(this).attr("fill", self.$store.runtimeColor.highlight);
+					d3.select(this).attr("fill", "orange");
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
@@ -324,7 +325,7 @@ export default {
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseout", function (d, i) {
-					d3.select(this).attr("fill", self.$store.runtimeColor.intermediate);
+					d3.select(this).attr("fill", self.generalColors.gainsboro);
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "grey")
 						.style("fill-opacity", 0.4);

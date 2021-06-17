@@ -27,8 +27,8 @@ export default class Color {
 	}
 
 	getColor(dictionary, attribute) {
-		return this.colorscale(dictionary[attribute]);
-	}
+		return this.colorscale(dictionary["attr_dict"][attribute]);
+	}	
 
 	getColorByValue(value) {
 		return this.rgbArrayToHex(this.colorscale(value));

@@ -33,7 +33,7 @@
 		<splitpanes id="callgraph-dashboard" class="default-theme">
 			<!-- Left column-->
 			<splitpanes horizontal :splitpanes-size="25">
-			<!-- <ModuleHierarchy ref="ModuleHierarchy" /> -->
+			<ModuleHierarchy ref="ModuleHierarchy" />
 			<EnsembleScatterplot ref="EnsembleScatterplot" />
 			<EnsembleHistogram ref="EnsembleHistogram" />
 			</splitpanes>
@@ -251,13 +251,13 @@ export default {
 
 		setComponentMap() {
 			return [
-				// this.$refs.Sankey,
+				this.$refs.Sankey,
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
 				this.$refs.CallsiteCorrespondence,
 				this.$refs.ParameterProjection,
 				// this.$refs.ModuleHierarchy,
-				// this.$refs.VisualEncoding
+				this.$refs.VisualEncoding
 			];
 		},
 

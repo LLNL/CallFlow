@@ -11,6 +11,7 @@
 
 <script>
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 export default {
 	name: "Outliers",
@@ -23,6 +24,12 @@ export default {
 	}),
 
 	props: ["nid", "tOutliers", "bOutliers", "xScale", "idPrefix"],
+
+	computed: {
+		...mapGetters({
+			generalColors: "getGeneralColors",
+		})
+	},
 
 	mounted() {
 		// Get the SVG belonging to this callsite.
@@ -251,7 +258,7 @@ export default {
 					"class": "target-outlier"
 				})
 				.style("opacity", 1)
-				.style("fill", this.$store.runtimeColor.intermediate)
+				.style("fill", this.generalColors.gainsboro)
 				.on("click", (d) => {
 					// self.$parent.$parent.selectedOutlierRanks[self.callsite.name] = d['ranks'].sort((a, b) => a - b)
 					// self.$parent.$parent.selectedOutlierDatasets[self.callsite.name] = d['datasets'].filter((value, index, self) => {

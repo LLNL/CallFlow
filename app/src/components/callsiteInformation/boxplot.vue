@@ -12,7 +12,7 @@
 		<Markers ref="Markers" :nid="nid" :tq="q" :xScale="xScale"
 		v-if="dataReady" :tColor="color" :idPrefix="idPrefix"/>
 		<Outliers ref="Outliers" :nid="nid" :tOutliers="outliers"
-		:xScale="xScale" v-if="dataReady" :tColor="tColor" :idPrefix="idPrefix"/>
+		:xScale="xScale" v-if="dataReady" :tColor="color" :idPrefix="idPrefix"/>
 		<ToolTip ref="ToolTip" />
 	</svg>
 </template>

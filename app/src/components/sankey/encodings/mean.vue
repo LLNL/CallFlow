@@ -10,21 +10,26 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 export default {
 	name: "Mean",
 	data: () => ({
 		stroke_width: 3,
 		id: "mean"
 	}),
+
+	computed: {
+		...mapGetters({ 
+			selectedMetric: "getSelectedMetric",
+			generalColors: "getGeneralColors"
+		})
+	},
+
 	methods: {
 		init(nodes, containerG) {
 			this.nodes = nodes;
 			this.containerG = containerG;
 
-			// this.module_data = this.$store.data_mod[this.$store.selectedTargetDataset];
-			// this.callsite_data = this.$store.data_cs[this.$store.selectedTargetDataset];
-
-			// this.setColorScale();
 			this.visualize();
 		},
 
@@ -51,11 +56,11 @@ export default {
 						return this.stroke_width;
 					},
 					"fill": (d) => {
+						console.log(d.level);
 						if (d.type == "intermediate") {
-							return this.$store.runtimeColor.intermediate;
-						}
-							
-						return this.$store.runtimeColor.getColor(d, this.$store.selectedMetric);						
+							return this.generalColors.silver;
+						}						
+						return this.$store.runtimeColor.getColor(d, this.selectedMetric);						
 					}
 				});
 		},

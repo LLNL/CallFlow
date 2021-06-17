@@ -60,6 +60,8 @@ import "splitpanes/dist/splitpanes.css";
 
 // Local library imports
 import EventHandler from "lib/routing/EventHandler";
+import Color from "lib/color/";
+import * as utils from "lib/utils";
 
 // Super graph dashboard imports
 import SingleScatterplot from "./singleScatterplot/index_ss";
@@ -96,7 +98,8 @@ export default {
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMetric: "getSelectedMetric",
 			metricTimeMap: "getMetricTimeMap",
-			// selectedMode: "getSelectedMode",
+			selectedRuntimeColorMap: "getSelectedRuntimeColorMap",
+			selectedColorPoint: "getSelectedColorPoint"
 		})
 	},
 
@@ -129,14 +132,39 @@ export default {
 	methods: {
 		init() {
 			this.$store.commit("setSelectedMode", "SG");
+			this.$store.commit("setEncoding", "MEAN");
 
 			console.log("[SG] Selected Run: ", this.selectedTargetRun);
 			console.log("[SG] Selected Mode: ", this.selectedMode);
 			console.log("[SG] Selected Metric: ", this.selectedMetric);
 
 			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
-			EventHandler.$emit("reset-runtime-color");
+			this.setupColors();
 			this.initComponents(this.currentComponents);
+		},
+
+		setupColors() {
+			this.$store.runtimeColor = new Color();
+			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
+
+			const _d = this.summary[this.selectedTargetRun][this.selectedMetric];
+			const colorMin = parseFloat(_d[0]);
+			const colorMax = parseFloat(_d[1]);
+
+			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
+				parseFloat(colorMin)
+			);
+			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
+				parseFloat(colorMax)
+			);
+
+			this.$store.runtimeColor.setColorScale(
+				this.selectedMetric,
+				colorMin,
+				colorMax,
+				this.selectedRuntimeColorMap,
+				this.selectedColorPoint
+			);
 		},
 
 		// ----------------------------------------------------------------
@@ -164,6 +192,7 @@ export default {
 
 		clearComponents(componentList) {
 			for (let i = 0; i < componentList.length; i++) {
+				console.log(componentList[i]);
 				componentList[i].clear();
 			}
 		},

@@ -13,6 +13,7 @@
 
 <script>
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 export default {
 	name: "Edges",
@@ -25,9 +26,16 @@ export default {
 		offset: 4,
 		precision: 2, // Adjust the precision for debugging.
 	}),
-	watch: {
 
+	computed: {
+		...mapGetters({
+			selectedMode: "getSelectedMode",
+			showTarget: "getShowTarget",
+			comparisonMode: "getComparisonMode",
+			generalColors: "getGeneralColors",
+		})
 	},
+
 	mounted() {
 		this.id = "edges";
 	},
@@ -37,15 +45,15 @@ export default {
 			this.graph = graph;
 			this.edges = d3.select("#" + this.id);
 
-			if (this.$store.selectedMode == "Ensemble") {
+			if (this.selectedMode == "Ensemble") {
 				this.initEdges("ensemble");
 				this.drawEdges("ensemble");
-				if (this.$store.showTarget && this.$store.comparisonMode == false) {
+				if (this.showTarget && this.comparisonMode == false) {
 					this.initEdges("target");
 					this.drawEdges("target");
 				}
 			}
-			else if (this.$store.selectedMode == "Single") {
+			else if (this.selectedMode == "Single") {
 				this.initEdges("single");
 				this.drawEdges("single");
 			}
@@ -63,7 +71,7 @@ export default {
 				})
 				.style("fill", (d) => {
 					if (dataset == "ensemble") { return this.$store.distributionColor.ensemble; }
-					return this.$store.runtimeColor.intermediate;
+					return this.generalColors.gainsboro;
 				})
 				.style("opacity", 0.5)
 				.on("mouseover", function (d) {
@@ -77,7 +85,7 @@ export default {
 		},
 
 
-		drawPath(d, linkHeight, edge_source_offset = 0, edge_target_offset = 0, dataset) {
+		drawPath(d, linkHeight, edge_source_offset = 0, edge_target_offset = 0) {
 			const Tx0 = (d.source_data.x + d.source_data.dx + edge_source_offset).toFixed(this.precision);
 			const Tx1 = (d.target_data.x - edge_target_offset).toFixed(this.precision);
 			const Txi = d3.interpolateNumber(Tx0, Tx1);
