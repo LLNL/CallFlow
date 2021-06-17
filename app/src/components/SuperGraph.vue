@@ -139,32 +139,7 @@ export default {
 			console.log("[SG] Selected Metric: ", this.selectedMetric);
 
 			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
-			this.setupColors();
 			this.initComponents(this.currentComponents);
-		},
-
-		setupColors() {
-			this.$store.runtimeColor = new Color();
-			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
-
-			const _d = this.summary[this.selectedTargetRun][this.selectedMetric];
-			const colorMin = parseFloat(_d[0]);
-			const colorMax = parseFloat(_d[1]);
-
-			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMin)
-			);
-			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMax)
-			);
-
-			this.$store.runtimeColor.setColorScale(
-				this.selectedMetric,
-				colorMin,
-				colorMax,
-				this.selectedRuntimeColorMap,
-				this.selectedColorPoint
-			);
 		},
 
 		// ----------------------------------------------------------------

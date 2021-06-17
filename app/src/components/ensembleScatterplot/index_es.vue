@@ -73,6 +73,7 @@ export default {
 			data: "getEnsembleScatterplot",
 			summary: "getSummary",
 			showTarget: "getShowTarget",
+			generalColors: "getGeneralColors",
 		})
 	},
 
@@ -333,7 +334,7 @@ export default {
 					})
 					.style("stroke", "#202020")
 					.style("stroke-width", 0.5)
-					.style("fill", this.$store.distributionColor.ensemble)
+					.style("fill", this.generalColors.gainsboro)
 					.on("mouseover", () => {
 						let data = {
 							"callsite": callsite,
@@ -366,8 +367,8 @@ export default {
 						"cx": () => this.xScale(this.xtargetArray[i]) + 3 * this.padding.left,
 						"cy": (d, i) => this.yScale(self.ytargetArray[i]),
 					})
-					.style("fill", this.$store.distributionColor.target)
-					.style("stroke", this.$store.runtimeColor.edgeStrokeColor)
+					.style("fill", this.generalColors.target)
+					.style("stroke", this.generalColors.darkGrey)
 					.style("stroke-width", 0.5)
 					.on("mouseover", () => {
 						let data = {

@@ -56,7 +56,6 @@ export default {
 						return this.stroke_width;
 					},
 					"fill": (d) => {
-						console.log(d.level);
 						if (d.type == "intermediate") {
 							return this.generalColors.silver;
 						}						

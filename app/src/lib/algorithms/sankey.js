@@ -223,7 +223,6 @@ export default function Sankey() {
 				node.value = node["attr_dict"]["time (inc)"];
 				node.type = node["attr_dict"]["type"];
 				node.level = node["attr_dict"]["level"];
-				console.log(node.level);
 				node.targetValue = 0;
 				// if (node[store.selectedTargetDataset] != undefined) {
 				// 	node.targetValue = node[store.selectedTargetDataset]["time (inc)"];

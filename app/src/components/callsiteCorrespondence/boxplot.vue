@@ -20,6 +20,7 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library imports
 import EventHandler from "lib/routing/EventHandler";
@@ -67,6 +68,12 @@ export default {
 		dataReady: false,
 		idPrefix: "ensemble-boxplot-",
 	}),
+	
+	computed: {
+		...mapGetters({
+			generalColors: "getGeneralColors"
+		})
+	},
 	components: {
 		Box,
 		Outliers,
@@ -100,8 +107,8 @@ export default {
 			this.tOutliers = this.tData["outliers"];
 			this.bOutliers = this.bData["outliers"];
 
-			this.tColor = this.$store.distributionColor.target;
-			this.bColor = this.$store.distributionColor.ensemble;
+			this.tColor = this.generalColors.target;
+			this.bColor = this.generalColors.ensemble;
 
 			this.nid = this.tData["nid"];
 			this.id = this.idPrefix + this.nid;

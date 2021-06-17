@@ -356,16 +356,21 @@ class SankeyLayout:
                     src = path[depth]
                     tgt = path[depth + 1]
 
-                    if self.mode == "ESG":
-                        src_name, src_dict = self.esg_node_construct(c_name, src)
-                        tgt_name, tgt_dict = self.esg_node_construct(c_name, tgt) 
-                    else:
-                        src_name, src_dict = self.sg_node_construct(c_name, src)
-                        tgt_name, tgt_dict = self.sg_node_construct(c_name, tgt) 
+                    src_name = self.sg.get_name(src.get("id"), src.get("type"))
+                    tgt_name = self.sg.get_name(tgt.get("id"), tgt.get("type"))
                         
                     if not nxg.has_node(src_name):
+                        if self.mode == "ESG":
+                            src_dict = self.esg_node_construct(c_name, src)
+                        else:
+                            src_dict = self.sg_node_construct(c_name, src)
                         nxg.add_node(src_name, attr_dict=src_dict)
+
                     if not nxg.has_node(tgt):
+                        if self.mode == "ESG":
+                            tgt_dict = self.esg_node_construct(c_name, tgt) 
+                        else:
+                            tgt_dict = self.sg_node_construct(c_name, tgt)
                         nxg.add_node(tgt_name, attr_dict=tgt_dict)
 
                     has_callback_edge = nxg.has_edge(src_name, tgt_name)
@@ -387,7 +392,8 @@ class SankeyLayout:
 
     def sg_node_construct(self, callsite_name, node):
         name = self.sg.get_name(node.get("id"), node.get("type"))
-        return name, {
+        return  {
+            "name": name,
             "type": node.get("type"),
             "level": node.get("level"),
             "cp_path": self.cp_dict[callsite_name],
@@ -398,14 +404,16 @@ class SankeyLayout:
 
     def esg_node_construct(self, callsite_name, node):
         name = self.esg.get_name(node.get("id"), node.get("type"))
-        print(node)
         grads = self.esg.get_gradients(node, self.nbins)
-        return name, {
+        
+        return {
+            "name": name,
             "type": node.get("type"),
             "level": node.get("level"),
             "cp_path": self.cp_dict[callsite_name],
-            self.time_inc: grads[self.time_inc],
-            self.time_exc: grads[self.time_exc],
+            self.time_inc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_inc),
+            self.time_exc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_exc),
+            "gradients": grads,
             "nid": node.get("id"),
         }
 

@@ -159,12 +159,4 @@ class Gradients:
 
         return results
 
-    @staticmethod
-    def _format_data(histo):
-        """
-        :param histo:
-        :return:
-        """
-        return {"b": histo[0], "h": histo[1]}
-
 # ------------------------------------------------------------------------------

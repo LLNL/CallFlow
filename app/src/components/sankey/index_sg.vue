@@ -43,6 +43,8 @@ import detectDirectedCycle from "lib/algorithms/detectcycle";
 // General component imports
 import ColorMap from "../general/colormap";
 import InfoChip from "../general/infoChip";
+import Color from "lib/color/";
+import * as utils from "lib/utils";
 
 // Local component imports
 import Nodes from "./nodes";
@@ -86,17 +88,31 @@ export default {
 	computed: {
 		...mapGetters({ 
 			selectedMetric: "getSelectedMetric", 
-			data: "getSG",
+			sg_data: "getSG",
+			esg_data: "getESG",
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMode: "getSelectedMode",
 			comparisonMode: "getComparisonMode",
 			runBinCount: "getRunBinCount",
+			selectedColorPoint: "getSelectedColorPoint",
+			summary: "getSummary",
+			targetColor: "getTargetColor",
+			targetColorMap: "getTargetColorMap",
 		})
 	},
 
 	watch: {
-		data: function (val) {
-			this.visualize(val);
+		sg_data: function (val) {
+			this.data = val;
+			this.singleColors();
+			this.visualize();
+		},
+
+		esg_data: function (val) {
+			this.data = val;
+			this.singleColors();
+			this.ensembleColors();
+			this.visualize();
 		}
 	},
 
@@ -128,43 +144,7 @@ export default {
 	},
 
 	methods: {
-		// fetchData() {
-		// 	let data = {};
-		// 	const payload = {
-		// 		selected_runs: [this.$store.selectedTargetDataset],
-		// 	};
-		// 	if (this.$store.selectedMode == "Single") {
-		// 		payload["dataset"] = this.$store.selectedTargetDataset;
-		// 		data = await APIService.POSTRequest("single_supergraph", payload);
-		// 		console.debug("[/single_supergraph]", data);
-		// 	} else if (this.$store.selectedMode == "Ensemble") {
-		// 		payload["selected_runs"] = this.$store.selectedDatasets;
-		// 		data = await APIService.POSTRequest("ensemble_supergraph", payload);
-		// 		console.debug("[/ensemble_supergraph]", data);
-		// 	}
-
-		// 	data = this._add_node_map(data);
-		// 	data.graph = this._construct_super_graph(data);
-
-		// 	// check cycle.
-		// 	// let detectcycle = detectDirectedCycle(data.graph);
-
-		// 	// for (let i = 0; i <data.links.length; i += 1) {
-		// 	// 	let link = data.links[i];
-		// 	// 	let source_callsite = link["source"];
-		// 	// 	let target_callsite = link["target"];
-		// 	// 	let weight = link["weight"];
-
-		// 	// 	console.debug("=============================================");
-		// 	// 	console.debug("[Ensemble SuperGraph] Source Name :", source_callsite);
-		// 	// 	console.debug("[Ensemble SuperGraph] Target Name :", target_callsite);
-		// 	// 	console.debug("[Ensemble SuperGraph] Weight: ", weight);
-		// 	// }
-		// 	return data;
-		// },
-
 		init() {
-			console.log(this.selectedMode);
 			if (this.selectedMode == "SG") {
 				this.$store.dispatch("fetchSG", {
 					dataset: this.selectedTargetRun,
@@ -178,8 +158,6 @@ export default {
 		},
 
 		visualize() {
-			// set the component info.
-			// this.info = "Metric: " + this.selectedMetric;
 
 			this.width = this.$store.viewWidth;
 			this.height = this.$store.viewHeight - 2 * this.margin.top - this.margin.bottom;
@@ -199,8 +177,63 @@ export default {
 				});
 			});
 			this.sankeySVG.call(zoom);
-			console.log("Before render");
 			this.render();
+		},
+
+		singleColors() {
+			this.$store.runtimeColor = new Color();
+			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
+
+			const _d = this.summary[this.selectedTargetRun][this.selectedMetric];
+			const colorMin = parseFloat(_d[0]);
+			const colorMax = parseFloat(_d[1]);
+
+			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
+				parseFloat(colorMin)
+			);
+			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
+				parseFloat(colorMax)
+			);
+
+			this.$store.runtimeColor.setColorScale(
+				this.selectedMetric,
+				colorMin,
+				colorMax,
+				this.selectedRuntimeColorMap,
+				this.selectedColorPoint
+			);
+		},
+
+		ensembleColors() {
+			this.$store.distributionColor = new Color();
+			this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
+			
+			let hist_min = 0;
+			let hist_max = 0;
+			for (let node of this.data.nodes) {
+				const vals = node.attr_dict["gradients"][this.selectedMetric]["hist"]["h"];
+				hist_min = Math.min(
+					hist_min,
+					Math.min(...vals)
+				);
+				hist_max = Math.max(
+					hist_max,
+					Math.max(...vals)
+				);
+			}
+			this.$store.distributionColor.setColorScale(
+				"MeanGradients",
+				hist_min,
+				hist_max,
+				"Blues",
+				this.selectedColorPoint
+			);
+
+			this.$store.distributionColor.target = this.targetColorMap[
+				this.targetColor
+			];
+			this.$store.distributionColor.ensemble = "#C0C0C0";
+			this.$store.distributionColor.compare = "#043060";
 		},
 
 		clear() {
@@ -228,41 +261,14 @@ export default {
 			this.$refs.Edges.init(this.$store.graph, this.view);
 			// this.$refs.MiniHistograms.init(this.$store.graph, this.view);
 
-			const mode_lower = this.selectedMode.toLowerCase();
-			EventHandler.$emit(mode_lower + "-histogram", {
-				node: this.selectedNode,
-				dataset: this.selectedTargetRun,
-			});
-
-			EventHandler.$emit(mode_lower + "-scatterplot", {
-				node: this.selectedNode,
-				dataset: this.selectedTargetRun,
-			});
-
-			if (this.$store.selectedMode == "Single") {
+			if (this.selectedMode == "SG") {
 				this.$refs.ColorMap.init(this.$store.runtimeColor);
 			}
-			else if(this.$store.selectedMode == "Ensemble") {
+			else if(this.selectedMode == "ESG") {
 				this.$refs.ColorMap.init(this.$store.runtimeColor);
 				this.$refs.ColorMap.init(this.$store.distributionColor);
 			}
 		},
-
-		// /**
-		//  * Add node map to maintain the index of the Sankey nodes.
-		//  */
-		// _add_node_map(graph) {
-		// 	let nodeMap = {};
-		// 	let idx = 0;
-		// 	for (const node of graph.nodes) {
-		// 		nodeMap[node.id] = idx;
-
-		// 		// console.debug(`[Supergraph] Assigning ${node.id} with index ${idx}`);
-		// 		idx += 1;
-		// 	}
-		// 	graph.nodeMap = nodeMap;
-		// 	return graph;
-		// },
 
 		/**
 		 * Internal function that construct the super graph structure.
@@ -289,14 +295,12 @@ export default {
 				.nodePadding(this.ySpacing)
 				.size([this.sankeyWidth, this.sankeyHeight])
 				.levelSpacing(this.levelSpacing)
-				.maxLevel(this.data.maxLevel)
+				// .maxLevel(this.data.maxLevel)
 				.setMinNodeScale(this.nodeScale);
 			// .targetDataset(this.$store.selectedTargetDataset)
 			// .store(this.$store);
 
 			this.sankey.link();
-
-			console.log(this.data.nodes);
 
 			this.sankey.nodes(this.data.nodes).links(this.data.links).layout(32);
 		},

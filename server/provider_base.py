@@ -333,16 +333,14 @@ class BaseProvider:
                     aux_dict = {sg.get_name(module_idx, "module"): sg.module_aux_dict[module_idx] for module_idx in sg.module_aux_dict.keys() }
 
         if operation_name == "supergraph":
-            reveal_callsites = operation.get("reveal_callsites", [])
-            split_entry_module = operation.get("split_entry_module", [])
-            split_callee_module = operation.get("split_callee_module", [])
-
             ssg = SankeyLayout(
+                grp_column="group_path",    
                 sg=sg,
-                path_column="group_path",
-                reveal_callsites=reveal_callsites,
-                split_entry_module=split_entry_module,
-                split_callee_module=split_callee_module,
+                esg=None,
+                nbins=operation.get("nbins", 20),
+                reveal_callsites=operation.get("reveal_callsites", []),
+                split_entry_module=operation.get("split_entry_module", []),
+                split_callee_module= operation.get("split_callee_module", []),
             )
             return ssg.nxg
 

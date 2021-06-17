@@ -23,7 +23,6 @@ import * as utils from "lib/utils";
 
 import InfoChip from "../general/infoChip";
 
-import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler.js";
 
 export default {
@@ -61,7 +60,8 @@ export default {
 			runs: "getRuns",
 			nclusters: "getNumOfClusters",
 			summary: "getSummary",
-			selectedTargetRun: "getSelectedTargetRun"
+			selectedTargetRun: "getSelectedTargetRun",
+			generalColors: "getGeneralColors",
 		})
 	},
 
@@ -333,7 +333,7 @@ export default {
 						) {
 							return this.colorset[d[4]];
 						} else {
-							return d3.rgb(self.$store.DistributionColor.ensemble);
+							return d3.rgb(self.generalColors.gainsboro);
 						}
 					},
 					"fill-opacity": 0,
@@ -419,16 +419,16 @@ export default {
 			let self = this;
 			this.selectedRun = d[2];
 			d3.selectAll(".dot")
-				.attr("stroke", self.$store.distributionColor.ensemble)
+				.attr("stroke", self.generalColors.gainsboro)
 				.attr("stroke-width", 3);
 
 			d3.select("#dot-" + this.selectedRun)
-				.attr("stroke", self.$store.distributionColor.compare)
+				.attr("stroke", self.generalColors.compare)
 				.attr("stroke-width", 3);
 			d3.select(
 				"#outer-dot" + this.selectedRun
 			)
-				.attr("stroke", self.$store.distributionColor.target)
+				.attr("stroke", self.generalColors.target)
 				.attr("stroke-width", 3);
 
 			// Set the local and global variables for compare dataset
@@ -629,13 +629,13 @@ export default {
 
 			this.circles = this.svg.selectAll("#dot-" + datasetID).attrs({
 				opacity: 1.0,
-				stroke: this.$store.distributionColor.target,
+				stroke: this.generalColors.target,
 				"stroke-width": 3.0,
 			});
 
 			this.circles = this.svg.selectAll("#dot-" + datasetID).attrs({
 				opacity: 1.0,
-				stroke: this.$store.distributionColor.target,
+				stroke: this.generalColors.target,
 				"stroke-width": 4.5,
 			});
 		},

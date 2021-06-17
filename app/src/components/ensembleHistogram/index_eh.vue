@@ -69,7 +69,8 @@ export default {
 			summary: "getSummary",
 			selectedMetric: "getSelectedMetric",
 			data: "getEnsembleHistogram",
-			showTarget: "getShowTarget"
+			showTarget: "getShowTarget",
+			generalColors: "getGeneralColors",
 		})
 	},
 
@@ -123,25 +124,25 @@ export default {
 			// this.$refs.ToolTip.init(this.svgID);
 		},
 
-		dataProcess(data) {
-			let axis_x = [];
-			let dataMin = 0;
-			let dataMax = 0;
+		// dataProcess(data) {
+		// 	let axis_x = [];
+		// 	let dataMin = 0;
+		// 	let dataMax = 0;
 
-			dataMin = Math.min(...data["x"]);
-			dataMax = Math.max(...data["x"]);
+		// 	dataMin = Math.min(...data["x"]);
+		// 	dataMax = Math.max(...data["x"]);
 
-			let dataWidth = (dataMax - dataMin) / this.$store.selectedMPIBinCount;
-			if (dataWidth == 0) {
-				dataWidth = 1;
-			}
+		// 	let dataWidth = (dataMax - dataMin) / this.$store.selectedMPIBinCount;
+		// 	if (dataWidth == 0) {
+		// 		dataWidth = 1;
+		// 	}
 
-			for (let i = 0; i < this.$store.selectedBinCount; i++) {
-				axis_x.push(dataMin + i * dataWidth);
-			}
+		// 	for (let i = 0; i < this.$store.selectedBinCount; i++) {
+		// 		axis_x.push(dataMin + i * dataWidth);
+		// 	}
 
-			return [data["x"], data["y"], axis_x];
-		},
+		// 	return [data["x"], data["y"], axis_x];
+		// },
 
 		setupScale() {
 			this.hist_data = this.data[this.selectedMetric][this.selectedProp];
@@ -212,7 +213,7 @@ export default {
 					y: (d, i) => this.yScale(d),
 					width: this.xScale.bandwidth(),
 					height: (d) => Math.abs(this.yAxisHeight - this.yScale(d)),
-					fill: this.$store.distributionColor.target,
+					fill: this.generalColors.target,
 					opacity: 1,
 					"stroke-width": "0.2px",
 					stroke: "#202020",
@@ -239,7 +240,7 @@ export default {
 					y: (d, i) => this.yScale(d),
 					width: this.xScale.bandwidth(),
 					height: (d) => Math.abs(this.yAxisHeight - this.yScale(d)),
-					fill: this.$store.distributionColor.ensemble,
+					fill: this.generalColors.gainsboro,
 					opacity: 1,
 					"stroke-width": "0.2px",
 					stroke: "#202020",
@@ -261,7 +262,7 @@ export default {
         "(e+" +
         this.x_max_exponent +
         ") " +
-        this.$store.selectedMetric +
+        this.selectedMetric +
         " Runtime (" +
         "\u03BCs)";
 			this.svg

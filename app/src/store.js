@@ -35,8 +35,9 @@ export default new Vuex.Store({
 			target: "#4DAF4A",
 		},
 		selectedColorPoint: 5,
-		selectedRuntimeColorMap: "OrRd",
-		selectedDistributionColorMap: "Blues",
+		runtimeColorMap: "OrRd",
+		distributionColorMap: "Greens",
+		targetColor: "Green",
 
 		// General properties
 		selectedMetric: "time (inc)", // Set the current metric of interest.
@@ -269,8 +270,8 @@ export default new Vuex.Store({
 
 		getCCT: state => state.CCT,
 
-		getRankBinCount: state => state.getRankBinCount,
-		getRunBinCount: state => state.getRunBinCount,
+		getRankBinCount: state => state.rankBinCount,
+		getRunBinCount: state => state.runBinCount,
 
 		getSelectedCompareRun: state => state.selectedCompareRun,
 		getSelectedMetric: state => state.selectedMetric,
@@ -282,6 +283,7 @@ export default new Vuex.Store({
 		getSingleHistogram: state => state.singleHistogram,
 		getSingleScatterplot: state => state.singleScatterplot,
 		getSingleBoxplots: state => state.singleBoxplots,
+		getRuntimeColorMap: state => state.runtimeColorMap,
 
 		getESG: state => state.ESG,
 		getEnsembleHistogram: state => state.ensembleHistogram,
@@ -289,13 +291,14 @@ export default new Vuex.Store({
 		getEnsembleBoxplots: state => state.ensembleBoxplots,
 		getShowTarget: state => state.showTarget,
 		getTargetColorMap: state => state.targetColorMap,
+		getDistributionColor: state => state.distributionColorMap,
+		getTargetColor: state => state.targetColor,
 
 		getParameterProjection: state => state.parameterProjection,
 		getNumOfClusters: state => state.numOfClusters,
 
 		getGeneralColors: state => state.generalColors,
 		getEncoding: state => state.encoding,
-		getSelectedRuntimeColorMap: state => state.selectedRuntimeColorMap,
 		getSelectedColorPoint: state => state.selectedColorPoint,	
 	}
 });
