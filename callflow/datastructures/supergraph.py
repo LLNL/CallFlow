@@ -30,7 +30,7 @@ from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.utils import NumpyEncoder
 from callflow.utils.df import *
 from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
-from callflow.modules import Gradients
+from callflow.modules import Gradients, Histogram
 
 LOGGER = get_logger(__name__)
 
@@ -64,10 +64,6 @@ class SuperGraph(ht.GraphFrame):
         self.graph = None
 
         self.name = name  # dataset name
-        # if name != "ensemble":
-        #     self.timestamp = Sanitizer.fmt_time(name) # dataset timestamp
-        # else: 
-        #     self.timestamp = ""
         self.profile_format = ""
 
         self.parameters = {}
@@ -173,10 +169,31 @@ class SuperGraph(ht.GraphFrame):
             return self.df_unique('dataset')
 
     def get_gradients(self, node, nbins):
+        """
+        Getter to obtain the gradients of a node by the runtime metrics.
+        """
         return Gradients(self.dataframe, bins=nbins,
             node_id=node.get("id"),
             node_type=node.get("type"),
             proxy_columns=self.proxy_columns).result
+
+    def get_histograms(self, node, nbins):
+        """
+        Getter to obtain the rank histograms of a node.
+        Used by the mini-histograms on top of the node.
+        """
+        nid = node.get("id")
+        ntype = node.get("type")
+
+        if ntype == "callsite":
+            aux_dict = self.callsite_aux_dict
+        elif ntype == "module":
+            aux_dict = self.module_aux_dict
+
+        return Histogram(dataframe=aux_dict[node.get("id")], relative_to_df=None,
+            histo_types=["rank"],
+            node_type=node.get("type"),
+            proxy_columns=self.proxy_columns).unpack()
 
     # --------------------------------------------------------------------------
     def create(self, path, profile_format, module_callsite_map: dict = {},  filter_by="time (inc)", filter_perc=10.0) -> None: 

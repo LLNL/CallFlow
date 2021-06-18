@@ -399,6 +399,7 @@ class SankeyLayout:
             "cp_path": self.cp_dict[callsite_name],
             self.time_inc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_inc),
             self.time_exc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_exc),
+            "hists": self.sg.get_histograms(node, nbins=20),
             "nid": node.get("id"),
         }
 
@@ -413,6 +414,7 @@ class SankeyLayout:
             "cp_path": self.cp_dict[callsite_name],
             self.time_inc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_inc),
             self.time_exc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_exc),
+            "hists": self.sg.get_histograms(node, nbins=20),
             "gradients": grads,
             "nid": node.get("id"),
         }

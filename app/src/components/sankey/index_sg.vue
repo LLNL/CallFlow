@@ -261,7 +261,7 @@ export default {
 
 			this.$refs.Nodes.init(this.$store.graph, this.view);
 			this.$refs.Edges.init(this.$store.graph, this.view);
-			// this.$refs.MiniHistograms.init(this.$store.graph, this.view);
+			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
 
 			if (this.selectedMode == "SG") {
 				this.$refs.ColorMap.init(this.$store.runtimeColor);

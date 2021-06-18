@@ -33,6 +33,8 @@ export default new Vuex.Store({
 			lightGrey: "#888888",
 			blue: "#043060", 
 			target: "#4DAF4A",
+			intermediate: "c0c0c0",
+			ensemble: "#d9d9d9",
 		},
 		selectedColorPoint: 9,
 		runtimeColorMap: "OrRd",
@@ -58,6 +60,9 @@ export default new Vuex.Store({
 		ensembleBoxplots: {}, // stores scatterplot data
 		showTarget: true, // show target in the view
 		ensembleGradients: {}, // stores the gradient data
+
+		// Comparison
+		comparisonMode: false,
 
 		// Timeline state
 		timeline: {},
