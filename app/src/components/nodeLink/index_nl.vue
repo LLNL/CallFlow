@@ -8,11 +8,15 @@
 <template>
 	<v-col>
 		<v-row>
-			<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
+			<v-col cols="4">
+				<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
+			</v-col>
+			<v-col cols="8">
+				<ColorMap ref="ColorMap" />
+			</v-col>
 			<Loader :isDataReady="isDataReady" />
 			<svg :id="id" :width="width" :height="height" :left="margin.left" :top="margin.top">
 			<g id="container"></g>
-			<ColorMap ref="ColorMap" />
 			</svg>
 		</v-row>
 	</v-col>
@@ -184,10 +188,10 @@ export default {
 		 * @return {JSON<{'node': Color, 'text': Color}>} 'node': fill color, 'text': text color
 		 */
 		setCallsiteColor(callsite) {
-			// Set node fill color.
+			console.log(this.$store, this.selectedMetric);
 			const color = this.$store.runtimeColor.getColor(
 				callsite,
-				this.$store.selectedMetric,
+				this.selectedMetric,
 			);
 
 			// Set node color.

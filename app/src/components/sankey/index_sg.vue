@@ -97,6 +97,8 @@ export default {
 			selectedColorPoint: "getSelectedColorPoint",
 			summary: "getSummary",
 			targetColor: "getTargetColor",
+			runtimeColorMap: "getRuntimeColorMap",
+			distributionColorMap: "getDistributionColorMap",
 			targetColorMap: "getTargetColorMap",
 		})
 	},
@@ -199,7 +201,7 @@ export default {
 				this.selectedMetric,
 				colorMin,
 				colorMax,
-				this.selectedRuntimeColorMap,
+				this.runtimeColorMap,
 				this.selectedColorPoint
 			);
 		},
@@ -225,7 +227,7 @@ export default {
 				"MeanGradients",
 				hist_min,
 				hist_max,
-				"Blues",
+				this.distributionColorMap,
 				this.selectedColorPoint
 			);
 

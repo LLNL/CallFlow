@@ -341,7 +341,7 @@ export default {
         "(e+" +
         this.x_max_exponent +
         ") " +
-        this.$store.selectedMetric +
+        this.selectedMetric +
         " Runtime (" +
         "\u03BCs)";
 			this.svg
@@ -450,7 +450,7 @@ export default {
 		},
 
 		rankLineScale() {
-			let rankCount = this.data[this.$store.selectedMetric].d.length;
+			let rankCount = this.data[this.selectedMetric].d.length;
 
 			this.ranklinescale = d3
 				.scaleLinear()

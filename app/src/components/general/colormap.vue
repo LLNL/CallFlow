@@ -41,7 +41,8 @@ export default {
 		...mapGetters({
 			showTarget: "getShowTarget",
 			comparisonMode: "getComparisonMode",
-			generalColors: "getGeneralColors"
+			generalColors: "getGeneralColors",
+			selectedColorPoint: "getSelectedColorPoint"
 		})
 	},
 
@@ -133,7 +134,7 @@ export default {
 		},
 
 		drawColorMap(text, x, y) {
-			let splits = this.$store.selectedColorPoint;
+			let splits = this.selectedColorPoint;
 			let dcolor = (this.colorMax - this.colorMin) / (splits - 1);
 			for (let i = 0; i < splits; i += 1) {
 				let splitColor = this.colorMin + dcolor * (splits - 1 - i);

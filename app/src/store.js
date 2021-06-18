@@ -34,7 +34,7 @@ export default new Vuex.Store({
 			blue: "#043060", 
 			target: "#4DAF4A",
 		},
-		selectedColorPoint: 5,
+		selectedColorPoint: 9,
 		runtimeColorMap: "OrRd",
 		distributionColorMap: "Greens",
 		targetColor: "Green",
@@ -291,7 +291,7 @@ export default new Vuex.Store({
 		getEnsembleBoxplots: state => state.ensembleBoxplots,
 		getShowTarget: state => state.showTarget,
 		getTargetColorMap: state => state.targetColorMap,
-		getDistributionColor: state => state.distributionColorMap,
+		getDistributionColorMap: state => state.distributionColorMap,
 		getTargetColor: state => state.targetColor,
 
 		getParameterProjection: state => state.parameterProjection,

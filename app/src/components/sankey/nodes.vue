@@ -138,7 +138,6 @@ export default {
 		},
 
 		setEncoding(encoding, data) {
-			console.log(encoding);
 			if (encoding == "MEAN") {
 				this.$refs.Mean.init(this.graph.nodes, this.containerG);
 			}

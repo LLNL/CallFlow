@@ -31,7 +31,6 @@
 <script>
 // Local library imports
 import Color from "lib/color/";
-import EventHandler from "lib/routing/EventHandler";
 
 // Local components
 import Footer from "./general/footer";
@@ -49,12 +48,7 @@ export default {
 	}),
 
 	mounted() {
-		let self = this;
 		document.title = "CallFlow";
-
-		// EventHandler.$on("setup-colors", () => {
-		// 	self.setupColors(this.$store.selectedRuntimeColorMap, this.$store.selectedDistributionColorMap);
-		// });
 
 		this.setGlobalVariables(); // Set the general variables in the store.
 		this.setViewDimensions(); // Set the view dimensions.	
@@ -66,44 +60,44 @@ export default {
 			this.$store.selectedProp = "rank";
 
 			this.$store.selectedIQRFactor = 0.15;
-			this.$store.selectedRunBinCount = 20;
-			this.$store.selectedMPIBinCount = 20;
-			this.$store.selectedEdgeAlignment = "Top";
+			// this.$store.selectedRunBinCount = 20;
+			// this.$store.selectedMPIBinCount = 20;
+			// this.$store.selectedEdgeAlignment = "Top";
 
 			// Used in sankey.js
 			// TODO: Sankey should not have any store related properties. 
-			this.$store.selectedSuperNodePositionMode = "Minimal edge crossing";
+			// this.$store.selectedSuperNodePositionMode = "Minimal edge crossing";
 
 			this.$store.auxiliarySortBy = "time (inc)";
-			this.$store.selectedMetric = "time (inc)";
+			// this.$store.selectedMetric = "time (inc)";
 		
 			// Shoud be specified in the CSS, not here.
 			this.$store.fontSize = 14;
 			this.$store.transitionDuration = 1000;
 	
 			// Set the selected mode (Single or Ensemble)
-			this.$store.selectedMode = this.run_counts > 1 ? "Ensemble": "Single";
+			// this.$store.selectedMode = this.run_counts > 1 ? "Ensemble": "Single";
 			
 			// Set the metric to sort the call site information
-			this.$store.selectedRuntimeSortBy = "time (inc)";
-			this.$store.selectedMetric = "time (inc)";
+			// this.$store.selectedRuntimeSortBy = "time (inc)";
+			// this.$store.selectedMetric = "time (inc)";
 			
 			// Histogram properties
 			this.$store.selectedScale = "Linear";
 
 			// Color properties
-			this.$store.selectedRuntimeColorMap = "OrRd";
-			this.$store.selectedColorPoint = 9;
+			// this.$store.selectedRuntimeColorMap = "OrRd";
+			// this.$store.selectedColorPoint = 9;
 			this.$store.runtimeColor = new Color("OrRd");
-			this.$store.runtimeColor.intermediate = "#d9d9d9";
-			this.$store.runtimeColor.highlight = "#C0C0C0";
-			this.$store.runtimeColor.textColor = "#3a3a3a";
-			this.$store.runtimeColor.edgeStrokeColor = "#888888";
+			// this.$store.runtimeColor.intermediate = "#d9d9d9";
+			// this.$store.runtimeColor.highlight = "#C0C0C0";
+			// this.$store.runtimeColor.textColor = "#3a3a3a";
+			// this.$store.runtimeColor.edgeStrokeColor = "#888888";
 
-			// Ensemble color properites
-			this.$store.distributionColor = new Color("OrRd");
-			this.$store.distributionColor.ensemble = "#C0C0C0";
-			this.$store.distributionColor.compare = "#043060";
+			// // Ensemble color properites
+			this.$store.distributionColor = new Color("Greens");
+			// this.$store.distributionColor.ensemble = "#C0C0C0";
+			// this.$store.distributionColor.compare = "#043060";
 		},
 
 		// setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {

@@ -34,7 +34,7 @@
 		<splitpanes id="callgraph-dashboard" class="default-theme">
 			<!-- Left column-->
 			<splitpanes horizontal :splitpanes-size="25">
-			<ModuleHierarchy ref="ModuleHierarchy" />
+			<!-- <ModuleHierarchy ref="ModuleHierarchy" /> -->
 			<EnsembleScatterplot ref="EnsembleScatterplot" />
 			<EnsembleHistogram ref="EnsembleHistogram" />
 			</splitpanes>

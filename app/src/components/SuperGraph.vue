@@ -93,13 +93,8 @@ export default {
 
 	computed: {
 		...mapGetters({ 
-			runs: "getRuns", 
 			summary: "getSummary",
-			selectedTargetRun: "getSelectedTargetRun",
-			selectedMetric: "getSelectedMetric",
 			metricTimeMap: "getMetricTimeMap",
-			selectedRuntimeColorMap: "getSelectedRuntimeColorMap",
-			selectedColorPoint: "getSelectedColorPoint"
 		})
 	},
 
@@ -134,10 +129,6 @@ export default {
 			this.$store.commit("setSelectedMode", "SG");
 			this.$store.commit("setEncoding", "MEAN");
 
-			console.log("[SG] Selected Run: ", this.selectedTargetRun);
-			console.log("[SG] Selected Mode: ", this.selectedMode);
-			console.log("[SG] Selected Metric: ", this.selectedMetric);
-
 			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
 			this.initComponents(this.currentComponents);
 		},
@@ -167,7 +158,6 @@ export default {
 
 		clearComponents(componentList) {
 			for (let i = 0; i < componentList.length; i++) {
-				console.log(componentList[i]);
 				componentList[i].clear();
 			}
 		},

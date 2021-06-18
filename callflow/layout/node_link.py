@@ -42,17 +42,6 @@ class NodeLinkLayout:
             sg.nxg_filter_by_datasets(selected_runs)
 
         self.runs = selected_runs
-
-        # Put the top callsites into a list.
-        callsites = sg.df_unique("name")
-        # callsite_count = len(callsite_count)
-        # callsites = sg.df_get_top_by_attr(callsite_count, self.time_inc)
-
-        # Filter out the callsites not in the list. (in a LOCAL copy)
-        # _fdf = sg.df_filter_by_name(callsites)
-
-        # paths = [df_get_column(sg.dataframe, "path")[0] for callsite in callsites]
-
         self.nxg = sg.nxg
         
         # Add node and edge attributes.
@@ -91,54 +80,6 @@ class NodeLinkLayout:
         # ----------------------------------------------------------------------
         for idx, key in enumerate(datamap):
             nx.set_node_attributes(self.nxg, name=key, values=datamap[key])
-
-        # ----------------------------------------------------------------------
-        # compute map across data
-        # for run in self.runs:
-        #     if isinstance(self.sg, callflow.SuperGraph):
-        #         target_df = self.sg.dataframe
-        #     else:
-        #         target_df = self.sg.dataframe.loc[self.sg.dataframe["dataset"] == run]
-
-        #     if not target_df["module"].equals(target_df["name"]):
-        #         target_group_df = target_df.groupby(["module"])
-        #         target_name_group_df = target_df.groupby(["module", "name"])
-        #     else:
-        #         target_group_df = target_df
-        #         target_name_group_df = target_df.groupby("name")
-
-        #     target_module_callsite_map = target_group_df["name"].unique().to_dict()
-        #     target_name_time_inc_map = (
-        #         target_name_group_df[self.time_inc].mean().to_dict()
-        #     )
-        #     target_name_time_exc_map = target_name_group_df[self.time_exc].mean().to_dict()
-
-        #     datamap = {}
-        #     for callsite in self.nxg.nodes():
-
-        #         if callsite not in target_module_callsite_map.keys():
-        #             continue
-
-        #         module = self.sg.get_module_idx(callsite)
-
-        #         if callsite not in datamap:
-        #             datamap[callsite] = {}
-
-        #         for column in NodeLinkLayout._COLUMNS:
-
-        #             if column not in datamap:
-        #                 datamap[column] = {}
-
-        #             if column == self.time_inc:
-        #                 datamap[callsite][column] = target_name_time_inc_map[module]
-        #             elif column == self.time_exc:
-        #                 datamap[callsite][column] = target_name_time_exc_map[module]
-        #             elif column == "module":
-        #                 datamap[callsite][column] = module
-        #             elif column == "name":
-        #                 datamap[callsite][column] = callsite
-
-        #     nx.set_node_attributes(self.nxg, name=run, values=datamap)
 
     # --------------------------------------------------------------------------
     def _add_edge_attributes(self):

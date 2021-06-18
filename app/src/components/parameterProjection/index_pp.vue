@@ -88,7 +88,6 @@ export default {
 	},
 	methods: {
 		init() {
-			console.log(this.runs, this.selectedNumOfClusters);
 			this.$store.dispatch("fetchParameterProjection", {
 				selected_runs: this.runs,
 				n_cluster: this.selectedNumOfClusters,
@@ -283,7 +282,6 @@ export default {
 						return "dot";
 					},
 					id: (d) => {
-						console.log(d);
 						return "dot-" + d[2];
 					},
 					r: (d) => {

@@ -59,7 +59,6 @@ export default {
 		},
 
 		sortDatasetsByAttr(datasets, attr) {
-			console.log(this.metricTimeMap);
 			let ret = datasets.sort((a, b) => {
 				let x = 0,
 					y = 0;
