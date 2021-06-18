@@ -87,8 +87,8 @@ export default {
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMetric: "getSelectedMetric",
 			metricTimeMap: "getMetricTimeMap",
-			selectedRuntimeColorMap: "getSelectedRuntimeColorMap",
-			selectedColorPoint: "getSelectedColorPoint",
+			runtimeColorMap: "getRuntimeColorMap",
+			colorPoint: "getSelectedColorPoint",
 		})
 	},
 
@@ -98,9 +98,8 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("reset-runtime-color", () => {
-			console.log("[Color] Resetting color to", self.selectedTargetRun);
-			self.setupColors();
+		EventHandler.$on("reset-cct", () => {
+			self.reset();
 		});
 	},
 
@@ -148,8 +147,8 @@ export default {
 				this.selectedMetric,
 				colorMin,
 				colorMax,
-				this.selectedRuntimeColorMap,
-				this.selectedColorPoint
+				this.runtimeColorMap,
+				this.colorPoint
 			);
 		},
 
@@ -165,6 +164,11 @@ export default {
 
 		clear() {
 			this.clearComponents(this.currentComponents);
+		},
+
+		reset() {
+			this.clear();
+			this.init();
 		},
 
 		initComponents(componentList) {

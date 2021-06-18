@@ -7,9 +7,10 @@
       <v-select
         label="Metric"
         :items="metrics"
-        v-model="selectedMetric"
+        :value="selectedMetric"
         :menu-props="{maxHeight: '200'}"
         persistent-hint
+		@change="updateSelectedMetric"
       >
       </v-select>
     </v-flex>
@@ -18,9 +19,10 @@
       <v-select
         label="Runtime Color Map"
         :items="runtimeColorMap"
-        v-model="selectedRuntimeColorMap"
+        :value="selectedRuntimeColorMap"
         :menu-props="{maxHeight: '200'}"
         persistent-hint
+		@change="updateRuntimeColorMap"
       >
       </v-select>
     </v-flex>
@@ -29,10 +31,11 @@
 		<v-select
 			label="Distribution Color Map"
 			:items="distributionColorMap"
-			v-model="selectedDistributionColorMap"
+			:value="selectedDistributionColorMap"
 			:menu-props="{ maxHeight: '200' }"
 			persistent-hint
-			:disabled="selectedFormat=='SuperGraph'? true : false"
+			:disabled="selectedMode !=='ESG'? true : false"
+			@change="updateDistributionColorMap"
 		>
 		</v-select>
 	</v-flex>
@@ -41,10 +44,11 @@
 		<v-select
 			label="Target Color"
 			:items="targetColors"
-			v-model="selectedTargetColor"
+			:value="selectedTargetColor"
 			:menu-props="{ maxHeight: '200' }"
 			persistent-hint
-			:disabled="selectedFormat=='SuperGraph'? true : false"
+			:disabled="selectedMode !== 'ESG'? true : false"
+			@change="updateTargetColor"
 		>
 		</v-select>
 	</v-flex>
@@ -54,9 +58,10 @@
         label="Color points (3-9)"
         class="mt-0"
         type="number"
-        v-model="selectedColorPoint"
+        :value="selectedColorPoint"
         :menu-props="{maxHeight: '200'}"
         persistent-hint
+		@change="updateSelectedColorPoint"
       >
       </v-text-field>
     </v-flex>
@@ -171,15 +176,15 @@
 <script>
 import EventHandler from "lib/routing/EventHandler";
 import APIService from "lib/routing/APIService";
+import Color from "lib/color/index";
+import { mapActions, mapGetters } from "vuex";
 
 export default {
 	name: "VisualEncoding",
 
 	data: () => ({
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
-		selectedColorPoint: 9,
 		metrics: ["time", "time (inc)"],
-		selectedMetric: "time (inc)",
 		selectedRuntimeColorMap: "OrRd",
 		runtimeColorMap: [],
 		distributionColorMap: [],
@@ -211,22 +216,6 @@ export default {
 	}),
   
 	watch: {
-		selectedRuntimeColorMap: function (val) {
-			this.$store.selectedRuntimeColorMap = val;
-			EventHandler.$emit("setup-colors");
-			this.reset();
-		},
-
-		selectedMetric: function (val) {
-			this.$store.selectedMetric = val;
-			this.reset();
-		},
-
-		selectedColorPoint: function (val) {
-			this.$store.selectedColorPoint = val;
-			EventHandler.$emit("setup-colors");
-			this.reset();
-		},
 
 		// NOTE: This functionality is broken!!!
 		// The request times out because the auxiliary processing
@@ -318,48 +307,40 @@ export default {
 		console.log("Format: ", this.selectedFormat);
 	},
 
-	methods: {
-		init() {
-			this.selectedMetric = this.$store.selectedMetric;
-			this.selectedColorPoint = this.$store.selectedColorPoint;
-			this.runtimeColorMap = this.$store.runtimeColorMap;
-			this.distributionColorMap = this.$store.runtimeColorMap;
-			this.selectedFormat = this.$store.selectedFormat;
+	computed: {
+		...mapGetters({
+			selectedMetric: "getSelectedMetric",
+			selectedRuntimeColorMap: "getRuntimeColorMap",
+			selectedColorPoint: "getSelectedColorPoint",
+			selectedMode: "getSelectedMode",
+		})
+	},
 
-			if (this.$store.selectedFormat == "SuperGraph") {
+	methods: {
+		...mapActions(["updateSelectedMetric", "updateRuntimeColorMap", "updateSelectedColorPoint"]),
+		init() {
+			this.runtimeColorMap = (new Color()).getAllColors();
+			this.distributionColorMap = (new Color()).getAllColors();
+
+			if (this.selectedMode == "SG") {
 				this.selectedMPIBinCount = this.$store.selectedMPIBinCount;
 	
 				// Set the scale for information (log or linear)
 				this.$store.selectedScale = this.selectedScale;
 			} 
 
-			else if (this.$store.selectedFormat == "EnsembleSuperGraph") {
+			else if (this.selectedMode == "ESG") {
 				this.selectedRunBinCount = this.$store.selectedRunBinCount;
 				this.selectedProp = this.$store.selectedProp;
 
 				this.selectedDistributionColorMap = this.$store.selectedDistributionColorMap;
 				this.selectedRuntimeColorMap = "Blues";
 			} 
-
-			// console.log("Mode : ", this.$store.selectedMode);
-			// console.log("Number of runs :", this.$store.numOfRuns);
-			// console.log("Target Dataset : ", this.$store.selectedTargetDataset);
-			// console.log("Node: ", this.$store.selectedNode);
-			// console.log("Run Bin size", this.$store.selectedRunBinCount);
-			// console.log("MPI Bin size", this.$store.selectedMPIBinCount);
 		},
 
-		reset() {
-			if (this.$store.selectedFormat == "CCT") {
-				EventHandler.$emit("cct-reset");
-			}
-			else if (this.$store.selectedFormat == "SuperGraph") {
-				EventHandler.$emit("supergraph-reset");
-			}
-			else if (this.$store.selectedFormat == "EnsembleSuperGraph") {
-				EventHandler.$emit("ensemble-supergraph-reset");
-			}
-		},
+		clear() {
+
+		}
 	}
 };
 </script>

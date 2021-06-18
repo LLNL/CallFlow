@@ -1,8 +1,10 @@
 import Vue from "vue";
-import Vuex from "vuex";
+import Vuex, { Store } from "vuex";
 
 import * as utils from "lib/utils";
 import APIService from "lib/routing/APIService";
+import EventHandler from "lib/routing/EventHandler";
+
 Vue.use(Vuex);
 
 
@@ -38,8 +40,9 @@ export default new Vuex.Store({
 		},
 		selectedColorPoint: 9,
 		runtimeColorMap: "OrRd",
-		distributionColorMap: "Greens",
+		distributionColorMap: "YlGnBu",
 		targetColor: "Green",
+		colorPoint: 9,
 
 		// General properties
 		selectedMetric: "time (inc)", // Set the current metric of interest.
@@ -74,6 +77,7 @@ export default new Vuex.Store({
 		parameterProjection: {},
 		numOfClusters: 3,
 	},
+
 	mutations: {
 		setConfig(state, payload) {
 			state.config = payload;
@@ -161,6 +165,10 @@ export default new Vuex.Store({
 
 		setNumOfClusters(state, payload) {
 			state.numOfClusters = payload;
+		},
+
+		setSelectedColorPoint(state, payload) {
+			state.colorPoint = payload;
 		}
 	},
 	actions: {
@@ -255,8 +263,39 @@ export default new Vuex.Store({
 			const grad = await APIService.POSTRequest("gradients", payload);
 			console.log("[Data] ESG Gradients: ", grad);
 			commit("setParameterProjection", grad);
+		},
 
-		}
+		updateSelectedMetric({ state, dispatch }, payload) {
+			state.selectedMetric = payload;
+			dispatch("reset");
+		},
+
+		updateRuntimeColorMap({ state, dispatch }, payload) {
+			state.runtimeColorMap = payload;
+			dispatch("reset");
+		},
+
+		updateDistributionColorMap({ state, dispatch }, payload) {
+			state.distributionColorMap = payload;
+			dispatch("reset");
+		},
+
+		updateSelectedColorPoint({ state, dispatch }, payload) {
+			state.selectedColorPoint = payload;
+			dispatch("reset");
+		},
+
+		reset({state}) {
+			if (state.selectedMode == "CCT") {
+				EventHandler.$emit("reset-cct");
+			}
+			else if (state.selectedMode == "SG") {
+				EventHandler.$emit("reset-sg");
+			}
+			else if (state.selectedMode == "ESG") {
+				EventHandler.$emit("reset-esg");
+			}
+		},
 	},
 	modules: {
 
@@ -304,6 +343,6 @@ export default new Vuex.Store({
 
 		getGeneralColors: state => state.generalColors,
 		getEncoding: state => state.encoding,
-		getSelectedColorPoint: state => state.selectedColorPoint,	
+		getSelectedColorPoint: state => state.colorPoint,	
 	}
 });
