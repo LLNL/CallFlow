@@ -69,6 +69,7 @@ export default {
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMetric: "getSelectedMetric",
 			selectedNode: "getSelectedNode",
+			comparisonMode: "getComparisonMode",
 		})
 	},
 
@@ -246,7 +247,7 @@ export default {
 
 		mouseover(node) {
 			this.$refs.ToolTip.visualize(self.graph, node);
-			if (this.$store.selectedMode == "Ensemble" && this.$store.comparisonMode == false) {
+			if (this.selectedMode === "ESG" && this.comparisonMode == false) {
 				this.$refs.Guides.visualize(node, "temporary");
 			}
 		},

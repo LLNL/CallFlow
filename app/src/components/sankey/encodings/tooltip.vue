@@ -98,7 +98,7 @@ export default {
 
 			const svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
 
-			const height = 3 * 33.3 + node["entry_function"].length * 33.3;
+			const height = 3 * 33.3 + node.attr_dict["entry_functions"].length * 33.3;
 			this.toolTipG.attr("height", svgScale(10) + "px");
 			this.toolTipRect = this.toolTipG
 				.append("rect")
@@ -149,8 +149,8 @@ export default {
 		 */
 		runtimeInformation(node) {
 			this.addText("Name: " + utils.truncNames(node.id, 40));
-			this.addText("Inclusive Time: " + utils.formatRuntimeWithUnits(node["time (inc)"]));
-			this.addText("Exclusive Time: " + utils.formatRuntimeWithUnits(node["time"]));
+			this.addText("Inclusive Time: " + utils.formatRuntimeWithUnits(node.attr_dict["time (inc)"]));
+			this.addText("Exclusive Time: " + utils.formatRuntimeWithUnits(node.attr_dict["time"]));
 		},
 
 		/**
@@ -167,10 +167,10 @@ export default {
 			}
 
 			let callsite_data = {};
-			if (this.$store.selectedMode == "Single") {
+			if (this.selectedMode == "SG") {
 				callsite_data = this.$store.data_cs[this.$store.selectedTargetDataset];
 			}
-			else if (this.$store.selectedMode == "Ensemble") {
+			else if (this.selectedMode == "ESG") {
 				callsite_data = this.$store.data_cs["ensemble"];
 			}
 

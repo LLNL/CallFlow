@@ -190,10 +190,13 @@ class SuperGraph(ht.GraphFrame):
         elif ntype == "module":
             aux_dict = self.module_aux_dict
 
-        return Histogram(dataframe=aux_dict[node.get("id")], relative_to_df=None,
+        return Histogram(dataframe=aux_dict[nid], relative_to_df=None,
             histo_types=["rank"],
             node_type=node.get("type"),
             proxy_columns=self.proxy_columns).unpack()
+
+    def get_entry_functions(self, node):
+        return []
 
     # --------------------------------------------------------------------------
     def create(self, path, profile_format, module_callsite_map: dict = {},  filter_by="time (inc)", filter_perc=10.0) -> None: 

@@ -400,24 +400,16 @@ class SankeyLayout:
             self.time_inc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_inc),
             self.time_exc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_exc),
             "hists": self.sg.get_histograms(node, nbins=20),
+            "entry_functions": self.sg.get_entry_functions(node),
             "nid": node.get("id"),
         }
 
     def esg_node_construct(self, callsite_name, node):
-        name = self.esg.get_name(node.get("id"), node.get("type"))
         grads = self.esg.get_gradients(node, self.nbins)
-        
-        return {
-            "name": name,
-            "type": node.get("type"),
-            "level": node.get("level"),
-            "cp_path": self.cp_dict[callsite_name],
-            self.time_inc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_inc),
-            self.time_exc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_exc),
-            "hists": self.sg.get_histograms(node, nbins=20),
-            "gradients": grads,
-            "nid": node.get("id"),
-        }
+
+        ret = self.sg_node_construct(callsite_name, node)
+        ret['gradients'] = grads
+        return ret
 
     @staticmethod
     def _break_cycles_in_paths(path):
