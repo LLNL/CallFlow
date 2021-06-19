@@ -8,6 +8,7 @@ SPDX-License-Identifier: MIT */
 <script>
 import * as d3 from "d3";
 import * as utils from "lib/utils";
+import { mapGetters } from "vuex";
 
 export default {
 	name: "Markers",
@@ -17,9 +18,17 @@ export default {
 		fontSize: 10,
 		topPosition: -0.2,
 		bottomPosition: 0.7,
+		markerColor: "",
+		textColor: "",
 	}),
 
 	props: ["tq", "bq", "xScale", "nid", "idPrefix"],
+
+	computed: {
+		...mapGetters({
+			generalColors: "getGeneralColors",
+		})
+	},
 
 	mounted() {
 		// Get the SVG belonging to this callsite.
@@ -31,7 +40,9 @@ export default {
 
 		this.markery1 = this.$parent.centerLinePosition - this.$parent.rectHeight / 2;
 		this.markery2 = this.$parent.centerLinePosition + this.$parent.rectHeight / 2;
-		
+		this.markerColor = this.generalColors.darkGrey;
+		this.textColor = this.generalColors.text;
+
 		this.medianMarker(this.tq);
 		this.extremeMarkers(this.tq);
 
@@ -39,6 +50,7 @@ export default {
 			this.medianMarker(this.bq);
 			this.extremeMarkers(this.bq);
 		}
+
 		// this.qTexts()
 	},
 
@@ -82,7 +94,7 @@ export default {
 					x1: this.xScale(q.min),
 					y2: this.markery2,
 					x2: this.xScale(q.min),
-					stroke: this.$store.runtimeColor.intermediate,
+					stroke: this.markerColor,
 				})
 				.style("stroke-width", "1.5");
 
@@ -94,7 +106,7 @@ export default {
 					x1: this.xScale(q.max),
 					y2: this.markery2,
 					x2: this.xScale(q.max),
-					stroke: this.$store.runtimeColor.intermediate,
+					stroke: this.markerColor,
 				})
 				.style("stroke-width", "1.5");
 		},
@@ -109,7 +121,7 @@ export default {
 					class: "whiskerText body-1",
 					x: 0.5 * this.fontSize,
 					y: this.$parent.containerHeight * this.topPosition,
-					fill: d3.rgb(this.$store.runtimeColor.intermediate).darker(1),
+					fill: d3.rgb(this.markerColor).darker(1),
 				})
 				.style("stroke-width", "1")
 				.text("Min: " + utils.formatRuntimeWithoutUnits(q.min));
@@ -125,7 +137,7 @@ export default {
 					class: "whiskerText body-1",
 					x: this.$parent.containerWidth - 9 * this.fontSize,
 					y: this.$parent.containerHeight * this.topPosition,
-					fill: d3.rgb(this.$store.runtimeColor.intermediate).darker(1),
+					fill: d3.rgb(this.markerColor).darker(1),
 				})
 				.style("stroke-width", "1")
 				.text("Max:" + utils.formatRuntimeWithoutUnits(q.max));
@@ -141,7 +153,7 @@ export default {
 					class: "whiskerText body-1",
 					x: this.$parent.containerWidth / 2 - 4.5 * this.fontSize,
 					y: this.$parent.containerHeight * this.topPosition,
-					fill: d3.rgb(this.$store.runtimeColor.intermediate).darker(1),
+					fill: d3.rgb(this.markerColor).darker(1),
 				})
 				.style("stroke-width", "1")
 				.text("Med.:" + utils.formatRuntimeWithoutUnits(q.q2));
@@ -185,19 +197,6 @@ export default {
 				})
 				.style("stroke-width", "1")
 				.text("q3: " + utils.formatRuntimeWithoutUnits(q.q3));
-		},
-
-		/**
-     * Format the name by truncating.
-     * TODO: move to utils.
-     * @param {*} name
-     */
-		formatName(name) {
-			if (name.length < 20) {
-				return name;
-			}
-			let ret = this.trunc(name, 20);
-			return ret;
 		},
 
 		/**
