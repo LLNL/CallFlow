@@ -12,7 +12,6 @@
 <script>
 import * as d3 from "d3";
 import * as utils from "lib/utils";
-import { mapGetters } from "vuex";
 
 export default {
 	name: "Box",
@@ -25,12 +24,6 @@ export default {
 	}),
 
 	props: ["nid", "tq", "bq", "xScale", "idPrefix", "tColor", "bColor"],
-
-	computed: {
-		...mapGetters({
-			generalColors: "getGeneralColors",
-		})
-	},
 
 	mounted() {
 		if (this.debug) {

@@ -129,18 +129,19 @@ export default {
 			dagreRender(inner, this.g);
 
 			// TODO: Zoom translate is not working well.
-			// this.zoomTranslate();
+			this.zoomTranslate();
 
 			let self = this;
 			this.svg.selectAll("g.node").on("click", function (id) {
 				self.node_click_action(id);
 				dagreRender(inner, self.g);
+				self.zoomTranslate();
 			});
 
 			// Add tooltip
-			// inner.selectAll("g.node")
-			// 	.attr("title", function (v) { return this.tooltip(v, g.node(v).description) })
-			// 	.each(function (v) { $(this).tipsy({ gravity: "w", opacity: 1, html: true }); });
+			inner.selectAll("g.node")
+				.attr("title", function (v) { return v; });
+			// .each(function (v) { $(this).tipsy({ gravity: "w", opacity: 1, html: true }); });
 
 			this.$refs.ColorMap.init(this.$store.runtimeColor);
 		},
@@ -188,7 +189,6 @@ export default {
 		 * @return {JSON<{'node': Color, 'text': Color}>} 'node': fill color, 'text': text color
 		 */
 		setCallsiteColor(callsite) {
-			console.log(this.$store, this.selectedMetric);
 			const color = this.$store.runtimeColor.getColor(
 				callsite,
 				this.selectedMetric,
@@ -258,7 +258,7 @@ export default {
 					node.style = `fill: ${node.fillColor}; color: "#f00";`;
 					node.rx = node.ry = 8;
 					node.id = node.name;
-					node.height = self.b_node_height;
+					// node.height = self.b_node_height;
 				}
 			});
 		},
@@ -335,7 +335,7 @@ export default {
 					nodeClass = node.class;
 					if (nodeClass !== "cct-node")
 						node.class = nodeClass.replace("highLight", " ").trim();
-					node.height = self.b_node_height;
+					// node.height = self.b_node_height;
 				});
 
 				this.g.edges().forEach(function (e, v, w) {
@@ -358,6 +358,8 @@ export default {
 				});
 				this.g.node(id).class += " highLight";
 			}
+
+			// this.zoomTranslate();
 		},
 
 		/**
