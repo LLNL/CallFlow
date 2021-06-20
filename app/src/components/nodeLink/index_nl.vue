@@ -16,7 +16,8 @@
 			</v-col>
 			<Loader :isDataReady="isDataReady" />
 			<svg :id="id" :width="width" :height="height" :left="margin.left" :top="margin.top">
-			<g id="container"></g>
+				<g id="container"></g>
+				<ToolTip ref="ToolTip" />
 			</svg>
 		</v-row>
 	</v-col>
@@ -32,6 +33,7 @@ import EventHandler from "lib/routing/EventHandler";
 import InfoChip from "../general/infoChip";
 import Loader from "../general/loader";
 import ColorMap from "../general/colormap";
+import ToolTip from "./tooltip";
 
 import * as utils from "lib/utils";
 
@@ -40,7 +42,8 @@ export default {
 	components: {
 		InfoChip,
 		Loader,
-		ColorMap
+		ColorMap, 
+		ToolTip
 	},
 
 	data: () => ({
@@ -132,18 +135,23 @@ export default {
 			this.zoomTranslate();
 
 			let self = this;
-			this.svg.selectAll("g.node").on("click", function (id) {
-				self.node_click_action(id);
+			this.svg.selectAll("g.node").on("click", function (v) {
+				self.node_click_action(v);
 				dagreRender(inner, self.g);
 				self.zoomTranslate();
 			});
 
+			this.$refs.ColorMap.init(this.$store.runtimeColor);
+
+			// this.$refs.Tooltip.init(this.id);
+			// this.svg.selectAll("g.node").on("mouseover", function (v) {
+			// 	console.log(v);
+			// 	self.$refs.ToolTip.visualize(v);
+			// });
+
 			// Add tooltip
 			inner.selectAll("g.node")
 				.attr("title", function (v) { return v; });
-			// .each(function (v) { $(this).tipsy({ gravity: "w", opacity: 1, html: true }); });
-
-			this.$refs.ColorMap.init(this.$store.runtimeColor);
 		},
 
 		/**
@@ -288,7 +296,7 @@ export default {
 				const edge = self.g.edge(e);
 				edge.class = "cct-edge";
 				self.g.edge(e).style =
-          "fill: rgba(255,255,255, 0); stroke: #3c3c3c; stroke-width: 2.5px;";
+          "fill: rgba(255,255,255, 0); stroke: #686868; stroke-width: 2.5px;";
 			});
 		},
 

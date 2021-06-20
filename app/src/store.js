@@ -169,7 +169,7 @@ export default new Vuex.Store({
 		},
 
 		setSelectedColorPoint(state, payload) {
-			state.colorPoint = payload;
+			state.selectedColorPoint = payload;
 		}
 	},
 	actions: {
@@ -283,6 +283,7 @@ export default new Vuex.Store({
 
 		updateSelectedColorPoint({ state, dispatch }, payload) {
 			state.selectedColorPoint = payload;
+			console.log("here");
 			dispatch("reset");
 		},
 
@@ -354,6 +355,6 @@ export default new Vuex.Store({
 
 		getGeneralColors: state => state.generalColors,
 		getEncoding: state => state.encoding,
-		getSelectedColorPoint: state => state.colorPoint,	
+		getSelectedColorPoint: state => state.selectedColorPoint,	
 	}
 });

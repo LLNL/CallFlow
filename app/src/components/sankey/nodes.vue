@@ -196,7 +196,7 @@ export default {
 				const nodeSVG = this.containerG.select("#callsite-" + node.id);
 
 				// Make appropriate event requests (Single and Ensemble).
-				if (this.$store.selectedMode == "Ensemble") {
+				if (this.selectedMode == "ESG") {
 					if (!this.drawGuidesMap[node.id]) {
 						this.$refs.Guides.visualize(node, "permanent", nodeSVG);
 						this.drawGuidesMap[node.id] = true;
@@ -223,7 +223,7 @@ export default {
 					});
 
 				}
-				else if (this.$store.selectedMode == "Single") {
+				else if (this.selectedMode == "SG") {
 					EventHandler.$emit("single-histogram", {
 						node,
 						groupBy: this.$store.selectedGroupBy,
@@ -247,14 +247,14 @@ export default {
 
 		mouseover(node) {
 			this.$refs.ToolTip.visualize(self.graph, node);
-			if (this.selectedMode === "ESG" && this.comparisonMode == false) {
+			if (this.selectedMode === "ESG") {
 				this.$refs.Guides.visualize(node, "temporary");
 			}
 		},
 
 		mouseout(node) {
 			this.$refs.ToolTip.clear();
-			if (this.$store.selectedMode == "Ensemble" && this.$store.comparisonMode == false) {
+			if (this.$store.selectedMode == "Ensemble") {
 				this.$refs.Guides.clear(node, "temporary");
 				if (this.permanentGuides == false) {
 					d3.selectAll(".ensemble-edge")
