@@ -254,7 +254,7 @@ export default {
 			this.data.nodes = postProcess["nodes"];
 			this.data.links = postProcess["links"];
 			
-			// this._init_sankey();
+			this._init_sankey();
 
 			this.$refs.Nodes.init(this.data, this.view);
 			this.$refs.Edges.init(this.data, this.view);
@@ -325,40 +325,39 @@ export default {
 				// console.debug(`[SuperGraph] Source Node: ${source_node}, Level: ${source_node.level}`);
 				// console.debug(`[Ensemble SuperGraph] Target Node: ${target_node} Level: ${target_node.level}`);
 
-				const source_level = source_node.level;
-				const target_level = target_node.level;
+				const source_level = source_node.attr_dict.level;
+				const target_level = target_node.attr_dict.level;
 				const shift_level = target_level - source_level;
 
 				// console.debug(source_level, target_level);
 				// console.debug(`[SuperGraph] Number of levels to shift: ${shift_level}`);
 
-				let targetDataset = this.selectedTargetRun;
 				// Put in intermediate nodes.
 				let firstNode = true;
 				for (let j = shift_level; j > 1; j--) {
 					const intermediate_idx = nodes.length;
 
 					let tempNode = {};
-					let actual_time = source_node["actual_time"];
 					let max_flow = source_node["max_flow"];
 					if (this.existingIntermediateNodes[target_node.id] == undefined) {
 						// Add the intermediate node to the array
 						tempNode = {
 							attr_dict: {
+								...target_node.attr_dict,
 								nid: -1,
 								level: j - 1,
 
 							},
+							level: j - 1,
 							id: "intermediate_" + target_node.id,
-							value: temp_edges[i].weight,
-							targetValue: temp_edges[i].targetWeight,
+							value: temp_edges[i].attr_dict.weight,
+							targetValue: temp_edges[i].attr_dict.targetWeight,
 							height: temp_edges[i].height,
 							targetHeight: temp_edges[i].targetHeight,
-							module: target_node.module,
 							type: "intermediate",
 							count: 1,
 						};
-						tempNode[targetDataset] = target_node[targetDataset];
+						// tempNode[targetDataset] = target_node[this.selectedTargetRun];
 
 						if (firstNode) {
 							nodes.push(tempNode);
@@ -378,12 +377,12 @@ export default {
 
 					// Add the source edge.
 					const sourceTempEdge = {
+						attr_dict: temp_edges[i].attr_dict,
 						type: "source_intermediate",
 						source: source_node.id,
 						target: tempNode.id,
-						weight: temp_edges[i].weight,
-						targetWeight: temp_edges[i].targetWeight,
-						actual_time: actual_time,
+						weight: temp_edges[i].attr_dict.weight,
+						targetWeight: temp_edges[i].attr_dict.targetWeight,
 						max_flow: max_flow,
 					};
 					edges.push(sourceTempEdge);
@@ -398,12 +397,12 @@ export default {
 					// console.debug(`[SuperGraph] Updating this edge: ${edges[i]}`);
 					
 					const targetTempEdge = {
+						attr_dict: temp_edges[i].attr_dict,
 						type: "target_intermediate",
 						source: tempNode.id,
 						target: target_node.id,
-						actual_time: actual_time,
-						weight: temp_edges[i].weight,
-						targetWeight: temp_edges[i].targetWeight,
+						weight: temp_edges[i].attr_dict.weight,
+						targetWeight: temp_edges[i].attr_dict.targetWeight,
 						max_flow: max_flow,
 					};
 					edges.push(targetTempEdge);
