@@ -471,6 +471,7 @@ class SuperGraph(ht.GraphFrame):
                   "maxmodule": self.get_name(self.df_get_top_by_attr("module", 1, "time")[0], "module"),
                   "invcallsites": self.inv_callsites,
                   "invmodules": self.inv_modules,
+                  "timecolumns": TIME_COLUMNS,
                   }
 
         for p in TIME_COLUMNS:
