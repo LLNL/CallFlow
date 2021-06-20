@@ -18,6 +18,11 @@
 				<v-col cols="7">{{ runs.length }} </v-col> 	
 			</v-row>
 			<v-divider></v-divider>
+			<v-row class="ma-0 pa-0 pb-0 mb-0">
+				<v-col cols="5"><b>Profile format: </b></v-col>
+				<v-col cols="7">{{ data.profile_format_summary }}</v-col> 
+			</v-row>
+			<v-divider></v-divider>
 			<v-row class="ma-0 pa-0 pb-0 mb-0"> 
 				<v-col cols="5"><b>Number of nodes: </b></v-col> 
 				<v-col cols="7">{{ Object.keys(data.module_callsite_map).length
@@ -37,13 +42,8 @@
 			</v-row>
 			<v-divider></v-divider>
 			<v-row class="ma-0 pa-0 pb-0 mb-0"> 
-				<v-col cols="5"><b>Filter by attribute: </b></v-col> 
-				<v-col cols="7">{{ data.filter_by }}</v-col> 
-			</v-row>
-			<v-divider></v-divider>
-			<v-row class="ma-0 pa-0 pb-0 mb-0">
-				<v-col cols="5"><b>Filter percentage: </b></v-col>
-				<v-col cols="7">{{ data.filter_perc }}</v-col> 
+				<v-col cols="5"><b>Metric columns: </b></v-col> 
+				<v-col cols="7">{{ data.time_columns }}</v-col> 
 			</v-row>
 			<!-- <v-divider></v-divider> -->
 			<!-- <v-row class="ma-0 pa-0 pb-0 mb-0"> 

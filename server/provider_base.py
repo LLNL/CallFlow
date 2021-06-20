@@ -279,7 +279,15 @@ class BaseProvider:
         operation_name = operation["name"]
 
         if operation_name == "init":
-            return self.config
+            if len(self.datasets) > 1:
+                time_columns = self.supergraphs["ensemble"].time_columns
+            else:
+                time_columns = self.supergraphs[self.datasets[0].name].time_columns
+            return { 
+                **self.config,
+                "time_columns": time_columns,
+                "profile_format_summary": list(set(map(lambda d: d["profile_format"], self.datasets))) 
+            }
 
         elif operation_name == "summary":
             return { sg: self.supergraphs[sg].summary() for sg in self.supergraphs }

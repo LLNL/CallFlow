@@ -175,6 +175,7 @@ export default new Vuex.Store({
 	actions: {
 		async fetchConfig({ commit }) {
 			const config = await APIService.GETRequest("config");
+			console.log("[Data] Config :", config);
 			commit("setConfig", config);
 		},
 
