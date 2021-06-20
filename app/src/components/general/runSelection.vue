@@ -20,27 +20,26 @@
 			</v-select>
 		</v-col>
 
-		<v-col cols="4">
+		<!-- <v-col cols="4">
 			<v-select
 				class="pt-8 pl-2"
+				dark
 				:label="compareLabel"
 				:items="datasets"
 				v-model="compareRun"
 				:menu-props="{maxHeight: '400'}"
-				v-show="isComparisonMode"
-				v-on:change="updateCompareRun()"
+				@input="updateCompareRun"
 			>
 				<template slot="selection" slot-scope="{item}">
 					{{ datasets.indexOf(item) + 1 }}. {{ item }} -
 					{{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
 				</template>
 				<template slot="item" slot-scope="{item}">
-					<!-- HTML that describe how select should render items when the select is open -->
 					{{ datasets.indexOf(item) + 1 }}. {{ item }} -
 					{{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
 				</template>
 			</v-select>
-		</v-col>
+		</v-col> -->
 	</v-row>
 </template>
 
@@ -48,20 +47,12 @@
 import * as d3 from "d3";
 import { mapGetters } from "vuex";
 
-// local library imports
-import EventHandler from "lib/routing/EventHandler";
-
 export default {
 	data: () => ({
 		name: "RunSelection",
 		datasets: [],
 		isComparisonMode: false,
 		targetLabel: "",
-		emitMapper: {
-			"CCT": "reset-cct",
-			"SG": "reset-sg",
-			"ESG": "reset-esg",
-		},
 		compareLabel: "",
 	}),
 
@@ -69,10 +60,6 @@ export default {
 		this.datasets = Object.keys(this.metricTimeMap);
 		this.targetLabel = "Select Target run (Sorted by " + this.selectedMetric + ")";
 		this.compareLabel = "Select Compare run (Sorted by " + this.selectedMetric + ")";
-
-		if (this.compareRun) {
-			this.isComparisonMode = true;
-		}
 	},
 
 	computed: {
@@ -94,20 +81,13 @@ export default {
 
 		updateTargetRun(data) {
 			this.$store.commit("setSelectedTargetRun", data);
-			if (this.selectedMode == "ESG") {
-				EventHandler.$emit("reset-runtime-color");
-				EventHandler.$emit("reset-distribution-color");
-			} else {
-				EventHandler.$emit("reset-runtime-color");
-			}
-			EventHandler.$emit(this.emitMapper[this.selectedMode]);
+			this.$store.dispatch("reset");
 		},
 
-		updateComapreRun() {
-			this.$store.isComparisonMode = true;
-			this.$store.selectedCompareDataset = this.selectedCompareDataset;
-			EventHandler.$emit("setup-colors");
-			EventHandler.$emit("reset");
+		updateComapareRun(data) {
+			this.$store.commit("setSelectedMode", "DSG");
+			this.$store.commit("setSelectedCompareRun", data);
+			this.$store.dispatch("reset");
 		},
 	},
 };

@@ -69,7 +69,6 @@ export default {
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMetric: "getSelectedMetric",
 			selectedNode: "getSelectedNode",
-			comparisonMode: "getComparisonMode",
 		})
 	},
 
@@ -116,14 +115,15 @@ export default {
 
 			this.ensemblePath();
 			this.text();
-			if (this.showTarget && this.selectedMode === "Ensemble") {
+			if (this.showTarget && this.selectedMode === "ESG") {
 				this.$refs.TargetLine.init(this.graph.nodes);
-
-				if (this.comparisonMode == false) {
-					this.targetPath();
-				}
 				this.$refs.Guides.init(this.graph.nodes);
 			}
+
+			if (this.selectedMode == "DSG") {
+				this.targetPath();
+			}
+
 			this.$refs.ToolTip.init(this.$parent.id);
 		},
 

@@ -169,15 +169,15 @@ export default {
 
 		clear() {
 			d3.select("#" + this.svgID).select("g").remove();
-			// d3.selectAll(".single-histogram-bar").remove();
-			// d3.select(".x-axis").remove();
-			// d3.select(".y-axis").remove();
-			// d3.selectAll(".histogram-axis-label").remove();
-			// d3.selectAll(".binRank").remove();
-			// d3.selectAll(".lineRank").remove();
-			// d3.selectAll(".brush").remove();
-			// d3.selectAll(".tick").remove();
-			// d3.selectAll(".histogram-rank-axis").remove();
+			d3.selectAll(".single-histogram-bar").remove();
+			d3.select(".x-axis").remove();
+			d3.select(".y-axis").remove();
+			d3.selectAll(".histogram-axis-label").remove();
+			d3.selectAll(".binRank").remove();
+			d3.selectAll(".lineRank").remove();
+			d3.selectAll(".brush").remove();
+			d3.selectAll(".tick").remove();
+			d3.selectAll(".histogram-rank-axis").remove();
 			this.$refs.ToolTip.clear();
 		},
 

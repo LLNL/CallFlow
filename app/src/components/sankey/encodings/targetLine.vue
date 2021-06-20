@@ -10,8 +10,8 @@
 </template>
 
 <script>
-import * as utils from "lib/utils";
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 export default {
 	name: "TargetLine",
@@ -21,12 +21,17 @@ export default {
 		id: "target-line"
 	}),
 
+	computed: {
+		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
+			generalColors: "getGeneralColors",
+			selectedMetric: "getSelectedMetric",
+		})
+	},
+
 	methods: {
 		init(nodes) {
 			this.nodes = nodes;
-
-			this.ensemble_module_data = this.$store.data_mod["ensemble"];
-			this.ensemble_callsite_data = this.$store.data_cs["ensemble"];
 
 			for (let node of nodes) {
 				this.visualize(node);
@@ -34,27 +39,28 @@ export default {
 		},
 
 		visualize(node) {
-			const gradients = utils.getGradients(this.$store, node);
-
-			if (Object.keys(gradients).length != 0) {
-				let targetPos = gradients["dataset"]["position"][this.$store.selectedTargetDataset];
-				let binWidth = node.height / (this.$store.selectedRunBinCount);
-				let y = binWidth * targetPos;
-
-				node.svg
-					.append("line")
-					.attrs({
-						"class": "targetLines",
-						"id": "line-2-" + this.$store.selectedTargetDataset + "-" + node.client_idx,
-						"x1": 0,
-						"y1": y,
-						"x2": this.$parent.nodeWidth,
-						"y2": y,
-						"stroke-width": 5,
-						"stroke": this.$store.distributionColor.target
-					});
-
+			if(node.type == "intermediate") {
+				return;
 			}
+			
+			const gradients = node.attr_dict.gradients[this.selectedMetric];
+			const targetPos = gradients["dataset"]["position"][this.selectedTargetRun];
+			const binWidth = node.height / (this.selectedRunBinCount);
+			const y = binWidth * targetPos;
+
+			node.svg
+				.append("line")
+				.attrs({
+					"class": "targetLines",
+					"id": "line-2-" + this.selectedTargetRun + "-" + node.attr_dict.nid,
+					"x1": 0,
+					"y1": y,
+					"x2": this.$parent.nodeWidth,
+					"y2": y,
+					"stroke-width": 5,
+					"stroke": this.generalColors.target
+				});
+
 		},
 
 		clear() {

@@ -226,11 +226,6 @@ export default {
 	}),
 
 	watch: {
-		selectedScale(val) {
-			this.$store.selectedScale = val;
-			this.reset();
-		},
-
 		selectedIQRFactor(val) {
 			this.$store.selectedIQRFactor = val;
 			this.reset();
@@ -253,17 +248,6 @@ export default {
 		auxiliarySortBy(val) {
 			this.$store.auxiliarySortBy = val;
 			EventHandler.$emit("update-auxiliary-sort-by");
-		},
-
-		selectedProp(val) {
-			this.$store.selectedProp = val;
-			this.reset();
-		},
-
-		selectedDistributionColorMap(val) {
-			this.$store.selectedDistributionColorMap = val;
-			EventHandler.$emit("setup-colors");
-			this.reset();
 		},
 
 		async selectedCompareDataset(val) {
