@@ -286,6 +286,16 @@ export default new Vuex.Store({
 			dispatch("reset");
 		},
 
+		updateRankBinCount({ state, dispatch }, payload) {
+			state.rankBinCount = payload;
+			EventHandler.$emit("reset-single-histogram");
+		},
+
+		updateRunBinCount({ state, dispatch }, payload) {
+			state.runBinCount = payload;
+			EventHandler.$emit("reset-ensemble-histogram");
+		},
+
 		reset({state}) {
 			if (state.selectedMode == "CCT") {
 				EventHandler.$emit("reset-cct");

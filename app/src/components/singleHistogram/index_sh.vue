@@ -74,6 +74,7 @@ export default {
 			rankBinCount: "getRankBinCount",
 			data: "getSingleHistogram",
 			generalColors: "getGeneralColors",
+			selectedRankBinCount: "getRankBinCount",
 		})
 	},
 
@@ -85,9 +86,9 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("update-rank-bin-size", function(data) {
+		EventHandler.$on("reset-single-histogram", function() {
 			self.clear();
-			EventHandler.$emit("single-histogram", data);		
+			self.init();
 		});
 	},
 
@@ -97,7 +98,7 @@ export default {
 				dataset: this.selectedTargetRun,
 				node: this.selectedNode["name"],
 				ntype: this.selectedNode["type"],
-				nbins: 20,
+				nbins: this.selectedRankBinCount,
 			});
 
 			this.width = window.innerWidth * 0.25;
@@ -120,7 +121,7 @@ export default {
 				width: this.boxWidth,
 				height: this.boxHeight,
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
-			});
+			}).append("g");
 		},
 
 		visualize() {
@@ -167,15 +168,16 @@ export default {
 		},
 
 		clear() {
-			d3.selectAll(".single-histogram-bar").remove();
-			d3.select(".x-axis").remove();
-			d3.select(".y-axis").remove();
-			d3.selectAll(".histogram-axis-label").remove();
-			d3.selectAll(".binRank").remove();
-			d3.selectAll(".lineRank").remove();
-			d3.selectAll(".brush").remove();
-			d3.selectAll(".tick").remove();
-			d3.selectAll(".histogram-rank-axis").remove();
+			d3.select("#" + this.svgID).select("g").remove();
+			// d3.selectAll(".single-histogram-bar").remove();
+			// d3.select(".x-axis").remove();
+			// d3.select(".y-axis").remove();
+			// d3.selectAll(".histogram-axis-label").remove();
+			// d3.selectAll(".binRank").remove();
+			// d3.selectAll(".lineRank").remove();
+			// d3.selectAll(".brush").remove();
+			// d3.selectAll(".tick").remove();
+			// d3.selectAll(".histogram-rank-axis").remove();
 			this.$refs.ToolTip.clear();
 		},
 

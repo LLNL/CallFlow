@@ -99,12 +99,14 @@
           label="Number of bins for MPI Distribution"
           class="mt-0"
           type="number"
-          v-model="selectedMPIBinCount"
+          v-model="selectedRankBinCount"
           :menu-props="{maxHeight: '200'}"
           persistent-hint
           :disabled="
             selectedMode === 'ESG' || selectedMode == 'SG' ? false : true
           "
+		@change="updateRankBinCount"
+
         >
         </v-text-field>
       </v-flex>
@@ -118,6 +120,8 @@
           :menu-props="{maxHeight: '200'}"
           persistent-hint
           :disabled="selectedMode === 'ESG' ? false : true"
+		@change="updateRankBinCount"
+
         >
         </v-text-field>
       </v-flex>
@@ -195,10 +199,8 @@ export default {
 	data: () => ({
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
 		metrics: ["time", "time (inc)"],
-		runtimeColorMap: [],
-		distributionColorMap: [],
-		selectedRunBinCount: 20,
-		selectedMPIBinCount: 20,
+		runtimeColorMap: new Color().getAllColors(),
+		distributionColorMap: new Color().getAllColors(),
 		selectedRuntimeSortBy: "mean",
 		sortByModes: ["min", "mean", "max", "imb", "var", "kert", "skew"],
 		scales: ["Log", "Linear"],
@@ -224,23 +226,6 @@ export default {
 	}),
 
 	watch: {
-		// NOTE: This functionality is broken!!!
-		// The request times out because the auxiliary processing
-		// exceeds the threshold set by the APIService.
-		// TODO: CAL-88: Fix the time out error and use events
-		// instead of a this.reset()
-		async selectedMPIBinCount(val) {
-			this.$store.selectedMPIBinCount = val;
-			const data = await this.requestAuxData();
-
-			// TODO: CAL-88 Fix the timeout error.
-			// EventHandler.$emit("update-rank-bin-size", {
-			// 	node: this.$store.selectedNode,
-			// 	dataset: this.$store.selectedTargetDataset
-			// });
-			this.reset();
-		},
-
 		selectedScale(val) {
 			this.$store.selectedScale = val;
 			this.reset();
@@ -268,13 +253,6 @@ export default {
 		auxiliarySortBy(val) {
 			this.$store.auxiliarySortBy = val;
 			EventHandler.$emit("update-auxiliary-sort-by");
-		},
-
-		async selectedRunBinCount(val) {
-			this.$store.selectedRunBinCount = val;
-			// TODO: Need to do something here.
-			const data = await this.requestAuxData();
-			this.reset();
 		},
 
 		selectedProp(val) {
@@ -313,6 +291,8 @@ export default {
 			selectedRuntimeColorMap: "getRuntimeColorMap",
 			selectedColorPoint: "getSelectedColorPoint",
 			selectedMode: "getSelectedMode",
+			selectedRunBinCount: "getRunBinCount",
+			selectedRankBinCount: "getRankBinCount",
 		}),
 	},
 
@@ -323,24 +303,12 @@ export default {
 			"updateSelectedColorPoint",
 			"updateDistributionColorMap",
 			"updateTargetColor",
+			"updateRankBinCount",
+			"updateRunBinCount"
 		]),
 		init() {
 			this.runtimeColorMap = new Color().getAllColors();
 			this.distributionColorMap = new Color().getAllColors();
-
-			if (this.selectedMode == "SG") {
-				this.selectedMPIBinCount = this.$store.selectedMPIBinCount;
-
-				// Set the scale for information (log or linear)
-				this.$store.selectedScale = this.selectedScale;
-			} else if (this.selectedMode == "ESG") {
-				this.selectedRunBinCount = this.$store.selectedRunBinCount;
-				this.selectedProp = this.$store.selectedProp;
-
-				this.selectedDistributionColorMap =
-          this.$store.selectedDistributionColorMap;
-				this.selectedRuntimeColorMap = "Blues";
-			}
 		},
 
 		clear() {},

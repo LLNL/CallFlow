@@ -367,12 +367,13 @@ class BaseProvider:
             }
 
         elif operation_name == "histogram":
-            node = operation["node"]
-            nbins = operation["nbins"]
+            node = operation.get("node", None)
+            nbins = int(operation.get("nbins", 20))
 
             hist = Histogram(dataframe=aux_dict[node], relative_to_df=None,
                         histo_types=["rank"],
                         node_type=ntype,
+                        bins=nbins,
                         proxy_columns=sg.proxy_columns)
 
             return hist.unpack()

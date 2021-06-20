@@ -65,6 +65,7 @@ export default {
 	},
 
 	mounted() {
+		console.log(this.data.experiment);
 		document.title = "CallFlow - " + this.data.experiment;
 	},	
 
