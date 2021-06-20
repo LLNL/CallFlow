@@ -71,7 +71,7 @@ export default {
 				if (this.showTarget && !this.comparisonMode) {
 					this.drawLegend("Target run", this.padding.right, 4 * this.padding.bottom, this.generalColors.target);
 				}
-				this.drawLegend("Ensemble of runs", this.padding.right, 3 * this.padding.bottom, this.generalColors.gainsboro);
+				this.drawLegend("Ensemble of runs", this.padding.right, 3 * this.padding.bottom, this.generalColors.intermediate);
 			}
 		},
 

@@ -331,7 +331,7 @@ export default {
 						) {
 							return this.colorset[d[4]];
 						} else {
-							return d3.rgb(self.generalColors.gainsboro);
+							return d3.rgb(self.generalColors.intermediate);
 						}
 					},
 					"fill-opacity": 0,
@@ -417,7 +417,7 @@ export default {
 			let self = this;
 			this.selectedRun = d[2];
 			d3.selectAll(".dot")
-				.attr("stroke", self.generalColors.gainsboro)
+				.attr("stroke", self.generalColors.intermediate)
 				.attr("stroke-width", 3);
 
 			d3.select("#dot-" + this.selectedRun)

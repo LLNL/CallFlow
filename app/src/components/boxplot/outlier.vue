@@ -258,7 +258,7 @@ export default {
 					"class": "target-outlier"
 				})
 				.style("opacity", 1)
-				.style("fill", this.generalColors.gainsboro)
+				.style("fill", this.generalColors.intermediate)
 				.on("click", (d) => {
 					// self.$parent.$parent.selectedOutlierRanks[self.callsite.name] = d['ranks'].sort((a, b) => a - b)
 					// self.$parent.$parent.selectedOutlierDatasets[self.callsite.name] = d['datasets'].filter((value, index, self) => {

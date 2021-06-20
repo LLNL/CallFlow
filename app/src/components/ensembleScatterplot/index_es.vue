@@ -334,7 +334,7 @@ export default {
 					})
 					.style("stroke", "#202020")
 					.style("stroke-width", 0.5)
-					.style("fill", this.generalColors.gainsboro)
+					.style("fill", this.generalColors.intermediate)
 					.on("mouseover", () => {
 						let data = {
 							"callsite": callsite,

@@ -240,7 +240,7 @@ export default {
 					y: (d, i) => this.yScale(d),
 					width: this.xScale.bandwidth(),
 					height: (d) => Math.abs(this.yAxisHeight - this.yScale(d)),
-					fill: this.generalColors.gainsboro,
+					fill: this.generalColors.intermediate,
 					opacity: 1,
 					"stroke-width": "0.2px",
 					stroke: "#202020",

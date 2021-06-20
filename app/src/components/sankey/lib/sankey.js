@@ -453,8 +453,9 @@ export default function Sankey() {
 		});
 
 		links.forEach(function (link) {
-			let flowScale = link.source_data.value / link.source_data.max_flow;
+			let flowScale = link.target_data.value / link.target_data.max_flow;
 			link.scaled_weight = link["attr_dict"].weight * flowScale;
+			// console.log(flowScale, link.scaled_weight, link.attr_dict.weight, link.source_data.value, link.source_data.max_flow);
 			link.height = link.scaled_weight * scale;
 
 			let targetEnsembleRatio = (link.source_data.targetValue / link.source_data.value);
@@ -614,11 +615,11 @@ export default function Sankey() {
 
 	function computeLinkDepths() {
 		nodes.forEach(function (node) {
-			node.sourceLinks.sort(ascendingTargetDepth);
-			node.targetLinks.sort(ascendingSourceDepth);
+			// node.sourceLinks.sort(ascendingTargetDepth);
+			// node.targetLinks.sort(ascendingSourceDepth);
 
-			// node.sourceLinks.sort(descendingTargetDepth);
-			// node.targetLinks.sort(descendingSourceDepth);
+			node.sourceLinks.sort(descendingTargetDepth);
+			node.targetLinks.sort(descendingSourceDepth);
 
 			// Push links having less weight to the bottom.
 			// node.sourceLinks.sort(ascendingEdgeValue);

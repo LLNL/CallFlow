@@ -107,7 +107,7 @@ export default {
 			this.outliers = this.data["outliers"];
 			this.nid = this.data["nid"];
 			this.id = this.idPrefix + this.nid; // Set the id for the boxplot view.
-			this.color = this.generalColors.gainsboro;
+			this.color = this.generalColors.intermediate;
 
 			this.svg = d3.select(this.id)
 				.attrs({

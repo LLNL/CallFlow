@@ -29,7 +29,6 @@ export default new Vuex.Store({
 			Red: "#A90400",
 		},
 		generalColors: {
-			gainsboro: "#d9d9d9", //for intermediate nodes
 			silver: "#c0c0c0",
 			darkGrey: "#3a3a3a",
 			lightGrey: "#888888",

@@ -133,16 +133,6 @@ export default {
 			self.$refs.Nodes.$refs.TargetLine.clear();
 			self.$refs.MiniHistograms.clear();
 		});
-
-		EventHandler.$on("fetch-super-graph", () => {
-			self.clear();
-			self.init();
-		});
-
-		EventHandler.$on("fetch-ensemble-super-graph", () => {
-			self.clear();
-			self.init();
-		});
 	},
 
 	methods: {
@@ -256,9 +246,9 @@ export default {
 			
 			this._init_sankey();
 
-			this.$refs.Nodes.init(this.data, this.view);
-			this.$refs.Edges.init(this.data, this.view);
-			this.$refs.MiniHistograms.init(this.data, this.view);
+			this.$refs.Nodes.init(this.data);
+			this.$refs.Edges.init(this.data);
+			this.$refs.MiniHistograms.init(this.data);
 
 			if (this.selectedMode == "SG") {
 				this.$refs.ColorMap.init(this.$store.runtimeColor);

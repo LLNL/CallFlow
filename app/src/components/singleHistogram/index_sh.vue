@@ -300,7 +300,7 @@ export default {
 					height: (d) => {
 						return Math.abs(this.yAxisHeight - this.yScale(d));
 					},
-					fill: this.generalColors.gainsboro,
+					fill: this.generalColors.intermediate,
 					opacity: 1,
 					"stroke-width": "0.2px",
 					stroke: "#202020",
@@ -327,7 +327,7 @@ export default {
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseout", function (d, i) {
-					d3.select(this).attr("fill", self.generalColors.gainsboro);
+					d3.select(this).attr("fill", self.generalColors.intermediate);
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "grey")
 						.style("fill-opacity", 0.4);

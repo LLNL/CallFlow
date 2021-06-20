@@ -115,6 +115,7 @@ export default {
 
 			this.ensemblePath();
 			this.text();
+
 			if (this.showTarget && this.selectedMode === "ESG") {
 				this.$refs.TargetLine.init(this.graph.nodes);
 				this.$refs.Guides.init(this.graph.nodes);
@@ -399,7 +400,7 @@ export default {
 			d3.selectAll(".callsite-text").remove();
 			d3.selectAll(".path").remove();
 			d3.selectAll(".targetLines").remove();
-			this.clearEncoding();
+			this.clearEncoding(this.encoding);
 			this.clearTargetPath();
 			this.$refs.ToolTip.clear();
 		},
