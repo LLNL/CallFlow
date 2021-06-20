@@ -253,7 +253,6 @@ export default function Sankey() {
 
 	function scaleNodeBreadths(kx) {
 		nodes.forEach(function (node) {
-			console.log(node.level);
 			let x = widthScale(node.level);
 			node.x = x;
 		});

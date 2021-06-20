@@ -34,11 +34,11 @@ import { mapGetters } from "vuex";
 
 // Local library imports
 import EventHandler from "lib/routing/EventHandler.js";
-import Sankey from "lib/algorithms/sankey";
-import Graph from "lib/datastructures/graph";
-import GraphVertex from "lib/datastructures/node";
-import GraphEdge from "lib/datastructures/edge";
-import detectDirectedCycle from "lib/algorithms/detectcycle";
+import Sankey from "./lib/sankey.js";
+// import Graph from "./lib/graph";
+// import GraphVertex from "./lib/node";
+// import GraphEdge from "./lib/edge";
+// import detectDirectedCycle from "./algorithms/detectcycle";
 
 // General component imports
 import ColorMap from "../general/colormap";
@@ -160,7 +160,6 @@ export default {
 		},
 
 		visualize() {
-
 			this.width = this.$store.viewWidth;
 			this.height = this.$store.viewHeight - 2 * this.margin.top - this.margin.bottom;
 
@@ -257,11 +256,9 @@ export default {
 			
 			// this._init_sankey();
 
-			this.$store.graph = this.data;
-
-			this.$refs.Nodes.init(this.$store.graph, this.view);
-			this.$refs.Edges.init(this.$store.graph, this.view);
-			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
+			this.$refs.Nodes.init(this.data, this.view);
+			this.$refs.Edges.init(this.data, this.view);
+			this.$refs.MiniHistograms.init(this.data, this.view);
 
 			if (this.selectedMode == "SG") {
 				this.$refs.ColorMap.init(this.$store.runtimeColor);
@@ -272,21 +269,21 @@ export default {
 			}
 		},
 
-		/**
-		 * Internal function that construct the super graph structure.
-		 */
-		_construct_super_graph(data) {
-			let graph = new Graph(true);
+		// /**
+		//  * Internal function that construct the super graph structure.
+		//  */
+		// _construct_super_graph(data) {
+		// 	let graph = new Graph(true);
 
-			for (let i = 0; i < data.links.length; i += 1) {
-				let source = new GraphVertex(data.links[i].source);
-				let target = new GraphVertex(data.links[i].target);
-				let weight = data.links[i].weight;
-				let edge = new GraphEdge(source, target, weight);
-				graph.addEdge(edge);
-			}
-			return graph;
-		},
+		// 	for (let i = 0; i < data.links.length; i += 1) {
+		// 		let source = new GraphVertex(data.links[i].source);
+		// 		let target = new GraphVertex(data.links[i].target);
+		// 		let weight = data.links[i].weight;
+		// 		let edge = new GraphEdge(source, target, weight);
+		// 		graph.addEdge(edge);
+		// 	}
+		// 	return graph;
+		// },
 
 		/**
 		 * Initialize the Sankey layout computation.
@@ -297,10 +294,7 @@ export default {
 				.nodePadding(this.ySpacing)
 				.size([this.sankeyWidth, this.sankeyHeight])
 				.levelSpacing(this.levelSpacing)
-				// .maxLevel(this.data.maxLevel)
 				.setMinNodeScale(this.nodeScale);
-			// .targetDataset(this.$store.selectedTargetDataset)
-			// .store(this.$store);
 
 			this.sankey.link();
 
@@ -338,7 +332,7 @@ export default {
 				// console.debug(source_level, target_level);
 				// console.debug(`[SuperGraph] Number of levels to shift: ${shift_level}`);
 
-				let targetDataset = this.$store.selectedTargetDataset;
+				let targetDataset = this.selectedTargetRun;
 				// Put in intermediate nodes.
 				let firstNode = true;
 				for (let j = shift_level; j > 1; j--) {
