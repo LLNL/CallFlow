@@ -45,15 +45,16 @@ export default {
 			this.graph = graph;
 			this.edges = d3.select("#" + this.id);
 
-			if (this.selectedMode == "Ensemble") {
+			if (this.selectedMode == "ESG") {
 				this.initEdges("ensemble");
 				this.drawEdges("ensemble");
-				if (this.showTarget && this.comparisonMode == false) {
+				if (this.showTarget) {
 					this.initEdges("target");
 					this.drawEdges("target");
 				}
 			}
-			else if (this.selectedMode == "Single") {
+			else if (this.selectedMode == "SG") {
+				console.log("here");
 				this.initEdges("single");
 				this.drawEdges("single");
 			}
@@ -70,8 +71,8 @@ export default {
 					"id": "edge-" + dataset
 				})
 				.style("fill", (d) => {
-					if (dataset == "ensemble") { return this.$store.distributionColor.ensemble; }
-					return this.generalColors.gainsboro;
+					if (dataset == "ensemble") { return this.generalColors.ensemble; }
+					return this.generalColors.intermediate;
 				})
 				.style("opacity", 0.5)
 				.on("mouseover", function (d) {
@@ -167,26 +168,26 @@ export default {
 						else if (dataset == "target") {
 							link_height = d.targetHeight;
 						}
-						if (this.$store.selectedEdgeAlignment == "Top") {
-							return this.drawPath(d, link_height, 0, 0, dataset);
-						}
-						else if (this.$store.selectedEdgeAlignment == "Middle") {
-							return this.drawMiddlePath(d, link_height, 0, 0, dataset);
-						}
+						// if (this.$store.selectedEdgeAlignment == "Top") {
+						return this.drawPath(d, link_height, 0, 0, dataset);
+						// }
+						// else if (this.$store.selectedEdgeAlignment == "Middle") {
+						// return this.drawMiddlePath(d, link_height, 0, 0, dataset);
+						// }
 
 					},
 					"fill": (d) => {
 						if (dataset == "ensemble") {
-							return this.$store.distributionColor.ensemble;
+							return this.generalColors.ensemble;
 						}
 						else if (dataset == "target") {
-							return this.$store.distributionColor.target;
+							return this.generalColors.target;
 						}
 						else if (dataset == "single") {
-							return this.$store.runtimeColor.intermediate;
+							return this.generalColors.intermediate;
 						}
 					},
-					"stroke": this.$store.runtimeColor.edgeStrokeColor,
+					"stroke": this.generalColors.darkGrey,
 				})
 				.on("mouseover", (d) => {
 					// self.$refs.ToolTip.render(self.graph, d)

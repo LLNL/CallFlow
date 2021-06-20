@@ -345,10 +345,10 @@ export default {
 							attr_dict: {
 								...target_node.attr_dict,
 								nid: -1,
-								level: j - 1,
+								level: j,
 
 							},
-							level: j - 1,
+							level: j,
 							id: "intermediate_" + target_node.id,
 							value: temp_edges[i].attr_dict.weight,
 							targetValue: temp_edges[i].attr_dict.targetWeight,
