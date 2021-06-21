@@ -10,7 +10,7 @@
     <InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
     
     <v-container
-      class="ml-4 callsite-information-node"
+      class="ml-4 ci-node"
       v-for="callsite in callsites"
       :key="getID(callsite.nid)"
     >
@@ -52,12 +52,8 @@
 		</v-col> -->
       </v-row>
 
-		<v-row wrap class="pa-2">
-			<Statistics :tData="stats[callsite.name]" />
-		</v-row>
-		<v-row class="pa-2">
-			<BoxPlot ref="BoxPlot" :data.sync="boxplot[callsite.name]" /> 
-		</v-row>
+		<Statistics ref="ci-Statistics" :tData="stats[callsite.name]" />
+		<BoxPlot ref="BoxPlot" :data.sync="boxplot[callsite.name]" /> 
     </v-container>
   </v-layout>
 </template>
@@ -85,7 +81,7 @@ export default {
 		Statistics,
 	},
 	data: () => ({
-		id: "callsite-information-overview",
+		id: "cc-overview",
 		title: "Call site Information",
 		infoSummary: "Call site Information view provides an insight into the runtime distribution among its MPI ranks. Boxplots are calculated to represent the range of the distribution and outliers (dots) correspond to the ranks which are beyond the 1.5*IQR. Additionally, several statistical measures are also provided.",
 		info: "",
@@ -560,10 +556,8 @@ export default {
   padding: 2px;
 }
 
-.callsite-information-node {
+.ci-node {
   padding: 10px 0px 5px 5px;
-  /* padding-bottom: 4px;
-	padding-top:5px; */
   margin: 10px;
   border-width: 1px;
   border-style: solid;

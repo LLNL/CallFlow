@@ -6,7 +6,7 @@
  */
 
 <template>
-	<svg :id="id" :width="containerWidth" :height="containerHeight" class='boxplot'>
+	<svg :id="id" :width="containerWidth" :height="containerHeight">
 		<Box ref="Box" :nid="nid" :tq="tq" :bq="bq" :xScale="xScale"
 		v-if="dataReady" :idPrefix="idPrefix" :tColor="tColor" :bColor="bColor" />
 		<Markers ref="Markers" :nid="nid" :tq="tq" :bq="bq" :xScale="xScale"
@@ -41,7 +41,7 @@ export default {
 		"showTarget"
 	],
 	data: () => ({
-		id: "",
+		id: "cc-boxplot",
 		boxContainerID: "",
 		markerContainerID: "",
 		outlierContainerID: "",

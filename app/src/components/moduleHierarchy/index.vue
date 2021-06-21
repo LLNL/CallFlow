@@ -114,7 +114,6 @@ export default {
 
 			this.width = document.getElementById(this.id).clientWidth;
 			this.height = this.$store.viewHeight * 0.3;
-			console.log(this.height);
 			this.icicleWidth = this.width - this.margin.right - this.margin.left;
 			this.icicleHeight = this.height - this.margin.top - this.margin.bottom;
 

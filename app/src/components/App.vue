@@ -29,8 +29,6 @@
 </template>
 
 <script>
-// Local library imports
-import Color from "lib/color/";
 
 // Local components
 import Footer from "./general/footer";
@@ -50,7 +48,7 @@ export default {
 	mounted() {
 		document.title = "CallFlow";
 
-		this.setViewDimensions(); // Set the view dimensions.	
+		this.setViewDimensions(); // Set the view dimensions.
 	},
 
 	methods: {
