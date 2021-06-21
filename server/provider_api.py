@@ -176,7 +176,7 @@ class APIProvider(BaseProvider):
         def module_hierarchy():
             data = request.json
             nxg = self.request_ensemble({"name": "module_hierarchy", **data})
-            result = json_graph.tree_data(nxg, root=data["module"])
+            result = json_graph.tree_data(nxg, root=data.get("node"))
             return APIProvider.emit_json("module_hierarchy", result)
 
         @app.route("/projection", methods=["POST"])

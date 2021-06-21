@@ -34,7 +34,7 @@
 		<splitpanes id="callgraph-dashboard" class="default-theme">
 			<!-- Left column-->
 			<splitpanes horizontal :splitpanes-size="25">
-			<!-- <ModuleHierarchy ref="ModuleHierarchy" /> -->
+			<ModuleHierarchy ref="ModuleHierarchy" />
 			<EnsembleScatterplot ref="EnsembleScatterplot" />
 			<EnsembleHistogram ref="EnsembleHistogram" />
 			</splitpanes>
@@ -83,7 +83,7 @@ export default {
 		// Ensemble supergraph components.
 		EnsembleScatterplot,
 		EnsembleHistogram,
-		// ModuleHierarchy,
+		ModuleHierarchy,
 		ParameterProjection,
 		CallsiteCorrespondence,
 		VisualEncoding,
@@ -171,7 +171,7 @@ export default {
 				this.$refs.EnsembleScatterplot,
 				this.$refs.CallsiteCorrespondence,
 				this.$refs.ParameterProjection,
-				// this.$refs.ModuleHierarchy,
+				this.$refs.ModuleHierarchy,
 				this.$refs.VisualEncoding
 			];
 		},

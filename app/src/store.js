@@ -256,16 +256,22 @@ export default new Vuex.Store({
 			commit("setEnsembleBoxplots", esb);
 		},
 
-		async fetchParameterProjection({commit, state}, payload) {
+		async fetchParameterProjection({ commit, state }, payload) {
 			const pp = await APIService.POSTRequest("projection", payload);
 			console.log("[Data] ESG Projection: ", JSON.parse(pp));
 			commit("setParameterProjection", JSON.parse(pp));
 		},
 
-		async fetchGradients({commit, state}, payload) {
+		async fetchGradients({ commit, state }, payload) {
 			const grad = await APIService.POSTRequest("gradients", payload);
 			console.log("[Data] ESG Gradients: ", grad);
 			commit("setParameterProjection", grad);
+		},
+
+		async fetchHierarchy({ commit, state }, payload) {
+			const hierarchy = await APIService.POSTRequest("module_hierarchy", payload);
+			console.log("[Data] ESG Hierarchy: ", hierarchy);
+			commit("setHierarchy", hierarchy);
 		},
 
 		updateSelectedMetric({ state, dispatch }, payload) {

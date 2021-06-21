@@ -17,15 +17,19 @@
 
 <script>
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
+
 import ToolTip from "./tooltip";
+import InfoChip from "../general/infoChip";
+
 import * as utils from "lib/utils";
-import Queue from "lib/datastructures/queue";
-import APIService from "lib/routing/APIService";
+import Queue from "./lib/queue";
 
 export default {
 	name: "ModuleHierarchy",
 	components: {
 		ToolTip,
+		InfoChip,
 	},
 	props: [],
 	data: () => ({
@@ -50,24 +54,9 @@ export default {
 			s: 3,
 			t: 10,
 		},
-		selectedSplitOption: {
-			name: "split-caller",
-		},
-		splitOptions: [
-			{
-				name: "split-caller",
-			},
-			{
-				name: "split-callee",
-			},
-			{
-				name: "split-level",
-			},
-		],
-		placeholder: "Split options",
 		maxLevel: 0,
 		path_hierarchy: [],
-		id: "",
+		id: "module-hierarchy-overview",
 		padding: 0,
 		offset: 4,
 		stroke_width: 4,
@@ -79,6 +68,17 @@ export default {
 		info: "",
 	}),
 
+	computed: {
+		...mapGetters({
+			selectedNode: "getSelectedNode",
+			data: "getHierarchy",
+			runs: "getRuns",
+			showTarget: "getShowTarget",
+			generalColors: "getGeneralColors",
+			selectedTargetRun: "getSelectedTargetRun"
+		})
+	},
+
 	watch: {
 		level: {
 			handler: function (val, oldVal) {
@@ -89,32 +89,19 @@ export default {
 	},
 	
 	mounted() {
-		this.id = "module-hierarchy-overview";
+		this.init();
 	},
 
 	methods: {
-		async init() {
-			if (this.$store.selectedMetric == "Inclusive") {
-				this.metric = "max_time (inc)";
-			} else if (this.$store.selectedMetric == "Exclusive") {
-				this.metric = "max_time";
+		init() {
+			if(this.selectedNode.type == "module") {
+				this.$store.dispatch("fetchHierarchy", {
+					node: this.selectedNode["name"],
+					ntype: this.selectedNode["type"],
+					dataset: this.selectedTargetRun,
+				});
 			}
-			this.selectedNode = this.$store.selectedNode;
-			const data = await APIService.POSTRequest("module_hierarchy", {
-				module: this.$store.selectedNode,
-				datasets: this.$store.selectedDatasets,
-			});
-		},
 
-		// Formatting for the html view
-		formatModule(module) {
-			if (module.length < 10) {
-				return module;
-			}
-			return this.trunc(module, 10);
-		},
-
-		setupSVG() {
 			this.width = document.getElementById(this.id).clientWidth;
 			this.height = this.$store.viewHeight * 0.3;
 			this.icicleWidth = this.width - this.margin.right - this.margin.left;
@@ -130,6 +117,14 @@ export default {
 				});
 
 			this.$refs.ToolTip.init(this.svgID);
+		},
+
+		// Formatting for the html view
+		formatModule(module) {
+			if (module.length < 10) {
+				return module;
+			}
+			return this.trunc(module, 10);
 		},
 
 		update_maxlevels(data) {

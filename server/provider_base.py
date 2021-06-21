@@ -416,7 +416,7 @@ class BaseProvider:
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
 
-        _OPERATIONS_WO_DATASET = ["projection"]
+        _OPERATIONS_WO_DATASET = ["projection", "module_hierarchy"]
         if not (operation["name"] in _OPERATIONS_WO_DATASET):
             assert "dataset" in operation
 
@@ -463,7 +463,7 @@ class BaseProvider:
             return ssg.nxg
 
         elif operation_name == "module_hierarchy":
-            hl = HierarchyLayout(e_sg, operation["module"])
+            hl = HierarchyLayout(sg, operation.get("node"))
             return hl.nxg
 
         elif operation_name == "projection":
