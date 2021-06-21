@@ -8,11 +8,16 @@
 <template>
 	<v-col>
 		<v-row>
-			<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
+			<v-col cols="4">
+				<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
+			</v-col>
+			<v-col cols="8">
+				<ColorMap ref="ColorMap" />
+			</v-col>
 			<Loader :isDataReady="isDataReady" />
-			<svg :id="id">
-			<g id="container"></g>
-			<ColorMap ref="ColorMap" />
+			<svg :id="id" :width="width" :height="height" :left="margin.left" :top="margin.top">
+				<g id="container"></g>
+				<ToolTip ref="ToolTip" />
 			</svg>
 		</v-row>
 	</v-col>
@@ -21,13 +26,14 @@
 <script>
 import * as d3 from "d3";
 import dagreD3 from "dagre-d3/dist/dagre-d3";
+import { mapGetters } from "vuex";
 
-import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
 
 import InfoChip from "../general/infoChip";
 import Loader from "../general/loader";
 import ColorMap from "../general/colormap";
+import ToolTip from "./tooltip";
 
 import * as utils from "lib/utils";
 
@@ -36,7 +42,8 @@ export default {
 	components: {
 		InfoChip,
 		Loader,
-		ColorMap
+		ColorMap, 
+		ToolTip
 	},
 
 	data: () => ({
@@ -47,13 +54,13 @@ export default {
 			bottom: 20,
 			left: 20,
 		},
-		width: null,
-		height: null,
+		width: 0,
+		height: 0,
 		zoom: null,
 		HAS_DATA_COLUMNS: ["module"], // Array of keys in incoming data to check for.
 		has_data_map: {}, // stores if the required data points are present in the incoming data.
 		title: "CCT view",
-		summary:
+		infoSummary:
       "CCT view visualizes the unique call paths of a sampled profile. Each call site is colored based on the selected metric (use settings to change the metric). On click, each node's callers (green) and callees (purple) are highlighted using the links.",
 		info: "",
 		b_node_height: 50,
@@ -64,41 +71,45 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("fetch-cct", () => {
+		EventHandler.$on("reset-cct", () => {
+			console.log("[CCT] Resetting dataset to :", this.selectedTargetRun);
 			self.clear();
-			self.init();
+			self.isDataReady = false;
+			self.$store.dispatch("fetchCCT", {
+				dataset: this.selectedTargetRun
+			});
 		});
 	},
 
+	computed: {
+		...mapGetters({ 
+			selectedMetric: "getSelectedMetric", 
+			data: "getCCT",
+			selectedTargetRun: "getSelectedTargetRun",
+		})
+	},
+
+	watch: {
+		data: function (val) {
+			this.visualize(val);
+		}
+	},
+
 	methods: {
-		/**
-		 * Send the request to /init endpoint
-		 * Parameters: {datasetPath: "path/to/dataset"}
-		 */
-		async fetchData() {
-			this.info = "Selected metric : " + this.$store.selectedMetric;
-			return await APIService.POSTRequest("cct", {
-				dataset: this.$store.selectedTargetDataset,
+		init() {
+			this.$store.dispatch("fetchCCT", {
+				dataset: this.selectedTargetRun
 			});
 		},
 
-		/**
-		 * Calls the socket to fetch data.
-		 */
-		async init() {
-			this.data = await this.fetchData();
+		visualize() {
 			this.isDataReady = true;
-			console.log("CCT data: ", this.data);
+			this.width = this.$store.viewWidth - this.margin.right;
+			this.height = this.$store.viewHeight - this.margin.bottom;
 
-			this.width = this.$store.viewWidth;
-			this.height = this.$store.viewHeight;
+			this.svg = d3.select("#" + this.id);
 
-			this.svg = d3.select("#" + this.id).attrs({
-				width: this.width - this.margin.right,
-				height: this.height - this.margin.bottom,
-				left: this.margin.left,
-				top: this.margin.top,
-			});
+			this.info = "Selected metric : " + this.selectedMetric;
 
 			this.g = this.createGraph();
 			this.setHasDataMap();
@@ -121,20 +132,26 @@ export default {
 			dagreRender(inner, this.g);
 
 			// TODO: Zoom translate is not working well.
-			// this.zoomTranslate();
+			this.zoomTranslate();
 
 			let self = this;
-			this.svg.selectAll("g.node").on("click", function (id) {
-				self.node_click_action(id);
+			this.svg.selectAll("g.node").on("click", function (v) {
+				self.node_click_action(v);
 				dagreRender(inner, self.g);
+				self.zoomTranslate();
 			});
 
-			// Add tooltip
-			// inner.selectAll("g.node")
-			// 	.attr("title", function (v) { return this.tooltip(v, g.node(v).description) })
-			// 	.each(function (v) { $(this).tipsy({ gravity: "w", opacity: 1, html: true }); });
-
 			this.$refs.ColorMap.init(this.$store.runtimeColor);
+
+			// this.$refs.Tooltip.init(this.id);
+			// this.svg.selectAll("g.node").on("mouseover", function (v) {
+			// 	console.log(v);
+			// 	self.$refs.ToolTip.visualize(v);
+			// });
+
+			// Add tooltip
+			inner.selectAll("g.node")
+				.attr("title", function (v) { return v; });
 		},
 
 		/**
@@ -180,10 +197,9 @@ export default {
 		 * @return {JSON<{'node': Color, 'text': Color}>} 'node': fill color, 'text': text color
 		 */
 		setCallsiteColor(callsite) {
-			// Set node fill color.
 			const color = this.$store.runtimeColor.getColor(
 				callsite,
-				this.$store.selectedMetric,
+				this.selectedMetric,
 			);
 
 			// Set node color.
@@ -250,7 +266,7 @@ export default {
 					node.style = `fill: ${node.fillColor}; color: "#f00";`;
 					node.rx = node.ry = 8;
 					node.id = node.name;
-					node.height = self.b_node_height;
+					// node.height = self.b_node_height;
 				}
 			});
 		},
@@ -280,7 +296,7 @@ export default {
 				const edge = self.g.edge(e);
 				edge.class = "cct-edge";
 				self.g.edge(e).style =
-          "fill: rgba(255,255,255, 0); stroke: #3c3c3c; stroke-width: 2.5px;";
+          "fill: rgba(255,255,255, 0); stroke: #686868; stroke-width: 2.5px;";
 			});
 		},
 
@@ -327,7 +343,7 @@ export default {
 					nodeClass = node.class;
 					if (nodeClass !== "cct-node")
 						node.class = nodeClass.replace("highLight", " ").trim();
-					node.height = self.b_node_height;
+					// node.height = self.b_node_height;
 				});
 
 				this.g.edges().forEach(function (e, v, w) {
@@ -350,6 +366,8 @@ export default {
 				});
 				this.g.node(id).class += " highLight";
 			}
+
+			// this.zoomTranslate();
 		},
 
 		/**

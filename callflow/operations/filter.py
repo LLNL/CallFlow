@@ -43,27 +43,26 @@ class Filter:
         LOGGER.info(
             f'Filtering ({self.sg}) by "{self.filter_by}" = {self.filter_perc}%'
         )
+        
+        self.callsites = self.sg.callsites
 
-        # self.callsites = df_unique(sg.dataframe, "name")
-        # LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")       
-        
-        # # Filter the graphframe using hatchet (initial filtering) using QueryMatcher.
-        # query = [
-        #     ("*", {f"{self.sg.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.sg.mean_root_inctime}"})
-        # ]
-        # LOGGER.debug(f"Query is :{query}")
-        # # self.sg.gf.drop_index_levels()
-        # fgf = self.sg.gf.filter(query)
-        
-        # self.f_callsites = df_unique(fgf.dataframe, "name")
-        # LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
+        if 0:
+            self.mean_root_inctime = self.df_root_max_mean_runtime(gf.dataframe, self.roots, "time (inc)")
+
+            # Formulate the hatchet query.
+            query = [
+                ("*", {f"{self.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
+            ]
+            LOGGER.info(f"Filtering GraphFrame by Hatchet Query :{query}")
+
+            LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
+            self.callsites = SuperGraph.hatchet_filter_callsites_by_query(gf, query)
+            LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.callsites)}")
+
+            LOGGER.profile(f'-----> Finished with hatchet filter: {_df_info(self.dataframe)}')
 
         self.compute()
         
-        # TODO: Find a better way to do this.
-        self.sg.dataframe = self.dataframe
-        self.sg.nxg = self.nxg
-
     # --------------------------------------------------------------------------
     def compute(self):
         """
@@ -78,13 +77,8 @@ class Filter:
             max_vals[mode] = np.array([_mx])
             LOGGER.debug(f"{mode}:  min = {_mn}, max = {_mx}")
 
-        if self.filter_by == "time (inc)":
-            value = self.filter_perc * 0.01 * np.max(max_vals["time (inc)"])
-            self._filter_sg(self.filter_by, value)
-
-        elif self.filter_by == "time":
-            value = self.filter_perc
-            self._filter_sg(self.filter_by, value)
+        value = self.filter_perc * 0.01 * np.max(max_vals[self.filter_by])
+        self._filter_sg(self.filter_by, value)
 
     # --------------------------------------------------------------------------
     def _filter_sg(self, filter_by, filter_val):
@@ -96,24 +90,23 @@ class Filter:
         :return nxg (networkx.graph):
         """
         LOGGER.debug(f'Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
-        # self.dataframe = self.sg.df_filter_by_value(filter_by, filter_val)
-        if len(self.sg.f_callsites) > 0:
-            self.dataframe = self.sg.dataframe[self.sg.dataframe["name"].isin(self.sg.f_callsites)]
-        LOGGER.info(f'Filtered dataframe comprises of: "{self.dataframe.shape}"')
 
-        callsites = self.sg.f_callsites
+        if len(self.callsites) > 0:
+            self.dataframe = self.sg.dataframe[self.sg.dataframe["name"].isin(self.callsites)]
+        LOGGER.info(f'Filtered dataframe comprises of: "{self.sg.dataframe.shape}"')
+
         nxg = nx.DiGraph()
 
         if filter_by == "time (inc)":
             for edge in self.sg.nxg.edges():
                 # If source is present in the callsites list
-                if edge[0] in callsites and edge[1] in callsites:
+                if edge[0] in self.callsites and edge[1] in self.callsites:
                     nxg.add_edge(edge[0], edge[1])
-                else:
-                    LOGGER.debug(f"Removing the edge: {edge}")
+                #else:
+                #    LOGGER.debug(f"Removing the edge: {edge}")
 
         elif filter_by == "time":
-            for callsite in callsites:
+            for callsite in self.callsites:
                 path = self.sg.df_lookup_with_column("name", callsite)["path"].tolist()[
                     0
                 ]

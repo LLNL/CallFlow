@@ -18,7 +18,7 @@ export default {
 	components: {},
 
 	data: () => ({
-		id: "supernode-tooltip",
+		id: "node-tooltip",
 		textCount: 0,
 		textxOffset: 20,
 		textyOffset: 20,
@@ -33,6 +33,7 @@ export default {
 
 	methods: {
 		init(id) {
+			console.log(id);
 			this.id = id;
 			const toolTipDiv = d3.select("#" + this.id);
 			this.toolTipG = toolTipDiv.append("g");
@@ -68,7 +69,7 @@ export default {
 		 * @param {Graph} graph 
 		 * @param {*} node 
 		 */
-		visualize(graph, node) {
+		visualize(node) {
 			// Set current mouse position.
 			this.mousePos = d3.mouse(d3.select("#" + this.id).node());
 			this.mousePosX = this.mousePos[0];
@@ -78,7 +79,7 @@ export default {
 			// console.log(this.prevMousePosY, this.prevMousePosX, utils.distanceBtwnPoints(this.mousePosX, this.mousePosY, this.prevMousePosX, this.prevMousePosY))
 			// if (this.prevMousePosX && this.prevMousePosY && utils.distanceBtwnPoints(this.mousePosX, this.mousePosY, this.prevMousePosX, this.prevMousePosY) > 0 ) {
 			this.clear();
-			this.render(graph, node);
+			this.render(node);
 			// }
 
 			// Store the previous mouse positions to calculate the distance.
@@ -152,116 +153,6 @@ export default {
 			this.addText("Inclusive Time: " + utils.formatRuntimeWithUnits(node.attr_dict["time (inc)"]));
 			this.addText("Exclusive Time: " + utils.formatRuntimeWithUnits(node.attr_dict["time"]));
 		},
-
-		/**
-		 * 
-		 * @param {*} node 
-		 */
-		pathInformation(node) {
-			let module_data = {};
-			if (this.$store.selectedMode == "Single") {
-				module_data = this.$store.data_mod[this.$store.selectedTargetDataset];
-			}
-			else if (this.$store.selectedMode == "Ensemble") {
-				module_data = this.$store.data_mod["ensemble"];
-			}
-
-			let callsite_data = {};
-			if (this.selectedMode == "SG") {
-				callsite_data = this.$store.data_cs[this.$store.selectedTargetDataset];
-			}
-			else if (this.selectedMode == "ESG") {
-				callsite_data = this.$store.data_cs["ensemble"];
-			}
-
-
-			// TODO : Improve the logic here to not process the string input multiple times. 
-			let entry_function_runtimes = node["entry_function"].map((_c) => callsite_data[_c][this.$store.selectedMetric]["mean"]);
-			// Create items array
-			let items = Object.keys(entry_function_runtimes).map(function (key) {
-				return [key, entry_function_runtimes[key]];
-			});
-
-			// Sort the array based on the second element
-			let entry_function_data = items.sort(function (first, second) {
-				return second[1] - first[1];
-			});
-
-			this.rectWidth = "10px";
-
-			if(entry_function_data.length > 0) {
-				this.addText("");
-				this.addText("Entry call sites: ");
-				this.entryFunctionInformation(node, entry_function_data);
-			}
-		},
-
-		entryFunctionInformation(node, entry_function_data) {
-			// Needs clean up for sure.
-			for (var tIndex = 0; tIndex < Math.min(3, entry_function_data.length); tIndex++) {
-				this.textCount += 1;
-				let toColor = this.$store.runtimeColor.getColorByValue(entry_function_data[tIndex][1]);
-				let fromColor = this.$store.runtimeColor.getColorByValue(node);
-				let toFunc = entry_function_data[tIndex][0];
-				let fromFunc = node.id;
-				let xOffset = this.xOffset + this.margin;
-				let yOffset = this.yOffset + this.textyOffset + this.textPadding * this.textCount;
-
-				this.toolTipG
-					.append("rect")
-					.attrs({
-						"width": this.rectWidth,
-						"height": this.rectWidth,
-						"x": xOffset + "px",
-						"y": yOffset - 10 + "px",
-						"class": "tooltip-content",
-					})
-					.style("fill", fromColor);
-
-				this.toolTipG
-					.append("text")
-					.attrs({
-						"x": xOffset + 15 + "px",
-						"y": yOffset + "px",
-						"class": "tooltip-content",
-					})
-					.text(utils.truncNames(fromFunc, 10));
-
-				this.toolTipG
-					.append("text")
-					.attrs({
-						"x": xOffset + 120 + "px",
-						"y": yOffset + "px",
-						"class": "tooltip-content",
-					})
-					.text("->");
-
-				this.toolTipG
-					.append("rect")
-					.attrs({
-						"width": this.rectWidth,
-						"height": this.rectWidth,
-						"x": xOffset + 140 + "px",
-						"y": yOffset - 10 + "px",
-						"class": "tooltip-content",
-					})
-					.style("fill", toColor);
-				this.toolTipG
-					.append("text")
-					.attrs({
-						"x": xOffset + 155 + "px",
-						"y": yOffset + "px",
-						"class": "tooltip-content",
-					})
-					.text(utils.truncNames(toFunc, 10));
-			}
-
-			let left_callsites = entry_function_data.length - 3;
-			if (left_callsites > 0) {
-				this.addText("and " + left_callsites + " call sites more.");
-			}
-		},
-
 
 		/**
 		 * Clear the content in the tooltip.

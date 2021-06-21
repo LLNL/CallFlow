@@ -12,7 +12,6 @@ import networkx as nx
 import callflow
 from callflow.utils.timer import Timer
 from callflow.utils.sanitizer import Sanitizer
-from callflow.utils.df import df_get_column
 
 
 class NodeLinkLayout:
@@ -40,23 +39,11 @@ class NodeLinkLayout:
 
         # Do not filter if the selected_runs is a single run.
         if not isinstance(sg, callflow.SuperGraph):
-            sg.filter_by_datasets(selected_runs)
+            sg.nxg_filter_by_datasets(selected_runs)
 
         self.runs = selected_runs
-
-        # Put the top callsites into a list.
-        callsites = sg.df_unique("name")
-        # callsite_count = len(callsite_count)
-        # callsites = sg.df_get_top_by_attr(callsite_count, self.time_inc)
-
-        # Filter out the callsites not in the list. (in a LOCAL copy)
-        # _fdf = sg.df_filter_by_name(callsites)
-
-        paths = [df_get_column(sg.dataframe, "path")[0] for callsite in callsites]
-
         self.nxg = sg.nxg
-        self.aux_data = sg.aux_data
-
+        
         # Add node and edge attributes.
         self._add_node_attributes()
         self._add_edge_attributes()
@@ -78,66 +65,21 @@ class NodeLinkLayout:
                 if column not in datamap:
                     datamap[column] = {}
 
-                if column == "time (inc)":
-                    datamap[column][callsite] = self.aux_data["data_cs"][callsite]["time (inc)"]["mean"]
-                elif column == "time":
-                    datamap[column][callsite] = self.aux_data["data_cs"][callsite]["time"]["mean"]
+                callsite_idx = self.sg.get_idx(callsite, "callsite")
+                _df =  self.sg.df_lookup_with_column("name", callsite)
+
+                if column == self.time_inc:
+                    datamap[column][callsite] = _df["time (inc)"].mean()
+                elif column == self.time_exc:
+                    datamap[column][callsite] = _df["time"].mean()
                 elif column == "name":
                     datamap[column][callsite] = callsite
                 elif column == "module":
-                    datamap[column][callsite] = self.aux_data["c2m"][callsite]
+                    datamap[column][callsite] = self.sg.get_module(callsite_idx)
 
         # ----------------------------------------------------------------------
         for idx, key in enumerate(datamap):
             nx.set_node_attributes(self.nxg, name=key, values=datamap[key])
-
-        # ----------------------------------------------------------------------
-        # compute map across data
-        # for run in self.runs:
-        #     if isinstance(self.sg, callflow.SuperGraph):
-        #         target_df = self.sg.dataframe
-        #     else:
-        #         target_df = self.sg.dataframe.loc[self.sg.dataframe["dataset"] == run]
-
-        #     if not target_df["module"].equals(target_df["name"]):
-        #         target_group_df = target_df.groupby(["module"])
-        #         target_name_group_df = target_df.groupby(["module", "name"])
-        #     else:
-        #         target_group_df = target_df
-        #         target_name_group_df = target_df.groupby("name")
-
-        #     target_module_callsite_map = target_group_df["name"].unique().to_dict()
-        #     target_name_time_inc_map = (
-        #         target_name_group_df[self.time_inc].mean().to_dict()
-        #     )
-        #     target_name_time_exc_map = target_name_group_df[self.time_exc].mean().to_dict()
-
-        #     datamap = {}
-        #     for callsite in self.nxg.nodes():
-
-        #         if callsite not in target_module_callsite_map.keys():
-        #             continue
-
-        #         module = self.sg.get_module_idx(callsite)
-
-        #         if callsite not in datamap:
-        #             datamap[callsite] = {}
-
-        #         for column in NodeLinkLayout._COLUMNS:
-
-        #             if column not in datamap:
-        #                 datamap[column] = {}
-
-        #             if column == self.time_inc:
-        #                 datamap[callsite][column] = target_name_time_inc_map[module]
-        #             elif column == self.time_exc:
-        #                 datamap[callsite][column] = target_name_time_exc_map[module]
-        #             elif column == "module":
-        #                 datamap[callsite][column] = module
-        #             elif column == "name":
-        #                 datamap[callsite][column] = callsite
-
-        #     nx.set_node_attributes(self.nxg, name=run, values=datamap)
 
     # --------------------------------------------------------------------------
     def _add_edge_attributes(self):

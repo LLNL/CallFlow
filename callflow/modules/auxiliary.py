@@ -10,20 +10,17 @@ CallFlow's module to consolidate the auxiliary information
 for each call site or module based on the type of data requested.
 """
 import numpy as np
-import pandas as pd
 from scipy.stats import kurtosis, skew
 import multiprocessing
 from functools import partial
-from pyinstrument import Profiler
 
 import callflow
-from callflow.utils.utils import print_dict_recursive
-from callflow.utils.df import df_minmax, df_count, df_unique, df_group_by, \
-    df_fetch_columns, df_lookup_by_column, df_bi_level_group
+from callflow.utils.df import df_unique, df_bi_level_group
 
 from .gradients import Gradients
 from .boxplot import BoxPlot
 from .histogram import Histogram
+from .unpack_auxiliary import UnpackAuxiliary
 from callflow.datastructures.metrics import TIME_COLUMNS
 
 LOGGER = callflow.get_logger(__name__)
@@ -34,100 +31,119 @@ class Auxiliary:
     """
     Auxiliary: consolidates per-callsite and per-module information.
     """
-    def __init__(self, sg, selected_runs=None,
-                 nbins_rank: int = 20, nbins_run: int = 20):
+    def __init__(self, sg, nbins_rank: int = 20, nbins_run: int = 20):
         """
-        Constructor
+        Constructor of the class 
+
         :param sg: SuperGraph
         :param selected_runs: Array of selected runs
         :param nbins_rank: Bin count for MPI-level histogram
         :param nbins_run: Bin count for run-level histogram
         """
+        LOGGER.info(f"Computing auxiliary data for {sg}")
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
 
         self.nbins_rank = nbins_rank
         self.nbins_run = nbins_run
+        self.sg = sg
 
         self.proxy_columns = sg.proxy_columns
         self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
-        self.runs = sg.filter_by_datasets(selected_runs)
+        self.name = sg.name
+    
+    def unpack(self, sg, fmt: str="json"):
+        """
+        Wrapper to trigger UnpackAuxiliary.
 
-        LOGGER.warning(f"Computing auxiliary data for ({sg}) with "
-                       f"{len(self.runs)} runs: {self.runs}")
+        :param sg: (callflow.Supergraph) Supergraph
+        :param json: (bool) Convert to JSON format or not. 
+        :return: (JSON or npz) Auxiliary data in the specified format.
+        
+        """
+        if fmt == "json":
+            if isinstance(sg, callflow.SuperGraph) and not isinstance(sg, callflow.EnsembleGraph):
+                ret = UnpackAuxiliary(data=self.single_auxiliary(sg), name=sg.name).data
+            elif isinstance(sg, callflow.EnsembleGraph):
+                ret = UnpackAuxiliary(data=self.ensemble_auxiliary(sg), name=sg.name).data
 
-        profiler = Profiler()
-        profiler.start()
+        elif fmt == "npz":
+            if not isinstance(sg, callflow.EnsembleGraph):
+                ret =  self.single_auxiliary(sg)
+            else:
+                ret = self.ensemble_auxiliary(sg)
 
-        self.result = {}
-        # ----------------------------------------------------------------------
-        # single super graph
-        if not isinstance(sg, callflow.EnsembleGraph):
-            df_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
-            df_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+        return ret
 
-            self.result = {"summary": sg.summary(),
-                           "modules": sg.modules,
-                           "m2c": sg.df_mod2callsite(),
-                           "c2m": sg.df_callsite2mod(),
-                           "data_mod": self.new_collect_data(sg.name, "module", df_module),
-                           "data_cs": self.new_collect_data(sg.name, "name", df_name)
-                           }
-
-        # ----------------------------------------------------------------------
-        # ensemble graph
-        else:
-            edf_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())        
-            edf_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
-
-            LOGGER.debug(f"Using {multiprocessing.cpu_count()} processes to perform auxiliary operation.")
-            with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-                result = pool.map(partial(self._relative_computation, sg=sg, edf_module=edf_module, edf_name=edf_name), self.runs)
-
-            self.result = {res["tag"]: res for res in result}
-
-            self.result['ensemble'] = {"summary": sg.summary(),
-                                       "modules": sg.modules,
-                                       "m2c": sg.df_mod2callsite(),
-                                       "c2m": sg.df_callsite2mod(),
-                                       "data_mod": self.new_collect_data(sg.name, "module", edf_module),
-                                       "data_cs": self.new_collect_data(sg.name, "name", edf_name),
-                                       "tag": "ensemble",
-                                       "runs": self.runs
-                                       }
-
-            print(self.result.keys())
-                
-            profiler.stop()
-            print(profiler.output_text(unicode=True, color=True))
-
-        # TODO: this should not happen this way
-        sg.aux_data = self.result
     # --------------------------------------------------------------------------
+    def single_auxiliary(self, sg):
+        """
+        Compute the single auxiliary for a SuperGraph.
+
+        :param sg: (callflow.Supergraph) Supergraph
+        :return: (dict): Auxiliary data for modules and callsits
+        """
+        assert isinstance(sg, callflow.SuperGraph)
+        df_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+        df_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["rank"], apply_func=lambda _: _.mean())
+
+        return {
+            "data_mod": self._auxiliary(sg.name, "module", df_module),
+            "data_cs": self._auxiliary(sg.name, "name", df_name),
+        }
+
+    def ensemble_auxiliary(self, sg):
+        """
+        Compute the single auxiliary for a EnsembleSuperGraph.
+
+        :param sg: (callflow.EnsembleGraph) Supergraph
+        :return: (dict): Auxiliary data for modules and callsits
+        """
+        assert isinstance(sg, callflow.EnsembleGraph)
+        edf_module = df_bi_level_group(sg.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())        
+        edf_name = df_bi_level_group(sg.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
+
+        runs = list(sg.supergraphs.keys())
+        runs.remove("ensemble") # TODO: avoid removing "ensemble" here. 
+
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            result = pool.map(partial(self._relative_computation, sg=sg, edf_module=edf_module, edf_name=edf_name), runs)
+
+        result = {res["tag"]: res for res in result}
+
+        result["ensemble"] = {
+            "data_mod": self._auxiliary(sg.name, "module", edf_module),
+            "data_cs": self._auxiliary(sg.name, "name", edf_name),
+        }
+
+        return result
 
     def _relative_computation(self, dataset, sg, edf_module, edf_name):
-        _df = sg.dataframe.loc[sg.dataframe['dataset'] == dataset]
-                
-        if len(_df['rank'].unique().tolist()) == 1:
+        """
+        Compute the relative auxiliary of SuperGraph w.r.t a EnsembleSuperGraph.
+
+        :param dataset: (str) Supergraph name
+        :param sg: (callflow.EnsembleGraph) Supergraph
+        :param edf_module: (pandas.DataFrameGroupBy) Grouped dataframe by module
+        :param edf_name: (pandas.DataFrameGroupBy) Grouped dataframe by module
+        :return: (dict): Auxiliary data for modules and callsits
+        """
+        assert isinstance(sg, callflow.EnsembleGraph)
+
+        if len(sg.supergraphs[dataset].dataframe['rank'].unique().tolist()) == 1:
             group_by = []
         else:
             group_by = ["rank"]
 
-        df_module = df_bi_level_group(_df, "module", "name", cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())        
-        df_name = df_bi_level_group(_df, "name", None, cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())
+        df_module = df_bi_level_group(sg.supergraphs[dataset].dataframe, "module", "name", cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())        
+        df_name = df_bi_level_group(sg.supergraphs[dataset].dataframe, "name", None, cols=self.time_columns, group_by=group_by, apply_func=lambda _: _.mean())
 
-        # TODO: this assumes that the original dataframe was modified
-        return {"summary": sg.supergraphs[dataset].summary(),
-                "modules": sg.supergraphs[dataset].modules,
-                "m2c": sg.supergraphs[dataset].df_mod2callsite(),
-                "c2m": sg.supergraphs[dataset].df_callsite2mod(),
-                "data_mod": self.new_collect_data(dataset, "module", df_module, edf_module),
-                "data_cs": self.new_collect_data(dataset, "name", df_name, edf_name),
-                "tag": dataset,
-                }
+        return {
+            "data_mod": self._auxiliary(dataset, "module", df_module, edf_module),
+            "data_cs": self._auxiliary(dataset, "name", df_name, edf_name),
+        }
 
-    def new_collect_data(self, name, grp_column, grp_df, grp_edf=None):
-
+    def _auxiliary(self, name, grp_column, grp_df, grp_edf=None):
         assert grp_column in ['module', 'name']
 
         is_callsite = grp_column == "name"
@@ -154,7 +170,7 @@ class Auxiliary:
                                   histo_types=histo_types,
                                   proxy_columns=self.proxy_columns).result
 
-            # todo: boxplot should also be for target wrt ensemble
+            # TODO: boxplot should also be for target wrt ensemble
             boxplot = BoxPlot(df, proxy_columns=self.proxy_columns).result
 
             if is_ensemble:
@@ -163,8 +179,7 @@ class Auxiliary:
                                       grp_type=grp_column,
                                       proxy_columns=self.proxy_columns).result
 
-            # ------------------------------------------------------------------
-            result[grp_name] = self.pack_json(df=df,
+            result[grp_name] = self.pack_npz(df=df,
                                               name=grp_name,
                                               grp_type=grp_column,
                                               is_ensemble=is_ensemble,
@@ -176,15 +191,14 @@ class Auxiliary:
         return result
 
     # --------------------------------------------------------------------------
-    def pack_json(self, name, df, is_ensemble, is_callsite,
+    def pack_npz(self, name, df,
                   gradients=None, histograms=None, boxplots=None,
                   grp_type="name"):
         """
+        Pack the data (gradients, histograms, and boxplots) into npz format
 
         :param name:
         :param df:
-        :param is_ensemble:
-        :param is_callsite:
         :param gradients:
         :param histograms:
         :param boxplots:
@@ -193,16 +207,12 @@ class Auxiliary:
         """
         assert grp_type in ['name', 'module']
 
-        _id_col = 'nid' if grp_type == "name" else 'module'
         result = {"name":               name,
                   "id":                 f"{grp_type}-{name}",
-                  #"dataset":            df_unique(df, "dataset"),
+                  "dataset":            df_unique(df, "dataset"),
                   "component_path":     df_unique(df, "component_path"),
-                  #"component_level":    df_unique(df, "component_level")
+                #   "component_level":    df_unique(df, "component_level")
                   }
-
-        #if grp_type == "module":
-        #    result["module"] = df_unique(df, "module")
 
         # now, append the data
         for tk, tv in zip(TIME_COLUMNS, self.time_columns):
@@ -217,7 +227,6 @@ class Auxiliary:
             # compute the statistics
             _min, _mean, _max = _data.min(), _data.mean(), _data.max()
             _var = _data.var() if _data.shape[0] > 0 else 0.0
-            #_std = np.sqrt(_var)
             _imb = (_max - _mean) / _mean if not np.isclose(_mean, 0.0) else _max
             _skew = skew(_data)
             _kurt = kurtosis(_data)
@@ -225,7 +234,6 @@ class Auxiliary:
             result[tk] = {"d": _data,
                           "rng": (_min, _max),
                           "uv": (_mean, _var),
-                          #"std": _std,
                           "imb": _imb,
                           "ks": (_kurt, _skew)
                           }

@@ -5,23 +5,78 @@
  * SPDX-License-Identifier: MIT
  */
 <template>
-	<v-container>
-		<v-card tile>
-			<v-card-title class="pa-4 pb-0"> General Information </v-card-title>
-			<v-row class="ma-4 pa-1"> <b>Experiment: </b> {{ data.experiment }} </v-row>
-			<v-row class="ma-4 pa-1"> <b>Data path: </b> {{ data.data_path }} </v-row>
-			<v-row class="ma-4 pa-1"> <b>.callflow save path: </b> {{ data.save_path }} </v-row>
-			<v-row class="ma-4 pa-1"> <b>Filter by attribute: </b> {{ data.filter_by }} </v-row>
-			<v-row class="ma-4 pa-1"> <b>Filter percentage: </b> {{ data.filter_perc }} </v-row>
-			<v-row class="ma-4 pa-1"> <b>Group by attribute: </b> {{ data.group_by }} </v-row>
+	<v-container fluid>
+		<v-card tile class="mx-auto">
+			<v-card-title class="pa-4 pb-2"> Configuration </v-card-title>
+			<v-row class="ma-0 pa-0 pb-0 mb-0"> 
+				<v-col cols="5"><b>Experiment: </b></v-col> 
+				<v-col cols="7">{{ data.experiment }} </v-col> 	
+			</v-row>
+			<v-divider></v-divider>
+			<v-row class="ma-0 pa-0 pb-0 mb-0"> 
+				<v-col cols="5"><b>Number of Runs: </b></v-col> 
+				<v-col cols="7">{{ runs.length }} </v-col> 	
+			</v-row>
+			<v-divider></v-divider>
+			<v-row class="ma-0 pa-0 pb-0 mb-0">
+				<v-col cols="5"><b>Profile format: </b></v-col>
+				<v-col cols="7">{{ data.profile_format_summary }}</v-col> 
+			</v-row>
+			<v-divider></v-divider>
+			<v-row class="ma-0 pa-0 pb-0 mb-0"> 
+				<v-col cols="5"><b>Number of nodes: </b></v-col> 
+				<v-col cols="7">{{ Object.keys(data.module_callsite_map).length
+				+ " modules, " +  (Object.keys(data.callsite_module_map).length
+				- 1) +
+				" callsites"}} </v-col> 	
+			</v-row>
+			<v-divider></v-divider>
+			<v-row class="ma-0 pa-0 pb-0 mb-0">
+				<v-col cols="5"> <b>Data path: </b></v-col>
+				<v-col cols="7">{{ data.data_path }}</v-col>
+			</v-row>
+			<v-divider></v-divider>
+			<v-row class="ma-0 pa-0 pb-0 mb-0"> 
+				<v-col cols="5"><b>.callflow save path: </b></v-col> 
+				<v-col cols="7">{{ data.save_path }}</v-col>
+			</v-row>
+			<v-divider></v-divider>
+			<v-row class="ma-0 pa-0 pb-0 mb-0"> 
+				<v-col cols="5"><b>Metric columns: </b></v-col> 
+				<v-col cols="7">{{ data.time_columns }}</v-col> 
+			</v-row>
+			<!-- <v-divider></v-divider> -->
+			<!-- <v-row class="ma-0 pa-0 pb-0 mb-0"> 
+				<v-col cols="5"><b>Group by attribute: </b></v-col>
+				<v-col cols="7"> {{ data.group_by }} </v-col>
+			</v-row> -->
 		</v-card>
 	</v-container>
 </template>
 
 
 <script>
+import { mapGetters } from "vuex";
+
 export default {
 	name: "ConfigInformation",
-	props: ["data"],
+	beforeCreate() {
+		this.$store.dispatch("fetchConfig");
+	},
+
+	mounted() {
+		document.title = "CallFlow - " + this.data.experiment;
+	},	
+
+	computed: {
+		...mapGetters({ data: "getConfig", runs: "getRuns"}),
+	},
+
 };
 </script>
+
+<style scoped>
+.col {
+	font-size: 0.9em;
+}
+</style>

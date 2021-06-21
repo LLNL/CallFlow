@@ -7,9 +7,12 @@
 
 <template>
 	<svg :id="id" :width="containerWidth" :height="containerHeight" class='boxplot'>
-		<Box ref="Box" />
-		<Markers ref="Markers" />
-		<Outliers ref="Outliers" />
+		<Box ref="Box" :nid="nid" :tq="tq" :bq="bq" :xScale="xScale"
+		v-if="dataReady" :idPrefix="idPrefix" :tColor="tColor" :bColor="bColor" />
+		<Markers ref="Markers" :nid="nid" :tq="tq" :bq="bq" :xScale="xScale"
+		v-if="dataReady" :idPrefix="idPrefix" tColor="tColor" :bColor="bColor" />
+		<Outliers ref="Outliers" :nid="nid" :tOutliers="tOutliers" :bOutliers="bOutliers"
+		:xScale="xScale" v-if="dataReady" :idPrefix="idPrefix" tColor="tColor" :bColor="bColor" />
 		<ToolTip ref="ToolTip" />
 	</svg>
 </template>
@@ -17,20 +20,22 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library imports
 import EventHandler from "lib/routing/EventHandler";
 
 // Local component imports
-import Box from "./box";
-import Markers from "./markers";
-import Outliers from "./outlier";
-import ToolTip from "./tooltip";
+import Box from "../boxplot/box";
+import Markers from "../boxplot/markers";
+import Outliers from "../boxplot/outlier";
+import ToolTip from "../boxplot/tooltip";
 
 export default {
 	name: "BoxPlot",
 	props: [
-		"callsite",
+		"tData",
+		"bData",
 		"width",
 		"height",
 		"showTarget"
@@ -59,8 +64,16 @@ export default {
 		rectHeight: 0,
 		centerLinePosition: 0,
 		boxHeight: 0,
-		boxWidth: 0
+		boxWidth: 0,
+		dataReady: false,
+		idPrefix: "ensemble-boxplot-",
 	}),
+	
+	computed: {
+		...mapGetters({
+			generalColors: "getGeneralColors"
+		})
+	},
 	components: {
 		Box,
 		Outliers,
@@ -77,10 +90,6 @@ export default {
 		});
 	},
 
-	created() {
-		this.id = "boxplot-" + this.callsite.id;
-	},
-
 	methods: {
 		init() {
 			this.containerHeight = 150;
@@ -92,35 +101,33 @@ export default {
 			this.centerLinePosition = (this.boxHeight - this.informationHeight / 4) / 2;
 			this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4;
 
-			this.process(this.callsite);
+			this.bq = this.qFormat(this.bData.q);
+			this.tq = this.qFormat(this.tData.q);
 
-			this.svg = d3.select("#boxplot-" + this.callsite.id)
+			this.tOutliers = this.tData["outliers"];
+			this.bOutliers = this.bData["outliers"];
+
+			this.tColor = this.generalColors.target;
+			this.bColor = this.generalColors.ensemble;
+
+			this.nid = this.tData["nid"];
+			this.id = this.idPrefix + this.nid;
+
+			this.svg = d3.select("#" + this.idPrefix + this.bData.nid)
 				.attrs({
 					"width": this.containerWidth,
 					"height": this.containerHeight
 				});
 
-			let min_x = Math.min(this.q.min, this.targetq.min);
-			let max_x = Math.max(this.q.max, this.targetq.max);
+			let min_x = Math.min(this.bq.min, this.tq.min);
+			let max_x = Math.max(this.bq.max, this.tq.max);
 
 			this.xScale = d3.scaleLinear()
 				.domain([min_x, max_x])
 				.range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
 
-			this.visualize(this.callsite);
-		},
-
-		process(callsite) {
-			this.ensemble_data = this.$store.data_cs["ensemble"][callsite.name][this.$store.selectedMetric]["boxplots"]["q"];
-			if (this.$store.data_cs[this.$store.selectedTargetDataset][callsite.name] != undefined) {
-				this.target_data = this.$store.data_cs[this.$store.selectedTargetDataset][callsite.name][this.$store.selectedMetric]["boxplots"]["q"];
-			}
-			else {
-				this.target_data = [0, 0, 0, 0, 0];
-			}
-
-			this.q = this.qFormat(this.ensemble_data);
-			this.targetq = this.qFormat(this.target_data);
+			this.dataReady = true;
+			// this.visualize();
 		},
 
 		qFormat(arr) {
@@ -134,11 +141,11 @@ export default {
 			return result;
 		},
 
-		visualize(callsite) {
-			this.$refs.Box.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Markers.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget);
-		},
+		// visualize() {
+		// 	this.$refs.Box.init(this.tData.nid, this.bq, this.tq, this.xScale, this.showTarget);
+		// 	this.$refs.Markers.init(this.tData.nid, this.q, this.tq, this.xScale, this.showTarget);
+		// 	this.$refs.Outliers.init(this.bq, this.tq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget);
+		// },
 
 		clear() {
 			this.$refs.Box.clear();

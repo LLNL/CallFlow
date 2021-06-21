@@ -13,15 +13,24 @@ import pandas as pd
 import hatchet as ht
 import networkx as nx
 from ast import literal_eval as make_list
-from pyinstrument import Profiler
 
-import callflow
+try:
+    from pyinstrument import Profiler
+except Exception:
+    class Profiler:
+        def __init__(self):
+            pass
+        def start(self):
+            pass
+        def stop(self):
+            pass
+
 from callflow import get_logger
 from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.utils import NumpyEncoder
 from callflow.utils.df import *
 from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
-from callflow.modules import UnpackAuxiliary
+from callflow.modules import Gradients, Histogram
 
 LOGGER = get_logger(__name__)
 
@@ -32,9 +41,9 @@ class SuperGraph(ht.GraphFrame):
     SuperGraph data structure
     """
     _FILENAMES = {
-        "ht": "hatchet_tree.txt",
-        "df": "df.pkl",
-        "nxg": "nxg.json",
+        "df": "cf-df.pkl",
+        "ht": "ht-graph.json",
+        "nxg": "cf-nxg.json",
         "env_params": "env_params.txt",
         "aux": "aux-{}.npz",
     }
@@ -43,33 +52,40 @@ class SuperGraph(ht.GraphFrame):
     def __init__(self, name):
         """
         Constructor to SuperGraph
-        :param name: SuperGraph's tag.
+        :param name: SuperGraph's tag name
         """
         assert isinstance(name, str)
 
         self.roots = [] # Roots of the call graph
         self.mean_root_inctime = 0.0 # Mean inc. metric of the root nodes
-        self.callsites = [] # all callsites in the call graph
-        self.f_callsites = [] # filtered callsites (after QueryMatcher))
 
+        self.dataframe = None
         self.nxg = None
+        self.graph = None
 
         self.name = name  # dataset name
         self.profile_format = ""
 
         self.parameters = {}
-        self.aux_data = {}
         self.proxy_columns = {}
         self.callers = {}
         self.callees = {}
         self.paths = {}
         self.hatchet_nodes = {}
-        self.indexes = []
 
-        self.modules = []
+        self.callsites = {}
+        self.modules = {}
+        self.modules_list = []
+        self.callsites_list = []
+        self.inv_callsites = {}
+        self.inv_modules = {}
         self.callsite_module_map = {}
         self.module_callsite_map = {}
-        self.gf = None
+        self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
+
+        self.callsite_aux_dict = {}
+        self.module_aux_dict = {}
+
         self.profiler = Profiler()
 
     # --------------------------------------------------------------------------
@@ -80,6 +96,107 @@ class SuperGraph(ht.GraphFrame):
     def __repr__(self):
         """SuperGraph string representation"""
         return self.__str__()
+
+    def get_name(self, idx, ntype):
+        """
+        Getter to get the node's name based on type.
+
+        :param idx (int): node index
+        :param ntype (str): node type (e.g., module, callsite)
+        :return name (str)
+        """
+        if ntype == 'callsite':
+            return self.callsites.get(idx, None)
+        if ntype == 'module':
+            return self.modules.get(idx, None)
+        assert 0
+
+    def get_idx(self, name, ntype):
+        """
+        Getter to get the node's index based on type.
+
+        :param name (str): node name
+        :param ntype (str): node type (e.g., module, callsite)
+        :return idx (int)
+        """
+        if ntype == 'callsite':
+            return self.inv_callsites.get(name, None)
+        if ntype == 'module':
+            return self.inv_modules.get(name, None)
+        assert 0
+
+    def get_module(self, callsite_idx):
+        """
+        Get module name from the node name.
+
+        :param callsite_idx (int): callsite index
+        :return (str): module for a call site
+        """
+        assert isinstance(callsite_idx, int)
+        return self.callsite_module_map[callsite_idx]
+        
+    def get_runtime(self, node_idx, ntype, metric, apply_func=None):
+        """
+        Getter to obtain the runtime as per the node type.
+
+        :param node_idx (int): node index
+        :param ntype (str): node type (e.g., 'callsite' or 'module')
+        :param metric (str): metric (e.g., 'time' or 'time (inc)')
+        :param apply_func (func): apply function (e.g., mean, min, max)
+        :return (float): runtime of a node
+        """
+        if ntype == 'callsite':
+            return self.df_lookup_with_column("name", node_idx)[metric].mean()
+        elif ntype == 'module':
+            return self.df_lookup_with_column("module", node_idx)[metric].mean()
+
+    def get_name_by_nid(self, nid):
+        """
+        Getter to obtain node's name by nid.
+
+        :param nid (int): node index
+        :return (str): node's name.
+        """
+        unique_names = self.df_lookup_with_column("nid", nid)['name'].unique()
+        assert len(unique_names) == 1
+        return unique_names[0]
+
+    def get_datasets(self):
+        """
+        Getter to obtain the datasets in the ensemble.
+        """
+        if "dataset" in self.df_columns():
+            return self.df_unique('dataset')
+
+    def get_gradients(self, node, nbins):
+        """
+        Getter to obtain the gradients of a node by the runtime metrics.
+        """
+        return Gradients(self.dataframe, bins=nbins,
+            node_id=node.get("id"),
+            node_type=node.get("type"),
+            proxy_columns=self.proxy_columns).result
+
+    def get_histograms(self, node, nbins):
+        """
+        Getter to obtain the rank histograms of a node.
+        Used by the mini-histograms on top of the node.
+        """
+        nid = node.get("id")
+        ntype = node.get("type")
+
+        if ntype == "callsite":
+            aux_dict = self.callsite_aux_dict
+        elif ntype == "module":
+            aux_dict = self.module_aux_dict
+
+        return Histogram(dataframe=aux_dict[nid], relative_to_df=None,
+            histo_types=["rank"],
+            node_type=node.get("type"),
+            proxy_columns=self.proxy_columns).unpack()
+
+    def get_entry_functions(self, node):
+        return []
 
     # --------------------------------------------------------------------------
     def create(self, path, profile_format, module_callsite_map: dict = {},  filter_by="time (inc)", filter_perc=10.0) -> None: 
@@ -106,80 +223,60 @@ class SuperGraph(ht.GraphFrame):
         gf = SuperGraph.from_config(path, self.profile_format)
         assert isinstance(gf, ht.GraphFrame)
         assert gf.graph is not None
-        LOGGER.debug(f"Input Dataframe shape: {gf.dataframe.shape}")
+        LOGGER.info(f'Loaded Hatchet GraphFrame: {df_info(gf.dataframe)}')
+        LOGGER.profile('')
+        if 0:
+            SuperGraph.write_ht(gf, path)
 
         # Create a hatchet.GraphFrame using the calculated graph and graphframe.
         super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics) # Initialize here so that we dont drop index levels.
-        
-        # Find the roots of the super graph. Used to get the mean inclusive runtime.
-        self.roots = SuperGraph.hatchet_get_roots(gf.graph) # Contains all unfiltered roots as well.
-        
-        # Call sites in the unfiltered GraphFrame. 
-        self.callsites = df_unique(gf.dataframe, "name")
-        LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
-        
-        # Add time proxies.
+
+        # ----------------------------------------------------------------------
+        self.add_callsites_and_modules_maps(module_callsite_map)
         self.add_time_proxies()
-
-        # Find the mean runtime of all the roots.
-        self.mean_root_inctime = self.df_mean_runtime(gf.dataframe, self.roots, "time (inc)")
-        
-        # Formulate the hatchet query.
-        query = [
-            ("*", {f"{self.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
-        ]
-        LOGGER.debug(f"Filtering GraphFrame by Hatchet Query :{query}")
-
-        self.f_callsites = SuperGraph.hatchet_filter_callsites_by_query(gf, query)
-        LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
-
-        # Construct the nxg from the hatchet.graph.
-        self.nxg = self.hatchet_graph_to_nxg(self.graph)
 
         # ----------------------------------------------------------------------
         # Hatchet requires node and rank to be indexes.
         # remove the indexes to maintain consistency.
-        self.indexes = list(self.dataframe.index.names) # We will remove node since it gets droped when `gf.drop_index_levels()`
-        self.df_reset_index()
+        # We will remove node since it gets droped when `gf.drop_index_levels()`
+        #self.indexes = list(self.dataframe.index.names)
+        #LOGGER.debug(f'Dataframe indexes = {self.indexes}')
+        #self.df_reset_index()
 
-        # ----------------------------------------------------------------------
-        LOGGER.info(f'Loaded dataframe: {self.dataframe.shape}, '
-                    f'columns = {list(self.dataframe.columns)}')
-
-        # add modules
-        self.add_modules(module_callsite_map)
-
-        # add new columns to the dataframe
-        self.df_add_nid_column()
-        
         # ----------------------------------------------------------------------
         # TODO: For faster searches, bring this back.
         # self.indexes.insert(0, 'dataset')
         # self.dataframe.set_index(self.indexes, inplace=True, drop=True)
 
-        LOGGER.info(f'Processed dataframe: {self.dataframe.shape}, '
-                    f'columns = {list(self.dataframe.columns)}')
-
+        LOGGER.info(f'Processed dataframe: {df_info(self.dataframe)}')
+        LOGGER.profile('')
         self.profiler.stop()
 
         # ----------------------------------------------------------------------
-        # graph-related operations
+        # Find the roots of the super graph. Used to get the mean inclusive runtime.
+        self.roots = SuperGraph.hatchet_get_roots(gf.graph)  # Contains all unfiltered roots as well.
+        self.nxg = self.hatchet_graph_to_nxg(self.graph)
+        LOGGER.debug(f'Found {len(self.roots)} graph roots; and converted to nxg')
+
+        _csidx = lambda _: self.get_idx(_, 'callsite')
         for node in self.graph.traverse():
             node_name = Sanitizer.from_htframe(node.frame)
-            self.hatchet_nodes[node_name] = node
-            self.paths[node_name] = [ Sanitizer.from_htframe(_) for _ in node.paths()[0]]
-            self.callers[node_name] = [_.frame.get("name") for _ in node.parents]
-            self.callees[node_name] = [_.frame.get("name") for _ in node.children]
+            node_idx = _csidx(node_name)
+            self.hatchet_nodes[node_idx] = node
+            self.paths[node_idx] = [_csidx(Sanitizer.from_htframe(_)) for _ in node.paths()[0]]
+            self.callers[node_idx] = [_csidx(_.frame.get('name')) for _ in node.parents]
+            self.callees[node_idx] = [_csidx(_.frame.get('name')) for _ in node.children]
 
-        self.df_add_column("callees", apply_func=lambda _: self.callees[_] if _ in self.callees else [])
-        self.df_add_column("callers", apply_func=lambda _: self.callers[_] if _ in self.callers else [])
-        self.df_add_column("path", apply_func=lambda _: self.paths[_] if _ in self.paths else [])
+        LOGGER.info(f'Processed graph')
+        LOGGER.profile('')
 
-        self.modules = np.array(self.df_factorize_column("module", sanitize=True))
+        self.df_add_column("callees", apply_dict=self.callees, dict_default=[], apply_on="nid")
+        self.df_add_column("callers", apply_dict=self.callers, dict_default=[], apply_on="nid")
+        self.df_add_column("path", apply_dict=self.paths, dict_default=[], apply_on="nid")
 
     # --------------------------------------------------------------------------
     def load(
-        self, path, read_graph=False, read_parameter=False, read_aux=False
+        self, path,  module_callsite_map: dict = {}, read_graph=False, read_parameter=False, read_aux=False
     ) -> None:
         """
         Load the SuperGraph class from reading .callflow data.
@@ -191,9 +288,7 @@ class SuperGraph(ht.GraphFrame):
         :return:
         """
         LOGGER.info(f"Reading SuperGraph ({self.name}) from ({path})")
-        self.dataframe = None
-        self.nxg = None
-        self.graph = None
+        
 
         if True:
             self.dataframe = SuperGraph.read_df(path)
@@ -207,56 +302,106 @@ class SuperGraph(ht.GraphFrame):
         if read_parameter:
             self.parameters = SuperGraph.read_env_params(path)
 
-        if read_aux:
-            self.aux_data = UnpackAuxiliary(path, self.name).result
-            # TODO: this should be handled better
-            if "modules" in self.aux_data.keys():   # single case
-                self.modules = self.aux_data["modules"]
-            elif self.name in self.aux_data.keys():     # ensemble base
-                self.modules = self.aux_data[self.name]["modules"]
-
         # ----------------------------------------------------------------------
         self.add_time_proxies()
-        # self.df_reset_index() # TODO: This might be cause a possible side
+        self.df_reset_index() # TODO: This might be cause a possible side
         # effect. Beware!!
-        self.roots = self.get_roots(self.nxg)
+        self.roots = self.nxg_get_roots(self.nxg)
+        self.add_callsites_and_modules_maps(module_callsite_map)
 
+        self.callsite_aux_dict = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns + ["nid"], group_by=["rank"], apply_func=lambda _: _.mean())
+        self.module_aux_dict = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns + ["nid"], group_by=["rank"], apply_func=lambda _: _.mean())
+
+        if self.name == "ensemble" and "dataset" in self.dataframe.columns:
+            self.rel_callsite_aux_dict = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
+            self.rel_module_aux_dict = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean()) 
+
+        
     # --------------------------------------------------------------------------
-    def add_modules(self, module_callsite_map={}):
+    def add_callsites_and_modules_maps(self, module_callsite_map={}):
 
         has_modules_in_df = "module" in self.dataframe.columns
         has_modules_in_map = len(module_callsite_map) > 0
-        assert not (has_modules_in_df and has_modules_in_map)
+        # assert not (has_modules_in_df and has_modules_in_map)
 
         # ----------------------------------------------------------------------
-        # if dataframe already has modules
-        if has_modules_in_df:
-            LOGGER.info('Found \"module\" column in the dataframe. Doing nothing.')
-            self.module_callsite_map = self.df_mod2callsite()
-            self.callsite_module_map = self.df_callsite2mod() # Expensive...
+        LOGGER.info('Creating \"module-callsite\" and \"callsite-module\" maps')
+
+        # create a map of callsite-indexes
+        self.callsites = df_as_dict(self.dataframe, 'nid', 'name')
 
         # ----------------------------------------------------------------------
-        # use the given module-callsite map
+        # if the dataframe already has columns
+        if has_modules_in_df and self.dataframe['module'].dtype != "int64":
+            LOGGER.debug('Extracting the module map from the dataframe')
+
+            # create a map of module-indexes
+            self.dataframe['module'], self.modules = \
+                self.dataframe['module'].factorize(sort=True)
+
+            self.modules = {i: Sanitizer.sanitize(v) for i, v in enumerate(self.modules)}
+        
+            self.callsite_module_map = df_as_dict(self.dataframe, 'nid', 'module')
+            self.module_callsite_map = {m: [] for m,c in self.modules.items()}
+            self.module_callsite_map[-1] = [] # @harsh: Why have assigned the index=-1 as empty array?
+            for ccode, mcode in self.callsite_module_map.items():
+                self.module_callsite_map[mcode].append(ccode)
+
+        # ----------------------------------------------------------------------
         elif has_modules_in_map:
-            LOGGER.info('Found user-specified module_callsite_map')
+            LOGGER.debug('Using the supplied module map')
+            self.modules = { i: m for i, m in enumerate(module_callsite_map.keys()) }
+            _modules_inv = dict((v, k) for k, v in self.modules.items())
 
-            self.module_callsite_map = module_callsite_map
-            self.callsite_module_map = {}
+            _nid = lambda _: self.df_lookup_with_column("name", _)["nid"].unique().tolist()
+            _mid = lambda _: _modules_inv.get(_)
 
-            for m, clist in self.module_callsite_map.items():
+            #self.module_callsite_map = {_mid(i): [_nid(_cs) for _cs in m] for i, m in module_callsite_map.items() }
+            self.module_callsite_map = {}
+            for i,m in module_callsite_map.items():
+                for _cs in m:
+                    if(_mid(i) in self.module_callsite_map.keys()):
+                        self.module_callsite_map[_mid(i)]= np.append(self.module_callsite_map[_mid(i)],_nid(_cs)).tolist()
+                    else: 
+                        self.module_callsite_map[_mid(i)] = _nid(_cs)
+
+            self.callsite_module_map = {_: -1 for _ in self.callsites}
+
+            for mcode, mname in enumerate(self.modules):
+                clist = self.module_callsite_map[mname]
                 for c in clist:
-                    self.callsite_module_map[c] = m
+                    self.callsite_module_map[c] = mcode
 
-            self.df_add_column("module", apply_func=lambda _: self.callsite_module_map[_])
+            self.df_add_column("module",
+                               apply_dict=self.callsite_module_map,
+                               apply_on="nid")
+
+            missing_callsites = [self.get_name_by_nid(c) for c in self.callsites if self.callsite_module_map[c] == -1]
+            if len(missing_callsites) > 0:
+                LOGGER.error(f"Missing callistes: {missing_callsites}")
+                LOGGER.error("Please add the missing callsite's module map in the config file.")
+                assert 0          
+            
         # ----------------------------------------------------------------------
         else:
-            LOGGER.info('No module map found. Defaulting to "module=callsite"')
-            self.df_add_column("module",
-                               apply_func=lambda _: Sanitizer.sanitize(_),
-                               apply_on="name")
+            LOGGER.debug('No module map found. Defaulting to \"module=callsite\"')
+            self.modules = self.callsites
+            self.callsite_module_map = {c: c for c,m in self.callsites.items()}
+            self.module_callsite_map = {m: [m] for m,c in self.modules.items()}
+            self.df_add_column('module', apply_func=lambda _: _, apply_on='name')
 
         # ----------------------------------------------------------------------
+        self.inv_callsites = {v: i for i,v in self.callsites.items()}
+        self.inv_modules = {v: i for i, v in self.modules.items()}
 
+        self.callsites_list = np.array(list(self.inv_callsites.keys()))
+        self.modules_list = np.array(list(self.inv_modules.keys()))
+        assert all([isinstance(m,int) for c,m in self.callsite_module_map.items()])
+        assert all([isinstance(c,list) for m,c in self.module_callsite_map.items()])
+
+        LOGGER.info(f'Created (\"module-to-callsite\" = {len(self.module_callsite_map)}) '
+                    f'and (\"callsite-to-module\" = {len(self.callsite_module_map)}) '
+                    'maps')
 
     # --------------------------------------------------------------------------
     def add_time_proxies(self):
@@ -264,6 +409,7 @@ class SuperGraph(ht.GraphFrame):
 
         :return:
         """
+        ## TODO: we should use ht.gf.exc_metric and ht.gf.inc_metric for this
         for key, proxies in METRIC_PROXIES.items():
             if key in self.dataframe.columns:
                 continue
@@ -303,219 +449,178 @@ class SuperGraph(ht.GraphFrame):
         if write_nxg:
             SuperGraph.write_nxg(path, self.nxg)
 
-        if write_aux:
-            #if self.name in list(self.auxiliary_data.keys()):
-            if self.name == 'ensemble':
-                for k, v in self.aux_data.items():
-                    SuperGraph.write_aux(path, v, k)
-            else:
-                SuperGraph.write_aux(path, self.aux_data, self.name)
-
     # --------------------------------------------------------------------------
-    # SuperGraph.dataframe api
+    # SuperGraph API functions
+    # These functions are used by the endpoints. 
     # --------------------------------------------------------------------------
     def summary(self):
 
         cols = list(self.dataframe.columns)
-        result = {"meantime": self.df_mean_runtime(self.dataframe, self.roots, "time (inc)"),
+        result = {"name": self.name,
+                  "meantime": self.df_root_max_mean_runtime(self.roots, "time (inc)"),
                   "roots": self.roots,
                   "ncallsites": self.df_count("name"),
+                  "modules": self.modules,
+                  "callsites": self.callsites,
+                  "m2c": self.module_callsite_map,
+                  "c2m": self.callsite_module_map,
                   "nmodules": self.df_count("module"), # if "module" in cols else 0,
                   "nranks": self.df_count("rank") if "rank" in cols else 1,
-                  "nedges": len(self.nxg.edges())}
+                  "nedges": len(self.nxg.edges()),
+                  "maxcallsite": self.df_get_top_by_attr("name", 1, "time")[0],
+                  "maxmodule": self.get_name(self.df_get_top_by_attr("module", 1, "time")[0], "module"),
+                  "invcallsites": self.inv_callsites,
+                  "invmodules": self.inv_modules,
+                  "timecolumns": TIME_COLUMNS,
+                  }
 
         for p in TIME_COLUMNS:
             result[p] = self.df_minmax(p)
 
         return result
 
-    # --------------------------------------------------------------------------
-    # added these functions to support auxiliary
-    # we need this
-    def df_mod2callsite(self, modules = None):
-
-        if None in self.indexes:
-            LOGGER.error('Found None in indexes. Removing!')
-            self.indexes = [_ for _ in self.indexes if _ is not None]
-
-        if modules is None:
-            modules = self.df_unique("module")
-        else:
-            assert isinstance(modules, (list, np.ndarray))
-
-        # TODO: this is a hack for now to append a "rank" index.
-        if len(self.indexes) == 0 and "rank" in self.dataframe.columns:
-            self.indexes = ["rank"]
-        _indexes = ["module"] + self.indexes
-        _df = self.dataframe.set_index(_indexes)
-
-        if "rank" in self.indexes:
-            return {_: _df.xs(_, 0)["name"].unique()
-                    for _ in modules}
-        else:
-            return {_: _df.xs(_, 0)["name"] for _ in modules}
-
-    def df_callsite2mod(self, callsites = None):
-
-        if callsites is None:
-            callsites = self.df_unique("name")
-        else:
-            assert isinstance(callsites, (list, np.ndarray))
-
-        # TODO: this is a hack for now to append a "rank" index. 
-        if len(self.indexes) == 0 and "rank" in self.dataframe.columns:
-            self.indexes = ["rank"]
-        _indexes = ["name"] + self.indexes
-        _df = self.dataframe.set_index(_indexes)
-
-        map = {}
-        for _ in callsites:
-            if "rank" in self.indexes:
-                __df =  _df.xs(_, 0)
-                mod_idx = __df["module"].unique()
-                # assert mod_idx.shape[0] in [0, 1]
-                if mod_idx.shape[0] == 1:
-                    map[_] = mod_idx[0]
-        return map
+    def timeline(self, nodes, ntype, metric):
+        grp_df = self.df_group_by(ntype)
+        data = { node : df_apply_func(grp_df.get_group(self.get_idx(node, ntype)), metric, self.proxy_columns) for node in nodes }    
+        data['root_time_inc'] = self.df_root_max_mean_runtime(self.roots, "time (inc)")
+        data['name'] = self.name
+        return data
 
     # --------------------------------------------------------------------------
-    # (Not documented)
-    # TODO: CAL-65: Move to utils directory
+    # SuperGraph.df functions
+    # --------------------------------------------------------------------------
     def df_reset_index(self):
         """
-
-        :return:
+        Wrapper to reset the index. The columns are added inplace and are not
+        dropped. 
         """
         self.dataframe.reset_index(drop=False, inplace=True)
 
     def df_columns(self):
         """
-
-        :return:
+        Wrapper to get all column names from a dataframe.
+        :return: (list) columns of dataframe
         """
         return self.dataframe.columns
 
     def df_get_proxy(self, column):
         """
+        Wrapper to get column name based on proxy.
 
-        :param column:
-        :return:
+        :param column: (str) column name
+        :return: (str) proxy of the column name
         """
         return self.proxy_columns.get(column, column)
 
     def df_get_column(self, column, index="name"):
         """
+        Wrapper to get a provided column based on an index. 
 
-        :param column:
-        :param index:
+        :param column: (str) column name
+        :param index: (str) column name to index by
         :return:
         """
         column = self.df_get_proxy(column)
         return self.dataframe.set_index(index)[column]
 
-    def df_add_column(self, column_name, value=None, apply_func=None, apply_on="name",
-                      update=False,):
+    def df_add_column(self, column_name,
+                      apply_value=None, apply_func=None,
+                      apply_dict=None, dict_default=None,
+                      apply_on="name", update=False):
         """
+        Wrapper to add a column to a dataframe in place. 
 
-        :param column_name:
-        :param value:
-        :param apply_func:
-        :param apply_on:
-        :param update:
-        :return:
+        :param column_name: (str) Name of the column to add in the dataframe
+        :param apply_value: (*) Value to apply on the column
+        :param apply_func: (func) Function to apply on the column
+        :param apply_dict: (dict) Dict to apply on the column
+        :param apply_on: (str) Column to apply the func, value or dict on
+        :param dict_default: (dict) default dictionary to apply on
+        :param update: (bool) in place update or not
         """
+        has_value = apply_value is not None
+        has_func = apply_func is not None
+        has_dict = apply_dict is not None
+        assert 1 == int(has_value) + int(has_func) + int(has_dict)
 
-        assert (value is None) != (apply_func is None)
         if column_name in self.dataframe.columns and not update:
             return
 
-        if value is not None:
-            assert isinstance(value, (int, float, str))
-            LOGGER.debug(f'appending column "{column_name}" = "{value}"')
-            self.dataframe[column_name] = value
+        if has_value:
+            assert isinstance(apply_value, (int, float, str))
+            LOGGER.debug(f'appending column "{column_name}" = "{apply_value}"')
+            self.dataframe[column_name] = apply_value
 
-        if apply_func is not None:
+        if has_func:
             assert callable(apply_func) and isinstance(apply_on, str)
             LOGGER.debug(f'appending column "{column_name}" = {apply_func}')
             self.dataframe[column_name] = self.dataframe[apply_on].apply(apply_func)
 
-    # TODO: merge this with the function above
-    def df_add_nid_column(self):
-        """
-
-        :return:
-        """
-        if "nid" in self.dataframe.columns:
-            return
-        self.dataframe["nid"] = self.dataframe.groupby("name")["name"].transform(
-            lambda x: pd.factorize(x)[0]
-        )
-
-    def df_update_mapping(self, col_name, mapping, apply_on="name"):
-        """
-
-        :param col_name:
-        :param mapping:
-        :param apply_on:
-        :return:
-        """
-        self.dataframe[col_name] = self.dataframe[apply_on].apply(
-            lambda _: mapping[_] if _ in mapping.keys() else ""
-        )
+        if has_dict:
+            assert isinstance(apply_dict, dict) and isinstance(apply_on, str)
+            LOGGER.debug(f'appending column "{column_name}" = (dict); default=({dict_default})')
+            self.dataframe[column_name] = self.dataframe[apply_on].apply(lambda _: apply_dict.get(_, dict_default))
 
     def df_unique(self, column):
         """
+        Wrapper to get unique rows from a column.
 
-        :param column:
-        :return:
+        :param column: (str) column name
+        :return: (ndarray) numpy array containing the unique elements. 
         """
         column = self.df_get_proxy(column)
         return self.dataframe[column].unique()
 
     def df_count(self, column):
         """
+        Wrapper to get the count of unique row elements of a column. 
 
-        :param column:
-        :return:
+        :param column: (str) Column name
+        :return: (int) Count of unique elements in the column.
         """
         return len(self.df_unique(column))
 
     def df_minmax(self, column):
         """
+        Wrapper to get the min and max elements from a column. 
 
-        :param column:
-        :return:
+        :param column: (str) column name
+        :return: (float, float) min, max of the column 
         """
         column = self.df_get_proxy(column)
         return self.dataframe[column].min(), self.dataframe[column].max()
 
     def df_filter_by_value(self, column, value):
         """
+        Wrapper to filter a column by a threshold value. 
 
-        :param column:
-        :param value:
-        :return:
+        :param column: (str) Column name
+        :param value: (float or int) threshold value to filter by
+        :return: (pandas.dataframe) filtered dataframe
         """
         assert isinstance(value, (int, float))
         column = self.df_get_proxy(column)
         df = self.dataframe.loc[self.dataframe[column] > value]
         return df[df["name"].isin(df["name"].unique())]
 
-    def df_filter_by_name(self, names):
+    def df_filter_by_name(self, values):
         """
+        Wrapper to filter a dataframe by a list of names on the "name" column.
 
-        :param names:
-        :return:
+        :param names: (list) list of values to filter
+        :return: (pandas.dataframe) Filtered dataframe
         """
-        assert isinstance(names, list)
-        return self.dataframe[self.dataframe["name"].isin(names)]
+        assert isinstance(values, list)
+        return self.dataframe[self.dataframe["name"].isin(values)]
 
     def df_filter_by_search_string(self, column, search_strings):
         """
+        Wrapper to filter by a list of search strings. 
+        Uses numpy for fast operation.
 
-        :param column:
-        :param search_strings:
-        :return:
+        :param column: (str) Column name
+        :param search_strings: (list) search strings to filter by.
+        :return: (pandas.dataframe) Filtered dataframe
         """
         unq, ids = np.unique(self.dataframe[column], return_inverse=True)
         unq_ids = np.searchsorted(unq, search_strings)
@@ -524,19 +629,23 @@ class SuperGraph(ht.GraphFrame):
 
     def df_lookup_with_column(self, column, value):
         """
+        Wrapper to look up by a value on a column
 
-        :param column:
-        :param value:
-        :return:
+        :param column: (str) Column name
+        :param value: (int, or float) Value to lookup by
+        :return: (pandas.dataframe) Lookup dataframe
         """
+        assert isinstance(value, (int, float, str))
+
         column = self.df_get_proxy(column)
         return self.dataframe.loc[self.dataframe[column] == value]
 
     def df_group_by(self, columns):
         """
+        Wrapper to group the dataframe by columns. 
 
-        :param columns:
-        :return:
+        :param columns: columns to groupby
+        :return: grouped dataframe
         """
         if isinstance(columns, list):
             return self.dataframe.groupby(columns)
@@ -544,63 +653,81 @@ class SuperGraph(ht.GraphFrame):
             assert isinstance(columns, str)
             return self.dataframe.groupby([columns])
 
-    def df_get_top_by_attr(self, count, sort_attr):
+    def df_get_top_by_attr(self, column, count, sort_attr):
         """
+        Get top n values of a column sorted in descending fashion by another column ("sort_attr")
 
-        :param count:
-        :param sort_attr:
-        :return:
+        :param column: (str) column to groupby (e.g., name, module)
+        :param count: (int) number of rows to return (e.g., n = 10 would return top-10
+        values)
+        :param sort_attr: (str) sorting attribute (e.g., time or time (inc))
+        :return: (list) top-n values 
         """
         assert isinstance(count, int) and isinstance(sort_attr, str)
         assert count > 0
 
-        df = self.dataframe.groupby(["name"]).mean()
+        df = self.dataframe.groupby([column]).mean()
         df = df.sort_values(by=[sort_attr], ascending=False)
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
 
-    def df_factorize_column(self, column, sanitize=False):
+    def df_factorize_column(self, column):
         """
-
-        :param column:
+        Wrapper to factorize a column. 
+        
+        :param column: (name)
         :param sanitize:
         :return:
         """
         column = self.df_get_proxy(column)
-        # Sanitize column name.
-        if sanitize:
-            self.dataframe[column] = self.dataframe[column].apply(
-                lambda _: Sanitizer.sanitize(_)
-            )
         _fct = self.dataframe[column].factorize()
         self.dataframe[column] = _fct[0]
         return _fct[1].values.tolist()
 
-    def df_xs_group_column(self, df, groups, name, column, apply_func):
+    def df_xs_group_column(self, name, column, groups=[], apply_func=None):
         """
+        Wrapper to get a cross-secton of a dataframe.
 
-        :param df:
-        :param groups:
-        :param name:
-        :param column:
-        :param apply_func:
-        :return:
+        :param name: (str) 
+        :param column: (str) column name
+        :param groups: (str) column to group by.
+        :param apply_func: (func) Apply a function after the group operation
+        :return: (pandas.dataframe) Cross-sectioned dataframe.
         """
-        # module_df = df.groupby(groups).mean()
-        module_df = df.groupby(groups).apply(apply_func)
-        return module_df.xs(name, level=column)
+        if len(groups) > 0:
+            _df = self.df_group_by(groups) 
+        else:
+            _df = self.dataframe
+
+        if apply_func is not None:
+            _df = _df.apply(apply_func)
+
+        return _df.xs(name, level=column)
+
+    def df_root_max_mean_runtime(self, roots, column):
+        """
+        Wrapper to get the root node's [max, mean] runtime.
+
+        :param roots: (list) list of roots
+        :param column: (str) runtime column (e.g., time or time (inc))
+        :return: max (mean runtime of the root nodes)
+        """
+        mean_runtime = 0.0
+        column = self.df_get_proxy(column)
+        for root in roots:
+            mean_runtime = max(mean_runtime, self.df_lookup_with_column("name", root)[column].mean())
+        return round(mean_runtime, 2)
 
     # --------------------------------------------------------------------------
     # SuperGraph.graph utilities.
     # --------------------------------------------------------------------------
-    # TODO: CAL-65: Move to utils directory
     @staticmethod
     def hatchet_graph_to_nxg(ht_graph):
         """
         Constructs a networkX graph from hatchet graph.
 
-        :param ht_graph:
-        :return:
+        :param ht_graph: (hatchet.Graph) Hatchet Graph
+        :return: (NetworkX.nxg) NetworkX graph
         """
         assert isinstance(ht_graph, ht.graph.Graph)
 
@@ -631,8 +758,15 @@ class SuperGraph(ht.GraphFrame):
         return nxg
 
     @staticmethod
-    def hatchet_get_roots(graph):
-        return [root.frame.get('name') for root in graph.roots]
+    def hatchet_get_roots(ht_graph):
+        """
+        Wrapper to get roots from the hatchet Graph.
+
+        :return: (list) Root nodes of a graph.
+        """
+        assert isinstance(ht_graph, ht.graph.Graph)
+
+        return [root.frame.get('name') for root in ht_graph.roots]
 
     @staticmethod
     def hatchet_filter_callsites_by_query(gf, query):
@@ -647,38 +781,12 @@ class SuperGraph(ht.GraphFrame):
 
         return df_unique(fgf.dataframe, "name")
 
-    def df_mean_runtime(self, df, roots, column):
-        mean_runtime = 0.0
-        column = self.df_get_proxy(column)
-        for root in roots:
-            mean_runtime = max(mean_runtime, df.loc[df['name'] == root][column].mean())
-        return round(mean_runtime, 2)
-
-    def get_roots(self, nxg):
+    def nxg_get_roots(self, nxg):
         roots = []
         for component in nx.weakly_connected_components(nxg):
             G_sub = nxg.subgraph(component)
             roots.extend([n for n,d in G_sub.in_degree() if d==0])
         return roots
-
-    def get_module_idx(self, module):
-        """
-        Get module index of a given module.
-        :param module:
-        :return:
-        """
-        # TODO: CAL-53
-        # If it is not in the module_fct_list, it means its a node with a cycle.
-        # This might be the correct way to go, but lets place a quick fix by
-        # comparing the strings...
-        # if module not in self.modules:
-        #     self.modules.append(module)
-        #     return len(self.modules)
-
-        if "=" in module:
-            module = module.split("=")[0]
-
-        return list(self.modules).index(module)
 
     # --------------------------------------------------------------------------
     # Create GraphFrame methods
@@ -695,7 +803,10 @@ class SuperGraph(ht.GraphFrame):
         if profile_format not in FILE_FORMATS:
             raise ValueError(f"Invalid profile format: {profile_format}")
 
-        gf = None
+        gf = SuperGraph.read_ht(data_path)
+        if gf is not None:
+            return gf
+
         if profile_format == "hpctoolkit":
             gf = ht.GraphFrame.from_hpctoolkit(data_path)
 
@@ -725,6 +836,42 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     # static read/write functionality
+    # --------------------------------------------------------------------------
+    @staticmethod
+    def write_ht(gf, path='.'):
+
+        import pickle
+        assert isinstance(gf, ht.GraphFrame)
+
+        LOGGER.debug(f"Writing Hatchet GraphFrame to ({path})")
+        fdf = os.path.join(path, 'ht-df.pkl')
+        fdg = os.path.join(path, 'ht-graph.pkl')
+        fdm = os.path.join(path, 'ht-metrics.npz')
+
+        gf.dataframe.to_pickle(fdf)
+        with open(fdg, "wb") as fptr:
+            pickle.dump(gf.graph, fptr)
+        np.savez_compressed(fdm, exc=gf.exc_metrics, inc=gf.inc_metrics)
+
+    @staticmethod
+    def read_ht(path):
+
+        import pickle
+        fdf = os.path.join(path, 'ht-df.pkl')
+        fdg = os.path.join(path, 'ht-graph.pkl')
+        fdm = os.path.join(path, 'ht-metrics.npz')
+
+        if not os.path.exists(fdf) or not os.path.exists(fdg) or not os.path.exists(fdm):
+            return None
+
+        LOGGER.debug(f"Reading Hatchet GraphFrame from ({path})")
+        df = pd.read_pickle(fdf)
+        with open(fdg, "rb") as fptr:
+            graph = pickle.load(fptr)
+        met = np.load(fdm)
+        ext_metrics, int_metrics = list(met['exc'][()]), list(met['inc'][()])
+        return ht.GraphFrame(graph, df, ext_metrics, int_metrics)
+
     # --------------------------------------------------------------------------
     # TODO: CAL-66: Clean up unnecessary writing and reading functions.
     @staticmethod
@@ -772,7 +919,7 @@ class SuperGraph(ht.GraphFrame):
             fptr.write(graph_str)
 
     @staticmethod
-    def write_aux(path, data, name):
+    def todelete_write_aux(path, data, name):
         """
 
         :param path:
@@ -844,7 +991,7 @@ class SuperGraph(ht.GraphFrame):
         return graph
 
     @staticmethod
-    def read_aux(path, name):
+    def todelete_read_aux(path, name):
         """
 
         :param path:
@@ -886,18 +1033,8 @@ class SuperGraph(ht.GraphFrame):
         return data
 
     # --------------------------------------------------------------------------
-    # functionality related to modules
+    # Supergraph.nxg methods
     # --------------------------------------------------------------------------
-    def get_module(self, callsite):
-        """
-        If such a mapping exists, this function returns the module based on
-        mapping. Else, it queries the graphframe for a module name.
-
-        :param callsite (str): call site
-        :return (str): module for a call site
-        """
-        return self.module_map[callsite]
-
     def filter_sg(self, filter_by, filter_val) -> None:
         """
         In-place filtering on the NetworkX Graph.

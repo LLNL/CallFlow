@@ -7,9 +7,10 @@
       <v-select
         label="Metric"
         :items="metrics"
-        v-model="selectedMetric"
+        :value="selectedMetric"
         :menu-props="{maxHeight: '200'}"
         persistent-hint
+        @change="updateSelectedMetric"
       >
       </v-select>
     </v-flex>
@@ -18,50 +19,54 @@
       <v-select
         label="Runtime Color Map"
         :items="runtimeColorMap"
-        v-model="selectedRuntimeColorMap"
+        :value="selectedRuntimeColorMap"
         :menu-props="{maxHeight: '200'}"
         persistent-hint
+        @change="updateRuntimeColorMap"
       >
       </v-select>
     </v-flex>
 
-	<v-flex xs12 class="ma-1">
-		<v-select
-			label="Distribution Color Map"
-			:items="distributionColorMap"
-			v-model="selectedDistributionColorMap"
-			:menu-props="{ maxHeight: '200' }"
-			persistent-hint
-			:disabled="selectedFormat=='SuperGraph'? true : false"
-		>
-		</v-select>
-	</v-flex>
-		
-	<v-flex xs12 class="ma-1">
-		<v-select
-			label="Target Color"
-			:items="targetColors"
-			v-model="selectedTargetColor"
-			:menu-props="{ maxHeight: '200' }"
-			persistent-hint
-			:disabled="selectedFormat=='SuperGraph'? true : false"
-		>
-		</v-select>
-	</v-flex>
+    <v-flex xs12 class="ma-1">
+      <v-select
+        label="Distribution Color Map"
+        :items="distributionColorMap"
+        :value="selectedDistributionColorMap"
+        :menu-props="{maxHeight: '200'}"
+        persistent-hint
+        :disabled="selectedMode === 'ESG' ? false : true"
+        @change="updateDistributionColorMap"
+      >
+      </v-select>
+    </v-flex>
+
+    <v-flex xs12 class="ma-1">
+      <v-select
+        label="Target Color"
+        :items="targetColors"
+        :value="selectedTargetColor"
+        :menu-props="{maxHeight: '200'}"
+        persistent-hint
+        :disabled="selectedMode === 'ESG' ? false : true"
+        @change="updateTargetColor"
+      >
+      </v-select>
+    </v-flex>
 
     <v-flex xs12 class="ma-1">
       <v-text-field
         label="Color points (3-9)"
         class="mt-0"
         type="number"
-        v-model="selectedColorPoint"
+        :value="selectedColorPoint"
         :menu-props="{maxHeight: '200'}"
         persistent-hint
+        @change="updateSelectedColorPoint"
       >
       </v-text-field>
     </v-flex>
 
-	<!-- <v-flex xs12 class="ma-1">
+    <!-- <v-flex xs12 class="ma-1">
             <v-text-field
               label="Color minimum (in seconds)"
               class="mt-0"
@@ -84,86 +89,101 @@
             </v-text-field>
           </v-flex> -->
 
-	<template :v-if="selectedFormat=='SuperGraph'">
-		<v-flex xs12 class="ma-1">
-			<v-subheader class="teal lighten-4">Histograms</v-subheader>
-		</v-flex>
+    <template :v-if="selectedMode == 'SG'">
+      <v-flex xs12 class="ma-1">
+        <v-subheader class="teal lighten-4">Histograms</v-subheader>
+      </v-flex>
 
-		<v-flex xs12 class="ma-1" :v-show="selectedFormat=='SuperGraph'">
-			<v-text-field
-				label="Number of bins for MPI Distribution"
-				class="mt-0"
-				type="number"
-				v-model="selectedMPIBinCount"
-				:menu-props="{maxHeight: '200'}"
-				persistent-hint
-				disabled
-			>
-			</v-text-field>
-		</v-flex>
+      <v-flex xs12 class="ma-1" :v-show="selectedMode == 'SG'">
+        <v-text-field
+          label="Number of bins for MPI Distribution"
+          class="mt-0"
+          type="number"
+          :value="selectedRankBinCount"
+          :menu-props="{maxHeight: '200'}"
+          persistent-hint
+          :disabled="
+            selectedMode === 'ESG' || selectedMode == 'SG' ? false : true
+          "
+		@change="updateRankBinCount"
 
-		<v-flex xs12 class="ma-1">
-            <v-text-field
-              label="Number of bins for Run Distribution"
-              class="mt-0"
-              type="number"
-              v-model="selectedRunBinCount"
-              :menu-props="{ maxHeight: '200' }"
-              persistent-hint
-			disabled
-            >
-            </v-text-field>
-          </v-flex>
+        >
+        </v-text-field>
+      </v-flex>
 
-		<v-flex xs12 class="ma-1">
-			<v-select
-				label="Distribution Scale"
-				:items="scales"
-				v-model="selectedScale"
-				:menu-props="{maxHeight: '200'}"
-				persistent-hint
-			>
-			</v-select>
-		</v-flex>
+      <v-flex xs12 class="ma-1">
+        <v-text-field
+          label="Number of bins for Run Distribution"
+          class="mt-0"
+          type="number"
+          :value="selectedRunBinCount"
+          :menu-props="{maxHeight: '200'}"
+          persistent-hint
+          :disabled="selectedMode === 'ESG' ? false : true"
+		@change="updateRunBinCount"
 
-		<v-flex xs12 class="ma-1">
-            <v-select
-              label="Bin by attribute"
-              :items="props"
-              v-model="selectedProp"
-              :menu-props="{ maxHeight: '200' }"
-              persistent-hint
-            >
-            </v-select>
-          </v-flex>
-	</template>
+        >
+        </v-text-field>
+      </v-flex>
 
-	<template :v-if="selectedFormat=='SuperGraph'">
-		<v-flex xs12 class="ma-1">
-			<v-subheader class="teal lighten-4">Call site Information</v-subheader>
-		</v-flex>
-		<v-flex xs12 class="ma-1">
-			<v-select
-				label="Sort by"
-				:items="sortByModes"
-				v-model="selectedRuntimeSortBy"
-				:menu-props="{maxHeight: '200'}"
-				persistent-hint
-			/>
-		</v-flex>
+      <v-flex xs12 class="ma-1">
+        <v-select
+          label="Distribution Scale"
+          :items="scales"
+          :value="selectedScale"
+          :menu-props="{maxHeight: '200'}"
+          persistent-hint
+          :disabled="selectedMode === 'ESG' ? false : true"
+        >
+        </v-select>
+      </v-flex>
 
-		<v-flex xs12 class="ma-1">
-            <v-text-field
-              label="IQR Factor"
-              class="mt-0"
-              type="float"
-              v-model="selectedIQRFactor"
-              :menu-props="{ maxHeight: '200' }"
-              persistent-hint
-            >
-            </v-text-field>
-          </v-flex>
-	</template>
+      <v-flex xs12 class="ma-1">
+        <v-select
+          label="Bin by attribute"
+          :items="props"
+          :value="selectedProp"
+          :menu-props="{maxHeight: '200'}"
+          persistent-hint
+          :disabled="selectedMode === 'ESG' ? false : true"
+        >
+        </v-select>
+      </v-flex>
+    </template>
+
+    <template>
+      <v-flex xs12 class="ma-1">
+        <v-subheader class="teal lighten-4">Call site Information</v-subheader>
+      </v-flex>
+      <v-flex xs12 class="ma-1">
+        <v-select
+          label="Sort by"
+          :items="sortByModes"
+          :value="selectedRuntimeSortBy"
+          :menu-props="{maxHeight: '200'}"
+          persistent-hint
+          :disabled="
+            selectedMode === 'ESG' || selectedMode == 'SG' ? false : true
+          "
+          @change="updateRuntimeSortBy"
+        />
+      </v-flex>
+
+      <!-- <v-flex xs12 class="ma-1">
+        <v-text-field
+          label="IQR Factor"
+          class="mt-0"
+          type="float"
+          :value="selectedIQRFactor"
+          :menu-props="{maxHeight: '200'}"
+          persistent-hint
+          :disabled="
+            selectedMode === 'ESG' || selectedMode == 'SG' ? false : true
+          "
+        >
+        </v-text-field>
+      </v-flex> -->
+    </template>
   </v-col>
 </template>
 
@@ -171,25 +191,20 @@
 <script>
 import EventHandler from "lib/routing/EventHandler";
 import APIService from "lib/routing/APIService";
+import Color from "lib/color/index";
+import {mapActions, mapGetters} from "vuex";
 
 export default {
 	name: "VisualEncoding",
 
 	data: () => ({
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
-		selectedColorPoint: 9,
 		metrics: ["time", "time (inc)"],
-		selectedMetric: "time (inc)",
-		selectedRuntimeColorMap: "OrRd",
-		runtimeColorMap: [],
-		distributionColorMap: [],
-		selectedRunBinCount: 20,
-		selectedMPIBinCount: 20,
-		selectedRuntimeSortBy: "mean",
+		runtimeColorMap: new Color().getAllColors(),
+		distributionColorMap: new Color().getAllColors(),
 		sortByModes: ["min", "mean", "max", "imb", "var", "kert", "skew"],
 		scales: ["Log", "Linear"],
 		selectedScale: "Linear",
-		selectedFormat: "",
 		selectedDistributionColorMap: "Blues",
 		compareModes: ["MEAN_DIFF", "RANK_DIFF"],
 		selectedCompareMode: "MEAN_DIFF",
@@ -198,7 +213,6 @@ export default {
 		dimensions: ["max_inclusive_time", "max_exclusive_time", "rank_count"],
 		selectedPC1: "max_inclusive_time",
 		selectedPC2: "max_exclusive_time",
-		selectedIQRFactor: 0.15,
 		selectedNumOfClusters: 3,
 		targetColorMap: {
 			Green: "#4EAF4A",
@@ -209,87 +223,10 @@ export default {
 		targetColors: ["Green", "Blue", "Brown"],
 		selectedTargetColor: "Green",
 	}),
-  
+
 	watch: {
-		selectedRuntimeColorMap: function (val) {
-			this.$store.selectedRuntimeColorMap = val;
-			EventHandler.$emit("setup-colors");
-			this.reset();
-		},
-
-		selectedMetric: function (val) {
-			this.$store.selectedMetric = val;
-			this.reset();
-		},
-
-		selectedColorPoint: function (val) {
-			this.$store.selectedColorPoint = val;
-			EventHandler.$emit("setup-colors");
-			this.reset();
-		},
-
-		// NOTE: This functionality is broken!!!
-		// The request times out because the auxiliary processing
-		// exceeds the threshold set by the APIService.
-		// TODO: CAL-88: Fix the time out error and use events
-		// instead of a this.reset()
-		async selectedMPIBinCount(val) {
-			this.$store.selectedMPIBinCount = val;
-			const data = await this.requestAuxData();
-
-			// TODO: CAL-88 Fix the timeout error.
-			// EventHandler.$emit("update-rank-bin-size", {
-			// 	node: this.$store.selectedNode,
-			// 	dataset: this.$store.selectedTargetDataset
-			// });
-			this.reset();
-		},
-
-		selectedScale(val) {
-			this.$store.selectedScale = val;
-			this.reset();
-		},
-
-		selectedIQRFactor(val) {
-			this.$store.selectedIQRFactor = val;
-			this.reset();
-		},
-
-		selectedRuntimeSortBy(val) {
-			this.$store.selectedRuntimeSortBy = val;
-			if (this.$store.selectedFormat == "EnsembleSuperGraph") {
-				EventHandler.$emit("callsite-correspondence-sort", val);
-			}
-			else if(this.$store.selectedFormat == "SuperGraph"){
-				EventHandler.$emit("callsite-information-sort", val);
-			}
-		},
-
 		selectedTargetColor(val) {
 			this.$store.selectedTargetColor = val;
-			this.reset();
-		},
-
-		auxiliarySortBy(val) {
-			this.$store.auxiliarySortBy = val;
-			EventHandler.$emit("update-auxiliary-sort-by");
-		},
-
-		async selectedRunBinCount(val) {
-			this.$store.selectedRunBinCount = val;
-			// TODO: Need to do something here.
-			const data = await this.requestAuxData();
-			this.reset();
-		},
-
-		selectedProp(val) {
-			this.$store.selectedProp = val;
-			this.reset();
-		},
-
-		selectedDistributionColorMap(val) {
-			this.$store.selectedDistributionColorMap = val;
-			EventHandler.$emit("setup-colors");
 			this.reset();
 		},
 
@@ -310,60 +247,39 @@ export default {
 			this.$store.selectedNumOfClusters = val;
 			EventHandler.$emit("update-number-of-clusters");
 		},
-
 	},
 
-	mounted() {
-		this.selectedFormat = this.$store.selectedFormat;
-		console.log("Format: ", this.selectedFormat);
+	computed: {
+		...mapGetters({
+			selectedMetric: "getSelectedMetric",
+			selectedRuntimeColorMap: "getRuntimeColorMap",
+			selectedColorPoint: "getSelectedColorPoint",
+			selectedMode: "getSelectedMode",
+			selectedRunBinCount: "getRunBinCount",
+			selectedRankBinCount: "getRankBinCount",
+			selectedRuntimeSortBy: "getRuntimeSortBy",
+			// selectedIQRFactor: "getIQRFactor"
+		}),
 	},
 
 	methods: {
+		...mapActions([
+			"updateSelectedMetric",
+			"updateRuntimeColorMap",
+			"updateSelectedColorPoint",
+			"updateDistributionColorMap",
+			"updateTargetColor",
+			"updateRankBinCount",
+			"updateRunBinCount",
+			"updateRuntimeSortBy"
+		]),
+
 		init() {
-			this.selectedMetric = this.$store.selectedMetric;
-			this.selectedColorPoint = this.$store.selectedColorPoint;
-			this.runtimeColorMap = this.$store.runtimeColorMap;
-			this.distributionColorMap = this.$store.runtimeColorMap;
-			this.selectedFormat = this.$store.selectedFormat;
-
-			if (this.$store.selectedFormat == "SuperGraph") {
-				this.selectedMPIBinCount = this.$store.selectedMPIBinCount;
-	
-				// Set the scale for information (log or linear)
-				this.$store.selectedScale = this.selectedScale;
-			} 
-
-			else if (this.$store.selectedFormat == "EnsembleSuperGraph") {
-				this.selectedRunBinCount = this.$store.selectedRunBinCount;
-				this.selectedProp = this.$store.selectedProp;
-
-				this.selectedDistributionColorMap = this.$store.selectedDistributionColorMap;
-				this.selectedRuntimeColorMap = "Blues";
-			} 
-
-			console.log("Mode : ", this.$store.selectedMode);
-			console.log("Number of runs :", this.$store.numOfRuns);
-			console.log("Target Dataset : ", this.$store.selectedTargetDataset);
-			console.log("Node: ", this.$store.selectedNode);
-			console.log("Run Bin size", this.$store.selectedRunBinCount);
-			console.log("MPI Bin size", this.$store.selectedMPIBinCount);
+			this.runtimeColorMap = new Color().getAllColors();
+			this.distributionColorMap = new Color().getAllColors();
 		},
 
-		reset() {
-			if (this.$store.selectedFormat == "CCT") {
-				EventHandler.$emit("cct-reset");
-			}
-			else if (this.$store.selectedFormat == "SuperGraph") {
-				EventHandler.$emit("supergraph-reset");
-			}
-			else if (this.$store.selectedFormat == "EnsembleSuperGraph") {
-				EventHandler.$emit("ensemble-supergraph-reset");
-			}
-		},
-
-		clear() {
-			// This should always be empty.
-		},
-	}
+		clear() {},
+	},
 };
 </script>

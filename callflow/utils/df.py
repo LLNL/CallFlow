@@ -7,9 +7,14 @@
 import numpy as np
 import pandas as pd
 
+
 # ------------------------------------------------------------------------------
 # pandas dataframe utils
 # ------------------------------------------------------------------------------
+def df_info(df):
+    return f'{df.shape} {list(df.index.names)} {list(df.columns)}'
+
+
 def df_unique(df, column, proxy={}):
     column = proxy.get(column, column)
     if column not in df.columns:
@@ -40,6 +45,7 @@ def df_fetch_columns(df, columns, proxy={}):
     columns = [proxy.get(_, _) for _ in columns]
     return df[columns]
 
+
 # ------------------------------------------------------------------------------
 def df_filter_by_value(df, column, value, index="name", proxy={}):
     assert isinstance(value, (int, float))
@@ -65,6 +71,16 @@ def df_filter_by_search_string(df, column, search_strings, proxy={}):
 
 
 # ------------------------------------------------------------------------------
+def df_as_dict(df, from_col, to_col):
+    assert isinstance(df, pd.DataFrame)
+    assert isinstance(from_col, str) and isinstance(to_col, str)
+    assert from_col in df.columns and to_col in df.columns
+    df = df[[from_col, to_col]]
+    df.set_index(from_col, inplace=True)
+    df = df[~df.index.duplicated(keep='first')]
+    return df.to_dict()[to_col]
+
+
 def df_lookup_by_column(df, column, value, proxy={}):
     column = proxy.get(column, column)
     return df.loc[df[column] == value]
@@ -86,55 +102,29 @@ def df_group_by(df, columns, proxy={}):
         columns = proxy.get(columns, columns)
         return df.groupby([columns])
 
-# TODO: Remove before merge to develop
-def df_bi_level_group_v1(df, frst_group_attr, scnd_group_attr, cols, apply_func, proxy={}):
-    """
-    """
-    g_df = df.groupby(frst_group_attr)
-
-    _cols = [proxy.get(_, _) for _ in cols]    
-    ret_df = pd.DataFrame([])
-    for grp in g_df.groups:
-        _df = g_df.get_group(grp)
-        if "dataset" in _df.columns:
-            group_cols = ["dataset", scnd_group_attr]
-        else:
-            group_cols = [scnd_group_attr]
-        ret_df = pd.concat([ret_df, _df.groupby(group_cols)[_cols].apply(apply_func)])
-        
-    ret_df["module"] = ret_df["module"].astype(int)
-        
-    ret_df.reset_index(drop=False, inplace=True)
-    return ret_df
-
-# TODO: Remove before merge to develop
-def df_bi_level_group_v2(df, frst_group_attr, scnd_group_attr, apply_func, proxy={}):
-    _df = df.set_index([frst_group_attr])
-    if scnd_group_attr is not None:
-        _df = df.set_index([frst_group_attr, scnd_group_attr])
-    _levels = _df.index.unique().tolist()
-    if scnd_group_attr is not None:
-        return { _ : _df.xs(_).groupby("rank").mean() for (_, __) in _levels }
-    else:
-        return { _ : _df.xs(_).groupby("rank").mean() for _ in _levels }
-
-# TODO: apply_func is really slow. So we apply the func directly on the column, instead of a lambda like functions.
+# TODO: Generalize to apply_func. 
+# Performs a 2-level grouping based on frst_group_attr and scnd_group_attr. 
+# Example use case:
+#   Group the dataframe by "module" and "name".
+# Returns a dict 
 def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, group_by, apply_func, proxy={}):
-    _df = df.set_index([frst_group_attr])
     _cols = [proxy.get(_, _) for _ in cols] + group_by
 
     # If there is only one attribute to group by, we use the 1st index.
     if len(group_by) == 1:
         group_by = group_by[0]
 
+    # Find the grouping
     if scnd_group_attr is not None:
-        _indexes = [frst_group_attr, scnd_group_attr]
+        _groups = [frst_group_attr, scnd_group_attr]
     else:
-        _indexes = [frst_group_attr]
+        _groups = [frst_group_attr]
 
-    _df = df.set_index(_indexes)
+    # Set the df.index as the _groups
+    _df = df.set_index(_groups)
     _levels = _df.index.unique().tolist()
         
+    # If "rank" is present in the columns, we will group by "rank".
     if "rank" in _df.columns and len(df["rank"].unique().tolist()) > 1:
         if scnd_group_attr is not None:
             if len(group_by) == 0:
@@ -148,3 +138,15 @@ def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, group_by, appl
             return { _ : (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index() for _ in _levels }
     else: 
         return { _ : _df.xs(_)[_cols] for _ in _levels}
+
+def df_apply_func(df, column, proxy={}):
+    """
+    Apply a function to the df.column
+
+    :param column: column to apply on. 
+    :param proxy: 
+    :return: 
+    """
+    assert isinstance(column, str)
+    column = proxy.get(column, column)
+    return df[column].mean()

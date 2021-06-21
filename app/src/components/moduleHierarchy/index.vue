@@ -7,7 +7,7 @@
 
 <template>
   <v-layout row wrap :id="id">
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info"/>
+	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info"/>
     <span class="component-info">
       Module = {{ formatModule(selectedModule) }}
     </span>
@@ -17,15 +17,20 @@
 
 <script>
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
+
 import ToolTip from "./tooltip";
+import InfoChip from "../general/infoChip";
+import EventHandler from "lib/routing/EventHandler";
+
 import * as utils from "lib/utils";
-import Queue from "lib/datastructures/queue";
-import APIService from "lib/routing/APIService";
+import Queue from "./lib/queue";
 
 export default {
 	name: "ModuleHierarchy",
 	components: {
 		ToolTip,
+		InfoChip,
 	},
 	props: [],
 	data: () => ({
@@ -50,24 +55,9 @@ export default {
 			s: 3,
 			t: 10,
 		},
-		selectedSplitOption: {
-			name: "split-caller",
-		},
-		splitOptions: [
-			{
-				name: "split-caller",
-			},
-			{
-				name: "split-callee",
-			},
-			{
-				name: "split-level",
-			},
-		],
-		placeholder: "Split options",
 		maxLevel: 0,
 		path_hierarchy: [],
-		id: "",
+		id: "module-hierarchy-overview",
 		padding: 0,
 		offset: 4,
 		stroke_width: 4,
@@ -75,9 +65,21 @@ export default {
 		selectedModule: "",
 		svgID: "module-hierarchy-svg",
 		title: "Super node Hierarchy",
-		summary: "",
+		infoSummary: "",
 		info: "",
+		selectedHierarchyMode: "Uniform"
 	}),
+
+	computed: {
+		...mapGetters({
+			selectedNode: "getSelectedNode",
+			data: "getHierarchy",
+			runs: "getRuns",
+			showTarget: "getShowTarget",
+			generalColors: "getGeneralColors",
+			selectedTargetRun: "getSelectedTargetRun"
+		})
+	},
 
 	watch: {
 		level: {
@@ -86,37 +88,33 @@ export default {
 			},
 			deep: true,
 		},
+
+		data: function () {
+			this.visualize();
+		}
 	},
-	
+
 	mounted() {
-		this.id = "module-hierarchy-overview";
+		let self = this;
+		EventHandler.$on("reset-module-hierarchy", function() {
+			self.clear();
+			self.init();
+		});
 	},
 
 	methods: {
-		async init() {
-			if (this.$store.selectedMetric == "Inclusive") {
-				this.metric = "max_time (inc)";
-			} else if (this.$store.selectedMetric == "Exclusive") {
-				this.metric = "max_time";
+		init() {
+			if(this.selectedNode.type == "module") {
+				this.$store.dispatch("fetchHierarchy", {
+					node: this.selectedNode["name"],
+					ntype: this.selectedNode["type"],
+					dataset: this.selectedTargetRun,
+				});
 			}
-			this.selectedNode = this.$store.selectedNode;
-			const data = await APIService.POSTRequest("module_hierarchy", {
-				module: this.$store.selectedNode,
-				datasets: this.$store.selectedDatasets,
-			});
-		},
 
-		// Formatting for the html view
-		formatModule(module) {
-			if (module.length < 10) {
-				return module;
-			}
-			return this.trunc(module, 10);
-		},
-
-		setupSVG() {
 			this.width = document.getElementById(this.id).clientWidth;
 			this.height = this.$store.viewHeight * 0.3;
+			console.log(this.height);
 			this.icicleWidth = this.width - this.margin.right - this.margin.left;
 			this.icicleHeight = this.height - this.margin.top - this.margin.bottom;
 
@@ -130,6 +128,19 @@ export default {
 				});
 
 			this.$refs.ToolTip.init(this.svgID);
+		},
+
+		visualize() {
+			const hierarchy = this.bfs(this.data);
+			this.drawIcicles(hierarchy);
+		},
+
+		// Formatting for the html view
+		formatModule(module) {
+			if (module.length < 10) {
+				return module;
+			}
+			return this.trunc(module, 10);
 		},
 
 		update_maxlevels(data) {
@@ -177,9 +188,10 @@ export default {
 			let startVertex = graph;
 
 			let thismodule = startVertex.id;
-			let moduleData = this.$store.data_mod["ensemble"][thismodule];
 
-			startVertex.data = moduleData;
+			// startVertex.data = this.$store.data_mod["ensemble"][thismodule];
+
+			startVertex.data = {};
 
 			vertexQueue.enqueue(startVertex);
 
@@ -194,10 +206,12 @@ export default {
 				let callsiteData = {};
 				if (!startVertexData) {
 					let callsite = currentVertex.id;
-					callsiteData = this.$store.data_cs["ensemble"][callsite];
+					// callsiteData = this.$store.data_cs["ensemble"][callsite];
+					callsiteData = {};
 				} else {
 					let module = currentVertex.id;
-					callsiteData = this.$store.data_mod["ensemble"][module];
+					// callsiteData = this.$store.data_mod["ensemble"][module];
+					callsiteData = {};
 					startVertexData = false;
 				}
 
@@ -215,11 +229,6 @@ export default {
 				previousVertex = currentVertex;
 			}
 			return graph;
-		},
-
-		update_from_graph(json) {
-			let hierarchy = this.bfs(json);
-			this.drawIcicles(hierarchy);
 		},
 
 		trunc(str, n) {
@@ -274,7 +283,7 @@ export default {
 			let self = this;
 			return function (node) {
 				if (node.children) {
-					if (self.$store.selectedHierarchyMode == "Exclusive") {
+					if (self.selectedHierarchyMode == "Exclusive") {
 						self.diceByValue(
 							node,
 							node.x0,
@@ -282,7 +291,7 @@ export default {
 							node.x1,
 							(dy * (node.depth + 2)) / n
 						);
-					} else if (self.$store.selectedHierarchyMode == "Uniform") {
+					} else if (self.selectedHierarchyMode == "Uniform") {
 						self.dice(
 							node,
 							node.x0,
@@ -356,15 +365,11 @@ export default {
 			}
 		},
 
-		drawIcicles(json) {
-			if (this.hierarchy != undefined) {
-				this.clear();
-			} else {
-				this.setupSVG();
-				this.hierarchy = this.hierarchySVG.attrs({
-					id: this.svgID,
-				});
-			}
+		drawIcicles(json) {		
+			this.hierarchy = this.hierarchySVG.attrs({
+				id: this.svgID,
+			});
+	
 			// Setup the view components
 			// this.initializeBreadcrumbTrail();
 			//  drawLegend();
@@ -395,12 +400,12 @@ export default {
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition);
 
-			this.setupModuleMeanGradients();
-			this.setupCallsiteMeanGradients();
+			// this.setupModuleMeanGradients();
+			// this.setupCallsiteMeanGradients();
 			this.addNodes();
 			this.addText();
-			if (this.$store.showTarget) {
-				this.drawTargetLine();
+			if (this.showTarget) {
+				// this.drawTargetLine();
 			}
 
 			// Add the mouseleave handler to the bounding rect.
@@ -759,21 +764,22 @@ export default {
 					return d.y1 - d.y0 - this.offset - this.stroke_width;
 				})
 				.style("fill", (d, i) => {
-					let gradients = undefined;
-					if (d.depth == 0 && this.$store.data_mod[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
-						gradients = "url(#mean-module-gradient-" + d.data.data.id + ")";
-					} else {
-						if (this.$store.data_cs[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
-							gradients = "url(#mean-callsite-gradient-" + d.data.data.id + ")";
-						} else {
-							gradients = this.$store.distributionColor.ensemble;
-						}
-					}
+					let gradients = "#fff";
+					// if (d.depth == 0 && this.$store.data_mod[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
+					// 	gradients = "url(#mean-module-gradient-" + d.data.data.id + ")";
+					// } else {
+					// 	if (this.$store.data_cs[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
+					// 		gradients = "url(#mean-callsite-gradient-" + d.data.data.id + ")";
+					// 	} else {
+					// 		gradients = this.$store.distributionColor.ensemble;
+					// 	}
+					// }
 					return gradients;
 				})
 				.style("stroke", (d) => {
-					let runtime = d.data.data[this.$store.selectedMetric]["max_time"];
-					return d3.rgb(this.$store.runtimeColor.getColorByValue(runtime));
+					return "#f0f0f0";
+					// let runtime = d.data.data[this.$store.selectedMetric]["max_time"];
+					// return d3.rgb(this.$store.runtimeColor.getColorByValue(runtime));
 				})
 				.style("stroke-width", this.stroke_width)
 				.style("opacity", (d) => {
@@ -851,9 +857,10 @@ export default {
 					return this.width;
 				})
 				.style("fill", (d) => {
-					let color = this.$store.runtimeColor.setContrast(
-						this.$store.runtimeColor.getColor(d)
-					);
+					// let color = this.$store.runtimeColor.setContrast(
+					// 	this.$store.runtimeColor.getColor(d)
+					// );
+					let color = "#f00";
 					return color;
 				})
 				.style("font-size", "14px")

@@ -5,25 +5,19 @@
 # ------------------------------------------------------------------------------
 
 import os
-import datetime
 import multiprocessing
 from functools import partial
 
 from callflow import SuperGraph, EnsembleGraph
 from callflow import get_logger
 from callflow.operations import Filter, Group, Unify
-from callflow.modules import Auxiliary
-from pyinstrument import Profiler
 
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
-from callflow.modules import ParameterProjection, DiffView
-from callflow.utils.utils import get_memory_usage
+
 from callflow.utils.sanitizer import Sanitizer
+from callflow.modules import Histogram, Scatterplot, BoxPlot, ParameterProjection, DiffView
 
 LOGGER = get_logger(__name__)
-
-# TODO: this flag should come from commandline
-indivdual_aux_for_ensemble = False
 
 
 # ------------------------------------------------------------------------------
@@ -31,7 +25,6 @@ indivdual_aux_for_ensemble = False
 # ------------------------------------------------------------------------------
 class BaseProvider:
 
-    # TODO: CAL-38: add additional module map argument
     def __init__(self, config: dict = None):
         """
         Entry interface to access CallFlow's functionalities.
@@ -39,7 +32,25 @@ class BaseProvider:
         assert config is not None
         assert isinstance(config, dict)
         self.config = config
-        self.ndatasets = len(self.config["runs"])
+        start_date = self.config.get("start_date", "")
+        end_date = self.config.get("end_date", "")
+        chunk_idx = int(self.config.get("chunk_idx", 0))
+        chunk_size = int(self.config.get("chunk_size", -1))
+
+        # ----------------------------------------------------------------------
+        # Stage-1: Each dataset is processed individually into a SuperGraph.
+        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} datasets detected from  in the CallFlow.config --------------------')
+        self.datasets = self.config["runs"]
+
+        if start_date and end_date:
+            LOGGER.warning(f'-------------------- FILTERING {len(self.config["runs"])} SUPERGRAPHS from start_date={start_date} to end_date={end_date} --------------------')
+            self.datasets = BaseProvider._filter_datasets_by_date_range(self.config, start_date, end_date)
+                    
+        if chunk_size != 0:
+            LOGGER.warning(f'-------------------- CHUNKING size={chunk_size} SUPERGRAPHS from index={chunk_idx} --------------------')
+            self.datasets = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
+        
+        self.ndatasets = len(self.datasets)
         assert self.ndatasets > 0
         self.supergraphs = {}
 
@@ -49,17 +60,13 @@ class BaseProvider:
         Outputs the directories that have the processed result. Others will be omitted during the loading. 
         """
         _FILENAMES = {
-            "df": "df.pkl",
-            "nxg": "nxg.json",
-            "aux": "aux-{}.npz",
+            "df": "cf-df.pkl",
+            "nxg": "cf-nxg.json",
         }
         _name = run_prop["name"]
         _path = os.path.join(save_path, _name)
         process = False
         for f_type, f_run in _FILENAMES.items():
-            if f_type == "aux":
-                f_run = f_run.format(_name)
-
             f_path = os.path.join(_path, f_run)
             if not os.path.isfile(f_path):
                 process = True
@@ -72,54 +79,38 @@ class BaseProvider:
         load_path = self.config.get("save_path", "")
         read_param = self.config.get("read_parameter", "")
         save_path = self.config.get("save_path", "")
-        chunk_idx = int(self.config.get("chunk_idx", 0))
-        chunk_size = int(self.config.get("chunk_size", -1))
 
         is_not_ensemble = self.ndatasets == 1
 
-        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
-
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            processed_folders = pool.map(partial(self._mp_saved_data, save_path=save_path), self.config["runs"])
-        self.config["runs"] = [d for d in processed_folders if d is not None] # Filter the none's 
-
-        LOGGER.warning(f'-------------------- CHUNKING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
-
-        if chunk_size != 0:
-            self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
-
-        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            supergraphs = pool.map(partial(self.mp_dataset_load, save_path=load_path), self.config["runs"])
+            supergraphs = pool.map(partial(self.mp_dataset_load, save_path=load_path), self.datasets)
         self.supergraphs = { sg.name: sg for sg in supergraphs }
+
+        selected_runs = list(self.supergraphs.keys())
+        all_runs = selected_runs + ['ensemble']
 
         # ensemble case
         if not is_not_ensemble:
             name = "ensemble"
-            sg = EnsembleGraph(name)
-            sg.load(os.path.join(load_path, name),
-                    read_parameter=read_param,
-                    read_aux=True)
-            self.supergraphs[name] = sg
+            eg = EnsembleGraph(name)
+            eg.load(os.path.join(load_path, name), module_callsite_map=self.config.get("module_callsite_map", {}),
+                    read_parameter=read_param)
+            eg.supergraphs = self.supergraphs
+            
+            self.supergraphs[name] = eg
 
-            # TODO: This is repopulation of data. Avoid!
-            for run in self.config["runs"]:
-                name = run["name"]
-                LOGGER.warning(f"Duplicating aux data for run {name}!")
-                self.supergraphs[name].modules = self.supergraphs["ensemble"].modules
-                self.supergraphs[name].aux_data = self.supergraphs["ensemble"].aux_data[name]
-                   
+        # self.aux = { dataset: Auxiliary(self.supergraphs[dataset]) for dataset in all_runs } 
+
     def mp_dataset_load(self, dataset, save_path):
         """
         Parallel function to load single supergraph loading.
         """
         name = dataset["name"]
         read_param = self.config["read_parameter"]
-        read_aux = True
 
         sg = SuperGraph(name)
-        sg.load(os.path.join(save_path, name),
-            read_parameter=read_param,
-            read_aux=read_aux) 
+        sg.load(os.path.join(save_path, name), module_callsite_map=self.config.get("module_callsite_map", {}),
+            read_parameter=read_param) 
         return sg
 
     def split_process_load_datasets(self):
@@ -128,7 +119,6 @@ class BaseProvider:
         _FILENAMES = {
             "df": "df.pkl",
             "nxg": "nxg.json",
-            "aux": "aux-{}.npz",
         }
 
         save_path = self.config["save_path"]
@@ -142,9 +132,6 @@ class BaseProvider:
             _name = dataset["name"]
             _path = os.path.join(save_path, _name)
             for f_type, f_run in _FILENAMES.items():
-                if f_type == "aux":
-                    f_run = f_run.format(dataset["name"])
-
                 f_path = os.path.join(_path, f_run)
                 if not os.path.isfile(f_path):
                     process = True
@@ -163,24 +150,18 @@ class BaseProvider:
         _start = Sanitizer.fmt_timestr_to_datetime(Sanitizer.fmt_time(start_date))
         _end = Sanitizer.fmt_timestr_to_datetime(Sanitizer.fmt_time(end_date))
 
-        LOGGER.info("Filtering datasets by start_date and end_date")
+        LOGGER.info(f"Filtering datasets by start_date [{_start}] and end_date [{_end}]")
 
         ret = []
         # Parallelize this.
         for dataset in config["runs"]:
             is_in_range = _start <= Sanitizer.fmt_timestr_to_datetime(Sanitizer.fmt_time(dataset["name"])) <= _end
-            print(Sanitizer.fmt_time(dataset["name"]), is_in_range)
             if is_in_range:
                 ret.append(dataset) 
                 
         return ret
 
     def process_single(self, process_datasets):
-        # TODO: Need to avoid auxiliary processing for single datasets.
-        indivdual_aux_for_ensemble = True
-
-        is_not_ensemble = len(self.config["runs"]) == 1
-        no_aux_process = self.config.get("no_aux_process", False)
         append_path = self.config.get("append_path", "")
         load_path = self.config["data_path"]
         module_callsite_map = self.config.get("module_callsite_map", {})
@@ -188,17 +169,15 @@ class BaseProvider:
         filter_by = self.config.get("filter_by","")
         filter_perc = self.config.get("filter_perc", 0)
         save_path = self.config.get("save_path", "")
-        no_aux_process = self.config.get("no_aux_process", False)
         
         run_props = {
             _["name"]: (os.path.join(_["path"], append_path) if len(append_path) > 0 else _["path"], _["profile_format"]) for _ in self.config["runs"]
         }
 
-        LOGGER.warning(f'-------------------- {len(process_datasets)} DATASETS NEED TO BE PROCESSED--------------------')
-
         for dataset in process_datasets:
             name = dataset["name"]
             _prop = run_props[name]
+            LOGGER.warning(f'-------------------- Dataset = {name} --------------------')
             LOGGER.profile(f'Starting supergraph ({name})')
 
             data_path = os.path.join(load_path, _prop[0])
@@ -218,26 +197,21 @@ class BaseProvider:
             LOGGER.profile(f'Created supergraph {name}')
             Group(sg, group_by=group_by)
             LOGGER.profile(f'Grouped supergraph {name}')
-
+ 
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             LOGGER.profile(f'Filtered supergraph {name}')
 
-            if (is_not_ensemble or indivdual_aux_for_ensemble) and no_aux_process:
-                Auxiliary(sg)
+            sg.write(os.path.join(save_path, name))
 
-            LOGGER.profile(f'Created Aux for {name}')
-            sg.write(os.path.join(save_path, name), write_aux=(is_not_ensemble or indivdual_aux_for_ensemble))
-
-            self.supergraphs[name] = sg
+            # self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
+
 
     def load_single(self, load_datasets):
         append_path = self.config.get("append_path", "")
         save_path = self.config.get("save_path", "")
 
-        if len(load_datasets) > 0:
-            LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------')
-            
+        if len(load_datasets) > 0:            
             with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
                 processed_folders = pool.map(partial(self._mp_saved_data, save_path=save_path), self.config["runs"])
             self.config["runs"] = [d for d in processed_folders if d is not None] # Filter the none's 
@@ -251,7 +225,6 @@ class BaseProvider:
     def process_ensemble(self, save_path):
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
-        no_aux_process = self.config.get("no_aux_process", False)
 
         if len(self.supergraphs) > 1:
             name = "ensemble"
@@ -260,16 +233,6 @@ class BaseProvider:
 
             Unify(sg, self.supergraphs)
             LOGGER.profile(f'Created supergraph {name}')
-
-            # Group(sg, group_by=group_by)
-            # LOGGER.profile(f'Grouped supergraph {name}')
-
-            # Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
-            # LOGGER.profile(f'Filtered supergraph {name}')
-
-            if not no_aux_process:
-                Auxiliary(sg)
-                LOGGER.profile(f'Created Aux for {name}')
 
             sg.write(os.path.join(save_path, name))
             self.supergraphs[name] = sg
@@ -283,49 +246,32 @@ class BaseProvider:
         variables, e.g., filter_perc, filter_by.
         2. EnsembleGraph is then constructed from the processed SuperGraphs.
         """
-        profile = Profiler()
-        start_date = self.config.get("start_date", "")
-        end_date = self.config.get("end_date", "")
         save_path = self.config.get("save_path", "")
-        chunk_idx = int(self.config.get("chunk_idx", 0))
-        chunk_size = int(self.config.get("chunk_size", -1))
         ensemble_process = self.config.get("ensemble_process", False);
 
-        # ----------------------------------------------------------------------
-        # Stage-1: Each dataset is processed individually into a SuperGraph.
-        LOGGER.warning(f'-------------------- TOTAL {len(self.config["runs"])} SUPERGRAPHS in the directory/config --------------------')
-        
-        LOGGER.warning(f'-------------------- FILTERING {len(self.config["runs"])} SUPERGRAPHS from start_date to end_date --------------------')
-        if start_date and end_date:
-            self.config["runs"] = BaseProvider._filter_datasets_by_date_range(self.config, start_date, end_date)
-                    
-        LOGGER.warning(f'-------------------- CHUNKING {chunk_size} SUPERGRAPHS from {chunk_idx} --------------------')
-        if chunk_size != 0:
-            self.config["runs"] = self.config["runs"][chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
-        
         # Do not process, if already processed. 
         if(reset):
-            process_datasets, load_datasets = self.config["runs"], []
+            process_datasets, load_datasets = self.datasets, []
         else:
             process_datasets, load_datasets = self.split_process_load_datasets()
 
         if ensemble_process:
-            process_datasets, load_datasets = [], self.config["runs"]
+            process_datasets, load_datasets = [], self.datasets
 
-        LOGGER.warning(f'-------------------- PROCESSING {len(process_datasets)} SUPERGRAPHS --------------------\n\n')
+        LOGGER.warning(f'-------------------- PROCESSING {len(process_datasets)} SUPERGRAPHS --------------------')
         self.process_single(process_datasets)
 
-        LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------\n\n')
+        LOGGER.warning(f'-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------')
         self.load_single(load_datasets)
 
-        LOGGER.warning('-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n')
+        LOGGER.warning('-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------')
         self.process_ensemble(save_path)
         
     def request_general(self, operation):
         """
         Handles general requests
         """
-        _OPERATIONS = ["init", "aux_data"]
+        _OPERATIONS = ["init", "summary", "timeline", "cct"]
 
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
@@ -333,27 +279,50 @@ class BaseProvider:
         operation_name = operation["name"]
 
         if operation_name == "init":
-            return self.config
-
-        elif operation_name == "aux_data":
-            if operation["reProcess"]:
-                Auxiliary(self.supergraphs["ensemble"], selected_runs=operation["datasets"], rankBinCount=int(operation["rankBinCount"]), runBinCount=int(operation["runBinCount"]))
-
-            if len(operation["datasets"]) > 1:
-                operation["datasets"].append("ensemble")
-                ret = {dataset: self.supergraphs["ensemble"].aux_data[dataset] for dataset in operation["datasets"]}
+            if len(self.datasets) > 1:
+                time_columns = self.supergraphs["ensemble"].time_columns
             else:
-                dataset = operation["datasets"][0]
-                ret = {dataset: self.supergraphs[dataset].aux_data}
+                time_columns = self.supergraphs[self.datasets[0].name].time_columns
+            return { 
+                **self.config,
+                "time_columns": time_columns,
+                "profile_format_summary": list(set(map(lambda d: d["profile_format"], self.datasets))) 
+            }
 
-            return ret
+        elif operation_name == "summary":
+            return { sg: self.supergraphs[sg].summary() for sg in self.supergraphs }
+            
+        elif operation_name == "timeline":
+            operation["ncount"] = int(operation["ncount"])
+            assert operation["ntype"] in ["module", "callsite"]
+            assert isinstance(operation["ncount"], int)
+            assert operation["metric"] in ["time", "time (inc)"]
 
+            # Get the top-n nodes from the "ensemble" based on the ntype.
+            top_nodes_idx = self.supergraphs["ensemble"].df_get_top_by_attr(operation["ntype"], operation["ncount"], operation["metric"])
+            
+            # Convert the indexs to the modules. 
+            top_nodes = [ self.supergraphs["ensemble"].get_name(node_idx, operation["ntype"]) for node_idx in top_nodes_idx]
+            # Construct the per-supergraph timeline data. 
+            data = {}
+            data['d'] = { sg: self.supergraphs[sg].timeline(top_nodes, operation["ntype"], operation["metric"]) for sg in self.supergraphs if sg != "ensemble"}
+            
+            # Attach the keys as the top_nodes
+            data['nodes'] = top_nodes
+
+            return data
+
+        elif operation_name == "cct":
+            sg = self.supergraphs[operation["dataset"]]
+            nll = NodeLinkLayout(sg=sg, selected_runs=operation["dataset"])
+            return nll.nxg
+            
     def request_single(self, operation):
         """
         Handles requests connected to Single CallFlow.
         """
         assert isinstance(operation, dict)
-        _OPERATIONS = ["cct", "supergraph", "split_mpi_distribution"]
+        _OPERATIONS = ["cct", "supergraph", "split_ranks", "histogram", "scatterplot", "boxplots"]
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
 
@@ -361,72 +330,140 @@ class BaseProvider:
 
         operation_name = operation["name"]
         sg = self.supergraphs[operation["dataset"]]
+        
+        if "ntype" in operation:
+            ntype = operation["ntype"]
 
-        if operation_name == "cct":
-            nll = NodeLinkLayout(sg=sg, selected_runs=operation["dataset"])
-            return nll.nxg
+            if operation_name in ['histogram', 'scatterplot', 'boxplots']:
+                if ntype == "callsite":
+                    aux_dict = sg.callsite_aux_dict
+                elif ntype == "module":
+                    aux_dict = {sg.get_name(module_idx, "module"): sg.module_aux_dict[module_idx] for module_idx in sg.module_aux_dict.keys() }
 
-        elif operation_name == "supergraph":
-            reveal_callsites = operation.get("reveal_callsites", [])
-            split_entry_module = operation.get("split_entry_module", [])
-            split_callee_module = operation.get("split_callee_module", [])
-            selected_runs = operation.get("selected_runs", None)
-
+        if operation_name == "supergraph":
             ssg = SankeyLayout(
+                grp_column="group_path",    
                 sg=sg,
-                path="group_path",
-                selected_runs=selected_runs,
-                reveal_callsites=reveal_callsites,
-                split_entry_module=split_entry_module,
-                split_callee_module=split_callee_module,
+                esg=None,
+                nbins=operation.get("nbins", 20),
+                reveal_callsites=operation.get("reveal_callsites", []),
+                split_entry_module=operation.get("split_entry_module", []),
+                split_callee_module= operation.get("split_callee_module", []),
             )
             return ssg.nxg
 
-        elif operation_name == "split_mpi_distribution":
-            assert False
-            pass
+        elif operation_name == "split_ranks":
+            selected_ranks = operation["ranks"]
+
+            selected_sg = SankeyLayout(
+                sg=sg,
+                path_column="group_path",
+                selected_runs=[operation["dataset"]],
+                ranks=selected_ranks
+            )
+
+            non_selected_sg =  SankeyLayout(
+                sg=sg,
+                path_column="group_path",
+                selected_runs=[operation["dataset"]],
+                ranks=selected_ranks
+            )
+
+            return {
+                selected_nxg: selected_sg.nxg,
+                non_selected_sg: non_selected_sg.nxg
+            }
+
+        elif operation_name == "histogram":
+            node = operation.get("node", None)
+            nbins = int(operation.get("nbins", 20))
+
+            hist = Histogram(dataframe=aux_dict[node], relative_to_df=None,
+                        histo_types=["rank"],
+                        node_type=ntype,
+                        bins=nbins,
+                        proxy_columns=sg.proxy_columns)
+
+            return hist.unpack()
+
+        elif operation_name == "scatterplot":
+            node = operation["node"]
+            orientation = operation["orientation"]
+
+            scatterplot = Scatterplot(df=aux_dict[node], relative_to_df=None,
+                        node_type=ntype,
+                        orientation=orientation,
+                        proxy_columns=sg.proxy_columns)
+
+            return scatterplot.unpack()
+        
+        elif operation_name == "boxplots":
+            callsites = operation["callsites"]
+
+            result = {}
+            for callsite in callsites:
+                bp = BoxPlot(sg=sg, name=callsite, ntype=ntype, proxy_columns=sg.proxy_columns)
+                result[callsite] = bp.unpack()
+            
+            return result
 
     def request_ensemble(self, operation):
         """
         Handles all the socket requests connected to Single CallFlow.
         """
-        _OPERATIONS = ["cct", "supergraph", "module_hierarchy", "projection", "compare"]
+        _OPERATIONS = ["supergraph", "module_hierarchy", "projection", "compare", "histogram", "boxplots", "scatterplot", "gradients"]
 
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
 
+        _OPERATIONS_WO_DATASET = ["projection", "module_hierarchy"]
+        if not (operation["name"] in _OPERATIONS_WO_DATASET):
+            assert "dataset" in operation
+
         LOGGER.info(f"[Ensemble Mode] {operation}")
 
         operation_name = operation["name"]
-        sg = self.supergraphs["ensemble"]
+        e_sg = self.supergraphs["ensemble"]
 
-        if operation_name == "init":
-            return self.config
+        if "dataset" in operation:
+            sg = self.supergraphs[operation["dataset"]]
+            
+        e_aux_dict = {}
 
-        elif operation_name == "cct":
-            nll = NodeLinkLayout(
-                supergraph=sg, callsite_count=operation["functionsInCCT"]
-            )
-            return nll.nxg
+        if "ntype" in operation:
+            ntype = operation["ntype"]
 
-        elif operation_name == "supergraph":
-            reveal_callsites = operation.get("reveal_callsites", [])
-            split_entry_module = operation.get("split_entry_module", [])
-            split_callee_module = operation.get("split_callee_module", [])
-            selected_runs = operation.get("selected_runs", None)
+            if operation_name in ['histogram', 'scatterplot', 'boxplots']:
+                if ntype == "callsite":
+                    e_aux_dict = e_sg.callsite_aux_dict
+                elif ntype == "module":
+                    e_aux_dict = {e_sg.get_name(module_idx, "module"): e_sg.module_aux_dict[module_idx] for module_idx in e_sg.module_aux_dict.keys() }
 
+        if "dataset" in operation:
+            t_aux_dict = {}
+            tgt_dataset = operation["dataset"]
+            t_sg = self.supergraphs[tgt_dataset]
+
+            if operation_name in ['histogram', 'scatterplot', 'boxplots']:
+                if ntype == "callsite":
+                    t_aux_dict = t_sg.callsite_aux_dict
+                elif ntype == "module":
+                    t_aux_dict = {t_sg.get_name(module_idx, "module"): t_sg.module_aux_dict[module_idx] for module_idx in t_sg.module_aux_dict.keys() }
+
+        if operation_name == "supergraph":
             ssg = SankeyLayout(
+                grp_column="group_path",    
                 sg=sg,
-                path="group_path",
-                selected_runs=selected_runs,
-                reveal_callsites=reveal_callsites,
-                split_entry_module=split_entry_module,
-                split_callee_module=split_callee_module,
+                esg=e_sg,
+                nbins=operation.get("nbins", 20),
+                reveal_callsites=operation.get("reveal_callsites", []),
+                split_entry_module=operation.get("split_entry_module", []),
+                split_callee_module= operation.get("split_callee_module", []),
             )
             return ssg.nxg
 
         elif operation_name == "module_hierarchy":
-            hl = HierarchyLayout(sg, operation["module"])
+            hl = HierarchyLayout(sg, operation.get("node"))
             return hl.nxg
 
         elif operation_name == "projection":
@@ -434,7 +471,7 @@ class BaseProvider:
             n_cluster = operation.get("n_cluster", 3)
 
             pp = ParameterProjection(
-                sg=sg,
+                sg=e_sg,
                 selected_runs=selected_runs,
                 n_cluster=n_cluster,
             )
@@ -445,11 +482,42 @@ class BaseProvider:
             target_dataset = operation["targetDataset"]
 
             assert operation["selectedMetric"] in ["Inclusive", "Exclusive"]
-            # TODO: CAL-37: Use proxies.
             if operation["selectedMetric"] == "Inclusive":
                 selected_metric = "time (inc)"
             elif operation["selectedMetric"] == "Exclusive":
                 selected_metric = "time"
 
-            dv = DiffView(sg, compare_dataset, target_dataset, selected_metric)
+            dv = DiffView(e_sg, compare_dataset, target_dataset, selected_metric)
             return dv.result
+
+        elif operation_name == "histogram":
+            node = operation["node"]
+            nbins = operation["nbins"]
+
+            hist = Histogram(dataframe=t_aux_dict[node], relative_to_df=e_aux_dict[node],
+                        histo_types=["rank"],
+                        node_type=ntype,
+                        proxy_columns=t_sg.proxy_columns)
+
+            return hist.unpack()
+
+        elif operation_name == "scatterplot":
+            node = operation["node"]
+            orientation = operation["orientation"]
+
+            scatterplot = Scatterplot(df=t_aux_dict[node], relative_to_df=e_aux_dict[node],
+                        node_type=ntype,
+                        orientation=orientation,
+                        proxy_columns=t_sg.proxy_columns)
+
+            return scatterplot.unpack()
+        
+        elif operation_name == "boxplots":
+            callsites = operation["callsites"]
+
+            result = {}
+            for callsite in callsites:
+                bp = BoxPlot(sg=sg, relative_sg=e_sg, name=callsite, ntype=ntype, proxy_columns=t_sg.proxy_columns)
+                result[callsite] = bp.unpack()
+            
+            return result

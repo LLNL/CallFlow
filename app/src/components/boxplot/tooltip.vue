@@ -6,7 +6,7 @@
  */
 
 <template>
-	<g id="tooltip-auxiliary-function"></g>
+	<g id="tooltip-auxiliary-function"></g>	
 </template>
 
 <script>
@@ -28,13 +28,16 @@ export default {
 
 	methods: {
 		init(id) {
-			this.id = id;
 			this.toolTipDiv = d3.select("#" + id);
 			this.height = 80;
-			this.halfWidth = document.getElementById(this.id).clientWidth / 2;
-			this.halfHeight = document.getElementById(this.id).clientHeight / 2;
+			this.halfWidth = document.getElementById(id).clientWidth / 2;
+			this.halfHeight = document.getElementById(id).clientHeight / 2;
 		},
 
+		/**
+		 * 
+		 * @param {*} text 
+		 */
 		addText(text) {
 			this.toolTipText = this.toolTipDiv
 				.append("text")
@@ -59,21 +62,32 @@ export default {
 			this.textCount += 1;
 		},
 
+		/**
+		 * 
+		 */
 		quartiles() {
 			this.addText("Q1: " + utils.formatRuntimeWithUnits(this.data.q1));
 			// this.addText('Q2: ' + utils.formatRuntimeWithUnits(this.data.q2))
 			this.addText("Q3: " + utils.formatRuntimeWithUnits(this.data.q3));
 		},
 
+		/**
+		 * 
+		 */
 		outliers() {
-			this.addText(this.data.count + " outliers");
+			this.addText("Rank: " + this.data["rank"]);
 		},
 
+		/**
+		 * 
+		 * @param {*} widthCount 
+		 * @param {*} heightCount 
+		 */
 		drawRect(widthCount, heightCount) {
 			this.clear();
 			this.width = widthCount * this.fontSize;
 			var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
-			this.mousePos = d3.mouse(d3.select("#" + this.id).node());
+			this.mousePos = d3.mouse(this.toolTipDiv.node());
 			this.mousePosX = this.mousePos[0];
 			this.mousePosY = this.mousePos[1];
 
@@ -103,23 +117,29 @@ export default {
 
 		},
 
+		/**
+		 * 
+		 * @param {*} data 
+		 */
 		renderQ(data) {
 			this.data = data;
 			this.drawRect(13, 4);
 			this.quartiles();
 		},
 
+		/**
+		 * 
+		 * @param {*} data 
+		 */
 		renderOutliers(data) {
 			this.data = data;
 			this.drawRect(10, 4);
 			this.outliers();
 		},
-
-		trunc(str, n) {
-			str = str.replace(/<unknown procedure>/g, "proc ");
-			return (str.length > n) ? str.substr(0, n - 1) + "..." : str;
-		},
-
+		
+		/**
+		 * 
+		 */
 		clear() {
 			this.textCount = 0;
 			d3.selectAll(".toolTipContent").remove();

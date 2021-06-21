@@ -23,21 +23,10 @@ export default {
 		textxOffset: 20,
 		textyOffset: 20,
 		textPadding: 13,
-		offset: 10,
+		offset: 15,
 		fontSize: 12,
-		containerHeight: 50,
-		containerWidth: 200
 	}),
-	sockets: {
-		tooltip(data) {
-			this.render(data);
-		},
-	},
-	watch: {
 
-	},
-
-	mounted() { },
 	methods: {
 		init(id) {
 			this.parentID = id;
@@ -52,7 +41,6 @@ export default {
 
 		render(data, node) {
 			this.clear();
-			this.width = data.length * this.fontSize + 10 * this.fontSize;
 			const svgScale = d3.scaleLinear().domain([2, 11]).range([this.containerWidth, this.containerHeight]);
 			this.mousePos = d3.mouse(d3.select("#" + this.parentID).node());
 			this.mousePosX = this.mousePos[0];
@@ -61,21 +49,12 @@ export default {
 
 			this.node = node;
 			this.data = data;
-			this.addText("Processes (MPI ranks):" + this.data);
-		},
-
-		optimizeTextHeight(text) {
-			const measure = utils.measure(text);
-			const rows = measure.width/this.containerWidth;
-
-			return {
-				"width": this.containerWidth,
-				"height": rows * measure.height
-			};
+			this.addText(this.data);
 		},
 
 		addText(text) {
-			const measure = this.optimizeTextHeight(text);
+			const maxWidth = 150;
+			const measure = utils.measure(text, maxWidth);
 			this.toolTipRect = this.toolTipG
 				.append("rect")
 				.attrs({
@@ -85,12 +64,12 @@ export default {
 					"rx": "10px",
 					"fill-opacity": 1,
 					"width": measure.width + 20,
-					"height": measure.height,
+					"height": measure.height / 1.5 + this.offset,
 				})
 				.attrs({
 					"x": () => {
 						if (this.mousePosX + this.halfWidth > document.getElementById(this.parentID).clientWidth - 25) {
-							return (this.mousePosX - this.containerWidth) + "px";
+							return (this.mousePosX) + "px";
 						}
 						return (this.mousePosX) + "px";
 
@@ -110,22 +89,18 @@ export default {
 					"class": "toolTipContent",
 					"x": () => {
 						if (this.mousePosX + this.halfWidth > document.getElementById(this.parentID).clientWidth - 25) {
-							return (this.mousePosX - this.containerWidth + this.offset) + "px";
+							return (this.mousePosX + this.offset) + "px";
 						}
 						return (this.mousePosX) + this.offset + "px";
 
 					},
 					"y": () => {
-						return (this.mousePosY) + 2 * this.offset + "px";
+						return (this.mousePosY) + this.offset + "px";
 					}
 				})
 				.style("z-index", 2)
 				.text(text)
-				.call(utils.textWrap, measure.width);
-		},
-
-		processes() {
-			let self = this;
+				.call(utils.textWrap, maxWidth);
 		},
 
 		clear() {

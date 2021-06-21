@@ -6,12 +6,14 @@
  */
 
 <template>
-	<g :id="id"></g>
+	<svg :id="id" :width="containerWidth" :height="containerHeight" >
+	</svg>
 </template>
 
 <script>
 import * as d3 from "d3";
 import "d3-selection-multi";
+import { mapGetters } from "vuex";
 
 import * as utils from "lib/utils";
 
@@ -19,19 +21,30 @@ export default {
 	name: "ColorMap",
 	components: {},
 	data: () => ({
+		id: "ensemble-supergraph-panel",
 		transitionDuration: 1000,
 		width: 230,
+		containerWidth: 660,
 		height: 20,
+		containerHeight: 50,
 		colorMin: 0,
 		colorMax: 0,
 		offset: 30,
 		padding: {
 			top: 0,
 			bottom: 30,
-			right: 400,
+			right: 0,
 		},
-		id: "colormap"
 	}),
+
+	computed: {
+		...mapGetters({
+			showTarget: "getShowTarget",
+			comparisonMode: "getComparisonMode",
+			generalColors: "getGeneralColors",
+			selectedColorPoint: "getSelectedColorPoint"
+		})
+	},
 
 	methods: {
 		init(color) {
@@ -39,11 +52,7 @@ export default {
 			this.colorMin = this.color.getScale().domain()[0];
 			this.colorMax = this.color.getScale().domain()[1];
 
-			this.containerWidth = this.$store.viewWidth / 2;
-			// TODO: need to fix hard coding.
-			this.containerHeight = window.innerHeight - 200;
-
-			this.svg = d3.select("#" + this.$parent.id)
+			this.svg = d3.select("#" + this.id)
 				.append("g")
 				.attrs({
 					"id": "Colormap",
@@ -58,11 +67,11 @@ export default {
 
 		_legends() {
 			this.clearLegends();
-			if (this.$store.showTarget && !this.$store.comparisonMode && this.$store.selectedMode === "Ensemble" && this.$store.selectedFormat == "SuperGraph") {
-				this.drawLegend("Target run", this.containerWidth - this.padding.right, this.containerHeight - 4 * this.padding.bottom, this.$store.distributionColor.target);
-			}
-			if (this.$store.selectedMode == "Ensemble" && this.$store.selectedFormat == "SuperGraph") {
-				this.drawLegend("Ensemble of runs", this.containerWidth - this.padding.right, this.containerHeight - 3 * this.padding.bottom, this.$store.distributionColor.ensemble);
+			if (this.selectedMode == "Ensemble") {
+				if (this.showTarget && !this.comparisonMode) {
+					this.drawLegend("Target run", this.padding.right, 4 * this.padding.bottom, this.generalColors.target);
+				}
+				this.drawLegend("Ensemble of runs", this.padding.right, 3 * this.padding.bottom, this.generalColors.intermediate);
 			}
 		},
 
@@ -72,10 +81,10 @@ export default {
 			let yOffsetCount = 1;
 
 			if (this.color.type == "time") {
-				text = "Exc. Runtime colormap";
+				text = this.color.type;
 			}
 			else if (this.color.type == "time (inc)") {
-				text = "Inc. Runtime colormap";
+				text = this.color.type;
 			}
 			else if (this.color.type == "MeanGradients") {
 				text = "Distribution colormap";
@@ -98,7 +107,7 @@ export default {
 				this.colorMinText = this.colorMin;
 				this.colorMaxText = this.colorMax;
 			}
-			this.drawColorMap(text, this.containerWidth - this.padding.right, this.containerHeight - this.padding.bottom * yOffsetCount);
+			this.drawColorMap(text, this.containerWidth/2 - this.padding.right, this.padding.bottom * yOffsetCount);
 		},
 
 		drawLegend(text, x, y, color) {
@@ -125,7 +134,7 @@ export default {
 		},
 
 		drawColorMap(text, x, y) {
-			let splits = this.$store.selectedColorPoint;
+			let splits = this.selectedColorPoint;
 			let dcolor = (this.colorMax - this.colorMin) / (splits - 1);
 			for (let i = 0; i < splits; i += 1) {
 				let splitColor = this.colorMin + dcolor * (splits - 1 - i);

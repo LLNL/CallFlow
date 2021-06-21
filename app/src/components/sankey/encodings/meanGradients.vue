@@ -12,6 +12,7 @@
 <script>
 import * as d3 from "d3";
 import * as utils from "lib/utils";
+import { mapGetters } from "vuex";
 
 export default {
 	name: "MeanGradients",
@@ -19,7 +20,17 @@ export default {
 		id: "mean-gradients",
 		intermediateStrokeWidth: 1,
 		defaultStrokeWidth: 3,
+		transitionDuration: 100,
 	}),
+
+	computed: {
+		...mapGetters({
+			selectedMetric: "getSelectedMetric",
+			distributionColorMap: "getDistributionColorMap",
+			selectedTargetRun: "getSelectedTargetRun",
+			targetColorMap: "getTargetColorMap",
+		})
+	},
 
 	methods: {
 		init(nodes, containerG) {
@@ -34,10 +45,10 @@ export default {
 			// Update the current rectangles.
 			rectangles
 				.transition()
-				.duration(this.$store.transitionDuration)
+				.duration(this.transitionDuration)
 				.attrs({
 					opacity: (d) => (d.type == "intermediate" ? 0.4 : 1),
-					stroke: (d) => this.stroke_by_metric(d, this.$store.selectedMetric),
+					stroke: (d) => this.stroke_by_metric(d, this.selectedMetric),
 					"stroke-width": (d) =>
 						d.type == "intermediate"
 							? this.intermediateStrokeWidth
@@ -45,35 +56,34 @@ export default {
 					fill: (d) =>
 						this.fill_with_gradients(
 							d,
-							this.$store.selectedMetric,
+							this.selectedMetric,
 							this.$store.distributionColor
 						),
 				});
 		},
 
 		stroke_by_metric(d, metric) {
-			if (d.type == "intermediate") {
+			if (d.attr_dict.type == "intermediate") {
 				return this.$store.runtimeColor.intermediate;
-			} else if (d.type == "component-node") {
+			} else if (d.attr_dict.type == "callsite") {
 				return d3.rgb(this.$store.runtimeColor.getColor(d, metric));
-			} else if (d.type == "super-node") {
+			} else if (d.attr_dict.type == "module") {
 				return d3.rgb(this.$store.runtimeColor.getColor(d, metric));
 			}
 		},
 
 		fill_with_gradients(d, metric, color) {
-			let index = null;
-			if (d.type == "super-node") {
-				index = d.module_idx;
-			} else if (d.type == "component-node") {
-				index = d.client_idx;
+			if(d.attr_dict["gradients"] == undefined) {
+				return "#000";
 			}
+
+			let nid = d.attr_dict.nid;
 
 			const defs = d3.select("#" + this.id).append("defs");
 
 			const linearGradient = defs
 				.append("linearGradient")
-				.attr("id", "mean-gradient" + d.client_idx)
+				.attr("id", "mean-gradient" + nid)
 				.attr("class", "mean-gradient");
 
 			linearGradient
@@ -82,13 +92,10 @@ export default {
 				.attr("x2", "0%")
 				.attr("y2", "100%");
 
-			if (index == null) {
-				return color.intermediate;
-			}
+			
 
-			const ensemble_gradients = utils.getGradients(this.$store, d);
-			const grid = ensemble_gradients["hist"]["b"];
-			const val = ensemble_gradients["hist"]["h"];
+			const grid = d.attr_dict["gradients"][metric]["hist"]["b"];
+			const val = d.attr_dict["gradients"][metric]["hist"]["h"];	
 
 			for (let i = 0; i < grid.length; i += 1) {
 				let x = (i + i + 1) / (2 * grid.length);
@@ -98,7 +105,7 @@ export default {
 					.attr("stop-color", color.getColorByValue(val[i]));
 			}
 
-			return "url(#mean-gradient" + index + ")";
+			return "url(#mean-gradient" + nid + ")";
 		},
 	},
 };

@@ -21,16 +21,21 @@ import Summary from "./components/Summary";
 import CCT from "./components/CCT";
 import SuperGraph from "./components/SuperGraph";
 import EnsembleSuperGraph from "./components/SuperGraphEnsemble";
-import TimelineSuperGraph from "./components/SuperGraphTimeline";
 import vuetify from "./lib/plugins/vuetify";
 
-Vue.use(Vuex);
-const store = new Vuex.Store();
-// import store from "./store";
+// Vue.use(Vuex);
+// const store = new Vuex.Store();
+import store from "./store";
 
 
 const router = new Router({
 	routes: [
+		{
+			path: "/",
+			name: "Summary",
+			component: Summary,
+			props: true,
+		},
 		{
 			path: "/cct",
 			name: "CCT",
@@ -49,12 +54,6 @@ const router = new Router({
 			component: EnsembleSuperGraph,
 			props: true
 		},
-		{
-			path: "/timeline_super_graph",
-			name: "TimeLineSuperGraph",
-			component: TimelineSuperGraph,
-			props: true
-		}
 	]
 });
 

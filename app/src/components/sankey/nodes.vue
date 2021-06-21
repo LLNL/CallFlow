@@ -19,6 +19,7 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library imports
 import * as utils from "lib/utils";
@@ -59,6 +60,18 @@ export default {
 		drawGuidesMap: {}
 	}),
 
+	computed: {
+		...mapGetters({ 
+			encoding: "getEncoding",
+			showTarget: "getShowTarget",
+			selectedMode: "getSelectedMode",
+			summary: "getSummary",
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedMetric: "getSelectedMetric",
+			selectedNode: "getSelectedNode",
+		})
+	},
+
 	methods: {
 		init(graph) {
 			this.graph = graph;
@@ -72,13 +85,14 @@ export default {
 					this.parentNode.appendChild(this);
 				})
 				.on("drag", (d) => {
-					d3.select(`node_${d.client_idx}`).attr("transform",
+					d3.select(`node_${d.id}`).attr("transform",
 						"translate(" + (
 							d.x = Math.max(0, Math.min(this.$parent.width - d.dx, d3.event.x))
 						) + "," + (
 							d.y = Math.max(0, Math.min(this.$parent.height - d.dy, d3.event.y))
 						) + ")");
 					this.$parent.sankey.relayout();
+					
 					// link.attr("d", path);
 				});
 
@@ -90,10 +104,6 @@ export default {
 					this.sankeySVG.attr("transform", "translate(" + [tx, ty] + ")scale(" + d3.event.transform.k + ")");
 				});
 
-			this.ensemble_module_data = this.$store.data_mod["ensemble"];
-			this.ensemble_callsite_data = this.$store.data_cs["ensemble"];
-
-			this.preVis();
 			this.visualize();
 		},
 
@@ -101,36 +111,27 @@ export default {
 			this.rectangle();
 			this.postVis();
 
-			this.setEncoding(this.$store.encoding);
+			this.setEncoding(this.encoding);
 
 			this.ensemblePath();
 			this.text();
-			if (this.$store.showTarget && this.$store.selectedMode === "Ensemble") {
-				this.$refs.TargetLine.init(this.graph.nodes);
 
-				if (this.$store.comparisonMode == false) {
-					this.targetPath();
-				}
+			if (this.showTarget && this.selectedMode === "ESG") {
+				this.$refs.TargetLine.init(this.graph.nodes);
 				this.$refs.Guides.init(this.graph.nodes);
 			}
-			this.$refs.ToolTip.init(this.$parent.id);
-		},
 
-		preVis() {
-			// TODO: Move this to backend.
-			let idx = 0;
-			for (let node of this.graph.nodes) {
-				node.client_idx = idx;
-				node.module_idx = node.module;
-				node.module = utils.getModuleName(this.$store, node.module_idx);
-				idx += 1;
+			if (this.selectedMode == "DSG") {
+				this.targetPath();
 			}
+
+			this.$refs.ToolTip.init(this.$parent.id);
 		},
 
 		// Attach the svg into the node object. 
 		postVis() {
 			for (let node of this.graph.nodes) {
-				node.svg = this.containerG.select("#callsite-" + node.client_idx);
+				node.svg = this.containerG.select("#callsite-" + node.id);
 			}
 		},
 
@@ -160,14 +161,14 @@ export default {
 				.append("g")
 				.attrs({
 					"class": "callsite",
-					"id": (d) => "callsite-" + d.client_idx,
+					"id": (d) => "callsite-" + d.attr_dict.nid,
 					"transform": (d) => `translate(${d.x},${d.y + this.$parent.ySpacing})`,
 					"opacity": 1,
 				});
 
 			this.nodesSVG.append("rect")
 				.attrs({
-					"id": (d) => { return d.id + " callsite-rect" + d.client_idx; },
+					"id": (d) => { return d.attr_dict.nid + " callsite-rect" + d.attr_dict.nid; },
 					"class": "callsite-rect",
 					"height": (d) => d.height,
 					"width": this.nodeWidth,
@@ -186,75 +187,46 @@ export default {
 
 		click(node) {
 			event.stopPropagation();
-
-			if (node !== this.$store.selectedNode) {
+			if (node.id !== this.selectedNode.name || node.type !== this.selectedNode.type) {
+				
 				// Set the data.
-				this.$store.selectedNode = node;
-				this.$store.selectedModule = node.module;
-				this.$store.selectedName = node.name;
+				this.$store.commit("setSelectedNode", {
+					name: node.id,
+					type: node.type
+				});
 
-				const nodeSVG = this.containerG.select("#callsite-" + node.client_idx);
+				const nodeSVG = this.containerG.select("#callsite-" + node.id);
 
 				// Make appropriate event requests (Single and Ensemble).
-				if (this.$store.selectedMode == "Ensemble") {
+				if (this.selectedMode == "ESG") {
 					if (!this.drawGuidesMap[node.id]) {
 						this.$refs.Guides.visualize(node, "permanent", nodeSVG);
 						this.drawGuidesMap[node.id] = true;
 					}
 					
-					EventHandler.$emit("ensemble-histogram", {
-						node,
-						datasets: this.$store.selectedDatasets,
-					});
-
-					EventHandler.$emit("ensemble-scatterplot", {
-						node,
-						dataset1: this.$store.selectedDatasets,
-					});
-
-					EventHandler.$emit("ensemble-select-module", {
-						module: this.$store.selectedModule,
-					});
-
-					APIService.POSTRequest("module_hierarchy", {
-						node,
-						name: this.$store.selectedName,
-						datasets: this.$store.selectedDatasets,
-					});
-
+					// EventHandler.$emit("reset-ensemble-histogram");
+					// EventHandler.$emit("reset-ensemble-scatterplot");
+					// EventHandler.$emit("reset-ensemble-boxplots");
+					EventHandler.$emit("reset-module-hierarchy");
 				}
-				else if (this.$store.selectedMode == "Single") {
-					EventHandler.$emit("single-histogram", {
-						node,
-						groupBy: this.$store.selectedGroupBy,
-						dataset: this.$store.selectedTargetDataset,
-					});
-
-					EventHandler.$emit("single-scatterplot", {
-						node,
-						dataset: this.$store.selectedTargetDataset,
-					});
-
-					// TODO: Bring this back.
-					// EventHandler.$emit("single-select-module", {
-					// 	node,
-					// });
+				else if (this.selectedMode == "SG") {
+					EventHandler.$emit("reset-single-histogram");
+					EventHandler.$emit("reset-single-scatterplot");
+					EventHandler.$emit("reset-single-boxplots");
 				}
-
-				// EventHandler.$emit("show-target-auxiliary", {});
 			}
 		},
 
 		mouseover(node) {
 			this.$refs.ToolTip.visualize(self.graph, node);
-			if (this.$store.selectedMode == "Ensemble" && this.$store.comparisonMode == false) {
+			if (this.selectedMode === "ESG") {
 				this.$refs.Guides.visualize(node, "temporary");
 			}
 		},
 
 		mouseout(node) {
 			this.$refs.ToolTip.clear();
-			if (this.$store.selectedMode == "Ensemble" && this.$store.comparisonMode == false) {
+			if (this.$store.selectedMode == "Ensemble") {
 				this.$refs.Guides.clear(node, "temporary");
 				if (this.permanentGuides == false) {
 					d3.selectAll(".ensemble-edge")
@@ -354,10 +326,10 @@ export default {
 				})
 				.style("opacity", 1)
 				.style("fill", d => {
-					if (this.$store.encoding == "MEAN_GRADIENTS") {
+					if (this.encoding == "MEAN_GRADIENTS") {
 						return "#000";
 					}
-					let rgbArray = this.$store.runtimeColor.getColor(d, this.$store.selectedMetric);
+					let rgbArray = this.$store.runtimeColor.getColor(d, this.selectedMetric);
 					let hex = this.$store.runtimeColor.rgbArrayToHex(rgbArray);
 					return this.$store.runtimeColor.setContrast(hex);
 				})
@@ -399,7 +371,7 @@ export default {
 			d3.selectAll(".callsite-text").remove();
 			d3.selectAll(".path").remove();
 			d3.selectAll(".targetLines").remove();
-			this.clearEncoding();
+			this.clearEncoding(this.encoding);
 			this.clearTargetPath();
 			this.$refs.ToolTip.clear();
 		},

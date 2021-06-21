@@ -11,6 +11,8 @@ import networkx as nx
 # CallFlow imports
 import callflow
 from callflow.utils.sanitizer import Sanitizer
+from callflow.utils.df import df_as_dict
+
 
 LOGGER = callflow.get_logger(__name__)
 
@@ -20,23 +22,26 @@ class HierarchyLayout:
     Hierarchy Layout computation
     """
 
-    def __init__(self, supergraph, module, filter_by="time (inc)", filter_perc=0.0):
+    def __init__(self, sg, node, filter_by="time (inc)", filter_perc=0.0):
         """
         Hierarchy Layout computation
 
         # TODO: Avoid filtering over here.
         :param supergraph: SuperGraph
-        :param module: module name
+        :param node: node name
         :param filter_by: filter by the metric
         :param filter_perc:  filter percentage
         """
-        assert isinstance(supergraph, callflow.SuperGraph)
-        assert "module" in supergraph.gf.df.columns
-        assert module in supergraph.gf.df["module"].unique().tolist()
+        assert isinstance(sg, callflow.SuperGraph)
+        assert "module" in sg.dataframe.columns
+        assert node in list(sg.modules_list)
 
-        module_df = supergraph.gf.df.loc[supergraph.gf.df["module"] == module]
-        self.nxg = HierarchyLayout.create_nxg_tree_from_paths(
-            module_df=module_df,
+        self.node = node
+        module_idx = sg.get_idx(node, "module")
+        self.sg = sg
+        module_df = sg.dataframe.loc[sg.dataframe["module"] == module_idx]
+        self.nxg = self.create_nxg_tree_from_paths(
+            df=module_df,
             path="component_path",
             filter_by=filter_by,
             filter_perc=filter_perc,
@@ -49,8 +54,7 @@ class HierarchyLayout:
             cycles = HierarchyLayout._check_cycles(self.nxg)
             LOGGER.debug(f"cycles: {cycles}")
 
-    @staticmethod
-    def create_nxg_tree_from_paths(module_df, path, filter_by, filter_perc):
+    def create_nxg_tree_from_paths(self, df, path, filter_by, filter_perc):
         """
         Create a networkx graph for the module hierarchy. Filter if filter percentage is greater than 0.
 
@@ -60,22 +64,14 @@ class HierarchyLayout:
         :param filter_perc: filter percentage
         :return: NetworkX graph
         """
-        from ast import literal_eval as make_tuple
-
-        if filter_perc > 0.0:
-            group_df = module_df.groupby(["name"]).mean()
-            f_group_df = group_df.loc[
-                group_df[filter_by] > filter_perc * group_df[filter_by].max()
-            ]
-            callsites = f_group_df.index.values.tolist()
-            module_df = module_df[module_df["name"].isin(callsites)]
 
         nxg = nx.DiGraph()
-        paths = module_df[path].unique()
+        cp_dict = df_as_dict(df, 'name', 'component_path')
 
-        for idx, path in enumerate(paths):
-            path = make_tuple(path)
-            source_targets = HierarchyLayout._create_source_targets(path)
+        for c_name, path in cp_dict.items():
+            path_list = list(map(lambda p: self.sg.get_name(p, "callsite"), path))
+            path_list = [self.node] + path_list
+            source_targets = HierarchyLayout._create_source_targets(path_list)
 
             for edge in source_targets:
                 source = edge["source"]
@@ -99,8 +95,8 @@ class HierarchyLayout:
             if idx == len(path_list) - 1:
                 break
 
-            source = Sanitizer.sanitize(path_list[idx])
-            target = Sanitizer.sanitize(path_list[idx + 1])
+            source = path_list[idx]
+            target = path_list[idx + 1]
 
             edges.append({"source": source, "target": target})
         return edges

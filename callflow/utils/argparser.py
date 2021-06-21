@@ -17,11 +17,10 @@ SUPPORTED_PROFILE_FORMATS = ["hpctoolkit", "caliper_json", "caliper"]
 JSONSCHEMA_CONFIG = {
     "type": "object",
     "properties": {
+        "append_path": {"type": "string"},
         "data_path": {"type": "string"},
-        "experiment": {"type": "string"},
         "save_path": {"type": "string"},
         "read_parameter": {"type": "boolean"},
-        "runs": {"type": "array"},
         "filter_perc": {"type": "number"},
         "filter_by": {"type": "string"},
         "group_by": {"type": "string"},
@@ -29,25 +28,11 @@ JSONSCHEMA_CONFIG = {
         "chunk_idx": {"type": "string"},
         "chunk_size": {"type": "string"},
         "ensemble_process": {"type": "boolean"},
-        "no_aux_process": {"type": "boolean"}
+        "experiment": {"type": "string"},
     },
 }
 
-CONFIG_KEYS = [
-    "data_path",
-    "save_path",
-    "filter_perc",
-    "filter_by",
-    "group_by",
-    "read_parameter",
-    "append_path",
-    "start_date",
-    "end_date",
-    "chunk_idx",
-    "chunk_size",
-    "ensemble_process",
-    "no_aux_process",
-]
+CONFIG_KEYS = list(JSONSCHEMA_CONFIG["properties"].keys())
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -237,12 +222,6 @@ class ArgParser:
             help="Enables ensemble SuperGraph construction",
         )
 
-        parser.add_argument(
-             "--no_aux_process",
-            action="store_true",
-            help="Disables the auxiliary processing for single and ensemble supergraph.",
-        )
-
         # -------------
         return parser
 
@@ -315,7 +294,8 @@ class ArgParser:
         """
         scheme = {}
         for _ in CONFIG_KEYS:
-            scheme[_] = self.args[_]
+            if _ in self.args:
+                scheme[_] = self.args[_]
 
         scheme["experiment"] = os.path.basename(scheme["data_path"])
         if len(scheme["save_path"]) == 0:
@@ -323,7 +303,7 @@ class ArgParser:
 
         # Set the datasets key, according to the format.
         scheme["runs"] = ArgParser._scheme_dataset_map(
-            self.args.get("profile_format", "default"), scheme["data_path"]
+            self.args.get("profile_format", "default"), os.path.join(scheme["data_path"], scheme["append_path"])
         )
 
         return scheme
@@ -351,7 +331,8 @@ class ArgParser:
                 scheme[_] = self.args[_]
 
         # Set the data_path, which is data directory.
-        scheme["experiment"] = os.path.basename(json["data_path"])
+        if len(scheme["experiment"]) == 0:
+            scheme["experiment"] = os.path.basename(json["data_path"])
 
         if self.args.get('save_path') is not "":
             scheme["save_path"] = os.path.join(os.path.abspath(self.args.get("save_path")), ".callflow")

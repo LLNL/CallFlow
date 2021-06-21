@@ -7,61 +7,16 @@
 
 <template>
   <v-layout row wrap :id="id">
-    <InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
-    <v-layout row wrap v-if="isCallsiteSelected == true">
-      <v-btn
-        class="ma-1 reveal-button"
-        small
-        tile
-        color="white"
-        @click="revealCallsite"
-      >
-        Reveal
-      </v-btn>
-    </v-layout>
-
-    <v-layout row wrap v-if="isModuleSelected == true">
-      <v-btn
-        class="ma-1 reveal-button"
-        small
-        tile
-        color="white"
-        :class="isEntryFunctionSelected"
-        @click="showEntryFunctions"
-      >
-        Entry call sites
-      </v-btn>
-      <v-btn
-        class="ma-1 reveal-button"
-        small
-        tile
-        color="white"
-        :class="isCalleeSelected"
-        @click="showExitFunctions"
-      >
-        Callees
-      </v-btn>
-      <v-spacer></v-spacer>
-      <v-btn
-        class="ma-1 reveal-button"
-        small
-        tile
-        color="white"
-        v-if="showSplitButton == 'true'"
-        @click="split"
-      >
-        Split
-      </v-btn>
-    </v-layout>
-
+    <InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
+    
     <v-container
       class="ml-4 callsite-information-node"
       v-for="callsite in callsites"
-      :key="getID(callsite.id)"
+      :key="getID(callsite.nid)"
     >
-      <v-row class="pt-2">
-        <v-col cols="1" >
-          <v-card class="ma-2 ml-4" tile outlined>
+      <v-row>
+         <v-col cols="1">
+          <!-- <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
               <template v-slot:activator="{on}">
                 <v-row
@@ -78,52 +33,31 @@
                 Callsite depth:{{ formatNumberOfHops(callsite.component_path) }}
               </span>
             </v-tooltip>
-          </v-card>
+          </v-card> -->
         </v-col>
 
-        <v-col cols="11">
+        <v-col cols="5">
           <v-tooltip bottom>
             <template v-slot:activator="{on}">
-              <v-row class="mt-0 ml-2 pl-2 subtitle-2 font-weight-black" v-on="on">
+              <v-row class="mt-0 pl-2 subtitle-2 font-weight-black" v-on="on">
                 {{ formatName(callsite.name) }}
               </v-row>
             </template>
             <span>{{ callsite.name }}</span>
           </v-tooltip>
         </v-col>
+
+		<!-- <v-col cols="5">
+			{{ callsite.module }}
+		</v-col> -->
       </v-row>
 
-      <v-row class="information">
-        <v-col class="pa-0 subtitle-2">
-          Module: {{ formatModule(callsite) }}
-        </v-col>
-      </v-row>
-      <v-row wrap class="information">
-		<v-col class="pa-0 subtitle-2">Min : {{ min[callsite.name] }}</v-col>
-		<v-col class="pa-0 subtitle-2">Max : {{ max[callsite.name] }}</v-col>
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2">Mean : {{ mean[callsite.name] }}</v-col>
-        <v-spacer></v-spacer>
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2"
-          >Variance : {{ variance[callsite.name] }}</v-col
-        >
-        <v-col class="pa-0 subtitle-2"
-          >Imbalance : {{ imb[callsite.name] }}</v-col
-        >
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2">
-          Kurtosis : {{ kurt[callsite.name] }}
-        </v-col>
-        <v-col class="pa-0 subtitle-2">
-          Skewness : {{ skew[callsite.name] }}
-        </v-col>
-      </v-row>
-
-      <BoxPlot :ref="callsite.id" :callsite="callsite" />
+		<v-row wrap class="pa-2">
+			<Statistics :tData="stats[callsite.name]" />
+		</v-row>
+		<v-row class="pa-2">
+			<BoxPlot ref="BoxPlot" :data.sync="boxplot[callsite.name]" /> 
+		</v-row>
     </v-container>
   </v-layout>
 </template>
@@ -131,6 +65,7 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library imports
 import * as utils from "lib/utils";
@@ -140,17 +75,19 @@ import InfoChip from "../general/infoChip";
 
 // Local component imports
 import BoxPlot from "./boxplot";
+import Statistics from "../boxplot/statistics";
 
 export default {
 	name: "CallsiteInformation",
 	components: {
 		BoxPlot,
 		InfoChip,
+		Statistics,
 	},
 	data: () => ({
 		id: "callsite-information-overview",
 		title: "Call site Information",
-		summary: "Call site Information view provides an insight into the runtime distribution among its MPI ranks. Boxplots are calculated to represent the range of the distribution and outliers (dots) correspond to the ranks which are beyond the 1.5*IQR. Additionally, several statistical measures are also provided.",
+		infoSummary: "Call site Information view provides an insight into the runtime distribution among its MPI ranks. Boxplots are calculated to represent the range of the distribution and outliers (dots) correspond to the ranks which are beyond the 1.5*IQR. Additionally, several statistical measures are also provided.",
 		info: "",
 		callsites: [],
 		numberOfcallsites: 0,
@@ -168,15 +105,8 @@ export default {
 			{title: "Sort by Inclusive runtime"},
 			{title: "Sort by Exclusive Runtime"},
 		],
-		selectedModule: "",
-		selectedCallsite: "",
-		informationHeight: 0,
+		informationHeight: 50,
 		revealCallsites: [],
-		selectedMetric: "",
-		targetMeans: {},
-		targetVariance: {},
-		targetStandardDeviation: {},
-		intersectionCallsites: {},
 		isModuleSelected: false,
 		isCallsiteSelected: false,
 		isEntryFunctionSelected: "unselect-callsite",
@@ -185,146 +115,163 @@ export default {
 		selectClassName: {},
 		selectedOutlierRanks: {},
 		selectedOutlierDatasets: {},
-		min: {},
-		max: {},
-		mean: {},
-		variance: {},
-		imb: {},
-		kurt: {},
-		skew: {},
+		boxplot: {},
+		stats: {},
 	}),
+
+	computed: {
+		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedNode: "getSelectedNode",
+			selectedMetric: "getSelectedMetric",
+			data: "getSingleBoxplots",
+			summary: "getSummary",
+			runtimeSortBy: "getRuntimeSortBy"
+		})
+	},
+
+
+	watch: {
+		data: function () {
+			this.visualize();
+		},
+	},
 
 	mounted() {
 		let self = this;
 
+		EventHandler.$on("reset-single-boxplots", () =>  {
+			self.init();
+			self.visualize();
+		});
+
 		/**
-     * Event handler when a user selects a supernode.
-     */
+	     * Event handler when a user selects a supernode.
+    	 */
 		EventHandler.$on("single-select-module", (data) => {
 			this.isModuleSelected = true;
 			self.selectModule(data["module"]);
 		});
 
 		/**
-     * Event handler for sorting the callsites by a metric.
-     */
+     	* Event handler for sorting the callsites by a metric.
+     	*/
 		EventHandler.$on("callsite-information-sort", (val) => {
-			self.$store.selectedRuntimeSortBy = val;
-			self.callsites = self.sortByAttribute(self.callsites, val);
+			self.clear();
+			self.visualize();
 		});
 	},
 
 	methods: {
 		/**
-     * Set up the view.
-     */
+		 * Set up the view.
+		 */
 		init() {
-			if (this.firstRender) {
-				this.width = document.getElementById(this.id).clientWidth;
-				let heightRatio = this.$store.selectedMode == "Ensemble" ? 0.66 : 1.0;
-				this.height = heightRatio * this.$store.viewHeight;
-				this.boxplotWidth = this.width - this.padding.left - this.padding.right;
-				document.getElementById(this.id).style.maxHeight = this.height + "px";
-				this.informationHeight = 50;
-				this.firstRender = false;
+			const summary = this.summary[this.selectedTargetRun];
+			let callsites = [];
+			if (this.selectedNode["type"] == "module") {
+				const module_name = this.selectedNode["name"];
+				const module_idx = summary["invmodules"][module_name];
+				callsites = summary["m2c"][module_idx].map((cs) => summary["callsites"][cs]);
 			}
-			this.visualize();
+			else if (this.selectedNode["type"] == "callsite") {
+				callsites = [this.selectedNode["name"]];
+			}
+
+			this.$store.dispatch("fetchSingleBoxplots", {
+				dataset: this.selectedTargetRun,
+				metric: this.selectedMetric,
+				callsites: callsites,
+				ntype: "callsite",
+			});
+
+			this.width = document.getElementById(this.id).clientWidth;
+			this.boxplotWidth = this.width - this.padding.left - this.padding.right;
+			
+			let heightRatio = this.$store.selectedMode == "Ensemble" ? 0.66 : 1.0;
+			this.height = heightRatio * this.$store.viewHeight;
+			document.getElementById(this.id).style.maxHeight = this.height + "px";
 		},
 
 		/**
-     * Visualizes the callsite information in the view.
-     * Three things are performed.
-     */
+		 * Visualizes the callsite information in the view.
+		 * Three things are performed.
+		 */
 		visualize() {
-			this.setStates();
-			this.borderColorByMetric();
-			this.boxplotByMetric();
-		},
-
-		/**
-     * Create ID for each callsite's div.
-     * @param {*} callsiteID
-     */
-		getID(callsiteID) {
-			return "callsite-information-" + callsiteID;
-		},
-
-		/**
-     * Set the states for the variables at the UI level.
-     * Similar to how React.useState().
-     */
-		setStates() {
-			// Set from Application store.
-			this.selectedModule = this.$store.selectedModule;
-			this.selectedMode = this.$store.selectedMode;
-			this.selectedCallsite = this.$store.selectedCallsite;
-			this.selectedMetric = this.$store.selectedMetric;
-			this.targetColor = this.$store.runtimeColor.textColor;
-
-			// this.callsites store the callsites in the current context.
-			// this.numberOfCallsites is used to show the number of callsites in
-			// the view.
-			this.callsites = this.$store.data_cs[this.$store.selectedTargetDataset];
-			this.numberOfcallsites = Object.keys(this.callsites).length;
-
-			this.info = this.numberOfcallsites + " call sites";
-
 			// Sort the callsites.
 			this.callsites = this.sortByAttribute(
-				this.callsites,
-				this.$store.selectedMetric,
+				this.data,
+				this.selectedMetric,
+				this.runtimeSortBy,
+				"tgt"
 			);
-		},
 
-		/**
-     * Color the border of the callsite information block by a metric.
-     */
-		borderColorByMetric() {
-			for (let callsite in this.callsites) {
-				let data = this.callsites[callsite];
-				const id = "#callsite-information-node-" + data.id;
-				const mean_time = data[this.$store.selectedMetric]["mean"];
-				const strokeColor = this.$store.runtimeColor.getColorByValue(mean_time);
+			this.numberOfcallsites = Object.keys(this.callsites).length;
+			this.info = this.numberOfcallsites + " call sites";
 
-				d3.select(id).style("stroke", strokeColor);
+			for (let callsite_name in this.callsites) {
+				let callsite = this.callsites[callsite_name];
+
+				// Set the dictionaries for metadata information. 
+				this.stats[callsite_name] = { 
+					"min": utils.formatRuntimeWithoutUnits(callsite["min"]),
+					"max": utils.formatRuntimeWithoutUnits(callsite["max"]),
+					"mean": utils.formatRuntimeWithoutUnits(callsite["mean"]),
+					"var": utils.formatRuntimeWithoutUnits(callsite["var"]),
+					"imb": utils.formatRuntimeWithoutUnits(callsite["imb"]),
+					"kurt": utils.formatRuntimeWithoutUnits(callsite["kurt"]),
+					"skew": utils.formatRuntimeWithoutUnits(callsite["skew"]),
+				};
+				
+				// Set the data for the boxplot.
+				this.boxplot[callsite_name] = {"q": callsite["q"], "outliers": callsite["outliers"], "nid": callsite["nid"]};
+
+				// Set the selection for a callsite. 
+				this.selectClassName[callsite_name] = "unselect-callsite";
+
+				// Set the border color of the container.
+				this.borderColorByMetric(callsite);
 			}
 		},
 
 		/**
-     * Draws a boxplot for the callsites.
-     */
-		boxplotByMetric() {
-			// TODO: Generalize this for all the possible metrics.
-			for (let callsite in this.callsites) {
-				let data = this.callsites[callsite][this.selectedMetric];
-				this.min[callsite] = utils.formatRuntimeWithoutUnits(data["min"]);
-				this.max[callsite] = utils.formatRuntimeWithoutUnits(data["max"]);
-				this.mean[callsite] = utils.formatRuntimeWithoutUnits(data["mean"]);
-				this.variance[callsite] = utils.formatRuntimeWithoutUnits(data["var"]);
-				this.imb[callsite] = utils.formatRuntimeWithoutUnits(data["imb"]);
-				this.kurt[callsite] = utils.formatRuntimeWithoutUnits(data["kurt"]);
-				this.skew[callsite] = utils.formatRuntimeWithoutUnits(data["skew"]);
-				this.selectClassName[callsite] = "unselect-callsite";
-			}
+		 * Create ID for each callsite's div.
+		 * @param {*} callsiteID
+		 */
+		getID(callsiteID) {
+			return "callsite-information-node-" + callsiteID;
 		},
 
 		/**
-     * Sort the callsite ordering based on the attribute.
-     *
-     * @param {Array} callsites - Callsites as a list.
-     * @param {String} attribute - Attribute to sort by.
-     */
-		sortByAttribute(callsites, attribute) {
+	     * Color the border of the callsite information block by a metric.
+    	 */
+		borderColorByMetric(data) {
+			const id = "#callsite-information-node-" + data.nid;
+			const mean_time = data.mean;
+			// const strokeColor =
+			// this.$store.runtimeColor.getColorByValue(mean_time);
+			const strokeColor = "#f00";
+			d3.select(id).style("stroke", strokeColor);
+		},
+
+		/**
+		 * Sort the callsite ordering based on the attribute.
+		 *
+		 * @param {Array} callsites - Callsites as a list.
+		 * @param {Stirng} metric - Metric (e.g., time or time (inc))
+		 * @param {String} attribute - Attribute to sort by.
+		 */
+		sortByAttribute(callsites, metric, attribute, boxplot_type) {
 			let items = Object.keys(callsites).map(function (key) {
-				return [key, callsites[key]];
+				return [key, callsites[key][boxplot_type]];
 			});
 
 			items = items.sort( (first, second) => {
-				return second[1][this.$store.selectedMetric][attribute] - first[1][this.$store.selectedMetric][attribute];
+				return second[1][metric][attribute] - first[1][metric][attribute];
 			});
 
 			callsites = items.reduce(function (map, obj) {
-				map[obj[0]] = obj[1];
+				map[obj[0]] = obj[1][metric];
 				return map;
 			}, {});
 
@@ -332,9 +279,9 @@ export default {
 		},
 
 		/**
-     * Selection feature.
-     * Code to select the callsite by the component-level button
-     */
+		 * Selection feature.
+		 * Code to select the callsite by the component-level button
+		 */
 		changeSelectedClassName() {
 			event.stopPropagation();
 			let callsite = event.currentTarget.id;
@@ -357,33 +304,33 @@ export default {
 		},
 
 		/**
-     *
-     */
+		 *
+		 */
 		switchIsSelectedCallsite(val) {
 			this.isCallsiteSelected = val;
 		},
 
 		/**
-     *
-     */
+		 *
+		 */
 		switchIsSelectedModule(val) {
 			this.isModuleSelected = val;
 		},
 
 		/**
-     *
-     * @param {*} callsite
-     */
+		 *
+		 * @param {*} callsite
+		 */
 		selectedClassName(callsite) {
 			return this.selectClassName[callsite];
 		},
 
 		/**
-     *
-     * @param {*} callsite
-     */
+		 *
+		 * @param {*} callsite
+		 */
 		formatModule(callsite) {
-			const _m = this.$store.c2m[this.$store.selectedTargetDataset][callsite["name"]];
+			const _m = this.$store.summary[this.$store.selectedTargetDataset]["c2m"][callsite["name"]];
 			const splice = 15;
 			if (_m.length < splice) {
 				return _m;
@@ -425,9 +372,7 @@ export default {
      *
      */
 		clear() {
-			for (let callsite in this.callsites) {
-				EventHandler.$emit("hide-mpi-boxplot", this.callsites[callsite]);
-			}
+			EventHandler.$emit("clear-boxplot");
 		},
 
 		/**
@@ -484,11 +429,11 @@ export default {
 		},
 
 		/**
-     * Interaction: On supernode click, the callsites belonging to the supernode
-     * are only shown in the callsite information view.
-     *
-     * @param {String} module
-     */
+		 * Interaction: On supernode click, the callsites belonging to the supernode
+		 * are only shown in the callsite information view.
+		 *
+		 * @param {String} module
+		 */
 		selectModule(module) {
 			let callsites_in_module = this.$store.moduleCallsiteMap[
 				this.$store.selectedTargetDataset
@@ -653,10 +598,5 @@ export default {
 .component-data {
   color: #009688;
   padding: 0px;
-}
-
-.information {
-  margin-left: 15px;
-  font-size: 16px;
 }
 </style>

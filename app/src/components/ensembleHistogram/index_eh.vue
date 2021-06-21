@@ -7,7 +7,7 @@
 
  <template>
   <div :id="id">
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info"/>
+	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info"/>
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
   </div>
@@ -17,6 +17,7 @@
 // Library imports
 import * as d3 from "d3";
 import "d3-selection-multi";
+import { mapGetters } from "vuex";
 
 // Local library imports
 import * as utils from "lib/utils";
@@ -33,9 +34,7 @@ export default {
 		ToolTip,
 		InfoChip
 	},
-	props: [],
 	data: () => ({
-		data: [],
 		width: null,
 		height: null,
 		padding: {
@@ -53,7 +52,7 @@ export default {
 		selectedColorBy: "Inclusive",
 		MPIcount: 0,
 		title: "Runtime Distribution",
-		summary: "MPI runtime distribution view shows the sampled distribution of the process-based metrics for a selected node. To connect the processes (e.g., MPI ranks) to the physical domain, we use shadow lines to visualize the rank-to-bin mapping. Shadow lines map the bins in the histogram to the process/rank id laid out on an ordered line at the bottom of the histogram.",
+		infoSummary: "MPI runtime distribution view shows the sampled distribution of the process-based metrics for a selected node. To connect the processes (e.g., MPI ranks) to the physical domain, we use shadow lines to visualize the rank-to-bin mapping. Shadow lines map the bins in the histogram to the process/rank id laid out on an ordered line at the bottom of the histogram.",
 		info: "",
 		paddingFactor: 3.5,
 		thisNode: "",
@@ -61,18 +60,44 @@ export default {
 		selectedPropSum: 0,
 		x_max_exponent: 0,
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
+		selectedProp: "rank",
 	}),
+
+	computed: {
+		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedNode: "getSelectedNode",
+			summary: "getSummary",
+			selectedMetric: "getSelectedMetric",
+			data: "getEnsembleHistogram",
+			showTarget: "getShowTarget",
+			generalColors: "getGeneralColors",
+		})
+	},
+
+	watch: {
+		data: function () {
+			this.visualize();
+		}
+	},
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("ensemble-histogram", function (data) {
-			console.log("Ensemble Histogram: ", data);
-			self.visualize(data);
+		EventHandler.$on("reset-ensemble-histogram", function() {
+			self.clear();
+			self.init();
 		});
 	},
 
 	methods: {
 		init() {
+			this.$store.dispatch("fetchEnsembleHistogram", {
+				dataset: this.selectedTargetRun,
+				node: this.selectedNode["name"],
+				ntype: this.selectedNode["type"],
+				nbins: 20,
+			});
+
 			// Assign the height and width of container
 			this.width = window.innerWidth * 0.25;
 			this.height = this.$store.viewHeight * 0.33;
@@ -90,91 +115,68 @@ export default {
 				height: this.boxHeight,
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
-
-			// this.visualize(this.$store.selectedNode);
 		},
 
-		dataProcess(data) {
-			let axis_x = [];
-			let dataMin = 0;
-			let dataMax = 0;
+		visualize() {
+			this.info = this.selectedNode["name"] + " (" + this.selectedNode["type"][0].toUpperCase() + ")";
 
-			dataMin = Math.min(...data["x"]);
-			dataMax = Math.max(...data["x"]);
-
-			let dataWidth = (dataMax - dataMin) / this.$store.selectedMPIBinCount;
-			if (dataWidth == 0) {
-				dataWidth = 1;
-			}
-
-			for (let i = 0; i < this.$store.selectedBinCount; i++) {
-				axis_x.push(dataMin + i * dataWidth);
-			}
-
-			return [data["x"], data["y"], axis_x];
-		},
-
-		setupScale(data) {
-			const _e_store = utils.getDataByNodeType(this.$store, "ensemble", data["node"]);
-			const _t_store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
-			
-			let ensembleData = _e_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp];
-			let temp = this.dataProcess(ensembleData);
-			this.xVals = temp[0];
-			this.freq = temp[1];
-			this.axis_x = temp[2];
-			this.binContainsProcID = temp[3];
-			this.logScaleBool = false;
-			let isTargetThere = true;
-
-			// If the module is not present in the target run.
-			if (_t_store == undefined) {
-				isTargetThere = false;
-			} else {
-				const targetData = _t_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp];
-				const targetTemp = this.dataProcess(targetData);
-				this.targetXVals = targetTemp[0];
-				this.targetFreq = targetTemp[1];
-				this.target_axis_x = targetTemp[2];
-				this.target_binContainsProcID = targetTemp[3];
-				isTargetThere = true;
-			}
-
-			this.rankCount = parseInt(this.$store.summary["ensemble"].nranks);
-
-			this.xScale = d3
-				.scaleBand()
-				.domain(this.xVals)
-				.rangeRound([0, this.xAxisHeight]);
-
-			if (this.$store.selectedScale == "Linear") {
-				this.yScale = d3
-					.scaleLinear()
-					.domain([0, d3.max(this.freq)])
-					.range([this.yAxisHeight, this.padding.top]);
-				this.logScaleBool = false;
-			} else if (this.$store.selectedScale == "Log") {
-				this.yScale = d3
-					.scaleLog()
-					.domain([0.1, d3.max(this.freq)])
-					.range([this.yAxisHeight, this.padding.top]);
-				this.logScaleBool = true;
-			}
-			return isTargetThere;
-		},
-
-		visualize(callsite) {
-			this.clear();
-			let isTargetThere = this.setupScale(callsite);
+			// this.clear();
+			this.setupScale();
 			this.ensembleBars();
 			this.xAxis();
 			this.yAxis();
 			this.setTitle();
 
-			if (this.$store.showTarget && isTargetThere) {
+			if (this.showTarget) {
 				this.targetBars();
 			}
 			// this.$refs.ToolTip.init(this.svgID);
+		},
+
+		// dataProcess(data) {
+		// 	let axis_x = [];
+		// 	let dataMin = 0;
+		// 	let dataMax = 0;
+
+		// 	dataMin = Math.min(...data["x"]);
+		// 	dataMax = Math.max(...data["x"]);
+
+		// 	let dataWidth = (dataMax - dataMin) / this.$store.selectedMPIBinCount;
+		// 	if (dataWidth == 0) {
+		// 		dataWidth = 1;
+		// 	}
+
+		// 	for (let i = 0; i < this.$store.selectedBinCount; i++) {
+		// 		axis_x.push(dataMin + i * dataWidth);
+		// 	}
+
+		// 	return [data["x"], data["y"], axis_x];
+		// },
+
+		setupScale() {
+			this.hist_data = this.data[this.selectedMetric][this.selectedProp];
+
+			this.rankCount = parseInt(this.summary["ensemble"].nranks);
+			this.leftPadding = this.paddingFactor * this.padding.left;
+
+			this.xScale = d3
+				.scaleBand()
+				.domain(this.hist_data["x"])
+				.rangeRound([0, this.xAxisHeight]);
+
+			if (this.$store.selectedScale == "Linear") {
+				this.yScale = d3
+					.scaleLinear()
+					.domain([0, this.hist_data["rel_y_max"]])
+					.range([this.yAxisHeight, this.padding.top]);
+				this.logScaleBool = false;
+			} else if (this.$store.selectedScale == "Log") {
+				this.yScale = d3
+					.scaleLog()
+					.domain([0.1, this.hist_data["rel_y_max"]])
+					.range([this.yAxisHeight, this.padding.top]);
+				this.logScaleBool = true;
+			}
 		},
 
 		setTitle() {
@@ -186,12 +188,11 @@ export default {
 				this.selectedPropLabel = "Runs";
 			}
 
-			this.selectedPropSum = this.freq.reduce((acc, val) => {
+			this.selectedPropSum = this.hist_data["y"].reduce((acc, val) => {
 				return acc + val;
 			});
 
 			this.info = "Number of " + this.selectedPropLabel + "= "+ this.selectedPropSum;
-			
 		},
 
 		clear() {
@@ -212,33 +213,20 @@ export default {
 			let self = this;
 			this.svg
 				.selectAll(".dist-target")
-				.data(this.targetFreq)
+				.data(this.hist_data["y"])
 				.enter()
 				.append("rect")
 				.attr("class", "dist-histogram-bar dist-target")
 				.attrs({
-					x: (d, i) => {
-						return this.xScale(this.targetXVals[i]);
-					},
-					y: (d, i) => {
-						return this.yScale(d);
-					},
-					width: (d) => {
-						return this.xScale.bandwidth();
-					},
-					height: (d) => {
-						return Math.abs(this.yAxisHeight - this.yScale(d));
-					},
-					fill: this.$store.distributionColor.target,
+					x: (d, i) => this.xScale(this.hist_data["x"][i]),
+					y: (d, i) => this.yScale(d),
+					width: this.xScale.bandwidth(),
+					height: (d) => Math.abs(this.yAxisHeight - this.yScale(d)),
+					fill: this.generalColors.target,
 					opacity: 1,
 					"stroke-width": "0.2px",
 					stroke: "#202020",
-					transform:
-            "translate(" +
-            this.paddingFactor * this.padding.left +
-            "," +
-            0 +
-            ")",
+					transform: "translate(" + this.leftPadding + "," + 0 + ")",
 				})
 				.on("mouseover", function (d, i) {
 					self.$refs.ToolTip.render(d);
@@ -252,36 +240,20 @@ export default {
 			let self = this;
 			this.svg
 				.selectAll(".dist-ensemble")
-				.data(this.freq)
+				.data(this.hist_data["rel_y"])
 				.enter()
 				.append("rect")
 				.attr("class", "dist-histogram-bar dist-ensemble")
 				.attrs({
-					x: (d, i) => {
-						return this.xScale(this.xVals[i]);
-					},
-					y: (d, i) => {
-						return this.yScale(d);
-					},
-					width: (d) => {
-						return this.xScale.bandwidth();
-					},
-					height: (d) => {
-						return Math.abs(this.yAxisHeight - this.yScale(d));
-					},
-					fill: (d) => {
-						let color = self.$store.distributionColor.ensemble;
-						return color;
-					},
+					x: (d, i) => this.xScale(this.hist_data["x"][i]),
+					y: (d, i) => this.yScale(d),
+					width: this.xScale.bandwidth(),
+					height: (d) => Math.abs(this.yAxisHeight - this.yScale(d)),
+					fill: this.generalColors.intermediate,
 					opacity: 1,
 					"stroke-width": "0.2px",
 					stroke: "#202020",
-					transform:
-            "translate(" +
-            this.paddingFactor * this.padding.left +
-            "," +
-            0 +
-            ")",
+					transform: "translate(" + this.leftPadding + "," + 0 + ")",
 				})
 				.on("mouseover", function (d, i) {
 					self.$refs.ToolTip.render(d);
@@ -299,7 +271,7 @@ export default {
         "(e+" +
         this.x_max_exponent +
         ") " +
-        this.$store.selectedMetric +
+        this.selectedMetric +
         " Runtime (" +
         "\u03BCs)";
 			this.svg

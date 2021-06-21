@@ -101,7 +101,7 @@ export function formatRuntimeWithoutUnits(val) {
 
 // Returns [mantessa, exponent, max_exponent]
 export function formatRuntimeWithExponent(val, min_exponent = 0) {
-	let format = d3.format(".2");
+	let format = d3.format(".3");
 	let ret = format(val);
 	if (ret == 0) {
 		return [0, 0, min_exponent];
@@ -114,7 +114,7 @@ export function formatRuntimeWithExponent(val, min_exponent = 0) {
 		let split_ret_by_e = ret.toString().split("e");
 		exponent = parseInt(split_ret_by_e[1].split("+")[1]);
 		multiplier = parseInt(exponent) - min_exponent;
-		mantessa = parseFloat(split_ret_by_e[0]); //* (10 ** multiplier));
+		mantessa = parseFloat(split_ret_by_e[0]);
 	}
 	return [mantessa.toFixed(2), exponent, min_exponent];
 }
@@ -241,11 +241,11 @@ export function removeDuplicates(arr) {
 
 // create a dummy element, apply the appropriate classes,
 // and then measure the element
-export function measure(text) {
+export function measure(text, maxWidth) {
 	if (!text || text.length === 0) return { height: 0, width: 0 };
 
 	const container = d3.select("body").append("svg").attr("class", "dummy");
-	container.append("text").attrs({ x: -1000, y: -1000 }).text(text);
+	container.append("text").attrs({ x: -1000, y: -1000 }).text(text).call(textWrap, maxWidth);
 
 	const bbox = container.node().getBBox();
 	container.remove();
@@ -259,29 +259,26 @@ export function measure(text) {
  * @param {*} width 
  */
 export function textWrap(text, width) {
-	text.each(function () {
-		var text = d3.select(this),
-			words = text.text().split(/\s+/).reverse(),
-			word,
-			line = [],
-			lineNumber = 0,
-			lineHeight = 1.1, // ems
-			x = text.attr("x"),
-			y = text.attr("y"),
-			dy = 0,
-			tspan = text.text(null).append("tspan").attr("dy", dy + "em");
+	let words = text.text().split(/\s+/).reverse(),
+		word,
+		line = [],
+		lineNumber = 0,
+		lineHeight = 1.2, // ems
+		dy = 0,
+		tspan = text.text(null).append("tspan").attr("dy", dy + "em"),
+		x = text.attr("x"),
+		y = text.attr("y");
 
-		while ((word = words.pop())) {
-			line.push(word);
+	while ((word = words.pop())) {
+		line.push(word);
+		tspan.text(line.join(" "));
+		if (tspan.node().getComputedTextLength() > width) {
+			line.pop();
 			tspan.text(line.join(" "));
-			if (tspan.node().getComputedTextLength() > width) {
-				line.pop();
-				tspan.text(line.join(" "));
-				line = [word];
-				tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
-			}
+			line = [word];
+			tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
 		}
-	});
+	}
 }
 
 /**
@@ -368,12 +365,34 @@ export function getKeyWithMaxValue(obj) {
 	return Object.keys(obj).reduce((a, b) => obj[a] > obj[b] ? a : b);
 }
 
-export function swapKeysToArray(data, key) {
-	return Object.keys(data).map((_) =>  { return {"run": _, ...data[_][key]};});
+export function swapKeysToArray(data, skipElements) {
+	return Object.keys(data).filter((_) => !skipElements.includes(_)).map((_) =>  { return {"run": _, ...data[_]};});
 }
 
 export function swapKeysToDict(data, key) {
 	return Object.keys(data).reduce((acc, post) => {
 		return {...acc, [post]: data[post][key]};	
 	}, {});
+}
+
+export function leastSquares(xSeries, ySeries) {
+	const reduceSumFunc = (prev, cur) => prev + cur;
+
+	const xBar = xSeries.reduce(reduceSumFunc) * 1.0 / xSeries.length;
+	const yBar = ySeries.reduce(reduceSumFunc) * 1.0 / ySeries.length;
+
+	const ssXX = xSeries.map(function(d) { return Math.pow(d - xBar, 2); })
+		.reduce(reduceSumFunc);
+
+	const ssYY = ySeries.map(function(d) { return Math.pow(d - yBar, 2); })
+		.reduce(reduceSumFunc);
+		
+	const ssXY = xSeries.map(function(d, i) { return (d - xBar) * (ySeries[i] - yBar); })
+		.reduce(reduceSumFunc);
+		
+	const slope = ssXY / ssXX;
+	const intercept = yBar - (xBar * slope);
+	const rSquare = Math.pow(ssXY, 2) / (ssXX * ssYY);
+
+	return [slope, intercept, rSquare];
 }
