@@ -27,7 +27,7 @@
 			</v-row>
 		</v-col>
       </v-card>
-	<VisualEncoding ref="VisualEncoding"/>
+	<Settings ref="Settings"/>
     </v-navigation-drawer>
 
     <v-main class="pa-0 ma-0">
@@ -71,7 +71,7 @@ import EnsembleScatterplot from "./ensembleScatterplot/index_es";
 import ParameterProjection from "./parameterProjection/index_pp";
 import Sankey from "./sankey/index_sg";
 import Toolbar from "./general/toolbar";
-import VisualEncoding from "./settings/visualEncoding";
+import Settings from "./general/settings";
 
 export default {
 	name: "EnsembleSuperGraph",
@@ -86,7 +86,7 @@ export default {
 		ModuleHierarchy,
 		ParameterProjection,
 		CallsiteCorrespondence,
-		VisualEncoding,
+		Settings,
 	},
 
 	// Not used currently. 
@@ -172,7 +172,7 @@ export default {
 				this.$refs.CallsiteCorrespondence,
 				this.$refs.ParameterProjection,
 				this.$refs.ModuleHierarchy,
-				this.$refs.VisualEncoding
+				this.$refs.Settings
 			];
 		},
 

@@ -27,7 +27,7 @@
 			</v-row>
 		</v-col>
       </v-card>
-	<VisualEncoding ref="VisualEncoding"/>
+	<Settings ref="Settings"/>
     </v-navigation-drawer>
 
     <v-row class="pa-0 ma-0">
@@ -67,8 +67,7 @@ import SingleHistogram from "./singleHistogram/index_sh";
 import CallsiteInformation from "./callsiteInformation/index_ci";
 import Sankey from "./sankey/index_sg";
 import Toolbar from "./general/toolbar";
-
-import VisualEncoding from "./settings/visualEncoding";
+import Settings from "./general/settings/";
 
 export default {
 	name: "SuperGraph",
@@ -81,7 +80,7 @@ export default {
 		SingleScatterplot,
 		SingleHistogram,
 		CallsiteInformation,
-		VisualEncoding,
+		Settings,
 	},
 
 	data: () => ({
@@ -140,7 +139,7 @@ export default {
 				this.$refs.SingleScatterplot,
 				this.$refs.Sankey,
 				this.$refs.CallsiteInformation,
-				this.$refs.VisualEncoding,
+				this.$refs.Settings,
 			];
 		},
 

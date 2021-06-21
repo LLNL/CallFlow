@@ -1,5 +1,5 @@
 import Vue from "vue";
-import Vuex, { Store } from "vuex";
+import Vuex from "vuex";
 
 import * as utils from "lib/utils";
 import APIService from "lib/routing/APIService";
@@ -178,6 +178,7 @@ export default new Vuex.Store({
 			state.hierarchy = payload;
 		}
 	},
+	
 	actions: {
 		async fetchConfig({ commit }) {
 			const config = await APIService.GETRequest("config");
@@ -279,6 +280,16 @@ export default new Vuex.Store({
 			commit("setHierarchy", hierarchy);
 		},
 
+		async fetchComparison({ commit, state }, payload) {
+			const comp = await APIService.POSTRequest("compare", {
+				targetDataset: state.selectedTargetRun,
+				compareDataset: state.selectedCompareRun,
+				selectedMetric: state.selectedMetric,
+			});
+			console.log("[Data] ESG Comparison: ", comp);
+			commit("setDSG", comp);
+		},
+
 		updateSelectedMetric({ state, dispatch }, payload) {
 			state.selectedMetric = payload;
 			dispatch("reset");
@@ -318,6 +329,11 @@ export default new Vuex.Store({
 			}
 		},
 
+		updateCompareRun({ state, dispatch}, payload) {
+			state.commit("setCompareRun", payload);
+			state.commit("setSelectedMode", "DSG");
+		},
+
 		reset({state}) {
 			if (state.selectedMode == "CCT") {
 				EventHandler.$emit("reset-cct");
@@ -327,6 +343,9 @@ export default new Vuex.Store({
 			}
 			else if (state.selectedMode == "ESG") {
 				EventHandler.$emit("reset-esg");
+			}
+			else if (state.selectedMode == "DSG") {
+				EventHandler.$emit("reset-dsg");
 			}
 		},
 	},
@@ -363,6 +382,7 @@ export default new Vuex.Store({
 		getRuntimeColorMap: state => state.runtimeColorMap,
 
 		getESG: state => state.ESG,
+		getDSG: state => state.DSG,
 		getEnsembleHistogram: state => state.ensembleHistogram,
 		getEnsembleScatterplot: state => state.ensembleScatterplot,
 		getEnsembleBoxplots: state => state.ensembleBoxplots,

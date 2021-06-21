@@ -27,7 +27,7 @@
 			</v-row>
 		</v-col>
       </v-card>
-		<VisualEncoding ref="VisualEncoding" /> 
+		<Settings ref="Settings" /> 
     </v-navigation-drawer>
 
     <v-main class="pt-0">
@@ -60,7 +60,7 @@ import Color from "lib/color/";
 import * as utils from "lib/utils";
 
 // Settings components
-import VisualEncoding from "./settings/visualEncoding";
+import Settings from "./general/settings/";
 import EventHandler from "lib/routing/EventHandler";
 
 export default {
@@ -69,7 +69,7 @@ export default {
 		Splitpanes,
 		NodeLink,
 		Toolbar,
-		VisualEncoding
+		Settings
 	},
 
 	data: () => ({
@@ -158,7 +158,7 @@ export default {
 		setComponentMap() {
 			return [
 				this.$refs.CCT1, 
-				this.$refs.VisualEncoding
+				this.$refs.Settings
 			];
 		},
 

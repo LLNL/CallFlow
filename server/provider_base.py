@@ -280,13 +280,28 @@ class BaseProvider:
 
         if operation_name == "init":
             if len(self.datasets) > 1:
-                time_columns = self.supergraphs["ensemble"].time_columns
+                sg = self.supergraphs["ensemble"]
             else:
-                time_columns = self.supergraphs[self.datasets[0].name].time_columns
+                sg = self.supergraphs[self.datasets[0].name]
+
+            time_columns = sg.time_columns
+            
+            # if "module_callsite_map" not in self.config.keys():
+            #     module_callsite_map = sg.module_callsite_map
+            # else:
+            #     module_callsite_map = self.config.module_callsite_map
+
+            # if "callsite_module_map" not in self.config.keys():
+            #     callsite_module_map = sg.module_callsite_map
+            # else:
+            #     callsite_module_map = self.config.callsite_module_map
+
             return { 
                 **self.config,
                 "time_columns": time_columns,
-                "profile_format_summary": list(set(map(lambda d: d["profile_format"], self.datasets))) 
+                "profile_format_summary": list(set(map(lambda d: d["profile_format"], self.datasets))),
+                # "module_callsite_map": module_callsite_map,
+                # "callsite_module_map": callsite_module_map
             }
 
         elif operation_name == "summary":
