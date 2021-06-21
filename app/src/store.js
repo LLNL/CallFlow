@@ -77,7 +77,8 @@ export default new Vuex.Store({
 		parameterProjection: {},
 		numOfClusters: 3,
 
-		runtimeSortBy: "mean"
+		runtimeSortBy: "mean",
+		hierarchy: {}
 	},
 
 	mutations: {
@@ -171,6 +172,10 @@ export default new Vuex.Store({
 
 		setSelectedColorPoint(state, payload) {
 			state.selectedColorPoint = payload;
+		}, 
+
+		setHierarchy(state, payload) {
+			state.hierarchy = payload;
 		}
 	},
 	actions: {
@@ -291,7 +296,6 @@ export default new Vuex.Store({
 
 		updateSelectedColorPoint({ state, dispatch }, payload) {
 			state.selectedColorPoint = payload;
-			console.log("here");
 			dispatch("reset");
 		},
 
@@ -375,5 +379,6 @@ export default new Vuex.Store({
 		getSelectedColorPoint: state => state.selectedColorPoint,	
 		getRuntimeSortBy: state => state.runtimeSortBy,
 		getIQRFactor: state => state.IQRFactor,
+		getHierarchy: state => state.hierarchy,
 	}
 });

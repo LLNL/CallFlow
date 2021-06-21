@@ -308,8 +308,6 @@ export default {
 				};
 			}
 
-			console.log(this.intersectionCallsites);
-
 			for (let callsite_name of this.knc["difference"]) {
 				let bCallsite = this.bCallsites[callsite_name];
 

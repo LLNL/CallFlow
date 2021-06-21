@@ -70,7 +70,7 @@ class HierarchyLayout:
 
         for c_name, path in cp_dict.items():
             path_list = list(map(lambda p: self.sg.get_name(p, "callsite"), path))
-            path_list = [self.node] + path
+            path_list = [self.node] + path_list
             source_targets = HierarchyLayout._create_source_targets(path_list)
 
             for edge in source_targets:

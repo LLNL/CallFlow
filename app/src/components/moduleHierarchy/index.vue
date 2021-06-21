@@ -21,6 +21,7 @@ import { mapGetters } from "vuex";
 
 import ToolTip from "./tooltip";
 import InfoChip from "../general/infoChip";
+import EventHandler from "lib/routing/EventHandler";
 
 import * as utils from "lib/utils";
 import Queue from "./lib/queue";
@@ -66,6 +67,7 @@ export default {
 		title: "Super node Hierarchy",
 		infoSummary: "",
 		info: "",
+		selectedHierarchyMode: "Uniform"
 	}),
 
 	computed: {
@@ -86,10 +88,18 @@ export default {
 			},
 			deep: true,
 		},
+
+		data: function () {
+			this.visualize();
+		}
 	},
-	
+
 	mounted() {
-		this.init();
+		let self = this;
+		EventHandler.$on("reset-module-hierarchy", function() {
+			self.clear();
+			self.init();
+		});
 	},
 
 	methods: {
@@ -104,6 +114,7 @@ export default {
 
 			this.width = document.getElementById(this.id).clientWidth;
 			this.height = this.$store.viewHeight * 0.3;
+			console.log(this.height);
 			this.icicleWidth = this.width - this.margin.right - this.margin.left;
 			this.icicleHeight = this.height - this.margin.top - this.margin.bottom;
 
@@ -117,6 +128,11 @@ export default {
 				});
 
 			this.$refs.ToolTip.init(this.svgID);
+		},
+
+		visualize() {
+			const hierarchy = this.bfs(this.data);
+			this.drawIcicles(hierarchy);
 		},
 
 		// Formatting for the html view
@@ -172,9 +188,10 @@ export default {
 			let startVertex = graph;
 
 			let thismodule = startVertex.id;
-			let moduleData = this.$store.data_mod["ensemble"][thismodule];
 
-			startVertex.data = moduleData;
+			// startVertex.data = this.$store.data_mod["ensemble"][thismodule];
+
+			startVertex.data = {};
 
 			vertexQueue.enqueue(startVertex);
 
@@ -189,10 +206,12 @@ export default {
 				let callsiteData = {};
 				if (!startVertexData) {
 					let callsite = currentVertex.id;
-					callsiteData = this.$store.data_cs["ensemble"][callsite];
+					// callsiteData = this.$store.data_cs["ensemble"][callsite];
+					callsiteData = {};
 				} else {
 					let module = currentVertex.id;
-					callsiteData = this.$store.data_mod["ensemble"][module];
+					// callsiteData = this.$store.data_mod["ensemble"][module];
+					callsiteData = {};
 					startVertexData = false;
 				}
 
@@ -210,11 +229,6 @@ export default {
 				previousVertex = currentVertex;
 			}
 			return graph;
-		},
-
-		update_from_graph(json) {
-			let hierarchy = this.bfs(json);
-			this.drawIcicles(hierarchy);
 		},
 
 		trunc(str, n) {
@@ -269,7 +283,7 @@ export default {
 			let self = this;
 			return function (node) {
 				if (node.children) {
-					if (self.$store.selectedHierarchyMode == "Exclusive") {
+					if (self.selectedHierarchyMode == "Exclusive") {
 						self.diceByValue(
 							node,
 							node.x0,
@@ -277,7 +291,7 @@ export default {
 							node.x1,
 							(dy * (node.depth + 2)) / n
 						);
-					} else if (self.$store.selectedHierarchyMode == "Uniform") {
+					} else if (self.selectedHierarchyMode == "Uniform") {
 						self.dice(
 							node,
 							node.x0,
@@ -351,15 +365,11 @@ export default {
 			}
 		},
 
-		drawIcicles(json) {
-			if (this.hierarchy != undefined) {
-				this.clear();
-			} else {
-				this.setupSVG();
-				this.hierarchy = this.hierarchySVG.attrs({
-					id: this.svgID,
-				});
-			}
+		drawIcicles(json) {		
+			this.hierarchy = this.hierarchySVG.attrs({
+				id: this.svgID,
+			});
+	
 			// Setup the view components
 			// this.initializeBreadcrumbTrail();
 			//  drawLegend();
@@ -390,12 +400,12 @@ export default {
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition);
 
-			this.setupModuleMeanGradients();
-			this.setupCallsiteMeanGradients();
+			// this.setupModuleMeanGradients();
+			// this.setupCallsiteMeanGradients();
 			this.addNodes();
 			this.addText();
-			if (this.$store.showTarget) {
-				this.drawTargetLine();
+			if (this.showTarget) {
+				// this.drawTargetLine();
 			}
 
 			// Add the mouseleave handler to the bounding rect.
@@ -754,21 +764,22 @@ export default {
 					return d.y1 - d.y0 - this.offset - this.stroke_width;
 				})
 				.style("fill", (d, i) => {
-					let gradients = undefined;
-					if (d.depth == 0 && this.$store.data_mod[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
-						gradients = "url(#mean-module-gradient-" + d.data.data.id + ")";
-					} else {
-						if (this.$store.data_cs[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
-							gradients = "url(#mean-callsite-gradient-" + d.data.data.id + ")";
-						} else {
-							gradients = this.$store.distributionColor.ensemble;
-						}
-					}
+					let gradients = "#fff";
+					// if (d.depth == 0 && this.$store.data_mod[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
+					// 	gradients = "url(#mean-module-gradient-" + d.data.data.id + ")";
+					// } else {
+					// 	if (this.$store.data_cs[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
+					// 		gradients = "url(#mean-callsite-gradient-" + d.data.data.id + ")";
+					// 	} else {
+					// 		gradients = this.$store.distributionColor.ensemble;
+					// 	}
+					// }
 					return gradients;
 				})
 				.style("stroke", (d) => {
-					let runtime = d.data.data[this.$store.selectedMetric]["max_time"];
-					return d3.rgb(this.$store.runtimeColor.getColorByValue(runtime));
+					return "#f0f0f0";
+					// let runtime = d.data.data[this.$store.selectedMetric]["max_time"];
+					// return d3.rgb(this.$store.runtimeColor.getColorByValue(runtime));
 				})
 				.style("stroke-width", this.stroke_width)
 				.style("opacity", (d) => {
@@ -846,9 +857,10 @@ export default {
 					return this.width;
 				})
 				.style("fill", (d) => {
-					let color = this.$store.runtimeColor.setContrast(
-						this.$store.runtimeColor.getColor(d)
-					);
+					// let color = this.$store.runtimeColor.setContrast(
+					// 	this.$store.runtimeColor.getColor(d)
+					// );
+					let color = "#f00";
 					return color;
 				})
 				.style("font-size", "14px")

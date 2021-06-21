@@ -387,7 +387,6 @@ export default {
 		},
 
 		showDetails(dataset) {
-			console.log(dataset, this.summary);
 			this.tooltip.html(
 				"Run: " +
           dataset +

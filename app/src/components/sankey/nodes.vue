@@ -187,9 +187,6 @@ export default {
 
 		click(node) {
 			event.stopPropagation();
-
-			console.log(node.id, node.type, this.selectedNode.name, this.selectedNode.type);
-
 			if (node.id !== this.selectedNode.name || node.type !== this.selectedNode.type) {
 				
 				// Set the data.
@@ -207,16 +204,10 @@ export default {
 						this.drawGuidesMap[node.id] = true;
 					}
 					
-					EventHandler.$emit("reset-ensemble-histogram");
-					EventHandler.$emit("reset-ensemble-scatterplot");
-					EventHandler.$emit("reset-ensemble-boxplots");
-
-					APIService.POSTRequest("module_hierarchy", {
-						node,
-						name: this.$store.selectedName,
-						datasets: this.$store.selectedDatasets,
-					});
-
+					// EventHandler.$emit("reset-ensemble-histogram");
+					// EventHandler.$emit("reset-ensemble-scatterplot");
+					// EventHandler.$emit("reset-ensemble-boxplots");
+					EventHandler.$emit("reset-module-hierarchy");
 				}
 				else if (this.selectedMode == "SG") {
 					EventHandler.$emit("reset-single-histogram");

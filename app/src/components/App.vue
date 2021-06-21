@@ -58,99 +58,20 @@ export default {
 		setGlobalVariables() {
 			console.log("[App] Set global variables.");
 			this.$store.selectedProp = "rank";
-
-			this.$store.selectedIQRFactor = 0.15;
-			// this.$store.selectedRunBinCount = 20;
-			// this.$store.selectedMPIBinCount = 20;
-			// this.$store.selectedEdgeAlignment = "Top";
-
-			// Used in sankey.js
-			// TODO: Sankey should not have any store related properties. 
-			// this.$store.selectedSuperNodePositionMode = "Minimal edge crossing";
-
-			this.$store.auxiliarySortBy = "time (inc)";
-			// this.$store.selectedMetric = "time (inc)";
 		
 			// Shoud be specified in the CSS, not here.
 			this.$store.fontSize = 14;
 			this.$store.transitionDuration = 1000;
-	
-			// Set the selected mode (Single or Ensemble)
-			// this.$store.selectedMode = this.run_counts > 1 ? "Ensemble": "Single";
-			
-			// Set the metric to sort the call site information
-			// this.$store.selectedRuntimeSortBy = "time (inc)";
-			// this.$store.selectedMetric = "time (inc)";
-			
+				
 			// Histogram properties
 			this.$store.selectedScale = "Linear";
 
 			// Color properties
-			// this.$store.selectedRuntimeColorMap = "OrRd";
-			// this.$store.selectedColorPoint = 9;
 			this.$store.runtimeColor = new Color("OrRd");
-			// this.$store.runtimeColor.intermediate = "#d9d9d9";
-			// this.$store.runtimeColor.highlight = "#C0C0C0";
-			// this.$store.runtimeColor.textColor = "#3a3a3a";
-			// this.$store.runtimeColor.edgeStrokeColor = "#888888";
 
-			// // Ensemble color properites
+			// Ensemble color properites
 			this.$store.distributionColor = new Color("Greens");
-			// this.$store.distributionColor.ensemble = "#C0C0C0";
-			// this.$store.distributionColor.compare = "#043060";
 		},
-
-		// setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {
-		// 	this.$store.runtimeColor = new Color();
-		// 	this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
-			
-		// 	this.setRuntimeColorScale(selectedRuntimeColorMap, this.$store.selectedMetric);
-
-		// 	if(this.$store.numOfRuns > 1 && this.$store.selectedFormat == "EnsembleSuperGraph") {
-		// 		// Create distribution color object
-		// 		this.$store.distributionColor = new Color();
-		// 		this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
-				
-		// 		this.setDistributionColorScale(selectedDistributionColorMap);
-
-		// 		this.selectedTargetColor = "Green";
-		// 		this.$store.distributionColor.target = this.targetColorMap[
-		// 			this.selectedTargetColor
-		// 		];
-		// 		this.$store.distributionColor.ensemble = "#C0C0C0";
-		// 		this.$store.distributionColor.compare = "#043060";
-
-		// 		// Create difference color object
-		// 		this.$store.diffColor = new Color();
-		// 		this.$store.selectedDistributionColorMap = selectedDistributionColorMap;
-		// 	}
-
-		// },
-
-		// setDistributionColorScale(selectedDistributionColorMap) {
-		// 	let hist_min = 0;
-		// 	let hist_max = 0;
-		// 	for (let module in this.$store.data_mod[this.$store.selectedTargetDataset]) {
-		// 		let node = this.$store.data_mod[this.$store.selectedTargetDataset][module];
-		// 		const vals = node[this.$store.selectedMetric]["gradients"]["hist"]["h"];
-		// 		hist_min = Math.min(
-		// 			hist_min,
-		// 			Math.min(...vals)
-		// 		);
-		// 		hist_max = Math.max(
-		// 			hist_max,
-		// 			Math.max(...vals)
-		// 		);
-		// 	}
-		// 	this.$store.distributionColor.setColorScale(
-		// 		"MeanGradients",
-		// 		hist_min,
-		// 		hist_max,
-		// 		selectedDistributionColorMap,
-		// 		this.$store.selectedColorPoint
-		// 	);
-		// },
-
 		setViewDimensions() {
 			console.log("[App] Set view dimensions.");
 
@@ -202,10 +123,6 @@ body {
 	stroke-width: 3px;
 }
 
-/* .big_text {
-	font-size: 32px;
-} */
-
 .ui.vis {
 	height: 98% !important;
 }
@@ -246,6 +163,7 @@ body {
 }
 
 .splitpanes.default-theme .splitpanes__pane {
+	height: auto;
 	background: #f7f7f7 !important;
 }
 

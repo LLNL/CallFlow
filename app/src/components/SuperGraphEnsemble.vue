@@ -30,8 +30,8 @@
 	<VisualEncoding ref="VisualEncoding"/>
     </v-navigation-drawer>
 
-    <v-main class="pt-0">
-		<splitpanes id="callgraph-dashboard" class="default-theme">
+    <v-main class="pa-0 ma-0">
+		<splitpanes id="callgraph-dashboard-2" class="default-theme">
 			<!-- Left column-->
 			<splitpanes horizontal :splitpanes-size="25">
 			<ModuleHierarchy ref="ModuleHierarchy" />
