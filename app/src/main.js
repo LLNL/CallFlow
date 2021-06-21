@@ -6,9 +6,7 @@
  */
 
 import Vue from "vue";
-import * as Vuex from "vuex";
 import Router from "vue-router";
-import Vuetify from "vuetify";
 import BootstrapVue from "bootstrap-vue";
 import VueMaterial from "vue-material";
 import "vue-material/dist/vue-material.min.css";
@@ -21,7 +19,15 @@ import Summary from "./components/Summary";
 import CCT from "./components/CCT";
 import SuperGraph from "./components/SuperGraph";
 import EnsembleSuperGraph from "./components/SuperGraphEnsemble";
-import vuetify from "./lib/plugins/vuetify";
+
+// Setup vuetify.
+import Vuetify from "vuetify/lib/framework";
+Vue.use(Vuetify);
+const vuetify = new Vuetify({
+	icons: {
+		iconfont: "mdiSvg"
+	}
+});
 
 import store from "./store";
 
