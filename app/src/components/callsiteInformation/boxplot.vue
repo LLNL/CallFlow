@@ -86,7 +86,6 @@ export default {
 			immediate: true,
 			deep: true,
 			handler(newValue, oldValue) {
-				console.log(newValue, oldValue);
 				if (this.dataReady) {
 					this.clear();
 				}
@@ -135,8 +134,6 @@ export default {
 				.range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
 
 			this.dataReady = true;
-
-			console.log(this.dataReady);
 		},
 
 		/**

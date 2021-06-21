@@ -99,7 +99,7 @@
           label="Number of bins for MPI Distribution"
           class="mt-0"
           type="number"
-          v-model="selectedRankBinCount"
+          :value="selectedRankBinCount"
           :menu-props="{maxHeight: '200'}"
           persistent-hint
           :disabled="
@@ -116,11 +116,11 @@
           label="Number of bins for Run Distribution"
           class="mt-0"
           type="number"
-          v-model="selectedRunBinCount"
+          :value="selectedRunBinCount"
           :menu-props="{maxHeight: '200'}"
           persistent-hint
           :disabled="selectedMode === 'ESG' ? false : true"
-		@change="updateRankBinCount"
+		@change="updateRunBinCount"
 
         >
         </v-text-field>
@@ -130,7 +130,7 @@
         <v-select
           label="Distribution Scale"
           :items="scales"
-          v-model="selectedScale"
+          :value="selectedScale"
           :menu-props="{maxHeight: '200'}"
           persistent-hint
           :disabled="selectedMode === 'ESG' ? false : true"
@@ -142,7 +142,7 @@
         <v-select
           label="Bin by attribute"
           :items="props"
-          v-model="selectedProp"
+          :value="selectedProp"
           :menu-props="{maxHeight: '200'}"
           persistent-hint
           :disabled="selectedMode === 'ESG' ? false : true"
@@ -159,21 +159,22 @@
         <v-select
           label="Sort by"
           :items="sortByModes"
-          v-model="selectedRuntimeSortBy"
+          :value="selectedRuntimeSortBy"
           :menu-props="{maxHeight: '200'}"
           persistent-hint
           :disabled="
             selectedMode === 'ESG' || selectedMode == 'SG' ? false : true
           "
+          @change="updateRuntimeSortBy"
         />
       </v-flex>
 
-      <v-flex xs12 class="ma-1">
+      <!-- <v-flex xs12 class="ma-1">
         <v-text-field
           label="IQR Factor"
           class="mt-0"
           type="float"
-          v-model="selectedIQRFactor"
+          :value="selectedIQRFactor"
           :menu-props="{maxHeight: '200'}"
           persistent-hint
           :disabled="
@@ -181,7 +182,7 @@
           "
         >
         </v-text-field>
-      </v-flex>
+      </v-flex> -->
     </template>
   </v-col>
 </template>
@@ -201,7 +202,6 @@ export default {
 		metrics: ["time", "time (inc)"],
 		runtimeColorMap: new Color().getAllColors(),
 		distributionColorMap: new Color().getAllColors(),
-		selectedRuntimeSortBy: "mean",
 		sortByModes: ["min", "mean", "max", "imb", "var", "kert", "skew"],
 		scales: ["Log", "Linear"],
 		selectedScale: "Linear",
@@ -213,7 +213,6 @@ export default {
 		dimensions: ["max_inclusive_time", "max_exclusive_time", "rank_count"],
 		selectedPC1: "max_inclusive_time",
 		selectedPC2: "max_exclusive_time",
-		selectedIQRFactor: 0.15,
 		selectedNumOfClusters: 3,
 		targetColorMap: {
 			Green: "#4EAF4A",
@@ -226,28 +225,9 @@ export default {
 	}),
 
 	watch: {
-		selectedIQRFactor(val) {
-			this.$store.selectedIQRFactor = val;
-			this.reset();
-		},
-
-		selectedRuntimeSortBy(val) {
-			this.$store.selectedRuntimeSortBy = val;
-			if (this.selectedMode == "ESG") {
-				EventHandler.$emit("callsite-correspondence-sort", val);
-			} else if (this.selectedMode == "SG") {
-				EventHandler.$emit("callsite-information-sort", val);
-			}
-		},
-
 		selectedTargetColor(val) {
 			this.$store.selectedTargetColor = val;
 			this.reset();
-		},
-
-		auxiliarySortBy(val) {
-			this.$store.auxiliarySortBy = val;
-			EventHandler.$emit("update-auxiliary-sort-by");
 		},
 
 		async selectedCompareDataset(val) {
@@ -277,6 +257,8 @@ export default {
 			selectedMode: "getSelectedMode",
 			selectedRunBinCount: "getRunBinCount",
 			selectedRankBinCount: "getRankBinCount",
+			selectedRuntimeSortBy: "getRuntimeSortBy",
+			// selectedIQRFactor: "getIQRFactor"
 		}),
 	},
 
@@ -288,8 +270,10 @@ export default {
 			"updateDistributionColorMap",
 			"updateTargetColor",
 			"updateRankBinCount",
-			"updateRunBinCount"
+			"updateRunBinCount",
+			"updateRuntimeSortBy"
 		]),
+
 		init() {
 			this.runtimeColorMap = new Color().getAllColors();
 			this.distributionColorMap = new Color().getAllColors();

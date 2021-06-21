@@ -496,7 +496,7 @@ export default {
 						let botX3 = this.ranklinescale(start);
 						let botX4 = this.ranklinescale(end);
 
-						let topY = this.boxHeight - this.histogramOffset + 10;
+						let topY = this.boxHeight - this.histogramOffset + 15;
 						let botY = this.boxHeight;
 
 						cumulativeBinSpace += (end - start + 1) * widthPerRank;

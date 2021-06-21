@@ -76,6 +76,8 @@ export default new Vuex.Store({
 		// Projection State
 		parameterProjection: {},
 		numOfClusters: 3,
+
+		runtimeSortBy: "mean"
 	},
 
 	mutations: {
@@ -297,6 +299,11 @@ export default new Vuex.Store({
 			EventHandler.$emit("reset-ensemble-histogram");
 		},
 
+		updateRuntimeSortBy({ state, dispatch }, payload) {
+			state.runtimeSortBy = payload;
+			EventHandler.$emit("boxplot-sort-by");
+		},
+
 		reset({state}) {
 			if (state.selectedMode == "CCT") {
 				EventHandler.$emit("reset-cct");
@@ -356,5 +363,7 @@ export default new Vuex.Store({
 		getGeneralColors: state => state.generalColors,
 		getEncoding: state => state.encoding,
 		getSelectedColorPoint: state => state.selectedColorPoint,	
+		getRuntimeSortBy: state => state.runtimeSortBy,
+		getIQRFactor: state => state.IQRFactor,
 	}
 });

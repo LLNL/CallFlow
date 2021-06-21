@@ -126,6 +126,7 @@ export default {
 			selectedMetric: "getSelectedMetric",
 			data: "getSingleBoxplots",
 			summary: "getSummary",
+			runtimeSortBy: "getRuntimeSortBy"
 		})
 	},
 
@@ -155,8 +156,8 @@ export default {
      	* Event handler for sorting the callsites by a metric.
      	*/
 		EventHandler.$on("callsite-information-sort", (val) => {
-			self.$store.selectedRuntimeSortBy = val;
-			self.callsites = self.sortByAttribute(self.callsites, val);
+			self.clear();
+			self.visualize();
 		});
 	},
 
@@ -200,7 +201,7 @@ export default {
 			this.callsites = this.sortByAttribute(
 				this.data,
 				this.selectedMetric,
-				"mean",
+				this.runtimeSortBy,
 				"tgt"
 			);
 
