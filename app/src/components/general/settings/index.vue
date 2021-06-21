@@ -103,7 +103,7 @@
         </v-text-field>
       </v-flex>
 
-      <v-flex xs12 class="ma-1">
+      <!-- <v-flex xs12 class="ma-1">
         <v-select
           label="Distribution Scale"
           :items="scales"
@@ -113,7 +113,7 @@
           :disabled="selectedMode === 'ESG' ? false : true"
         >
         </v-select>
-      </v-flex>
+      </v-flex> -->
 
       <v-flex xs12 class="ma-1">
         <v-select
@@ -123,6 +123,7 @@
           :menu-props="{maxHeight: '200'}"
           persistent-hint
           :disabled="selectedMode === 'ESG' ? false : true"
+          @change="updateProp"
         >
         </v-select>
       </v-flex>
@@ -166,8 +167,6 @@
 
 
 <script>
-import EventHandler from "lib/routing/EventHandler";
-import APIService from "lib/routing/APIService";
 import Color from "lib/color/index";
 import {mapActions, mapGetters} from "vuex";
 
@@ -190,6 +189,7 @@ export default {
 		...mapGetters({
 			selectedMetric: "getSelectedMetric",
 			selectedRuntimeColorMap: "getRuntimeColorMap",
+			selectedDistributionColorMap: "getDistributionColorMap",
 			selectedColorPoint: "getSelectedColorPoint",
 			selectedMode: "getSelectedMode",
 			selectedRunBinCount: "getRunBinCount",
@@ -198,6 +198,7 @@ export default {
 			selectedTargetColor: "getTargetColor",
 			selectedIQRFactor: "getIQRFactor",
 			selectedCompareRun: "getCompareRun",
+			selectedProp: "getProp",
 		}),
 	},
 
@@ -213,7 +214,7 @@ export default {
 			"updateRuntimeSortBy",
 			"updateTargetColor",
 			"updateCompareRun",
-
+			"updateProp",
 		]),
 
 		init() {

@@ -53,7 +53,7 @@
     </v-container> -->
 
     <v-container
-      class="ml-4 callsite-information-node"
+      class="ml-4 cc-node"
       v-for="callsite in intersectionCallsites"
       :key="getID(callsite.nid)"
     >
@@ -92,17 +92,13 @@
         </v-col>
       </v-row>
 
-		<v-row wrap class="pa-2">
-			<Statistics 
-				:tData="intersectionCallsites[callsite.name]['tStats']" 
-				:bData="intersectionCallsites[callsite.name]['bStats']" />
-		</v-row>
-		<v-row class="pa-2">
-			<BoxPlot :ref="callsite.id" 
-				:bData="intersectionCallsites[callsite.name]['bBoxplot']" 
-				:tData="intersectionCallsites[callsite.name]['tBoxplot']" 
-				showTarget="false" />
-		</v-row>      
+		<Statistics ref="cc-Statistics"
+			:tData="intersectionCallsites[callsite.name]['tStats']" 
+			:bData="intersectionCallsites[callsite.name]['bStats']" />
+		<BoxPlot 
+			:bData="intersectionCallsites[callsite.name]['bBoxplot']" 
+			:tData="intersectionCallsites[callsite.name]['tBoxplot']" 
+			showTarget="false" />
     </v-container>
   </v-layout>
 </template>
@@ -130,9 +126,7 @@ export default {
 		Statistics
 	},
 	data: () => ({
-		selected: {},
-		id: "auxiliary-function-overview",
-		people: [],
+		id: "ci-overview",
 		title: "Call Site Correspondence",
 		infoSummary: "Call site Correspondence view provides an insight into the runtime distribution among its MPI ranks. Boxplots are calculated to represent the range of the distribution and outliers (dots) correspond to the ranks which are beyond the 1.5*IQR. Additionally, several statistical measures are also provided. The (green) boxplots and dots belong to the target run's statistics. Both matched (callsites in both target and ensemble) and unmatched (callsites not in target but in ensemble) are shown in separate lists",
 		callsites: [],
@@ -144,20 +138,10 @@ export default {
 		textOffset: 25,
 		boxplotHeight: 340,
 		boxplotWidth: 0,
-		duration: 300,
 		iqrFactor: 0.15,
 		outlierRadius: 4,
 		targetOutlierList: {},
 		outlierList: {},
-		callsiteIDMap: {},
-		settings: [
-			{title: "Sort by Inclusive runtime"},
-			{title: "Sort by Exclusive Runtime"},
-		],
-		compareMode: false,
-		selectedModule: "",
-		selectedCallsite: "",
-		informationHeight: 70,
 		revealCallsites: [],
 		targetColor: "",
 		differenceCallsites: {},
@@ -167,12 +151,10 @@ export default {
 		isEntryFunctionSelected: "unselect-callsite",
 		isCalleeSelected: "unselect-callsite",
 		showSplitButton: "false",
-		selectClassName: {},
 		selectedOutlierRanks: {},
 		selectedOutlierDatasets: {},
 		showKNCCallsite: {},
 		showuKNCCallsite: {},
-		selectedMode: "Single",
 		tStats: {},
 		bStats: {},
 		tBoxplot: {},
@@ -186,6 +168,7 @@ export default {
 			selectedMetric: "getSelectedMetric",
 			data: "getEnsembleBoxplots",
 			summary: "getSummary",
+			generalColors: "getGeneralColors",
 		})
 	},
 
@@ -244,9 +227,7 @@ export default {
 
 			this.width = document.getElementById(this.id).clientWidth;
 			this.boxplotWidth = this.width - this.padding.left - this.padding.right;
-			
-			let heightRatio = this.$store.selectedMode == "Ensemble" ? 0.65 : 1.0;
-			this.height = heightRatio * this.$store.viewHeight;
+			this.height = 0.5 * this.$store.viewHeight;
 			document.getElementById(this.id).style.maxHeight = this.height + "px";
 		},
 
@@ -259,10 +240,10 @@ export default {
 			this.numberOfDifferenceCallsites = this.knc["difference"].length;
 
 			this.ensembleColor = d3
-				.rgb(this.$store.distributionColor.ensemble)
+				.rgb(this.generalColors.ensemble)
 				.darker(1);
 			this.targetColor = d3
-				.rgb(this.$store.distributionColor.target)
+				.rgb(this.generalColors.target)
 				.darker(1);
 
 			this.boxplotByMetric();
@@ -356,40 +337,40 @@ export default {
 			return "callsite-correspondence-" + callsiteID;
 		},
 
-		// Code to select the callsite by the component-level button
-		changeSelectedClassName() {
-			event.stopPropagation();
-			let callsite = event.currentTarget.id;
-			// If it was already selected
-			if (this.selectClassName[callsite] == "select-callsite") {
-				this.revealCallsites.splice(this.revealCallsites.indexOf(callsite), 1);
-				event.target.className = "flex text-xs-center unselect-callsite";
-				this.selectClassName[callsite] = "unselect-callsite";
-			} else {
-				this.selectClassName[callsite] = "select-callsite";
-				event.target.className = "flex text-xs-center select-callsite";
-				this.revealCallsites.push(callsite);
-			}
+		// // Code to select the callsite by the component-level button
+		// changeSelectedClassName() {
+		// 	event.stopPropagation();
+		// 	let callsite = event.currentTarget.id;
+		// 	// If it was already selected
+		// 	if (this.selectClassName[callsite] == "select-callsite") {
+		// 		this.revealCallsites.splice(this.revealCallsites.indexOf(callsite), 1);
+		// 		event.target.className = "flex text-xs-center unselect-callsite";
+		// 		this.selectClassName[callsite] = "unselect-callsite";
+		// 	} else {
+		// 		this.selectClassName[callsite] = "select-callsite";
+		// 		event.target.className = "flex text-xs-center select-callsite";
+		// 		this.revealCallsites.push(callsite);
+		// 	}
 
-			if (this.revealCallsites.length == 0) {
-				this.switchIsSelectedCallsite(false);
-			} else {
-				this.switchIsSelectedCallsite(true);
-			}
-			console.debug("Selected callsites: ", this.revealCallsites);
-		},
+		// 	if (this.revealCallsites.length == 0) {
+		// 		this.switchIsSelectedCallsite(false);
+		// 	} else {
+		// 		this.switchIsSelectedCallsite(true);
+		// 	}
+		// 	console.debug("Selected callsites: ", this.revealCallsites);
+		// },
 
-		switchIsSelectedCallsite(val) {
-			this.isCallsiteSelected = val;
-		},
+		// switchIsSelectedCallsite(val) {
+		// 	this.isCallsiteSelected = val;
+		// },
 
-		switchIsSelectedModule(val) {
-			this.isModuleSelected = val;
-		},
+		// switchIsSelectedModule(val) {
+		// 	this.isModuleSelected = val;
+		// },
 
-		selectedClassName(callsite) {
-			return this.selectClassName[callsite];
-		},
+		// selectedClassName(callsite) {
+		// 	return this.selectClassName[callsite];
+		// },
 
 		// Formatting for the html view
 		formatModule(module) {
@@ -612,7 +593,7 @@ export default {
 </script>
 
 <style>
-#auxiliary-function-overview {
+#ci-overview {
   overflow: auto;
 }
 
@@ -640,7 +621,7 @@ export default {
   padding: 2px;
 }
 
-.callsite-information-node {
+.cc-node {
   padding: 10px;
   margin: 3px;
   border-width: 1px;

@@ -38,7 +38,7 @@ export default {
 		"showTarget"
 	],
 	data: () => ({
-		id: "",
+		id: "ci-boxplot",
 		boxContainerID: "",
 		markerContainerID: "",
 		outlierContainerID: "",

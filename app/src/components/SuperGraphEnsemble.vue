@@ -33,21 +33,25 @@
     <v-main class="pa-0 ma-0">
 		<splitpanes id="callgraph-dashboard-2" class="default-theme">
 			<!-- Left column-->
-			<splitpanes horizontal :splitpanes-size="25">
+			<splitpanes horizontal splitpanes-size="25">
 			<ModuleHierarchy ref="ModuleHierarchy" />
 			<EnsembleScatterplot ref="EnsembleScatterplot" />
 			<EnsembleHistogram ref="EnsembleHistogram" />
 			</splitpanes>
 
 			<!-- Center column-->
-			<splitpanes horizontal :splitpanes-size="55">
+			<splitpanes horizontal splitpanes-size="55">
 			<Sankey ref="Sankey" />
 			</splitpanes>
 
 			<!-- Right column-->
-			<splitpanes horizontal :splitpanes-size="20">
-			<CallsiteCorrespondence ref="CallsiteCorrespondence" />
-			<ParameterProjection ref="ParameterProjection" />
+			<splitpanes horizontal splitpanes-size="20" :push-other-panes="true">
+				<pane size="65">
+					<CallsiteCorrespondence ref="CallsiteCorrespondence" />
+				</pane>
+				<pane size="35">
+					<ParameterProjection ref="ParameterProjection" />
+				</pane>
 			</splitpanes>
 		</splitpanes>
     </v-main>

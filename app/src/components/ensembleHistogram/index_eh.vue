@@ -60,7 +60,6 @@ export default {
 		selectedPropSum: 0,
 		x_max_exponent: 0,
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
-		selectedProp: "rank",
 		selectedScale: "Linear"
 	}),
 
@@ -73,7 +72,8 @@ export default {
 			data: "getEnsembleHistogram",
 			showTarget: "getShowTarget",
 			generalColors: "getGeneralColors",
-			selectedProp: "getSelectedProp",
+			selectedProp: "getProp",
+			selectedRunBinCount: "getRunBinCount"
 		})
 	},
 
@@ -97,7 +97,7 @@ export default {
 				dataset: this.selectedTargetRun,
 				node: this.selectedNode["name"],
 				ntype: this.selectedNode["type"],
-				nbins: this.selectedRunBin,
+				nbins: this.selectedRunBinCount,
 			});
 
 			// Assign the height and width of container

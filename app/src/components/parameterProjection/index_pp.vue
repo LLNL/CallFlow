@@ -39,7 +39,7 @@ export default {
 		xMax: 0,
 		yMin: 0,
 		yMax: 0,
-		title: "Parameter Projection",
+		title: "Projection View",
 		colorset: [
 			"#FF7F00",
 			"#16BECF",
