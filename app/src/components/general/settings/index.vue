@@ -66,29 +66,6 @@
       </v-text-field>
     </v-flex>
 
-    <!-- <v-flex xs12 class="ma-1">
-            <v-text-field
-              label="Color minimum (in seconds)"
-              class="mt-0"
-              type="number"
-              v-model="selectedColorMinText"
-              :menu-props="{ maxHeight: '200' }"
-              persistent-hint
-            >
-            </v-text-field>
-          </v-flex>
-          <v-flex xs12 class="ma-1">
-            <v-text-field
-              label="Color maximum (in seconds)"
-              class="mt-0"
-              type="number"
-              v-model="selectedColorMaxText"
-              :menu-props="{ maxHeight: '200' }"
-              persistent-hint
-            >
-            </v-text-field>
-          </v-flex> -->
-
     <template :v-if="selectedMode == 'SG'">
       <v-flex xs12 class="ma-1">
         <v-subheader class="teal lighten-4">Histograms</v-subheader>
@@ -169,7 +146,7 @@
         />
       </v-flex>
 
-      <!-- <v-flex xs12 class="ma-1">
+      <v-flex xs12 class="ma-1">
         <v-text-field
           label="IQR Factor"
           class="mt-0"
@@ -182,7 +159,7 @@
           "
         >
         </v-text-field>
-      </v-flex> -->
+      </v-flex>
     </template>
   </v-col>
 </template>
@@ -195,7 +172,7 @@ import Color from "lib/color/index";
 import {mapActions, mapGetters} from "vuex";
 
 export default {
-	name: "VisualEncoding",
+	name: "Settings",
 
 	data: () => ({
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
@@ -203,51 +180,11 @@ export default {
 		runtimeColorMap: new Color().getAllColors(),
 		distributionColorMap: new Color().getAllColors(),
 		sortByModes: ["min", "mean", "max", "imb", "var", "kert", "skew"],
-		scales: ["Log", "Linear"],
-		selectedScale: "Linear",
-		selectedDistributionColorMap: "Blues",
 		compareModes: ["MEAN_DIFF", "RANK_DIFF"],
 		selectedCompareMode: "MEAN_DIFF",
 		props: ["name", "rank", "dataset"],
-		selectedProp: "dataset",
-		dimensions: ["max_inclusive_time", "max_exclusive_time", "rank_count"],
-		selectedPC1: "max_inclusive_time",
-		selectedPC2: "max_exclusive_time",
-		selectedNumOfClusters: 3,
-		targetColorMap: {
-			Green: "#4EAF4A",
-			Blue: "#4681B4",
-			Brown: "#AF9B90",
-			Red: "#A90400",
-		},
 		targetColors: ["Green", "Blue", "Brown"],
-		selectedTargetColor: "Green",
 	}),
-
-	watch: {
-		selectedTargetColor(val) {
-			this.$store.selectedTargetColor = val;
-			this.reset();
-		},
-
-		async selectedCompareDataset(val) {
-			this.summaryChip = "Diff SuperGraph";
-			this.$store.selectedCompareDataset = val;
-			this.$store.comparisonMode = true;
-			this.$store.encoding = this.selectedCompareMode;
-			const data = await APIService.POSTRequest("compare", {
-				targetDataset: this.$store.selectedTargetDataset,
-				compareDataset: this.$store.selectedCompareDataset,
-				selectedMetric: this.$store.selectedMetric,
-			});
-			this.$refs.SuperGraph.activateCompareMode(data);
-		},
-
-		selectedNumOfClusters(val) {
-			this.$store.selectedNumOfClusters = val;
-			EventHandler.$emit("update-number-of-clusters");
-		},
-	},
 
 	computed: {
 		...mapGetters({
@@ -258,7 +195,9 @@ export default {
 			selectedRunBinCount: "getRunBinCount",
 			selectedRankBinCount: "getRankBinCount",
 			selectedRuntimeSortBy: "getRuntimeSortBy",
-			// selectedIQRFactor: "getIQRFactor"
+			selectedTargetColor: "getTargetColor",
+			selectedIQRFactor: "getIQRFactor",
+			selectedCompareRun: "getCompareRun",
 		}),
 	},
 
@@ -271,7 +210,10 @@ export default {
 			"updateTargetColor",
 			"updateRankBinCount",
 			"updateRunBinCount",
-			"updateRuntimeSortBy"
+			"updateRuntimeSortBy",
+			"updateTargetColor",
+			"updateCompareRun",
+
 		]),
 
 		init() {
