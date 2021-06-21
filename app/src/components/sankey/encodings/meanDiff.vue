@@ -19,7 +19,8 @@ export default {
 	data: () => ({
 		strokeWidth: 7,
 		id: "mean-diff-gradients",
-		meanDiff: {}
+		meanDiff: {},
+		animationDuration: 1000,
 	}),
 
 	methods: {
@@ -85,7 +86,7 @@ export default {
 			// Transition
 			rectangles
 				.transition()
-				.duration(this.$store.transitionDuration)
+				.duration(this.animationDuration)
 				.attrs({
 					"opacity": d => {
 						return 1;

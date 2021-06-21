@@ -26,6 +26,7 @@ export default {
 		id: "minihistogram-overview",
 		offset: 7,
 		bandWidth: 0,
+		selectedScale: "Linear"
 	}),
 
 	computed: {
@@ -86,12 +87,12 @@ export default {
 				freq = data.y;
 			}
 
-			if (this.$store.selectedScale == "Linear") {
+			if (this.selectedScale == "Linear") {
 				this.minimapYScale = d3.scaleLinear()
 					.domain([0, d3.max(freq)])
 					.range([this.$parent.ySpacing - 10, 0]);
 			}
-			else if (this.$store.selectedScale == "Log") {
+			else if (this.selectedScale == "Log") {
 				this.minimapYScale = d3.scaleLog()
 					.domain([0.1, d3.max(freq)])
 					.range([this.$parent.ySpacing, 0]);

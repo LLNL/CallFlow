@@ -61,6 +61,7 @@ export default {
 		x_max_exponent: 0,
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
 		selectedProp: "rank",
+		selectedScale: "Linear"
 	}),
 
 	computed: {
@@ -72,6 +73,7 @@ export default {
 			data: "getEnsembleHistogram",
 			showTarget: "getShowTarget",
 			generalColors: "getGeneralColors",
+			selectedProp: "getSelectedProp",
 		})
 	},
 
@@ -95,7 +97,7 @@ export default {
 				dataset: this.selectedTargetRun,
 				node: this.selectedNode["name"],
 				ntype: this.selectedNode["type"],
-				nbins: 20,
+				nbins: this.selectedRunBin,
 			});
 
 			// Assign the height and width of container
@@ -133,26 +135,6 @@ export default {
 			// this.$refs.ToolTip.init(this.svgID);
 		},
 
-		// dataProcess(data) {
-		// 	let axis_x = [];
-		// 	let dataMin = 0;
-		// 	let dataMax = 0;
-
-		// 	dataMin = Math.min(...data["x"]);
-		// 	dataMax = Math.max(...data["x"]);
-
-		// 	let dataWidth = (dataMax - dataMin) / this.$store.selectedMPIBinCount;
-		// 	if (dataWidth == 0) {
-		// 		dataWidth = 1;
-		// 	}
-
-		// 	for (let i = 0; i < this.$store.selectedBinCount; i++) {
-		// 		axis_x.push(dataMin + i * dataWidth);
-		// 	}
-
-		// 	return [data["x"], data["y"], axis_x];
-		// },
-
 		setupScale() {
 			this.hist_data = this.data[this.selectedMetric][this.selectedProp];
 
@@ -164,13 +146,13 @@ export default {
 				.domain(this.hist_data["x"])
 				.rangeRound([0, this.xAxisHeight]);
 
-			if (this.$store.selectedScale == "Linear") {
+			if (this.selectedScale == "Linear") {
 				this.yScale = d3
 					.scaleLinear()
 					.domain([0, this.hist_data["rel_y_max"]])
 					.range([this.yAxisHeight, this.padding.top]);
 				this.logScaleBool = false;
-			} else if (this.$store.selectedScale == "Log") {
+			} else if (this.selectedScale == "Log") {
 				this.yScale = d3
 					.scaleLog()
 					.domain([0.1, this.hist_data["rel_y_max"]])
@@ -180,11 +162,11 @@ export default {
 		},
 
 		setTitle() {
-			if (this.$store.selectedProp == "rank") {
+			if (this.selectedProp == "rank") {
 				this.selectedPropLabel = "Ranks";
-			} else if (this.$store.selectedProp == "name") {
+			} else if (this.selectedProp == "name") {
 				this.selectedPropLabel = "Callsites";
-			} else if (this.$store.selectedProp == "dataset") {
+			} else if (this.selectedProp == "dataset") {
 				this.selectedPropLabel = "Runs";
 			}
 
@@ -341,17 +323,17 @@ export default {
 				.axisLeft(this.yScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
-					if (this.$store.selectedProp == "rank") {
+					if (this.selectedProp == "rank") {
 						if (d == 1) {
 							return d;
 						} else if (d % 10 == 0) {
 							return d;
 						}
-					} else if (this.$store.selectedProp == "dataset") {
+					} else if (this.selectedProp == "dataset") {
 						if (d % 1 == 0) {
 							return d;
 						}
-					} else if (this.$store.selectedProp == "name") {
+					} else if (this.selectedProp == "name") {
 						if (d % 1 == 0) {
 							return d;
 						}
@@ -359,13 +341,13 @@ export default {
 				});
 
 			let yAxisText = "";
-			if (this.$store.selectedProp == "name") {
+			if (this.selectedProp == "name") {
 				yAxisText = "Number of Callsites";
-			} else if (this.$store.selectedProp == "dataset") {
+			} else if (this.selectedProp == "dataset") {
 				yAxisText = "Number of Runs";
-			} else if (this.$store.selectedProp == "rank") {
+			} else if (this.selectedProp == "rank") {
 				yAxisText = "Number of Ranks";
-			} else if (this.$store.selectedProp == "all_ranks") {
+			} else if (this.selectedProp == "all_ranks") {
 				yAxisText = "Number of Processes";
 			}
 

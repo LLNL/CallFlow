@@ -78,7 +78,8 @@ export default new Vuex.Store({
 		numOfClusters: 3,
 
 		runtimeSortBy: "mean",
-		hierarchy: {}
+		hierarchy: {},
+		prop: "rank",
 	},
 
 	mutations: {
@@ -176,6 +177,10 @@ export default new Vuex.Store({
 
 		setHierarchy(state, payload) {
 			state.hierarchy = payload;
+		},
+
+		setSelectedProp(state, payload) {
+			state.prop = payload;
 		}
 	},
 	
@@ -400,5 +405,6 @@ export default new Vuex.Store({
 		getRuntimeSortBy: state => state.runtimeSortBy,
 		getIQRFactor: state => state.IQRFactor,
 		getHierarchy: state => state.hierarchy,
+		getProp: state => state.prop,
 	}
 });
