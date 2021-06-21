@@ -140,7 +140,8 @@ export default {
 	mounted() {
 		let self = this;
 
-		EventHandler.$on("single-boxplots", () =>  {
+		EventHandler.$on("reset-single-boxplots", () =>  {
+			self.init();
 			self.visualize();
 		});
 

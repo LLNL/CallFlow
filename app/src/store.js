@@ -301,7 +301,11 @@ export default new Vuex.Store({
 
 		updateRuntimeSortBy({ state, dispatch }, payload) {
 			state.runtimeSortBy = payload;
-			EventHandler.$emit("boxplot-sort-by");
+			if (state.selectedMode === "SG") {
+				EventHandler.$emit("callsite-information-sort");
+			} else if (state.selectedMode === "ESG") {
+				EventHandler.$emit("callsite-correspondence-sort");
+			}
 		},
 
 		reset({state}) {

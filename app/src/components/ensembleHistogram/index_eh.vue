@@ -21,6 +21,7 @@ import { mapGetters } from "vuex";
 
 // Local library imports
 import * as utils from "lib/utils";
+import EventHandler from "lib/routing/EventHandler";
 
 import InfoChip from "../general/infoChip";
 
@@ -78,6 +79,14 @@ export default {
 		data: function () {
 			this.visualize();
 		}
+	},
+
+	mounted() {
+		let self = this;
+		EventHandler.$on("reset-ensemble-histogram", function() {
+			self.clear();
+			self.init();
+		});
 	},
 
 	methods: {

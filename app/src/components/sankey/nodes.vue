@@ -188,11 +188,15 @@ export default {
 		click(node) {
 			event.stopPropagation();
 
-			if (node !== this.selectedNode) {
+			console.log(node.id, node.type, this.selectedNode.name, this.selectedNode.type);
+
+			if (node.id !== this.selectedNode.name || node.type !== this.selectedNode.type) {
+				
 				// Set the data.
-				this.$store.selectedNode = node;
-				this.$store.selectedModule = node.module;
-				this.$store.selectedName = node.name;
+				this.$store.commit("setSelectedNode", {
+					name: node.id,
+					type: node.type
+				});
 
 				const nodeSVG = this.containerG.select("#callsite-" + node.id);
 
@@ -203,19 +207,9 @@ export default {
 						this.drawGuidesMap[node.id] = true;
 					}
 					
-					EventHandler.$emit("ensemble-histogram", {
-						node,
-						datasets: this.$store.selectedDatasets,
-					});
-
-					EventHandler.$emit("ensemble-scatterplot", {
-						node,
-						dataset1: this.$store.selectedDatasets,
-					});
-
-					EventHandler.$emit("ensemble-select-module", {
-						module: this.$store.selectedModule,
-					});
+					EventHandler.$emit("reset-ensemble-histogram");
+					EventHandler.$emit("reset-ensemble-scatterplot");
+					EventHandler.$emit("reset-ensemble-boxplots");
 
 					APIService.POSTRequest("module_hierarchy", {
 						node,
@@ -225,24 +219,10 @@ export default {
 
 				}
 				else if (this.selectedMode == "SG") {
-					EventHandler.$emit("single-histogram", {
-						node,
-						groupBy: this.$store.selectedGroupBy,
-						dataset: this.$store.selectedTargetDataset,
-					});
-
-					// EventHandler.$emit("single-scatterplot", {
-					// 	node,
-					// 	dataset: this.$store.selectedTargetDataset,
-					// });
-
-					// TODO: Bring this back.
-					// EventHandler.$emit("single-select-module", {
-					// 	node,
-					// });
+					EventHandler.$emit("reset-single-histogram");
+					EventHandler.$emit("reset-single-scatterplot");
+					EventHandler.$emit("reset-single-boxplots");
 				}
-
-				// EventHandler.$emit("show-target-auxiliary", {});
 			}
 		},
 

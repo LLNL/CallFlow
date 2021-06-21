@@ -210,26 +210,14 @@ export default {
 			self.highlight(datasets);
 		});
 
-		EventHandler.$on("ensemble-select-module", (data) => {
-			let thismodule = data["module"];
-			// self.selectCallsitesByModule(thismodule)
-			this.isModuleSelected = true;
-			self.selectModule(thismodule);
-		});
 
 		EventHandler.$on("callsite-correspondence-sort", (val) => {
-			self.$store.selectedRuntimeSortBy = val;
-			self.differenceCallsites = self.sortByAttribute(
-				self.knc["difference"],
-				val,
-			);
-			self.intersectionCallsites = self.sortByAttribute(
-				self.knc["intersection"],
-				val,
-			);
+			self.clear();
+			self.visualize();
 		});
 
-		EventHandler.$on("ensemble-boxplots", () =>  {
+		EventHandler.$on("reset-ensemble-boxplots", () =>  {
+			self.init();
 			self.visualize();
 		});
 	},
@@ -237,7 +225,6 @@ export default {
 	methods: {
 		init() {
 			const summary = this.summary[this.selectedTargetRun];
-			console.log(this.summary);
 			let callsites = [];
 			if (this.selectedNode["type"] == "module") {
 				const module_name = this.selectedNode["name"];
@@ -278,41 +265,9 @@ export default {
 				.rgb(this.$store.distributionColor.target)
 				.darker(1);
 
-			// this.setStates();
 			this.boxplotByMetric();
 			// this.borderColorByMetric()
 		},
-
-		// setStates() {
-		// 	this.callsites = this.$store.data_cs["ensemble"];
-		// 	this.targetCallsites = this.$store.data_cs[this.$store.selectedTargetDataset];
-
-		// 	this.knc = this.KNC();
-
-		// 	this.numberOfDifferenceCallsites = Object.keys(
-		// 		this.knc["difference"],
-		// 	).length;
-		// 	this.numberOfIntersectionCallsites = Object.keys(
-		// 		this.knc["intersection"],
-		// 	).length;
-
-		// 	this.differenceCallsites = this.sortByAttribute(
-		// 		this.knc["difference"],
-		// 		this.selectedMetric,
-		// 	);
-		// 	this.intersectionCallsites = this.sortByAttribute(
-		// 		this.knc["intersection"],
-		// 		this.selectedMetric,
-		// 	);
-
-		// 	this.intersectionCallsites = this.hideAllCallsites(
-		// 		this.intersectionCallsites,
-		// 	);
-		// 	this.differenceCallsites = this.hideAllCallsites(
-		// 		this.differenceCallsites,
-		// 	);
-
-		// },
 
 		/**
 		 * Sort the callsite ordering based on the attribute.
@@ -518,7 +473,9 @@ export default {
 			);
 		},
 
-		clear() {},
+		clear() {
+			EventHandler.$emit("clear-boxplot");
+		},
 
 		dataset(idx) {
 			return this.labels[idx];
