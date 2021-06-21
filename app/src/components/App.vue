@@ -50,28 +50,10 @@ export default {
 	mounted() {
 		document.title = "CallFlow";
 
-		this.setGlobalVariables(); // Set the general variables in the store.
 		this.setViewDimensions(); // Set the view dimensions.	
 	},
 
 	methods: {
-		setGlobalVariables() {
-			console.log("[App] Set global variables.");
-			this.$store.selectedProp = "rank";
-		
-			// Shoud be specified in the CSS, not here.
-			this.$store.fontSize = 14;
-			this.$store.transitionDuration = 1000;
-				
-			// Histogram properties
-			this.$store.selectedScale = "Linear";
-
-			// Color properties
-			this.$store.runtimeColor = new Color("OrRd");
-
-			// Ensemble color properites
-			this.$store.distributionColor = new Color("Greens");
-		},
 		setViewDimensions() {
 			console.log("[App] Set view dimensions.");
 

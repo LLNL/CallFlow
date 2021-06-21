@@ -57,7 +57,8 @@ export default {
 		graph: null,
 		nidNameMap: {},
 		intermediateColor: "#d9d9d9",
-		drawGuidesMap: {}
+		drawGuidesMap: {},
+		fontSize: 14,
 	}),
 
 	computed: {
@@ -344,7 +345,7 @@ export default {
 							return d.id;
 						}
 
-						let characterCount = d.height / this.$store.fontSize;
+						let characterCount = d.height / this.fontSize;
 						return utils.truncNames(d.id, characterCount);
 					}
 				});
