@@ -23,7 +23,7 @@ export default {
 		textxOffset: 20,
 		textyOffset: 20,
 		textPadding: 13,
-		offset: 10,
+		offset: 15,
 		fontSize: 12,
 	}),
 
@@ -64,7 +64,7 @@ export default {
 					"rx": "10px",
 					"fill-opacity": 1,
 					"width": measure.width + 20,
-					"height": measure.height,
+					"height": measure.height / 1.5 + this.offset,
 				})
 				.attrs({
 					"x": () => {

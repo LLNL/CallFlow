@@ -224,15 +224,12 @@ export default {
 				// Set the data for the boxplot.
 				this.boxplot[callsite_name] = {"q": callsite["q"], "outliers": callsite["outliers"], "nid": callsite["nid"]};
 
-				// EventHandler.$emit("init-boxplot");
-
 				// Set the selection for a callsite. 
 				this.selectClassName[callsite_name] = "unselect-callsite";
 
 				// Set the border color of the container.
 				this.borderColorByMetric(callsite);
 			}
-
 		},
 
 		/**
@@ -373,12 +370,7 @@ export default {
      *
      */
 		clear() {
-			// this.boxplot = {};
-			// this.$refs.BoxPlot.clear();
-			// d3.selectAll(".callsite-information-node").remove();
-			// for (let callsite in this.callsites) {
 			EventHandler.$emit("clear-boxplot");
-			// }
 		},
 
 		/**
