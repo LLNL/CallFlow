@@ -56,7 +56,7 @@
 			<Statistics :tData="stats[callsite.name]" />
 		</v-row>
 		<v-row class="pa-2">
-			<BoxPlot :data="boxplot[callsite.name]" /> 
+			<BoxPlot ref="BoxPlot" :data.sync="boxplot[callsite.name]" /> 
 		</v-row>
     </v-container>
   </v-layout>
@@ -224,12 +224,15 @@ export default {
 				// Set the data for the boxplot.
 				this.boxplot[callsite_name] = {"q": callsite["q"], "outliers": callsite["outliers"], "nid": callsite["nid"]};
 
+				// EventHandler.$emit("init-boxplot");
+
 				// Set the selection for a callsite. 
 				this.selectClassName[callsite_name] = "unselect-callsite";
 
 				// Set the border color of the container.
 				this.borderColorByMetric(callsite);
 			}
+
 		},
 
 		/**
@@ -370,9 +373,12 @@ export default {
      *
      */
 		clear() {
-			for (let callsite in this.callsites) {
-				EventHandler.$emit("hide-mpi-boxplot", this.callsites[callsite]);
-			}
+			// this.boxplot = {};
+			// this.$refs.BoxPlot.clear();
+			// d3.selectAll(".callsite-information-node").remove();
+			// for (let callsite in this.callsites) {
+			EventHandler.$emit("clear-boxplot");
+			// }
 		},
 
 		/**

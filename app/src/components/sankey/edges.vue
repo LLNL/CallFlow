@@ -54,7 +54,6 @@ export default {
 				}
 			}
 			else if (this.selectedMode == "SG") {
-				console.log("here");
 				this.initEdges("single");
 				this.drawEdges("single");
 			}

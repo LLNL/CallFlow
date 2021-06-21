@@ -60,8 +60,6 @@ import "splitpanes/dist/splitpanes.css";
 
 // Local library imports
 import EventHandler from "lib/routing/EventHandler";
-import Color from "lib/color/";
-import * as utils from "lib/utils";
 
 // Super graph dashboard imports
 import SingleScatterplot from "./singleScatterplot/index_ss";

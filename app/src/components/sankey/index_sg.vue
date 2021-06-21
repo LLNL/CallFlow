@@ -295,6 +295,7 @@ export default {
 		 * Adds the intermediate nodes and edges to the SuperGraph.
 		 */
 		_add_intermediate(nodes, edges) {
+			this.existingIntermediateNodes = {};
 			const temp_nodes = nodes.slice();
 			const temp_edges = edges.slice();
 
@@ -382,7 +383,7 @@ export default {
 					if (j == shift_level) {
 						edges[i].original_target = target;
 					}
-					edges[i].target_data = nodes[intermediate_idx];
+					// edges[i].target_data = nodes[intermediate_idx];
 					
 					// console.debug(`[SuperGraph] Updating this edge: ${edges[i]}`);
 					

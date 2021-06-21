@@ -64,8 +64,8 @@ export default {
 		boxWidth: 0,
 		dataReady: false,
 		idPrefix: "boxplot-",
-
 	}),
+
 	components: {
 		Box,
 		Outliers,
@@ -76,11 +76,25 @@ export default {
 	mounted() {
 		this.init();
 		let self = this;
-
-		EventHandler.$on("single-refresh-boxplot", (data) => {
+		EventHandler.$emit("clear-boxplot", function () {
 			self.clear();
-			self.init();
 		});
+	},
+
+	watch: {
+		data: {
+			immediate: true,
+			deep: true,
+			handler(newValue, oldValue) {
+				console.log(newValue, oldValue);
+				if (this.dataReady) {
+					this.clear();
+				}
+				else {
+					this.init();
+				}
+			}
+		}
 	},
 
 	computed: {
@@ -121,15 +135,18 @@ export default {
 				.range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
 
 			this.dataReady = true;
+
+			console.log(this.dataReady);
 		},
 
 		/**
 		 * Clear the components.
 		 */
 		clear() {
-			this.$refs.Box.clear();
-			this.$refs.Markers.clear();
-			this.$refs.Outliers.clear();
+			this.dataReady = false;
+			// this.$refs.Box.clear();
+			// this.$refs.Markers.clear();
+			// this.$refs.Outliers.clear();
 		},
 
 		/**

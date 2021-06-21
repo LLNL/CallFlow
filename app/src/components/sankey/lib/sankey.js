@@ -142,12 +142,8 @@ export default function Sankey() {
 		let idx = 0, node;
 		nodes.forEach(function (node) {
 			nodeMap[node.id] = node;
-			// if (debug) {
-			// 	console.debug("[Assign Link ids] ", node.id, "with index: ", idx);
-			// }
 			idx += 1;
 		});
-
 		links.forEach(function (link) {
 			if (nodeMap[link.source] == undefined) {
 				nodeMap[link.source] = idx;
@@ -173,6 +169,7 @@ export default function Sankey() {
 			node["maxLinkVal"] = 0;
 			node["minLinkVal"] = 1000000000000000;
 		});
+
 		links.forEach(function (link) {
 			link.source_data.sourceLinks.push(link);
 			link.source_data.maxLinkVal = Math.max(link.source_data.maxLinkVal, link["attr_dict"]["weight"]);
