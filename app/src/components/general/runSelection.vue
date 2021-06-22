@@ -103,7 +103,7 @@ export default {
 				console.log("Enable comparison");
 				this.$store.commit("setComparisonMode", true);
 				this.$store.commit("setSelectedCompareRun", data);
-				this.$store.dispatch("reset");
+				this.$store.dispatch("updateNodeEncoding");
 			}
 		},
 	},

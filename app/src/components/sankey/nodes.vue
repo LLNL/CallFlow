@@ -77,7 +77,7 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("update-encoding", function (data) {
+		EventHandler.$on("update-node-encoding", function (data) {
 			self.clear();
 			self.init(self.graph);
 		});

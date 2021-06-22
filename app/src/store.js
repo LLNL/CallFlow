@@ -372,8 +372,8 @@ export default new Vuex.Store({
 			state.commit("setIsComparisonMode", payload);
 		},
 
-		updateEncoding({ state, dispatch }, payload) {
-			EventHandler.$emit("update-encoding");
+		updateNodeEncoding() {
+			EventHandler.$emit("update-node-encoding");
 		},
 
 		reset({state}) {

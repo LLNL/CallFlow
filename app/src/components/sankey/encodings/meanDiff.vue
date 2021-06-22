@@ -91,13 +91,23 @@ export default {
 				.attrs({
 					"opacity": 1,
 					"height": d => d.height,
+					"stroke-width": 3,
 				})
-				.style("stroke", 1)
 				.style("fill", (d, i) => {
-					console.log(d.id, this.meanDiff);
-					let color = d3.rgb(this.$store.diffColor.getColorByValue((this.meanDiff[d.id])));
-					return color;
+					return d3.rgb(this.$store.diffColor.getColorByValue((this.meanDiff[d.id])));
 				});
+
+			let texts = this.containerG.selectAll(".callsite-text")
+				.data(this.nodes);
+			
+			texts
+				.transition()
+				.duration(this.animationDuration)
+				.style("fill", d => {
+					let hex = this.$store.diffColor.getColorByValue(this.meanDiff[d.id]);
+					return this.$store.diffColor.setContrast(hex);
+				});
+
 		},
 
 		clear() {
