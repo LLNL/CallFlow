@@ -11,7 +11,6 @@
 
 <script>
 import * as d3 from "d3";
-import * as utils from "lib/utils";
 import { mapGetters } from "vuex";
 
 export default {
@@ -92,8 +91,6 @@ export default {
 				.attr("x2", "0%")
 				.attr("y2", "100%");
 
-			
-
 			const grid = d.attr_dict["gradients"][metric]["hist"]["b"];
 			const val = d.attr_dict["gradients"][metric]["hist"]["h"];	
 
@@ -107,6 +104,10 @@ export default {
 
 			return "url(#mean-gradient" + nid + ")";
 		},
+
+		clear() {
+			d3.select("#" + this.id).remove();
+		}
 	},
 };
 </script>

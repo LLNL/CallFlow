@@ -95,7 +95,6 @@ export default {
 				console.log("Disable comparison");
 				this.$store.commit("setComparisonMode", false);
 				this.$store.commit("setSelectedCompareRun", "");
-				this.$store.commit("setEncoding", "MEAN_GRADIENTS");
 				this.$store.dispatch("reset");
 			}
 			else {
@@ -104,9 +103,7 @@ export default {
 				console.log("Enable comparison");
 				this.$store.commit("setComparisonMode", true);
 				this.$store.commit("setSelectedCompareRun", data);
-				this.$store.commit("setEncoding", "MEAN_DIFF");
-				this.$store.dispatch("fetchCompare");
-				this.$store.commit("updateEncoding");
+				this.$store.dispatch("reset");
 			}
 		},
 	},
