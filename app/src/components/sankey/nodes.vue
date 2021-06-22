@@ -141,7 +141,7 @@ export default {
 		// Attach the svg into the node object. 
 		postVis() {
 			for (let node of this.graph.nodes) {
-				node.svg = this.containerG.select("#callsite-" + node.id);
+				node.svg = this.containerG.select("#callsite-" + node.attr_dict.nid);
 			}
 		},
 
