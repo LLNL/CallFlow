@@ -129,8 +129,8 @@ export default {
 
 			// TODO: Fix this.
 			if (this.showTarget && this.selectedMode === "ESG") {
-				this.$refs.TargetLine.init(this.graph.nodes);
-				this.$refs.Guides.init(this.graph.nodes);
+				this.$refs.TargetLine.init(this.graph.nodes, this.containerG);
+				this.$refs.Guides.init(this.graph.nodes, this.containerG);
 				this.targetPath();
 			}
 		
@@ -191,7 +191,7 @@ export default {
 
 			this.nodesSVG.append("rect")
 				.attrs({
-					"id": (d) => { return d.attr_dict.nid + " callsite-rect" + d.attr_dict.nid; },
+					"id": (d) => { return "callsite-rect" + d.attr_dict.nid; },
 					"class": "callsite-rect",
 					"height": (d) => d.height,
 					"width": this.nodeWidth,

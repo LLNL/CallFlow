@@ -26,41 +26,44 @@ export default {
 			selectedTargetRun: "getSelectedTargetRun",
 			generalColors: "getGeneralColors",
 			selectedMetric: "getSelectedMetric",
+			selectedRunBinCount: "getRunBinCount",
 		})
 	},
 
 	methods: {
-		init(nodes) {
+		init(nodes, containerG) {
 			this.nodes = nodes;
-
-			for (let node of nodes) {
-				this.visualize(node);
-			}
+			this.containerG = containerG;
+			this.visualize();
 		},
 
-		visualize(node) {
-			if(node.type == "intermediate") {
-				return;
-			}
-			
-			const gradients = node.attr_dict.gradients[this.selectedMetric];
-			const targetPos = gradients["dataset"]["position"][this.selectedTargetRun];
-			const binWidth = node.height / (this.selectedRunBinCount);
-			const y = binWidth * targetPos;
+		visualize() {
+			const callsites = this.containerG
+				.selectAll(".callsite")
+				.data(this.nodes);
 
-			node.svg
+			callsites
 				.append("line")
 				.attrs({
 					"class": "targetLines",
-					"id": "line-2-" + this.selectedTargetRun + "-" + node.attr_dict.nid,
+					"id": (d) => "line-2-" + this.selectedTargetRun + "-" + d.attr_dict.nid,
 					"x1": 0,
-					"y1": y,
+					"y1": (d) => this.getTargetPos(d),
 					"x2": this.$parent.nodeWidth,
-					"y2": y,
+					"y2": (d) => this.getTargetPos(d),
 					"stroke-width": 5,
 					"stroke": this.generalColors.target
 				});
+		},
 
+		getTargetPos(node) {
+			if(node.type == "intermediate") {
+				return;
+			}
+			const gradients = node.attr_dict.gradients[this.selectedMetric];
+			const targetPos = gradients["dataset"]["position"][this.selectedTargetRun];
+			const binWidth = node.height / (this.selectedRunBinCount);
+			return binWidth * targetPos;
 		},
 
 		clear() {
