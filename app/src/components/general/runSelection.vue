@@ -29,6 +29,7 @@
 				v-model="compareRun"
 				:menu-props="{maxHeight: '400'}"
 				@input="updateCompareRun"
+				:disabled={isComparisonMode}
 			>
 				<template slot="selection" slot-scope="{item}">
 					{{ datasets.indexOf(item) + 1 }}. {{ item }} -
@@ -70,6 +71,7 @@ export default {
 			compareRun: "getSelectedCompareRun",
 			selectedMetric: "getSelectedMetric",
 			selectedMode: "getSelectedMode",
+			isComparisonMode: "getComparisonMode",
 		})
 	},
 
