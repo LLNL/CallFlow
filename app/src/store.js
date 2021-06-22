@@ -98,6 +98,8 @@ export default new Vuex.Store({
 		// Compare mode
 		selectedCompareRun: "",
 		compareData: {},
+
+		encoding: "MEAN",
 	},
 
 	mutations: {

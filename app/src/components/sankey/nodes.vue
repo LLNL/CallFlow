@@ -74,6 +74,14 @@ export default {
 		})
 	},
 
+	mounted() {
+		let self = this;
+		EventHandler.$on("update-encoding", function (data) {
+			self.clear();
+			self.init(self.graph);
+		});
+	},
+
 	methods: {
 		init(graph) {
 			this.graph = graph;
@@ -113,7 +121,7 @@ export default {
 			this.rectangle();
 			this.postVis();
 
-			this.setEncoding(this.encoding);
+			this.setEncoding();
 
 			this.ensemblePath();
 			this.text();
@@ -140,18 +148,25 @@ export default {
 			d3.selectAll(".callsite").remove();
 		},
 
-		setEncoding(encoding, data) {
-			if (encoding == "MEAN") {
+		setEncoding(data) {
+			if (this.selectedMode == "SG") {
+				this.$store.commit("setEncoding", "MEAN");
+			} else if (this.selectedMode == "ESG") {
+				this.$store.commit("setEncoding", "MEAN_GRADIENTS");
+			}
+
+			console.log("Node encoding: ", this.encoding, this.selectedMode);
+			if (this.encoding == "MEAN") {
 				this.$refs.Mean.init(this.graph.nodes, this.containerG);
 			}
-			else if (encoding == "MEAN_GRADIENTS") {
+			else if (this.encoding == "MEAN_GRADIENTS") {
 				this.$refs.MeanGradients.init(this.graph.nodes, this.containerG);
 			}
-			else if (encoding == "MEAN_DIFF") {
-				this.$refs.MeanDiff.init(this.graph.nodes, this.containerG, this.compareData);
+			else if (this.encoding == "MEAN_DIFF") {
+				this.$refs.MeanDiff.init(this.graph.nodes, this.containerG, data);
 			}
-			else if (encoding == "RANK_DIFF") {
-				this.$refs.RankDiff.init(this.graph.nodes, this.containerG, this.compareData);
+			else if (this.encoding == "RANK_DIFF") {
+				this.$refs.RankDiff.init(this.graph.nodes, this.containerG, data);
 			}
 		},
 
