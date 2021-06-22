@@ -7,46 +7,53 @@
 
 <template>
   <div id="inspire">
-    <Toolbar ref="ToolBar" :isSettingsOpen.sync="isSettingsOpen"
-    v-if="Object.keys(metricTimeMap).length > 0" />
+    <Toolbar
+      ref="ToolBar"
+      :isSettingsOpen.sync="isSettingsOpen"
+      v-if="Object.keys(metricTimeMap).length > 0"
+    />
     <v-navigation-drawer v-model.lazy="isSettingsOpen" fixed>
       <v-card fill-height>
         <v-col>
-			<v-row>
-				<v-icon color="teal">settings</v-icon>
-				<v-col cols="9" class="center teal--text">SETTINGS</v-col>
-				<v-btn icon>
-					<v-icon v-on:click="closeSettings()">close</v-icon>
-				</v-btn>
-			</v-row>
-			<v-row align="center" justify="space-around">
-				<v-btn class="mx-0" icon>
-					Reload
-					<v-icon v-on:click="reset()">refresh</v-icon>
-				</v-btn>
-			</v-row>
-		</v-col>
+          <v-row>
+            <v-icon color="teal">settings</v-icon>
+            <v-col cols="9" class="center teal--text">SETTINGS</v-col>
+            <v-btn icon>
+              <v-icon v-on:click="closeSettings()">close</v-icon>
+            </v-btn>
+          </v-row>
+          <v-row align="center" justify="space-around">
+            <v-btn class="mx-0" icon>
+              Reload
+              <v-icon v-on:click="reset()">refresh</v-icon>
+            </v-btn>
+          </v-row>
+        </v-col>
       </v-card>
-	<Settings ref="Settings"/>
+      <Settings ref="Settings" />
     </v-navigation-drawer>
 
     <v-row class="pa-0 ma-0">
       <splitpanes id="callgraph-dashboard" class="default-theme">
         <!-- Left column-->
         <splitpanes horizontal :splitpanes-size="25">
-          <SingleHistogram ref="SingleHistogram" />
-          <SingleScatterplot ref="SingleScatterplot" />
+          <pane>
+            <SingleHistogram ref="SingleHistogram" />
+          </pane>
+          <pane>
+            <SingleScatterplot ref="SingleScatterplot" />
+          </pane>
         </splitpanes>
 
         <!-- Center column-->
-        <splitpanes horizontal :splitpanes-size="55">
+        <!-- <splitpanes horizontal :splitpanes-size="55">
           <Sankey ref="Sankey" />
-        </splitpanes>
+        </splitpanes> -->
 
         <!-- Right column-->
-        <splitpanes horizontal :splitpanes-size="20">
+        <!-- <splitpanes horizontal :splitpanes-size="20">
           <CallsiteInformation ref="CallsiteInformation" />
-        </splitpanes>
+        </splitpanes> -->
       </splitpanes>
     </v-row>
   </div>
@@ -54,8 +61,8 @@
 
 <script>
 // Library imports
-import { mapGetters } from "vuex";
-import Splitpanes from "splitpanes";
+import {mapGetters} from "vuex";
+import {Splitpanes, Pane} from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
 // Local library imports
@@ -73,13 +80,14 @@ export default {
 	name: "SuperGraph",
 	components: {
 		Splitpanes,
+		Pane,
 		Toolbar,
 		// Generic components
-		Sankey,
+		// Sankey,
 		// Single supergraph components.
 		SingleScatterplot,
 		SingleHistogram,
-		CallsiteInformation,
+		// CallsiteInformation,
 		Settings,
 	},
 
@@ -89,10 +97,10 @@ export default {
 	}),
 
 	computed: {
-		...mapGetters({ 
+		...mapGetters({
 			summary: "getSummary",
 			metricTimeMap: "getMetricTimeMap",
-		})
+		}),
 	},
 
 	beforeCreate() {
@@ -118,7 +126,7 @@ export default {
 
 		selectedMode: function (val) {
 			this.selectedMode = val;
-		}
+		},
 	},
 
 	methods: {
