@@ -100,6 +100,7 @@ export default {
 			runtimeColorMap: "getRuntimeColorMap",
 			distributionColorMap: "getDistributionColorMap",
 			targetColorMap: "getTargetColorMap",
+			isComparisonMode: "getComparisonMode",
 		})
 	},
 
@@ -115,7 +116,31 @@ export default {
 			this.singleColors();
 			this.ensembleColors();
 			this.visualize();
-		}
+		},
+
+		compare_data: function (val) {
+			// console.log("[Comparison] Data:", data);
+			// this.clearEncoding("MEAN_GRADIENTS");
+			// // this.clearZeroLine()
+			// d3.selectAll(".target-path").remove();
+			// // Clear target lines. 
+			// if (this.$store.showTarget) {
+			// 	this.$refs.TargetLine.clear();
+			// }
+			// d3.selectAll(".histogram-bar-target").remove();
+			// d3.selectAll("#ensemble-edge-target").remove();
+			// // remove target legend
+			// d3.selectAll(".legend").remove();
+			// d3.selectAll(".legend-text").remove();
+			// // // remove ensemble legend
+			// // d3.selectAll(".ensemble-circle-legend").remove();
+			// // d3.selectAll(".ensemble-circle-legend-text").remove();
+			// // remove colormap container
+			// d3.selectAll(".colormap").remove();
+			// this.setEncoding(this.$store.encoding, data);
+
+			// this.compareData = val;
+		},
 	},
 
 	mounted() {

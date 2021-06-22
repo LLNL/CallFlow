@@ -70,6 +70,7 @@ export default {
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMetric: "getSelectedMetric",
 			selectedNode: "getSelectedNode",
+			compareData: "getCompareData",
 		})
 	},
 
@@ -117,14 +118,13 @@ export default {
 			this.ensemblePath();
 			this.text();
 
+			// TODO: Fix this.
 			if (this.showTarget && this.selectedMode === "ESG") {
 				this.$refs.TargetLine.init(this.graph.nodes);
 				this.$refs.Guides.init(this.graph.nodes);
-			}
-
-			if (this.selectedMode == "DSG") {
 				this.targetPath();
 			}
+		
 
 			this.$refs.ToolTip.init(this.$parent.id);
 		},
@@ -148,10 +148,10 @@ export default {
 				this.$refs.MeanGradients.init(this.graph.nodes, this.containerG);
 			}
 			else if (encoding == "MEAN_DIFF") {
-				this.$refs.MeanDiff.init(this.graph.nodes, this.containerG, data);
+				this.$refs.MeanDiff.init(this.graph.nodes, this.containerG, this.compareData);
 			}
 			else if (encoding == "RANK_DIFF") {
-				this.$refs.RankDiff.init(this.graph.nodes, this.containerG, data);
+				this.$refs.RankDiff.init(this.graph.nodes, this.containerG, this.compareData);
 			}
 		},
 

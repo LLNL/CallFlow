@@ -34,6 +34,8 @@ class DiffView:
         assert isinstance(dataset1, str) and isinstance(dataset2, str)
         assert isinstance(col, str)
 
+        self.sg = esg
+
         self.df1 = esg.df_lookup_with_column("dataset", dataset1)
         self.df2 = esg.df_lookup_with_column("dataset", dataset2)
         self.dataset1 = dataset1
@@ -118,7 +120,7 @@ class DiffView:
         mean1 = np.mean(data1) if len(data1) > 0 else 0
         mean2 = np.mean(data2) if len(data2) > 0 else 0
 
-        mean_diff = DiffView._mean_difference(module)
+        mean_diff = DiffView._mean_difference(self.df1, self.df2, module)
         LOGGER.debug(f"Mean differences {mean_diff}")
 
         # now, need to compute the histogram
@@ -126,7 +128,7 @@ class DiffView:
         hist_grid = histogram(diff, bins=num_of_bins)
 
         result = {
-            "name": module,
+            "name": self.sg.get_name(module, "module"),
             "mean1": mean1,
             "mean2": mean2,
             "dataset": list(set(dataset)),
