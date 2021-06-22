@@ -28,6 +28,7 @@ export default {
 			distributionColorMap: "getDistributionColorMap",
 			selectedTargetRun: "getSelectedTargetRun",
 			targetColorMap: "getTargetColorMap",
+			generalColors: "getGeneralColors",
 		})
 	},
 
@@ -63,7 +64,7 @@ export default {
 
 		stroke_by_metric(d, metric) {
 			if (d.attr_dict.type == "intermediate") {
-				return this.$store.runtimeColor.intermediate;
+				return this.generalColors.intermediate;
 			} else if (d.attr_dict.type == "callsite") {
 				return d3.rgb(this.$store.runtimeColor.getColor(d, metric));
 			} else if (d.attr_dict.type == "module") {

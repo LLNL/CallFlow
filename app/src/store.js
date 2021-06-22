@@ -54,7 +54,7 @@ export default new Vuex.Store({
 		},
 		selectedColorPoint: 9,
 		runtimeColorMap: "OrRd",
-		distributionColorMap: "YlGnBu",
+		distributionColorMap: "Reds",
 		targetColor: "Green",
 		colorPoint: 9,
 
