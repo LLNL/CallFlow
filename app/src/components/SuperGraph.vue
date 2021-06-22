@@ -124,7 +124,6 @@ export default {
 	methods: {
 		init() {
 			this.$store.commit("setSelectedMode", "SG");
-			this.$store.commit("setEncoding", "MEAN");
 
 			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
 			this.initComponents(this.currentComponents);
