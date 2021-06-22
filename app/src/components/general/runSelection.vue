@@ -20,7 +20,7 @@
 			</v-select>
 		</v-col>
 
-		<!-- <v-col cols="4">
+		<v-col cols="4">
 			<v-select
 				class="pt-8 pl-2"
 				dark
@@ -39,7 +39,7 @@
 					{{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
 				</template>
 			</v-select>
-		</v-col> -->
+		</v-col>
 	</v-row>
 </template>
 
@@ -51,19 +51,20 @@ export default {
 	data: () => ({
 		name: "RunSelection",
 		datasets: [],
-		isComparisonMode: false,
 		targetLabel: "",
 		compareLabel: "",
 	}),
 
 	mounted() {
 		this.datasets = Object.keys(this.metricTimeMap);
+		this.datasetsWNoRun = this.datasets.push(NaN);
 		this.targetLabel = "Select Target run (Sorted by " + this.selectedMetric + ")";
 		this.compareLabel = "Select Compare run (Sorted by " + this.selectedMetric + ")";
 	},
 
 	computed: {
 		...mapGetters({
+			runs: "getRuns",
 			metricTimeMap: "getMetricTimeMap",
 			targetRun: "getSelectedTargetRun",
 			compareRun: "getSelectedCompareRun",
@@ -74,6 +75,9 @@ export default {
 
 	methods: {
 		formatRuntimeWithoutUnits(val) {
+			if (val == undefined) {
+				return "";
+			}
 			let format = d3.format(".2");
 			let ret = format(val);
 			return ret;
@@ -84,8 +88,13 @@ export default {
 			this.$store.dispatch("reset");
 		},
 
-		updateComapareRun(data) {
-			this.$store.commit("setSelectedMode", "DSG");
+		updateCompareRun(data) {
+			if (isNaN(data)) {
+				this.$store.commit("setComparisonMode", false);
+				this.$store.commit("setSelectedCompareRun", "");
+				this.$store.dispatch("reset");
+			}
+			this.$store.commit("setComparisonMode", true);
 			this.$store.commit("setSelectedCompareRun", data);
 			this.$store.dispatch("reset");
 		},

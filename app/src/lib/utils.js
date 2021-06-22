@@ -361,20 +361,6 @@ export function getDataByNodeType(store, dataset, node) {
 	return {};
 }
 
-export function getKeyWithMaxValue(obj) {
-	return Object.keys(obj).reduce((a, b) => obj[a] > obj[b] ? a : b);
-}
-
-export function swapKeysToArray(data, skipElements) {
-	return Object.keys(data).filter((_) => !skipElements.includes(_)).map((_) =>  { return {"run": _, ...data[_]};});
-}
-
-export function swapKeysToDict(data, key) {
-	return Object.keys(data).reduce((acc, post) => {
-		return {...acc, [post]: data[post][key]};	
-	}, {});
-}
-
 export function leastSquares(xSeries, ySeries) {
 	const reduceSumFunc = (prev, cur) => prev + cur;
 

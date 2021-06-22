@@ -1,12 +1,26 @@
 import Vue from "vue";
 import Vuex from "vuex";
 
-import * as utils from "lib/utils";
 import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
 
 Vue.use(Vuex);
 
+function swapKeysToArray(data, skipElements) {
+	return Object.keys(data).filter((_) => !skipElements.includes(_)).map((_) =>  { return {"run": _, ...data[_]};});
+}
+
+function swapKeysToDict(data, key, skipElements) {
+	return Object.keys(data)
+		.filter((_) => !skipElements.includes(_))
+		.reduce((acc, post) => {
+			return {...acc, [post]: data[post][key]};	
+		}, {});
+}
+
+function getKeyWithMaxValue(obj) {
+	return Object.keys(obj).reduce((a, b) => obj[a] > obj[b] ? a : b);
+}
 
 export default new Vuex.Store({
 	state: {
@@ -195,10 +209,10 @@ export default new Vuex.Store({
 			const summary = await APIService.POSTRequest("summary");
 			console.log("[Data] Summary :", summary);
 			commit("setSummary", summary);
-			commit("setProfiles", utils.swapKeysToArray(summary, ["ensemble"]));
-			const metricTimeMap = utils.swapKeysToDict(summary, "meantime");
+			commit("setProfiles", swapKeysToArray(summary, ["ensemble"]));
+			const metricTimeMap = swapKeysToDict(summary, "meantime", ["ensemble"]);
 			commit("setMetricTimeMap", metricTimeMap);
-			const selectedTargetRun = utils.getKeyWithMaxValue(metricTimeMap);
+			const selectedTargetRun = getKeyWithMaxValue(metricTimeMap);
 			commit("setSelectedTargetRun", selectedTargetRun);
 			commit("setSelectedNode", { 
 				"name": summary[selectedTargetRun]["maxmodule"],
