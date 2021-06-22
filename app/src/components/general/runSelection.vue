@@ -89,14 +89,18 @@ export default {
 		},
 
 		updateCompareRun(data) {
-			if (isNaN(data)) {
+			if (data.length == 0) {
+				console.log("Disable comparison");
 				this.$store.commit("setComparisonMode", false);
 				this.$store.commit("setSelectedCompareRun", "");
 				this.$store.dispatch("reset");
 			}
-			this.$store.commit("setComparisonMode", true);
-			this.$store.commit("setSelectedCompareRun", data);
-			this.$store.dispatch("reset");
+			else {
+				console.log("Enable comparison");
+				this.$store.commit("setComparisonMode", true);
+				this.$store.commit("setSelectedCompareRun", data);
+				this.$store.dispatch("reset");
+			}
 		},
 	},
 };

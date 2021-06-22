@@ -33,14 +33,21 @@
     <v-main class="pt-0">
         <splitpanes id="cct-dashboard">
           <!-- Left column-->
-          <splitpanes horizontal :splitpanes-size="100">
-            <NodeLink ref="CCT1" />
-          </splitpanes>
-
-			<!-- Right column
-			<splitpanes horizontal :splitpanes-size="50" :v-show="{isComparisonMode}">
+		<splitpanes horizontal :splitpanes-size="isComparisonMode ? 50 : 100">
+			<pane>
 				<NodeLink ref="CCT1" />
-			</splitpanes> -->
+			</pane>
+			<pane :v-if="{isComparisonMode}">
+				<NodeLink ref="CCT2"  />
+			</pane>
+		</splitpanes>
+
+		<!-- Right column -->
+		<!-- <splitpanes horizontal :splitpanes-size="isComparisonMode ? 50 : 0" >
+			<pane :v-if="{isComparisonMode}">
+				<NodeLink ref="CCT2"  />
+			</pane>
+		</splitpanes> -->
         </splitpanes>
     </v-main>
   </div>
@@ -75,7 +82,6 @@ export default {
 	data: () => ({
 		id: "cct-overview",
 		selectedFunctionsInCCT: 70,
-		isComparisonMode: false,
 		isSettingsOpen: false,
 		selectedComponents: [],
 	}),
@@ -89,11 +95,16 @@ export default {
 			metricTimeMap: "getMetricTimeMap",
 			runtimeColorMap: "getRuntimeColorMap",
 			colorPoint: "getSelectedColorPoint",
+			isComparisonMode: "getComparisonMode",
+			selectedCompareRun: "getSelectedCompareRun",
+			selectedMode: "getSelectedMode",
 		})
 	},
 
 	beforeCreate() {
 		this.$store.dispatch("fetchSummary");
+		this.$store.commit("setSelectedMode", "CCT");
+		this.$store.commit("setEncoding", "MEAN");
 	},
 
 	mounted() {
@@ -111,15 +122,23 @@ export default {
 		summary: function (val) {
 			this.isDataReady = true;
 			this.init();
-		}
+		},
+
+		isComparisonMode: function(val) {
+			console.log(val);
+		},
+
 	},
 
 	methods: {
 		init() {
-			this.$store.commit("setSelectedMode", "CCT");
-			this.$store.commit("setEncoding", "MEAN");
+			console.log("here", this.selectedMode);
 
-			console.log("[CCT] Selected Run: ", this.selectedTargetRun);
+			console.log("[CCT] Selected Target Run: ", this.selectedTargetRun);
+			if (this.isComparisonMode) {
+				console.log("[CCT] Selected Compare Run: ", this.selectedCompareRun);
+			}
+
 			console.log("[CCT] Selected Mode: ", this.selectedMode);
 			console.log("[CCT] Selected Metric: ", this.selectedMetric);
 
@@ -156,10 +175,15 @@ export default {
 		// Initialize the relevant modules for respective Modes.
 		// ----------------------------------------------------------------
 		setComponentMap() {
-			return [
+			let components = [
 				this.$refs.CCT1, 
 				this.$refs.Settings
 			];
+			
+			if (this.isComparisonMode) {
+				components.push(this.$refs.CCT2);
+			}
+			return components;
 		},
 
 		clear() {
@@ -172,9 +196,14 @@ export default {
 		},
 
 		initComponents(componentList) {
-			for (let i = 0; i < componentList.length; i++) {
-				componentList[i].init();
+			this.$refs.CCT1.init(this.selectedTargetRun);
+			if (this.isComparisonMode) {
+				this.$refs.CCT2.init(this.selectedCompareRun);
 			}
+			this.$refs.Settings.init();
+			// for (let i = 0; i < componentList.length; i++) {
+			// 	componentList[i].init();
+			// }
 		},
 
 		clearComponents(componentList) {

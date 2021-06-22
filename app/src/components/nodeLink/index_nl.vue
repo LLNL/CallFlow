@@ -85,7 +85,6 @@ export default {
 		...mapGetters({ 
 			selectedMetric: "getSelectedMetric", 
 			data: "getCCT",
-			selectedTargetRun: "getSelectedTargetRun",
 		})
 	},
 
@@ -96,9 +95,9 @@ export default {
 	},
 
 	methods: {
-		init() {
+		init(run) {
 			this.$store.dispatch("fetchCCT", {
-				dataset: this.selectedTargetRun
+				dataset: run
 			});
 		},
 
