@@ -46,20 +46,20 @@ class Filter:
         
         self.callsites = self.sg.callsites
 
-        if 0:
-            self.mean_root_inctime = self.df_root_max_mean_runtime(gf.dataframe, self.roots, "time (inc)")
+        # if 0:
+        self.mean_root_inctime = self.sg.df_root_max_mean_runtime(self.sg.roots, "time (inc)")
 
-            # Formulate the hatchet query.
-            query = [
-                ("*", {f"{self.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
-            ]
-            LOGGER.info(f"Filtering GraphFrame by Hatchet Query :{query}")
+        # Formulate the hatchet query.
+        query = [
+            ("*", {f"{self.sg.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
+        ]
+        LOGGER.info(f"Filtering GraphFrame by Hatchet Query :{query}")
 
-            LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
-            self.callsites = SuperGraph.hatchet_filter_callsites_by_query(gf, query)
-            LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.callsites)}")
+        LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
+        self.callsites = self.sg.hatchet_filter_callsites_by_query(query)
+        LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.callsites)}")
 
-            LOGGER.profile(f'-----> Finished with hatchet filter: {_df_info(self.dataframe)}')
+        LOGGER.profile(f'-----> Finished with hatchet filter: {df_info(self.sg.dataframe)}')
 
         self.compute()
         
@@ -92,8 +92,8 @@ class Filter:
         LOGGER.debug(f'Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
 
         if len(self.callsites) > 0:
-            self.dataframe = self.sg.dataframe[self.sg.dataframe["name"].isin(self.callsites)]
-        LOGGER.info(f'Filtered dataframe comprises of: "{self.sg.dataframe.shape}"')
+            self.sg.dataframe = self.sg.dataframe[self.sg.dataframe["name"].isin(self.callsites)]
+        LOGGER.info(f'Filtered dataframe comprises of: "{df_info(self.sg.dataframe)}"')
 
         nxg = nx.DiGraph()
 

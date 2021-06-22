@@ -225,6 +225,8 @@ class SuperGraph(ht.GraphFrame):
         assert gf.graph is not None
         LOGGER.info(f'Loaded Hatchet GraphFrame: {df_info(gf.dataframe)}')
         LOGGER.profile('')
+        self.gf = gf
+        
         if 0:
             SuperGraph.write_ht(gf, path)
 
@@ -768,16 +770,15 @@ class SuperGraph(ht.GraphFrame):
 
         return [root.frame.get('name') for root in ht_graph.roots]
 
-    @staticmethod
-    def hatchet_filter_callsites_by_query(gf, query):
+    def hatchet_filter_callsites_by_query(self, query):
         """
         Returns the filtered callsites based on the query.
         """
         # Expensive. We need to do this to speed up the filtering process. 
-        gf.drop_index_levels() 
+        self.gf.drop_index_levels()
 
         # Filter the graphframe using hatchet (initial filtering) using QueryMatcher.
-        fgf = gf.filter(query)
+        fgf = self.gf.filter(query)
 
         return df_unique(fgf.dataframe, "name")
 
