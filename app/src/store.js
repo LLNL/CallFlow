@@ -94,6 +94,8 @@ export default new Vuex.Store({
 		runtimeSortBy: "mean",
 		hierarchy: {},
 		prop: "rank",
+
+		selectedCompareRun: "",
 	},
 
 	mutations: {
@@ -134,6 +136,7 @@ export default new Vuex.Store({
 		},
 
 		setSelectedMode(state, payload) {
+			console.log("Payload for selectedMode: ", payload);
 			state.selectedMode = payload;
 		},
 
@@ -195,6 +198,16 @@ export default new Vuex.Store({
 
 		setSelectedProp(state, payload) {
 			state.prop = payload;
+		},
+
+		setComparisonMode(state, payload) {
+			console.log("Setting comparison mode to :", payload);
+			state.comparisonMode = payload;
+		},
+
+		setSelectedCompareRun(state, payload) {
+			console.log("Setting comparison run to :", payload);
+			state.selectedCompareRun = payload;
 		}
 	},
 	
@@ -247,7 +260,7 @@ export default new Vuex.Store({
 
 		async fetchCCT({ commit, state }, payload) {
 			const cct = await APIService.POSTRequest("cct", payload);
-			console.log("[Data] CCT: ", cct);
+			console.log("[Data] CCT for", payload.dataset, "is :", cct);
 			commit("setCCT", cct);
 		},
 
@@ -350,7 +363,7 @@ export default new Vuex.Store({
 
 		updateCompareRun({ state, dispatch}, payload) {
 			state.commit("setCompareRun", payload);
-			state.commit("setSelectedMode", "DSG");
+			state.commit("setIsComparisonMode", payload);
 		},
 
 		reset({state}) {
@@ -362,9 +375,6 @@ export default new Vuex.Store({
 			}
 			else if (state.selectedMode == "ESG") {
 				EventHandler.$emit("reset-esg");
-			}
-			else if (state.selectedMode == "DSG") {
-				EventHandler.$emit("reset-dsg");
 			}
 		},
 	},
