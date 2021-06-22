@@ -174,10 +174,10 @@ class BaseProvider:
             _["name"]: (os.path.join(_["path"], append_path) if len(append_path) > 0 else _["path"], _["profile_format"]) for _ in self.config["runs"]
         }
 
-        for dataset in process_datasets:
+        for idx, dataset in enumerate(process_datasets):
             name = dataset["name"]
             _prop = run_props[name]
-            LOGGER.warning(f'-------------------- Dataset = {name} --------------------')
+            LOGGER.warning(f'-------------------- Dataset ({idx}/{len(process_datasets)}) = {name} --------------------')
             LOGGER.profile(f'Starting supergraph ({name})')
 
             data_path = os.path.join(load_path, _prop[0])
