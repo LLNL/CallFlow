@@ -95,7 +95,9 @@ export default new Vuex.Store({
 		hierarchy: {},
 		prop: "rank",
 
+		// Compare mode
 		selectedCompareRun: "",
+		compareData: {},
 	},
 
 	mutations: {
@@ -208,6 +210,10 @@ export default new Vuex.Store({
 		setSelectedCompareRun(state, payload) {
 			console.log("Setting comparison run to :", payload);
 			state.selectedCompareRun = payload;
+		},
+		
+		setCompareData(state, payload) {
+			state.compareData = payload;
 		}
 	},
 	
@@ -312,14 +318,14 @@ export default new Vuex.Store({
 			commit("setHierarchy", hierarchy);
 		},
 
-		async fetchComparison({ commit, state }, payload) {
+		async fetchCompare({ commit, state }, payload) {
 			const comp = await APIService.POSTRequest("compare", {
-				targetDataset: state.selectedTargetRun,
-				compareDataset: state.selectedCompareRun,
+				targetRun: state.selectedTargetRun,
+				compareRun: state.selectedCompareRun,
 				selectedMetric: state.selectedMetric,
 			});
 			console.log("[Data] ESG Comparison: ", comp);
-			commit("setDSG", comp);
+			commit("setCompareData", comp);
 		},
 
 		updateSelectedMetric({ state, dispatch }, payload) {
@@ -364,6 +370,10 @@ export default new Vuex.Store({
 		updateCompareRun({ state, dispatch}, payload) {
 			state.commit("setCompareRun", payload);
 			state.commit("setIsComparisonMode", payload);
+		},
+
+		updateEncoding({ state, dispatch }, payload) {
+			EventHandler.$emit("update-encoding");
 		},
 
 		reset({state}) {
@@ -430,5 +440,7 @@ export default new Vuex.Store({
 		getIQRFactor: state => state.IQRFactor,
 		getHierarchy: state => state.hierarchy,
 		getProp: state => state.prop,
+
+		getCompareData: state => state.compareData
 	}
 });

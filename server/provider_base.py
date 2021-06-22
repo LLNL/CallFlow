@@ -431,9 +431,14 @@ class BaseProvider:
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
 
-        _OPERATIONS_WO_DATASET = ["projection", "module_hierarchy"]
+        _OPERATIONS_WO_DATASET = ["projection", "module_hierarchy", "compare"]
         if not (operation["name"] in _OPERATIONS_WO_DATASET):
             assert "dataset" in operation
+
+        _OPERATION_W_COMPARE = ["compare"]
+        if (operation["name"] in _OPERATION_W_COMPARE):
+            assert "targetRun" in operation
+            assert "compareRun" in operation
 
         LOGGER.info(f"[Ensemble Mode] {operation}")
 
@@ -493,14 +498,9 @@ class BaseProvider:
             return pp.result.to_json(orient="columns")
 
         elif operation_name == "compare":
-            compare_dataset = operation["compareDataset"]
-            target_dataset = operation["targetDataset"]
-
-            assert operation["selectedMetric"] in ["Inclusive", "Exclusive"]
-            if operation["selectedMetric"] == "Inclusive":
-                selected_metric = "time (inc)"
-            elif operation["selectedMetric"] == "Exclusive":
-                selected_metric = "time"
+            compare_dataset = operation.get("compareRun", None)
+            target_dataset = operation.get("targetRun", None)
+            selected_metric = operation.get("selectedMtric", "time")            
 
             dv = DiffView(e_sg, compare_dataset, target_dataset, selected_metric)
             return dv.result

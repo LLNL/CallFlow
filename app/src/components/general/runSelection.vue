@@ -105,12 +105,8 @@ export default {
 				this.$store.commit("setComparisonMode", true);
 				this.$store.commit("setSelectedCompareRun", data);
 				this.$store.commit("setEncoding", "MEAN_DIFF");
-				this.dispatch("fetchCompare", {
-					targetRun: this.selectedTargetRun,
-					compareRun: this.selectedCompareRun,
-					selectedMetric: this.selectedMetric,
-				});
-				this.$store.dispatch("reset");
+				this.$store.dispatch("fetchCompare");
+				this.$store.commit("updateEncoding");
 			}
 		},
 	},
