@@ -22,6 +22,7 @@
 
 		<v-col cols="4">
 			<v-select
+				:disabled="!(selectedMode === 'ESG')"
 				class="pt-8 pl-2"
 				dark
 				:label="compareLabel"
@@ -70,6 +71,7 @@ export default {
 			compareRun: "getSelectedCompareRun",
 			selectedMetric: "getSelectedMetric",
 			selectedMode: "getSelectedMode",
+			isComparisonMode: "getComparisonMode",
 		})
 	},
 
@@ -93,12 +95,21 @@ export default {
 				console.log("Disable comparison");
 				this.$store.commit("setComparisonMode", false);
 				this.$store.commit("setSelectedCompareRun", "");
+				this.$store.commit("setEncoding", "MEAN_GRADIENTS");
 				this.$store.dispatch("reset");
 			}
 			else {
+				// TODO: Move this to the store.js
+				// TODO: reduce the number of dependents on commit operation. 
 				console.log("Enable comparison");
 				this.$store.commit("setComparisonMode", true);
 				this.$store.commit("setSelectedCompareRun", data);
+				this.$store.commit("setEncoding", "MEAN_DIFF");
+				this.dispatch("fetchCompare", {
+					targetRun: this.selectedTargetRun,
+					compareRun: this.selectedCompareRun,
+					selectedMetric: this.selectedMetric,
+				});
 				this.$store.dispatch("reset");
 			}
 		},
