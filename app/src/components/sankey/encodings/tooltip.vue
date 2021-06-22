@@ -117,7 +117,7 @@ export default {
 				});
 
 			this.runtimeInformation(node);
-			this.pathInformation(node);
+			// this.pathInformation(node);
 		},
 
 		/**
