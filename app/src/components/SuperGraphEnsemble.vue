@@ -46,12 +46,8 @@
 
 			<!-- Right column-->
 			<splitpanes horizontal splitpanes-size="20" :push-other-panes="true">
-				<pane size="65">
-					<CallsiteCorrespondence ref="CallsiteCorrespondence" />
-				</pane>
-				<pane size="35">
-					<ParameterProjection ref="ParameterProjection" />
-				</pane>
+				<CallsiteCorrespondence ref="CallsiteCorrespondence" />
+				<ParameterProjection ref="ParameterProjection" />
 			</splitpanes>
 		</splitpanes>
     </v-main>
@@ -136,6 +132,7 @@ export default {
 	},
 
 	mounted() {
+		let self = this;
 		EventHandler.$on("lasso-selection", (selectedDatasets) => {
 			this.$store.resetTargetDataset = true;
 			this.$store.selectedDatasets = selectedDatasets;

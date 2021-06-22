@@ -78,9 +78,6 @@ export default new Vuex.Store({
 		showTarget: true, // show target in the view
 		ensembleGradients: {}, // stores the gradient data
 
-		// Comparison
-		comparisonMode: false,
-
 		// Timeline state
 		timeline: {},
 
@@ -96,6 +93,7 @@ export default new Vuex.Store({
 		prop: "rank",
 
 		// Compare mode
+		comparisonMode: false,
 		selectedCompareRun: "",
 		compareData: {},
 

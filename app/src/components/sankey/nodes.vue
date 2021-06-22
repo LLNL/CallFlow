@@ -24,7 +24,6 @@ import { mapGetters } from "vuex";
 // Local library imports
 import * as utils from "lib/utils";
 import EventHandler from "lib/routing/EventHandler";
-import APIService from "lib/routing/APIService";
 
 // local imports
 import MeanGradients from "./encodings/meanGradients";
@@ -59,6 +58,7 @@ export default {
 		intermediateColor: "#d9d9d9",
 		drawGuidesMap: {},
 		fontSize: 14,
+		prevEncoding: "",
 	}),
 
 	computed: {
@@ -71,6 +71,7 @@ export default {
 			selectedMetric: "getSelectedMetric",
 			selectedNode: "getSelectedNode",
 			compareData: "getCompareData",
+			isComparisonMode: "getComparisonMode",
 		})
 	},
 
@@ -148,14 +149,20 @@ export default {
 			d3.selectAll(".callsite").remove();
 		},
 
-		setEncoding(data) {
+		setEncoding() {
 			if (this.selectedMode == "SG") {
 				this.$store.commit("setEncoding", "MEAN");
 			} else if (this.selectedMode == "ESG") {
-				this.$store.commit("setEncoding", "MEAN_GRADIENTS");
+				if (this.isComparisonMode) {
+					this.$store.commit("setEncoding", "MEAN_DIFF");
+				}
+				else {
+					this.$store.commit("setEncoding", "MEAN_GRADIENTS");
+				}
 			}
 
-			console.log("Node encoding: ", this.encoding, this.selectedMode);
+			this.prevEncoding = this.encoding;
+
 			if (this.encoding == "MEAN") {
 				this.$refs.Mean.init(this.graph.nodes, this.containerG);
 			}
@@ -163,10 +170,10 @@ export default {
 				this.$refs.MeanGradients.init(this.graph.nodes, this.containerG);
 			}
 			else if (this.encoding == "MEAN_DIFF") {
-				this.$refs.MeanDiff.init(this.graph.nodes, this.containerG, data);
+				this.$refs.MeanDiff.init(this.graph.nodes, this.containerG);
 			}
 			else if (this.encoding == "RANK_DIFF") {
-				this.$refs.RankDiff.init(this.graph.nodes, this.containerG, data);
+				this.$refs.RankDiff.init(this.graph.nodes, this.containerG);
 			}
 		},
 
@@ -220,9 +227,9 @@ export default {
 						this.drawGuidesMap[node.id] = true;
 					}
 					
-					// EventHandler.$emit("reset-ensemble-histogram");
-					// EventHandler.$emit("reset-ensemble-scatterplot");
-					// EventHandler.$emit("reset-ensemble-boxplots");
+					EventHandler.$emit("reset-ensemble-histogram");
+					EventHandler.$emit("reset-ensemble-scatterplot");
+					EventHandler.$emit("reset-ensemble-boxplots");
 					EventHandler.$emit("reset-module-hierarchy");
 				}
 				else if (this.selectedMode == "SG") {
@@ -370,14 +377,14 @@ export default {
 			d3.selectAll(".target-path").remove();
 		},
 
-		clearEncoding(encoding) {
-			if (encoding == "MEAN_GRADIENTS") {
+		clearEncoding() {
+			if (this.prevEncoding == "MEAN_GRADIENTS") {
 				this.$refs.MeanGradients.clear(this.graph.nodes, this.containerG);
 			}
-			else if (encoding == "MEAN_DIFF") {
+			else if (this.prevEncoding == "MEAN_DIFF") {
 				this.$refs.MeanDiff.clear(this.graph.nodes, this.containerG);
 			}
-			else if (encoding == "RANK_DIFF") {
+			else if (this.prevEncoding == "RANK_DIFF") {
 				this.$refs.RankDiff.clear(this.graph.nodes, this.containerG);
 			}
 		},
