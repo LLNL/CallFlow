@@ -365,7 +365,7 @@ export default {
 
 							},
 							level: j,
-							id: "intermediate_" + target_node.id,
+							id: "i" + target_node.id,
 							value: temp_edges[i].attr_dict.weight,
 							targetValue: temp_edges[i].attr_dict.targetWeight,
 							height: temp_edges[i].height,

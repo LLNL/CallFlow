@@ -34,20 +34,9 @@
         <splitpanes id="cct-dashboard">
           <!-- Left column-->
 		<splitpanes horizontal :splitpanes-size="isComparisonMode ? 50 : 100">
-			<pane>
-				<NodeLink ref="CCT1" />
-			</pane>
-			<pane :v-if="{isComparisonMode}">
-				<NodeLink ref="CCT2"  />
-			</pane>
+			<NodeLink ref="CCT1" />
+			<!-- <NodeLink ref="CCT2" /> -->
 		</splitpanes>
-
-		<!-- Right column -->
-		<!-- <splitpanes horizontal :splitpanes-size="isComparisonMode ? 50 : 0" >
-			<pane :v-if="{isComparisonMode}">
-				<NodeLink ref="CCT2"  />
-			</pane>
-		</splitpanes> -->
         </splitpanes>
     </v-main>
   </div>
@@ -122,18 +111,11 @@ export default {
 		summary: function (val) {
 			this.isDataReady = true;
 			this.init();
-		},
-
-		isComparisonMode: function(val) {
-			console.log(val);
-		},
-
+		}
 	},
 
 	methods: {
 		init() {
-			console.log("here", this.selectedMode);
-
 			console.log("[CCT] Selected Target Run: ", this.selectedTargetRun);
 			if (this.isComparisonMode) {
 				console.log("[CCT] Selected Compare Run: ", this.selectedCompareRun);
@@ -201,9 +183,6 @@ export default {
 				this.$refs.CCT2.init(this.selectedCompareRun);
 			}
 			this.$refs.Settings.init();
-			// for (let i = 0; i < componentList.length; i++) {
-			// 	componentList[i].init();
-			// }
 		},
 
 		clearComponents(componentList) {
