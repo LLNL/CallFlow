@@ -166,7 +166,7 @@ class Group:
         # update the dataframe
         self.sg.df_add_column("group_path", apply_dict=group_path, dict_default='', apply_on="nid")
         self.sg.df_add_column("component_path", apply_dict=component_path, dict_default='', apply_on="nid")
-        LOGGER.profile(f'Finished Grouping: {df_info(self.sg.dataframe)}')
+        LOGGER.profile(f'Finished Grouping.')
 
     def _construct_group_path(self, path):  # noqa: C901
         """

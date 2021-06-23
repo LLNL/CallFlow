@@ -13,6 +13,7 @@ from ast import literal_eval as make_list
 
 import callflow
 from callflow.utils.df import *
+from callflow.utils.nxg import *
 
 LOGGER = callflow.get_logger(__name__)
 
@@ -53,16 +54,23 @@ class Filter:
         query = [
             ("*", {f"{self.sg.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
         ]
+
         LOGGER.info(f"Filtering GraphFrame by Hatchet Query :{query}")
+        LOGGER.debug(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
 
-        LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
         self.callsites = self.sg.hatchet_filter_callsites_by_query(query)
-        LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.callsites)}")
 
-        LOGGER.profile(f'-----> Finished with hatchet filter: {df_info(self.sg.dataframe)}')
+        LOGGER.debug(f"Number of callsites after QueryMatcher: {len(self.callsites)}")
+        LOGGER.info(f"Removed {len(self.sg.callsites) - len(self.callsites)} callsites.")
+        
+        LOGGER.debug(f"Callsites: {','.join(self.callsites[:50]) }")
 
         self.compute()
-        
+
+        LOGGER.info(f'Filtered graph comprises of: "{nxg_info(self.nxg)}"')
+        LOGGER.profile('-----> Finished Filtering')
+
+
     # --------------------------------------------------------------------------
     def compute(self):
         """
@@ -114,5 +122,7 @@ class Filter:
                 nxg.add_path(path)
 
         self.nxg = nxg
+
+
 
 # ------------------------------------------------------------------------------

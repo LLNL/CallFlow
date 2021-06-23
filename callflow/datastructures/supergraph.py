@@ -224,7 +224,7 @@ class SuperGraph(ht.GraphFrame):
         assert isinstance(gf, ht.GraphFrame)
         assert gf.graph is not None
         LOGGER.info(f'Loaded Hatchet GraphFrame: {df_info(gf.dataframe)}')
-        LOGGER.profile('')
+        LOGGER.profile('-----> Created Hatchet GraphFrame')
         self.gf = gf
         
         if 0:
@@ -251,7 +251,7 @@ class SuperGraph(ht.GraphFrame):
         # self.dataframe.set_index(self.indexes, inplace=True, drop=True)
 
         LOGGER.info(f'Processed dataframe: {df_info(self.dataframe)}')
-        LOGGER.profile('')
+        LOGGER.profile('-----> Processed DataFrame properties')
         self.profiler.stop()
 
         # ----------------------------------------------------------------------
@@ -270,7 +270,7 @@ class SuperGraph(ht.GraphFrame):
             self.callees[node_idx] = [_csidx(_.frame.get('name')) for _ in node.children]
 
         LOGGER.info(f'Processed graph')
-        LOGGER.profile('')
+        LOGGER.profile('-----> Processed Graph properties')
 
         self.df_add_column("callees", apply_dict=self.callees, dict_default=[], apply_on="nid")
         self.df_add_column("callers", apply_dict=self.callers, dict_default=[], apply_on="nid")
@@ -775,10 +775,31 @@ class SuperGraph(ht.GraphFrame):
         Returns the filtered callsites based on the query.
         """
         # Expensive. We need to do this to speed up the filtering process. 
-        self.gf.drop_index_levels()
+        # self.gf.drop_index_levels()
+        index_names = self.df_index_names()
+
+        self.gf.dataframe.reset_index(drop=False, inplace=True)
+        self.gf.dataframe.set_index(index_names)
+        index_names.remove("node")
+
+         # create dict that stores aggregation function for each column
+        agg_dict = {}
+        for col in self.gf.dataframe.columns.tolist():
+            if col in self.gf.exc_metrics + self.gf.inc_metrics:
+                agg_dict[col] = np.mean
+            else:
+                agg_dict[col] = lambda x: x.iloc[0]
+        
+        agg_df = self.gf.dataframe.groupby("node").agg(agg_dict)
+
+        if "node" in agg_df.columns:
+            agg_df = agg_df.drop("node", axis=1)
+
+
+        gf_copy = ht.GraphFrame(self.gf.graph, agg_df, self.gf.exc_metrics, self.gf.inc_metrics)
 
         # Filter the graphframe using hatchet (initial filtering) using QueryMatcher.
-        fgf = self.gf.filter(query)
+        fgf = gf_copy.filter(query)
 
         return df_unique(fgf.dataframe, "name")
 
@@ -788,6 +809,12 @@ class SuperGraph(ht.GraphFrame):
             G_sub = nxg.subgraph(component)
             roots.extend([n for n,d in G_sub.in_degree() if d==0])
         return roots
+
+    # --------------------------------------------------------------------------
+    # GraphFrame utils
+    # --------------------------------------------------------------------------
+    def gf_index_names(self):
+        return list(self.gf.dataframe.index.names)
 
     # --------------------------------------------------------------------------
     # Create GraphFrame methods
