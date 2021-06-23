@@ -312,7 +312,7 @@ export default function Sankey() {
 	function pushIntermediateNodeBottom(nodes) {
 		let tempNode;
 		for (let i = 0; i < nodes.length; i += 1) {
-			if (nodes[i].id.split("_")[0] == "intermediate") {
+			if (nodes[i].type === "intermediate") {
 				tempNode = nodes[i];
 				nodes.splice(i, 1);
 			}

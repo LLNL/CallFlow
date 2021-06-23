@@ -139,7 +139,7 @@ def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, group_by, appl
     else: 
         return { _ : _df.xs(_)[_cols] for _ in _levels}
 
-def df_apply_func(df, column, proxy={}):
+def df_column_mean(df, column, proxy={}):
     """
     Apply a function to the df.column
 

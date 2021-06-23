@@ -306,7 +306,7 @@ class SuperGraph(ht.GraphFrame):
 
         # ----------------------------------------------------------------------
         self.add_time_proxies()
-        self.df_reset_index() # TODO: This might be cause a possible side
+        # self.df_reset_index() # TODO: This might be cause a possible side
         # effect. Beware!!
         self.roots = self.nxg_get_roots(self.nxg)
         self.add_callsites_and_modules_maps(module_callsite_map)
@@ -321,38 +321,24 @@ class SuperGraph(ht.GraphFrame):
         
     # --------------------------------------------------------------------------
     def add_callsites_and_modules_maps(self, module_callsite_map={}):
+        LOGGER.debug(f"DataFrame columns: {list(self.dataframe.columns)}")
 
         has_modules_in_df = "module" in self.dataframe.columns
         has_modules_in_map = len(module_callsite_map) > 0
         # assert not (has_modules_in_df and has_modules_in_map)
 
         # ----------------------------------------------------------------------
-        LOGGER.info('Creating \"module-callsite\" and \"callsite-module\" maps')
-
+        LOGGER.info(f'[{self.name}] Creating \"module-callsite\" and \"callsite-module\" maps')
         # create a map of callsite-indexes
         self.callsites = df_as_dict(self.dataframe, 'nid', 'name')
 
         # ----------------------------------------------------------------------
         # if the dataframe already has columns
-        if has_modules_in_df and self.dataframe['module'].dtype != "int64":
-            LOGGER.debug('Extracting the module map from the dataframe')
-
-            # create a map of module-indexes
-            self.dataframe['module'], self.modules = \
-                self.dataframe['module'].factorize(sort=True)
-
-            self.modules = {i: Sanitizer.sanitize(v) for i, v in enumerate(self.modules)}
-        
-            self.callsite_module_map = df_as_dict(self.dataframe, 'nid', 'module')
-            self.module_callsite_map = {m: [] for m,c in self.modules.items()}
-            self.module_callsite_map[-1] = [] # @harsh: Why have assigned the index=-1 as empty array?
-            for ccode, mcode in self.callsite_module_map.items():
-                self.module_callsite_map[mcode].append(ccode)
-
         # ----------------------------------------------------------------------
-        elif has_modules_in_map:
-            LOGGER.debug('Using the supplied module map')
+        if has_modules_in_map:
+            LOGGER.debug(f'[{self.name}] Using the supplied module map')
             self.modules = { i: m for i, m in enumerate(module_callsite_map.keys()) }
+            print("Callsite module map", self.modules)
             _modules_inv = dict((v, k) for k, v in self.modules.items())
 
             _nid = lambda _: self.df_lookup_with_column("name", _)["nid"].unique().tolist()
@@ -383,10 +369,26 @@ class SuperGraph(ht.GraphFrame):
                 LOGGER.error(f"Missing callistes: {missing_callsites}")
                 LOGGER.error("Please add the missing callsite's module map in the config file.")
                 assert 0          
+
+        elif has_modules_in_df:
+            LOGGER.debug(f'[{self.name}] Extracting the module map from the dataframe')
+
+            # create a map of module-indexes
+            self.dataframe['module'], self.modules = \
+                self.dataframe['module'].factorize(sort=True)
+
+            self.modules = {i: v for i, v in enumerate(self.modules)}
+        
+            self.callsite_module_map = df_as_dict(self.dataframe, 'nid', 'module')
+            self.module_callsite_map = {m: [] for m,c in self.modules.items()}
+            self.module_callsite_map[-1] = [] # @harsh: Why have assigned the index=-1 as empty array?
+            for ccode, mcode in self.callsite_module_map.items():
+                self.module_callsite_map[mcode].append(ccode)
+
             
         # ----------------------------------------------------------------------
         else:
-            LOGGER.debug('No module map found. Defaulting to \"module=callsite\"')
+            LOGGER.debug(f'[{self.name}] No module map found. Defaulting to \"module=callsite\"')
             self.modules = self.callsites
             self.callsite_module_map = {c: c for c,m in self.callsites.items()}
             self.module_callsite_map = {m: [m] for m,c in self.modules.items()}
@@ -483,7 +485,10 @@ class SuperGraph(ht.GraphFrame):
 
     def timeline(self, nodes, ntype, metric):
         grp_df = self.df_group_by(ntype)
-        data = { node : df_apply_func(grp_df.get_group(self.get_idx(node, ntype)), metric, self.proxy_columns) for node in nodes }    
+        LOGGER.debug(f'Nodes: {nodes}; ntype: {ntype}; metric: {metric}')
+
+        data = {} 
+        data = { str(node) : df_column_mean(grp_df.get_group(node), metric, self.proxy_columns) for node in nodes }    
         data['root_time_inc'] = self.df_root_max_mean_runtime(self.roots, "time (inc)")
         data['name'] = self.name
         return data
@@ -776,7 +781,7 @@ class SuperGraph(ht.GraphFrame):
         """
         # Expensive. We need to do this to speed up the filtering process. 
         # self.gf.drop_index_levels()
-        index_names = self.df_index_names()
+        index_names = self.gf_index_names()
 
         self.gf.dataframe.reset_index(drop=False, inplace=True)
         self.gf.dataframe.set_index(index_names)
