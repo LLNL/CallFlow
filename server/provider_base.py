@@ -203,7 +203,6 @@ class BaseProvider:
 
             sg.write(os.path.join(save_path, name))
 
-            # self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
 
 
