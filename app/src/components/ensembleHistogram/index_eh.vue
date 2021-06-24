@@ -132,7 +132,7 @@ export default {
 			if (this.showTarget) {
 				this.targetBars();
 			}
-			// this.$refs.ToolTip.init(this.svgID);
+			this.$refs.ToolTip.init(this.svgID);
 		},
 
 		setupScale() {

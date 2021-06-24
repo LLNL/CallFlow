@@ -151,16 +151,6 @@ export function addIndexToBeginning(arr) {
 }
 
 export function truncNames(str, len) {
-	if (str.indexOf("=")) {
-		str = str.split("=")[0];
-	}
-
-	if (str.indexOf(":") > -1) {
-		let str_list = str.split(":");
-		str = str_list[str_list.length - 1];
-	}
-
-	str = str.replace(/<unknown procedure>/g, "proc ");
 	return (str.length > len) ? str.substr(0, len - 1) + "..." : str;
 }
 

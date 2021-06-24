@@ -94,6 +94,7 @@ export default {
 
 	methods: {
 		init() {
+			this.orientation = ["time", "time (inc)"];
 			this.$store.dispatch("fetchEnsembleScatterplot", {
 				dataset: this.selectedTargetRun,
 				node: this.selectedNode["name"],
@@ -173,7 +174,7 @@ export default {
 
 			// this.correlationText()
 			this.setTitle();
-			// this.$refs.ToolTip.init(this.svgID);
+			this.$refs.ToolTip.init(this.svgID);
 		},
 
 		setTitle() {
@@ -286,7 +287,7 @@ export default {
 			var y1 = leastSquaresCoeff[0] * this.xMin + leastSquaresCoeff[1];
 			var x2 = this.xMax;
 			var y2 = leastSquaresCoeff[0] * this.xMax + leastSquaresCoeff[1];
-			var trendData = [[x1,y1,x2,y2]];
+			var trendData = [[x1, y1, x2, y2]];
 			
 			var trendline = this.svg.selectAll("#trendline" + id)
 				.data(trendData);
@@ -348,8 +349,10 @@ export default {
 						let data = {
 							"callsite": callsite,
 							"QCD": opacity,
-							"value": self.xArray[i].val,
-							"run": self.xArray[i].run
+							"x": self.xArray[i],
+							"y": self.yArray[i],
+							"run": self.xArray[i].run,
+							"orientation": self.orientation
 						};
 						self.$refs.ToolTip.render(data);
 					})
@@ -383,7 +386,9 @@ export default {
 						let data = {
 							"callsite": callsite,
 							"QCD": opacity,
-							"value": self.xtargetArray[i].val,
+							"x": self.xtargetArray[i],
+							"y": self.ytargetArray[i],
+							"orientation": self.orientation,
 							"run": run
 						};
 						self.$refs.ToolTip.render(data);
