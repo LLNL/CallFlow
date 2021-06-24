@@ -221,10 +221,11 @@ export default {
 		},
 
 		clear() {
-			d3.selectAll(".icicleNode").remove();
-			d3.selectAll(".icicleText").remove();
-			d3.selectAll(".hierarchy-targetLines").remove();
-			d3.selectAll(".linear-gradient").remove();
+			// d3.selectAll(".icicleNode").remove();
+			// d3.selectAll(".icicleText").remove();
+			// d3.selectAll(".hierarchy-targetLines").remove();
+			// d3.selectAll(".linear-gradient").remove();
+			d3.select("#module-hierarchy-svg").remove();
 			// this.$refs.ToolTipModuleHierarchy.clear()
 		},
 
