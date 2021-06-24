@@ -182,40 +182,23 @@ export default {
 			this.$refs.ToolTip.clear();
 		},
 
-		
-
 		array_unique(arr) {
 			return arr.filter(function (value, index, self) {
 				return self.indexOf(value) === index;
 			});
 		},
 
-		dataProcess(data, mpiData) {
+		dataProcess(data) {
 			let axis_x = [];
-			let binContainsProcID = {};
 			let dataMin = data["x_min"];
 			let dataMax = data["x_max"];
 
-			const dataWidth = (dataMax - dataMin) / (data["x"].length);
+			const dataWidth = (dataMax - dataMin) / (data["x"].length - 1);
 			for (let i = 0; i < data["x"].length; i++) {
 				axis_x.push(dataMin + i * dataWidth);
 			}
 
-			// TODO: Expensive !!!
-			mpiData.forEach((val, idx) => {
-				let pos = Math.floor((val - dataMin) / dataWidth);
-				if (pos >= this.rankBinCount) {
-					pos = this.rankBinCount;
-				}
-				if (pos < 0){
-					pos = 0;
-				}
-				if (binContainsProcID[pos] == null) {
-					binContainsProcID[pos] = [];
-				}
-				binContainsProcID[pos].push(idx);
-			});
-			return [data["x"], data["y"], axis_x, binContainsProcID];
+			return [data["x"], data["y"], axis_x, data["dig"]];
 		},
 
 		removeDuplicates(arr) {
@@ -229,8 +212,6 @@ export default {
 		// return a string version and an array version
 		// stolen from this: https://gist.github.com/XciA/10572206
 		groupProcess(processIDs) {
-
-			console.log(processIDs);
 			const constData = processIDs.slice();
 			let a = 0;
 			let groupArrayStr = "[ ";
@@ -269,7 +250,7 @@ export default {
 					string = `[${constData[k]}]`;
 					temp.push(constData[k]);
 				}
-				groupArray.push(temp);
+				// groupArray.push(temp);
 				if (!first) {
 					groupArrayStr += ", ";
 				}
@@ -314,13 +295,13 @@ export default {
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
+
 					let groupProcStr = self.groupProcess(self.binContainsProcID[i])
 						.string;
 					groupProcStr =  "MPI ranks:" + self.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseover", function (d, i) {
-					console.log(d);
 					d3.select(this).attr("fill", "orange");
 					d3.selectAll(".lineRank")
 						.style("fill-opacity", 0.1);
@@ -647,7 +628,6 @@ export default {
 				ranks: processIDList,
 				ntype: "callsite",
 			});
-			console.log(split_sgs);
 		},
 	},
 };

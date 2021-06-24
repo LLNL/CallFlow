@@ -95,7 +95,9 @@ def histogram(data, data_range=None, bins=20):
         assert isinstance(data_range, (list, np.ndarray))
         assert len(data_range) == 2
     h, b = np.histogram(data, range=data_range, bins=bins)
-    return 0.5 * (b[1:] + b[:-1]), h
+    dig = np.digitize(data, b)
+
+    return 0.5 * (b[1:] + b[:-1]), h, dig
 
 
 def freedman_diaconis_bins(arr):
