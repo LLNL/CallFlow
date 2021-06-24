@@ -64,7 +64,7 @@ export default {
 					"rx": "10px",
 					"fill-opacity": 1,
 					"width": measure.width + 30,
-					"height": measure.height / 1.5 + this.offset,
+					"height": measure.height / 1.5 + this.offset / 1.5,
 				})
 				.attrs({
 					"x": () => {
