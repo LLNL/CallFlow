@@ -35,15 +35,16 @@ class HierarchyLayout:
         module_idx = esg.get_idx(node, "module")
         self.esg = esg
         module_df = esg.dataframe.loc[esg.dataframe["module"] == module_idx]
+
+        self.time_exc = self.esg.df_get_proxy("time")
+        self.time_inc = self.esg.df_get_proxy("time (inc)")
+
         self.nxg = self.create_nxg_tree_from_paths(
             df=module_df,
             path="component_path",
             nbins=nbins
         )
-        self.nbins = nbins
-
-        # self.add_node_attributes()
-
+        
         # TODO: Need to verify it is always a Tree.
         cycles = HierarchyLayout._check_cycles(self.nxg)
         while len(cycles) != 0:
@@ -81,12 +82,7 @@ class HierarchyLayout:
                         ntype = "callsite"
                     nid = self.esg.get_idx(source, ntype)
 
-                    nxg.add_node(source, attr_dict={
-                        "id": nid,
-                        "type": ntype,
-                        "name": source,
-                        "grad": self.esg.get_gradients(nid, ntype, nbins)
-                    })
+                    nxg.add_node(source, attr_dict=self.esg_node_construct(nid, ntype, source, nbins))
 
                 # TODO: This could lead to issues. We cannot assume all nodes
                 # that are below a module, a callsite. 
@@ -95,16 +91,28 @@ class HierarchyLayout:
                 if not nxg.has_node(target):
                     ntype = "callsite"
                     nid = self.esg.get_idx(target, ntype)
-                    nxg.add_node(target, attr_dict={
-                        "id": nid,
-                        "type": ntype,
-                        "name": target,
-                        "grad": self.esg.get_gradients(nid, ntype, nbins)
-                    })
+                    nxg.add_node(target, attr_dict=self.esg_node_construct(nid, ntype, target, nbins))
 
                 if not nxg.has_edge(source, target):
                     nxg.add_edge(source, target)
         return nxg
+
+    def esg_node_construct(self, nid, ntype, name, nbins):
+        if ntype == "callsite":
+            time_inc = self.esg.get_runtime(name, ntype, self.time_inc)
+            time_exc = self.esg.get_runtime(name, ntype, self.time_exc)
+        elif ntype == "module":
+            time_inc = self.esg.get_runtime(nid, ntype, self.time_inc)
+            time_exc = self.esg.get_runtime(nid, ntype, self.time_exc)
+
+        return {
+            "id": nid,
+            "type": ntype,
+            "name": name,
+            "grad": self.esg.get_gradients(nid, ntype, nbins),
+            self.time_inc: time_inc,
+            self.time_exc: time_exc
+        }
 
     @staticmethod
     def as_spanning_trees(G):
