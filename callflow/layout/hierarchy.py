@@ -13,24 +13,19 @@ import callflow
 from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.df import df_as_dict
 
-
 LOGGER = callflow.get_logger(__name__)
-
 
 class HierarchyLayout:
     """
     Hierarchy Layout computation
     """
 
-    def __init__(self, sg, node, filter_by="time (inc)", filter_perc=0.0):
+    def __init__(self, sg, node, nbins):
         """
         Hierarchy Layout computation
 
-        # TODO: Avoid filtering over here.
         :param supergraph: SuperGraph
         :param node: node name
-        :param filter_by: filter by the metric
-        :param filter_perc:  filter percentage
         """
         assert isinstance(sg, callflow.SuperGraph)
         assert "module" in sg.dataframe.columns
@@ -43,9 +38,10 @@ class HierarchyLayout:
         self.nxg = self.create_nxg_tree_from_paths(
             df=module_df,
             path="component_path",
-            filter_by=filter_by,
-            filter_perc=filter_perc,
         )
+        self.nbins = nbins
+
+        self.add_node_attributes()
 
         # TODO: Need to verify it is always a Tree.
         cycles = HierarchyLayout._check_cycles(self.nxg)
@@ -54,14 +50,12 @@ class HierarchyLayout:
             cycles = HierarchyLayout._check_cycles(self.nxg)
             LOGGER.debug(f"cycles: {cycles}")
 
-    def create_nxg_tree_from_paths(self, df, path, filter_by, filter_perc):
+    def create_nxg_tree_from_paths(self, df, path):
         """
-        Create a networkx graph for the module hierarchy. Filter if filter percentage is greater than 0.
+        Create a networkx graph for the module hierarchy.
 
         :param module_df: dataframe for the module
         :param path: path column to consider, e.g., path, group_path, component_path
-        :param filter_by: filter by attribute
-        :param filter_perc: filter percentage
         :return: NetworkX graph
         """
 
@@ -71,35 +65,38 @@ class HierarchyLayout:
         for c_name, path in cp_dict.items():
             path_list = list(map(lambda p: self.sg.get_name(p, "callsite"), path))
             path_list = [self.node] + path_list
-            source_targets = HierarchyLayout._create_source_targets(path_list)
 
-            for edge in source_targets:
-                source = edge["source"]
-                target = edge["target"]
+            for idx in range(len(path_list)):
+                if idx == len(path_list) - 1:
+                    break
+
+                source = path_list[idx]
+                target = path_list[idx + 1]
+
+                if idx == 0 and self.node == source:
+                    ntype = "module"
+                else:
+                    ntype = "callsite"
+
+                nxg.add_node(source, attr_dict={
+                    "id": self.sg.get_idx(source, ntype),
+                    "type": ntype,
+                    "name": source
+                })
+
+                # TODO: This could lead to issues. We cannot assume all nodes
+                # that are below a module, a callsite. 
+                # We need to make it type independent. We need a better way to
+                # judge what type a particular callsite is. 
+                nxg.add_node(target, attr_dict={
+                    "id": self.sg.get_idx(target, "callsite"),
+                    "type": "callsite",
+                    "name": target
+                })
+
                 if not nxg.has_edge(source, target):
                     nxg.add_edge(source, target)
         return nxg
-
-    @staticmethod
-    def _create_source_targets(path_list):
-        """
-        Create edges from path list.
-
-        :param path_list: paths expressed as a list.
-        :return: edges (array)  edges expressed as source-target pairs.
-        """
-
-        edges = []
-
-        for idx in range(len(path_list)):
-            if idx == len(path_list) - 1:
-                break
-
-            source = path_list[idx]
-            target = path_list[idx + 1]
-
-            edges.append({"source": source, "target": target})
-        return edges
 
     @staticmethod
     def as_spanning_trees(G):
@@ -155,3 +152,11 @@ class HierarchyLayout:
                 LOGGER.debug("Removing edge:", source, target)
                 G.remove_edge(source, target)
         return G
+
+    def add_node_attributes(self):
+        """
+        Add gradients as a node property. 
+        """
+        for node in self.nxg.nodes(data=True):
+            grads = self.sg.get_gradients(node[1]["attr_dict"], self.nbins)
+            nx.set_node_attributes(self.nxg, name=node[0], values=grads)

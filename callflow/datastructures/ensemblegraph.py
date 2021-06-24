@@ -10,6 +10,8 @@ CallFlow's ensemble super graph.
 from callflow import get_logger
 from .supergraph import SuperGraph
 
+from callflow.modules import Gradients
+
 LOGGER = get_logger(__name__)
 
 
@@ -64,5 +66,14 @@ class EnsembleGraph(SuperGraph):
             self.dataframe = self.df_filter_by_search_string("dataset", runs)
 
         return runs
+
+    def get_gradients(self, node, nbins):
+        """
+        Getter to obtain the gradients of a node by the runtime metrics.
+        """
+        return Gradients(self.dataframe, bins=nbins,
+            node_id=node.get("id"),
+            node_type=node.get("type"),
+            proxy_columns=self.proxy_columns).result
 
 # ------------------------------------------------------------------------------

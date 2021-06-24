@@ -77,7 +77,8 @@ export default {
 			runs: "getRuns",
 			showTarget: "getShowTarget",
 			generalColors: "getGeneralColors",
-			selectedTargetRun: "getSelectedTargetRun"
+			selectedTargetRun: "getSelectedTargetRun",
+			runBinCount: "getRunBinCount",
 		})
 	},
 
@@ -109,6 +110,7 @@ export default {
 					node: this.selectedNode["name"],
 					ntype: this.selectedNode["type"],
 					dataset: this.selectedTargetRun,
+					nbins: this.runBinCount,
 				});
 			}
 
