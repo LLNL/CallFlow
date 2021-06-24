@@ -93,7 +93,6 @@ export default {
 		boxplotHeight: 340,
 		boxplotWidth: 0,
 		duration: 300,
-		iqrFactor: 0.15,
 		outlierRadius: 4,
 		outlierList: {},
 		callsiteIDMap: {},
@@ -122,7 +121,8 @@ export default {
 			selectedMetric: "getSelectedMetric",
 			data: "getSingleBoxplots",
 			summary: "getSummary",
-			runtimeSortBy: "getRuntimeSortBy"
+			runtimeSortBy: "getRuntimeSortBy",
+			iqrFactor: "getIQRFactor",
 		})
 	},
 
@@ -179,6 +179,7 @@ export default {
 				metric: this.selectedMetric,
 				callsites: callsites,
 				ntype: "callsite",
+				iqr: this.iqrFactor,
 			});
 
 			this.width = document.getElementById(this.id).clientWidth;

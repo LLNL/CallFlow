@@ -98,6 +98,7 @@ export default new Vuex.Store({
 		compareData: {},
 
 		encoding: "MEAN",
+		IQRFactor: 1.5,
 	},
 
 	mutations: {
@@ -214,6 +215,10 @@ export default new Vuex.Store({
 		
 		setCompareData(state, payload) {
 			state.compareData = payload;
+		},
+
+		setIQRFactor(state, payload) {
+			state.IQRFactor = payload;
 		}
 	},
 	
@@ -374,6 +379,17 @@ export default new Vuex.Store({
 
 		updateNodeEncoding() {
 			EventHandler.$emit("update-node-encoding");
+		},
+
+		updateIQRFactor({state, commit}, payload) {
+			commit("setIQRFactor", payload);
+			console.log("[Interaction] Updating IQR Factor.");
+			if (state.selectedMode == "SG") {
+				EventHandler.$emit("reset-single-boxplots");
+			}
+			else if(state.selectedMode == "ESG") {
+				EventHandler.$emit("reset-ensemble-boxplots");
+			}
 		},
 
 		reset({state}) {

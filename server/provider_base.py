@@ -527,11 +527,12 @@ class BaseProvider:
             return scatterplot.unpack()
         
         elif operation_name == "boxplots":
-            callsites = operation["callsites"]
+            callsites = operation.get("callsites", [])
+            iqr = float(operation.get("iqr", 1.5))
 
             result = {}
             for callsite in callsites:
-                bp = BoxPlot(sg=sg, relative_sg=e_sg, name=callsite, ntype=ntype, proxy_columns=t_sg.proxy_columns)
+                bp = BoxPlot(sg=sg, relative_sg=e_sg, name=callsite, ntype=ntype, iqr_scale=iqr, proxy_columns=t_sg.proxy_columns)
                 result[callsite] = bp.unpack()
             
             return result

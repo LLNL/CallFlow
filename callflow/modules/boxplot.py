@@ -26,7 +26,7 @@ class BoxPlot:
     Boxplot computation for a dataframe segment
     """
 
-    def __init__(self, sg, relative_sg=None,  name="", ntype="", proxy_columns={}):
+    def __init__(self, sg, relative_sg=None, name="", ntype="", iqr_scale=1.5, proxy_columns={}):
         """
         Boxplot for callsite or module
         
@@ -40,6 +40,7 @@ class BoxPlot:
         assert isinstance(name, str)
         assert ntype in ["callsite", "module"]
         assert isinstance(proxy_columns, dict)
+        assert isinstance(iqr_scale, float)
 
         self.box_types = ["tgt"]        
         if relative_sg is not None:
@@ -61,6 +62,7 @@ class BoxPlot:
         self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
         self.result = {}
         self.ntype = ntype
+        self.iqr_scale = iqr_scale
 
         self.result["name"] = name
         if ntype == "callsite":
@@ -74,7 +76,7 @@ class BoxPlot:
         ret = {_: {} for _ in TIME_COLUMNS}
         for tk, tv in zip(TIME_COLUMNS, self.time_columns):
             q = np.percentile(df[tv], [0.0, 25.0, 50.0, 75.0, 100.0])
-            mask = outliers(df[tv])
+            mask = outliers(df[tv], scale=self.iqr_scale)
             mask = np.where(mask)[0]
 
             if 'rank' in df.columns:
@@ -89,16 +91,17 @@ class BoxPlot:
             _skew = skew(_data)
             _kurt = kurtosis(_data)
 
-            ret[tk] = {"q": q,
-                               "oval": df[tv].to_numpy()[mask],
-                               "orank": rank,
-                               "d": _data,
-                                "rng": (_min, _max),
-                                "uv": (_mean, _var),
-                                "imb": _imb,
-                                "ks": (_kurt, _skew),
-                                "nid": df["nid"].unique(),
-                            }
+            ret[tk] = {
+                "q": q,
+                "oval": df[tv].to_numpy()[mask],
+                "orank": rank,
+                "d": _data,
+                "rng": (_min, _max),
+                "uv": (_mean, _var),
+                "imb": _imb,
+                "ks": (_kurt, _skew),
+                "nid": df["nid"].unique(),
+            }
             if 'dataset' in df.columns:
                 ret[tk]['odset'] = df['dataset'].to_numpy()[mask]
 

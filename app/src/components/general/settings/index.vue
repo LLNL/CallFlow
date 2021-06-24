@@ -1,7 +1,7 @@
 <template>
   <v-col class="pa-0">
     <v-flex xs12 class="ma-1">
-      <v-subheader class="teal lighten-4">Visual Encoding</v-subheader>
+      <v-subheader class="teal lighten-4">SuperGraph Encoding</v-subheader>
     </v-flex>
     <v-flex xs12 class="ma-1">
       <v-select
@@ -68,7 +68,7 @@
 
     <template :v-if="selectedMode == 'SG'">
       <v-flex xs12 class="ma-1">
-        <v-subheader class="teal lighten-4">Histograms</v-subheader>
+        <v-subheader class="teal lighten-4">Runtime Encoding</v-subheader>
       </v-flex>
 
       <v-flex xs12 class="ma-1" :v-show="selectedMode == 'SG'">
@@ -131,7 +131,7 @@
 
     <template>
       <v-flex xs12 class="ma-1">
-        <v-subheader class="teal lighten-4">Call site Information</v-subheader>
+        <v-subheader class="teal lighten-4">Call site Variability</v-subheader>
       </v-flex>
       <v-flex xs12 class="ma-1">
         <v-select
@@ -158,6 +158,7 @@
           :disabled="
             selectedMode === 'ESG' || selectedMode == 'SG' ? false : true
           "
+          @change="updateIQRFactor"
         >
         </v-text-field>
       </v-flex>
@@ -215,6 +216,7 @@ export default {
 			"updateTargetColor",
 			"updateCompareRun",
 			"updateProp",
+			"updateIQRFactor"
 		]),
 
 		init() {
