@@ -84,7 +84,7 @@ export default {
 			const linearGradient = defs
 				.append("linearGradient")
 				.attr("id", "mean-gradient" + nid)
-				.attr("class", "mean-gradient");
+				.attr("class", "linear-gradient");
 
 			linearGradient
 				.attr("x1", "0%")
