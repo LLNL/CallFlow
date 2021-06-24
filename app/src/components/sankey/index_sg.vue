@@ -158,6 +158,15 @@ export default {
 			self.$refs.Nodes.$refs.TargetLine.clear();
 			self.$refs.MiniHistograms.clear();
 		});
+
+		EventHandler.$on("update-ensemble-colors", () => {
+			d3.selectAll(".callsite").remove();
+			self.$refs.ColorMap.clear();
+			self.singleColors();
+			self.ensembleColors();
+			self.$refs.Nodes.init(self.data);
+			this.colormaps();
+		});
 	},
 
 	methods: {
@@ -275,6 +284,10 @@ export default {
 			this.$refs.Edges.init(this.data);
 			this.$refs.MiniHistograms.init(this.data);
 
+			this.colormaps();
+		},
+
+		colormaps() {
 			if (this.selectedMode == "SG") {
 				this.$refs.ColorMap.init(this.$store.runtimeColor);
 			}
