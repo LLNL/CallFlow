@@ -177,7 +177,6 @@ export default {
 			d3.selectAll(".binRank").remove();
 			d3.selectAll(".lineRank").remove();
 			d3.selectAll(".brush").remove();
-			d3.selectAll(".tick").remove();
 			d3.selectAll(".histogram-rank-axis").remove();
 			this.$refs.ToolTip.clear();
 		},
@@ -474,11 +473,8 @@ export default {
 							end = group[1] + 1;
 						}
 
-						let topX1 = cumulativeBinSpace + binLocation + widthPerRank;
-						let topX2 =
-              cumulativeBinSpace +
-              (end - start + 1) * widthPerRank +
-              binLocation;
+						let topX1 = cumulativeBinSpace + binLocation + widthPerRank + binWidth  / 4;
+						let topX2 = cumulativeBinSpace + (end - start + 1) * widthPerRank + binLocation + binWidth / 4;
 
 						let botX3 = this.ranklinescale(start);
 						let botX4 = this.ranklinescale(end);
@@ -501,7 +497,7 @@ export default {
 								return "grey";
 							})
 							.style("fill-opacity", 0.4)
-							.attr("transform", `translate(${binWidth/2},${-3 * this.bottomMargin})`);
+							.attr("transform", `translate(${0},${-3 * this.bottomMargin})`);
 					});
 				}
 			});
