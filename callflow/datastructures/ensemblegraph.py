@@ -67,13 +67,13 @@ class EnsembleGraph(SuperGraph):
 
         return runs
 
-    def get_gradients(self, node, nbins):
+    def get_gradients(self, nid, ntype, nbins):
         """
         Getter to obtain the gradients of a node by the runtime metrics.
         """
         return Gradients(self.dataframe, bins=nbins,
-            node_id=node.get("id"),
-            node_type=node.get("type"),
+            node_id=nid,
+            node_type=ntype,
             proxy_columns=self.proxy_columns).result
 
 # ------------------------------------------------------------------------------

@@ -405,7 +405,7 @@ class SankeyLayout:
         }
 
     def esg_node_construct(self, callsite_name, node):
-        grads = self.esg.get_gradients(node, self.nbins)
+        grads = self.esg.get_gradients(node.get("id"), node.get("type"), self.nbins)
 
         ret = self.sg_node_construct(callsite_name, node)
         ret['gradients'] = grads
