@@ -229,6 +229,8 @@ export default {
 		// return a string version and an array version
 		// stolen from this: https://gist.github.com/XciA/10572206
 		groupProcess(processIDs) {
+
+			console.log(processIDs);
 			const constData = processIDs.slice();
 			let a = 0;
 			let groupArrayStr = "[ ";
@@ -267,7 +269,7 @@ export default {
 					string = `[${constData[k]}]`;
 					temp.push(constData[k]);
 				}
-				// groupArray.push(temp);
+				groupArray.push(temp);
 				if (!first) {
 					groupArrayStr += ", ";
 				}
@@ -314,22 +316,25 @@ export default {
 						.style("fill-opacity", 1);
 					let groupProcStr = self.groupProcess(self.binContainsProcID[i])
 						.string;
-					groupProcStr =  "Processes (MPI ranks):" + self.sanitizeGroupProc(groupProcStr);
+					groupProcStr =  "MPI ranks:" + self.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseover", function (d, i) {
+					console.log(d);
 					d3.select(this).attr("fill", "orange");
+					d3.selectAll(".lineRank")
+						.style("fill-opacity", 0.1);
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
 					let groupProcStr = self.groupProcess(self.binContainsProcID[i])
 						.string;
-					groupProcStr = "Processes (MPI ranks):" + self.sanitizeGroupProc(groupProcStr);
+					groupProcStr = d + " MPI ranks:" + self.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseout", function (d, i) {
 					d3.select(this).attr("fill", self.generalColors.intermediate);
-					d3.selectAll(`.lineRank_${i}`)
+					d3.selectAll(".lineRank")
 						.style("fill", "grey")
 						.style("fill-opacity", 0.4);
 					self.$refs.ToolTip.clear();
@@ -515,7 +520,7 @@ export default {
 								return "grey";
 							})
 							.style("fill-opacity", 0.4)
-							.attr("transform", `translate(${0},${-3 * this.bottomMargin})`);
+							.attr("transform", `translate(${binWidth/2},${-3 * this.bottomMargin})`);
 					});
 				}
 			});

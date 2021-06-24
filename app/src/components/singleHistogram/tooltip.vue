@@ -68,7 +68,7 @@ export default {
 				})
 				.attrs({
 					"x": () => {
-						if (this.mousePosX + this.halfWidth > document.getElementById(this.parentID).clientWidth - 25) {
+						if (this.mousePosX + this.halfWidth > document.getElementById(this.parentID).clientWidth) {
 							return (this.mousePosX) - this.halfWidth + "px";
 						}
 						return (this.mousePosX) + "px";
@@ -88,7 +88,7 @@ export default {
 				.attrs({
 					"class": "toolTipContent",
 					"x": () => {
-						if (this.mousePosX + this.halfWidth > document.getElementById(this.parentID).clientWidth - 25) {
+						if (this.mousePosX + this.halfWidth > document.getElementById(this.parentID).clientWidth) {
 							return (this.mousePosX + this.offset) - this.halfWidth+ "px";
 						}
 						return (this.mousePosX) + this.offset + "px";
