@@ -482,7 +482,7 @@ class BaseProvider:
             return ssg.nxg
 
         elif operation_name == "module_hierarchy":
-            hl = HierarchyLayout(sg, operation.get("node"))
+            hl = HierarchyLayout(esg=e_sg, node=operation.get("node"), nbins=operation.get("nbins", 20))
             return hl.nxg
 
         elif operation_name == "projection":

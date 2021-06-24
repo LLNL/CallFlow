@@ -30,7 +30,7 @@ from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.utils import NumpyEncoder
 from callflow.utils.df import *
 from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
-from callflow.modules import Gradients, Histogram
+from callflow.modules import Histogram
 
 LOGGER = get_logger(__name__)
 
@@ -168,15 +168,6 @@ class SuperGraph(ht.GraphFrame):
         if "dataset" in self.df_columns():
             return self.df_unique('dataset')
 
-    def get_gradients(self, node, nbins):
-        """
-        Getter to obtain the gradients of a node by the runtime metrics.
-        """
-        return Gradients(self.dataframe, bins=nbins,
-            node_id=node.get("id"),
-            node_type=node.get("type"),
-            proxy_columns=self.proxy_columns).result
-
     def get_histograms(self, node, nbins):
         """
         Getter to obtain the rank histograms of a node.
@@ -197,6 +188,11 @@ class SuperGraph(ht.GraphFrame):
 
     def get_entry_functions(self, node):
         return []
+
+    def get_node(self, node): 
+        return {
+
+        }
 
     # --------------------------------------------------------------------------
     def create(self, path, profile_format, module_callsite_map: dict = {},  filter_by="time (inc)", filter_perc=10.0) -> None: 
@@ -338,7 +334,6 @@ class SuperGraph(ht.GraphFrame):
         if has_modules_in_map:
             LOGGER.debug(f'[{self.name}] Using the supplied module map')
             self.modules = { i: m for i, m in enumerate(module_callsite_map.keys()) }
-            print("Callsite module map", self.modules)
             _modules_inv = dict((v, k) for k, v in self.modules.items())
 
             _nid = lambda _: self.df_lookup_with_column("name", _)["nid"].unique().tolist()
@@ -488,7 +483,7 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.debug(f'Nodes: {nodes}; ntype: {ntype}; metric: {metric}')
 
         data = {} 
-        data = { str(node) : df_column_mean(grp_df.get_group(node), metric, self.proxy_columns) for node in nodes }    
+        data = { str(node) : df_column_mean(grp_df.get_group(self.get_idx(node, ntype)), metric, self.proxy_columns) for node in nodes }    
         data['root_time_inc'] = self.df_root_max_mean_runtime(self.roots, "time (inc)")
         data['name'] = self.name
         return data
