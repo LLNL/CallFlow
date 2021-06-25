@@ -158,6 +158,18 @@ export default {
 			self.$refs.Nodes.$refs.TargetLine.clear();
 			self.$refs.MiniHistograms.clear();
 		});
+
+		EventHandler.$on("update-ensemble-colors", () => {
+			self.$refs.ColorMap.clear();
+			if (self.isComparisonMode) {
+				// EventHandler.$emit("setup-diff-colormap");
+			}
+			else {
+				self.singleColors();
+				self.ensembleColors();
+			}
+			this.initColorMaps();
+		});
 	},
 
 	methods: {
@@ -275,12 +287,21 @@ export default {
 			this.$refs.Edges.init(this.data);
 			this.$refs.MiniHistograms.init(this.data);
 
+			this.initColorMaps();
+		},
+
+		initColorMaps() {
 			if (this.selectedMode == "SG") {
 				this.$refs.ColorMap.init(this.$store.runtimeColor);
 			}
 			else if(this.selectedMode == "ESG") {
-				this.$refs.ColorMap.init(this.$store.runtimeColor);
-				this.$refs.ColorMap.init(this.$store.distributionColor);
+				if (this.isComparisonMode) {
+					this.$refs.ColorMap.init(this.$store.diffColor);
+				}
+				else {
+					this.$refs.ColorMap.init(this.$store.runtimeColor);
+					this.$refs.ColorMap.init(this.$store.distributionColor);
+				}
 			}
 		},
 

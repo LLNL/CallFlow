@@ -75,6 +75,7 @@ export default {
 			summary: "getSummary",
 			showTarget: "getShowTarget",
 			generalColors: "getGeneralColors",
+			targetColor: "getTargetColor"
 		})
 	},
 
@@ -94,6 +95,7 @@ export default {
 
 	methods: {
 		init() {
+			this.orientation = ["time", "time (inc)"];
 			this.$store.dispatch("fetchEnsembleScatterplot", {
 				dataset: this.selectedTargetRun,
 				node: this.selectedNode["name"],
@@ -102,7 +104,7 @@ export default {
 			});
 
 			this.width = window.innerWidth * 0.25;
-			this.height = (this.$store.viewHeight) * 0.33;
+			this.height = (this.$store.viewHeight) * 0.30;
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
@@ -173,7 +175,7 @@ export default {
 
 			// this.correlationText()
 			this.setTitle();
-			// this.$refs.ToolTip.init(this.svgID);
+			this.$refs.ToolTip.init(this.svgID);
 		},
 
 		setTitle() {
@@ -286,7 +288,7 @@ export default {
 			var y1 = leastSquaresCoeff[0] * this.xMin + leastSquaresCoeff[1];
 			var x2 = this.xMax;
 			var y2 = leastSquaresCoeff[0] * this.xMax + leastSquaresCoeff[1];
-			var trendData = [[x1,y1,x2,y2]];
+			var trendData = [[x1, y1, x2, y2]];
 			
 			var trendline = this.svg.selectAll("#trendline" + id)
 				.data(trendData);
@@ -348,8 +350,10 @@ export default {
 						let data = {
 							"callsite": callsite,
 							"QCD": opacity,
-							"value": self.xArray[i].val,
-							"run": self.xArray[i].run
+							"x": self.xArray[i],
+							"y": self.yArray[i],
+							"run": self.xArray[i].run,
+							"orientation": self.orientation
 						};
 						self.$refs.ToolTip.render(data);
 					})
@@ -376,14 +380,17 @@ export default {
 						"cx": () => this.xScale(this.xtargetArray[i]) + 3 * this.padding.left,
 						"cy": (d, i) => this.yScale(self.ytargetArray[i]),
 					})
-					.style("fill", this.generalColors.target)
+					.style("fill", this.targetColor)
+					.style("opacity", 0.5)
 					.style("stroke", this.generalColors.darkGrey)
 					.style("stroke-width", 0.5)
 					.on("mouseover", () => {
 						let data = {
 							"callsite": callsite,
 							"QCD": opacity,
-							"value": self.xtargetArray[i].val,
+							"x": self.xtargetArray[i],
+							"y": self.ytargetArray[i],
+							"orientation": self.orientation,
 							"run": run
 						};
 						self.$refs.ToolTip.render(data);

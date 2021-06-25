@@ -62,6 +62,7 @@ export default {
 			summary: "getSummary",
 			selectedTargetRun: "getSelectedTargetRun",
 			generalColors: "getGeneralColors",
+			targetColor: "getTargetColor"
 		})
 	},
 
@@ -425,7 +426,7 @@ export default {
 			d3.select(
 				"#outer-dot" + this.selectedRun
 			)
-				.attr("stroke", self.generalColors.target)
+				.attr("stroke", this.targetColor)
 				.attr("stroke-width", 3);
 
 			// Set the local and global variables for compare dataset

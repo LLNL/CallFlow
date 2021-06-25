@@ -34,14 +34,14 @@
 		<splitpanes id="callgraph-dashboard-2" class="default-theme">
 			<!-- Left column-->
 			<splitpanes horizontal splitpanes-size="25">
-			<ModuleHierarchy ref="ModuleHierarchy" />
-			<EnsembleScatterplot ref="EnsembleScatterplot" />
-			<EnsembleHistogram ref="EnsembleHistogram" />
+				<ModuleHierarchy ref="ModuleHierarchy" />
+				<EnsembleScatterplot ref="EnsembleScatterplot" />
+				<EnsembleHistogram ref="EnsembleHistogram" />
 			</splitpanes>
 
 			<!-- Center column-->
 			<splitpanes horizontal splitpanes-size="55">
-			<Sankey ref="Sankey" />
+				<Sankey ref="Sankey" />
 			</splitpanes>
 
 			<!-- Right column-->

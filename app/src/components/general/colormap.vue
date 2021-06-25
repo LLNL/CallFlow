@@ -26,7 +26,7 @@ export default {
 		width: 230,
 		containerWidth: 660,
 		height: 20,
-		containerHeight: 50,
+		containerHeight: 100,
 		colorMin: 0,
 		colorMax: 0,
 		offset: 30,

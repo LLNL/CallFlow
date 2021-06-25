@@ -95,6 +95,7 @@ class Histogram:
                 'abs': dhist[1],
                 'rel': rhist[1],
                 'rng': dhist[0],
+                'dig': dhist[2],
             }
 
             if node_type == "callsite":
@@ -124,6 +125,7 @@ class Histogram:
                     "x_max": float(data[histo_type]['rng'][-1]),
                     "y_min": float(data[histo_type]['abs'].min()),
                     "y_max": float(data[histo_type]['abs'].max()),
+                    "dig": Histogram._get_digs_as_dict_array(data[histo_type]['dig']),
                 }
                 if 'rel' in data[histo_type].keys() and data[histo_type]["rel"] is not None:
                     result[metric][histo_type]["rel_y"] = data[histo_type]['rel'].tolist()
@@ -133,6 +135,16 @@ class Histogram:
                 result[metric]["d"] = data["d"].tolist()
         
         return result
+
+    def _get_digs_as_dict_array(arr):
+        ret = {}
+        for x in zip(iter(arr), range(0, len(arr))):
+            bin_idx = int(x[0]) - 1
+            if bin_idx not in ret:
+                ret[bin_idx] = []
+                
+            ret[bin_idx].append(int(x[1]))
+        return ret
 
     # --------------------------------------------------------------------------
     def _get_data_by_histo_type(self, df, histo_type):
@@ -171,6 +183,6 @@ class Histogram:
         :param histo:
         :return:
         """
-        return {"b": histo[0], "h": histo[1]}
+        return {"b": histo[0], "h": histo[1], "dig": histo[2]}
 
 # ------------------------------------------------------------------------------

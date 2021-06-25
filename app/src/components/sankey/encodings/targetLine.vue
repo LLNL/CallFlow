@@ -27,12 +27,13 @@ export default {
 			generalColors: "getGeneralColors",
 			selectedMetric: "getSelectedMetric",
 			selectedRunBinCount: "getRunBinCount",
+			targetColor: "getTargetColor",
 		})
 	},
 
 	methods: {
 		init(nodes, containerG) {
-			this.nodes = nodes;
+			this.nodes = nodes.filter((node) => !(node.type === "intermediate"));
 			this.containerG = containerG;
 			this.visualize();
 		},
@@ -52,7 +53,7 @@ export default {
 					"x2": this.$parent.nodeWidth,
 					"y2": (d) => this.getTargetPos(d),
 					"stroke-width": 5,
-					"stroke": this.generalColors.target
+					"stroke": this.targetColor
 				});
 		},
 

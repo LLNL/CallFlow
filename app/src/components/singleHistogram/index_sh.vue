@@ -177,12 +177,9 @@ export default {
 			d3.selectAll(".binRank").remove();
 			d3.selectAll(".lineRank").remove();
 			d3.selectAll(".brush").remove();
-			d3.selectAll(".tick").remove();
 			d3.selectAll(".histogram-rank-axis").remove();
 			this.$refs.ToolTip.clear();
 		},
-
-		
 
 		array_unique(arr) {
 			return arr.filter(function (value, index, self) {
@@ -190,32 +187,17 @@ export default {
 			});
 		},
 
-		dataProcess(data, mpiData) {
+		dataProcess(data) {
 			let axis_x = [];
-			let binContainsProcID = {};
 			let dataMin = data["x_min"];
 			let dataMax = data["x_max"];
 
-			const dataWidth = (dataMax - dataMin) / (data["x"].length);
+			const dataWidth = (dataMax - dataMin) / (data["x"].length - 1);
 			for (let i = 0; i < data["x"].length; i++) {
 				axis_x.push(dataMin + i * dataWidth);
 			}
 
-			// TODO: Expensive !!!
-			mpiData.forEach((val, idx) => {
-				let pos = Math.floor((val - dataMin) / dataWidth);
-				if (pos >= this.rankBinCount) {
-					pos = this.rankBinCount;
-				}
-				if (pos < 0){
-					pos = 0;
-				}
-				if (binContainsProcID[pos] == null) {
-					binContainsProcID[pos] = [];
-				}
-				binContainsProcID[pos].push(idx);
-			});
-			return [data["x"], data["y"], axis_x, binContainsProcID];
+			return [data["x"], data["y"], axis_x, data["dig"]];
 		},
 
 		removeDuplicates(arr) {
@@ -312,24 +294,27 @@ export default {
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
+
 					let groupProcStr = self.groupProcess(self.binContainsProcID[i])
 						.string;
-					groupProcStr =  "Processes (MPI ranks):" + self.sanitizeGroupProc(groupProcStr);
+					groupProcStr =  "MPI ranks:" + self.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseover", function (d, i) {
 					d3.select(this).attr("fill", "orange");
+					d3.selectAll(".lineRank")
+						.style("fill-opacity", 0.1);
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
 					let groupProcStr = self.groupProcess(self.binContainsProcID[i])
 						.string;
-					groupProcStr = "Processes (MPI ranks):" + self.sanitizeGroupProc(groupProcStr);
+					groupProcStr = d + " MPI ranks:" + self.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseout", function (d, i) {
 					d3.select(this).attr("fill", self.generalColors.intermediate);
-					d3.selectAll(`.lineRank_${i}`)
+					d3.selectAll(".lineRank")
 						.style("fill", "grey")
 						.style("fill-opacity", 0.4);
 					self.$refs.ToolTip.clear();
@@ -488,11 +473,8 @@ export default {
 							end = group[1] + 1;
 						}
 
-						let topX1 = cumulativeBinSpace + binLocation + widthPerRank;
-						let topX2 =
-              cumulativeBinSpace +
-              (end - start + 1) * widthPerRank +
-              binLocation;
+						let topX1 = cumulativeBinSpace + binLocation + widthPerRank + binWidth  / 4;
+						let topX2 = cumulativeBinSpace + (end - start + 1) * widthPerRank + binLocation + binWidth / 4;
 
 						let botX3 = this.ranklinescale(start);
 						let botX4 = this.ranklinescale(end);
@@ -642,7 +624,6 @@ export default {
 				ranks: processIDList,
 				ntype: "callsite",
 			});
-			console.log(split_sgs);
 		},
 	},
 };
