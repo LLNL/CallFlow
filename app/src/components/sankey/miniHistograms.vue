@@ -36,6 +36,7 @@ export default {
 			selectedMode: "getSelectedMode",
 			showTarget: "getShowTarget",
 			comparisonMode: "getComparisonMode",
+			targetColor: "getTargetColor"
 		})
 	},
 
@@ -80,7 +81,7 @@ export default {
 			}
 			else if (type == "target" || type == "single") {
 				if (type == "target")
-					color = this.generalColors.target;
+					color = this.targetColor;
 				else if (type == "single")
 					color = this.generalColors.intermediate;
 				xVals = data.x;

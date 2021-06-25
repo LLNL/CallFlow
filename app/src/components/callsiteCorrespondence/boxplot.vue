@@ -71,7 +71,8 @@ export default {
 	
 	computed: {
 		...mapGetters({
-			generalColors: "getGeneralColors"
+			generalColors: "getGeneralColors",
+			targetColor: "getTargetColor"
 		})
 	},
 	components: {
@@ -107,7 +108,7 @@ export default {
 			this.tOutliers = this.tData["outliers"];
 			this.bOutliers = this.bData["outliers"];
 
-			this.tColor = this.generalColors.target;
+			this.tColor = this.targetColor;
 			this.bColor = this.generalColors.ensemble;
 
 			this.nid = this.tData["nid"];

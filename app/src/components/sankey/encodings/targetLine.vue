@@ -27,6 +27,7 @@ export default {
 			generalColors: "getGeneralColors",
 			selectedMetric: "getSelectedMetric",
 			selectedRunBinCount: "getRunBinCount",
+			targetColor: "getTargetColor",
 		})
 	},
 
@@ -52,7 +53,7 @@ export default {
 					"x2": this.$parent.nodeWidth,
 					"y2": (d) => this.getTargetPos(d),
 					"stroke-width": 5,
-					"stroke": this.generalColors.target
+					"stroke": this.targetColor
 				});
 		},
 

@@ -37,10 +37,14 @@ export default new Vuex.Store({
 
 		// Color
 		targetColorMap: {
-			Green: "#4EAF4A",
-			Blue: "#4681B4",
+			Green: "#4DAF4A",
+			Blue: "#3366CC",
 			Brown: "#AF9B90",
 			Red: "#A90400",
+			Vermillion: "#dc3912",
+			Yellow: "#ff9900",
+			Majenta: "#990099",
+			Pink: "#dd4477"
 		},
 		generalColors: {
 			silver: "#c0c0c0",
@@ -219,7 +223,11 @@ export default new Vuex.Store({
 
 		setIQRFactor(state, payload) {
 			state.IQRFactor = payload;
-		}
+		},
+
+		setTargetColor(state, payload) {
+			state.targetColor = payload;
+		},
 	},
 	
 	actions: {
@@ -383,13 +391,19 @@ export default new Vuex.Store({
 
 		updateIQRFactor({state, commit}, payload) {
 			commit("setIQRFactor", payload);
-			console.log("[Interaction] Updating IQR Factor.");
+			console.log("[Interaction] Updating IQR Factor: ", payload);
 			if (state.selectedMode == "SG") {
 				EventHandler.$emit("reset-single-boxplots");
 			}
 			else if(state.selectedMode == "ESG") {
 				EventHandler.$emit("reset-ensemble-boxplots");
 			}
+		},
+
+		updateTargetColor({commit, dispatch}, payload) {
+			console.log("[Interaction] Updating Target color: ", payload);
+			commit("setTargetColor", payload);
+			dispatch("reset");
 		},
 
 		reset({state}) {

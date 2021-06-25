@@ -73,7 +73,8 @@ export default {
 			showTarget: "getShowTarget",
 			generalColors: "getGeneralColors",
 			selectedProp: "getProp",
-			selectedRunBinCount: "getRunBinCount"
+			selectedRunBinCount: "getRunBinCount",
+			targetColor: "getTargetColor"
 		})
 	},
 
@@ -204,7 +205,7 @@ export default {
 					y: (d, i) => this.yScale(d),
 					width: this.xScale.bandwidth(),
 					height: (d) => Math.abs(this.yAxisHeight - this.yScale(d)),
-					fill: this.generalColors.target,
+					fill: this.targetColor,
 					opacity: 1,
 					"stroke-width": "0.2px",
 					stroke: "#202020",

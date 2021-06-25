@@ -75,6 +75,7 @@ export default {
 			summary: "getSummary",
 			showTarget: "getShowTarget",
 			generalColors: "getGeneralColors",
+			targetColor: "getTargetColor"
 		})
 	},
 
@@ -379,8 +380,8 @@ export default {
 						"cx": () => this.xScale(this.xtargetArray[i]) + 3 * this.padding.left,
 						"cy": (d, i) => this.yScale(self.ytargetArray[i]),
 					})
-					.style("fill", this.generalColors.target)
-					.style("stroke", this.generalColors.darkGrey)
+					.style("fill", this.targetColor)
+					// .style("stroke", this.generalColors.darkGrey)
 					.style("stroke-width", 0.5)
 					.on("mouseover", () => {
 						let data = {

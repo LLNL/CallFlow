@@ -183,7 +183,6 @@ export default {
 		compareModes: ["MEAN_DIFF", "RANK_DIFF"],
 		selectedCompareMode: "MEAN_DIFF",
 		props: ["name", "rank", "dataset"],
-		targetColors: ["Green", "Blue", "Brown"],
 	}),
 
 	computed: {
@@ -200,7 +199,11 @@ export default {
 			selectedIQRFactor: "getIQRFactor",
 			selectedCompareRun: "getCompareRun",
 			selectedProp: "getProp",
+			targetColorMap: "getTargetColorMap"
 		}),
+		targetColors: function () {
+			return Object.keys(this.targetColorMap);
+		}
 	},
 
 	methods: {
@@ -213,7 +216,6 @@ export default {
 			"updateRankBinCount",
 			"updateRunBinCount",
 			"updateRuntimeSortBy",
-			"updateTargetColor",
 			"updateCompareRun",
 			"updateProp",
 			"updateIQRFactor"
