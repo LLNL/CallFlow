@@ -33,7 +33,7 @@ export default {
 
 	methods: {
 		init(nodes, containerG) {
-			this.nodes = nodes;
+			this.nodes = nodes.filter((node) => !(node.type === "intermediate"));
 			this.containerG = containerG;
 			this.visualize();
 		},

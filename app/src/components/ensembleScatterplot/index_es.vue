@@ -104,7 +104,7 @@ export default {
 			});
 
 			this.width = window.innerWidth * 0.25;
-			this.height = (this.$store.viewHeight) * 0.33;
+			this.height = (this.$store.viewHeight) * 0.30;
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
@@ -381,7 +381,8 @@ export default {
 						"cy": (d, i) => this.yScale(self.ytargetArray[i]),
 					})
 					.style("fill", this.targetColor)
-					// .style("stroke", this.generalColors.darkGrey)
+					.style("opacity", 0.5)
+					.style("stroke", this.generalColors.darkGrey)
 					.style("stroke-width", 0.5)
 					.on("mouseover", () => {
 						let data = {

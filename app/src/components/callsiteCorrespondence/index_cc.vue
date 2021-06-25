@@ -57,7 +57,7 @@
       v-for="callsite in intersectionCallsites"
       :key="getID(callsite.nid)"
     >
-      <v-row  class="pt-2">
+      <v-row>
         <!-- <v-col cols="1">
           <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>

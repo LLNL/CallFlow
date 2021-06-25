@@ -8,9 +8,6 @@
 <template>
   <v-layout row wrap :id="id">
 	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info"/>
-    <span class="component-info">
-      Module = {{ formatModule(selectedModule) }}
-    </span>
     <ToolTip ref="ToolTip" />
   </v-layout>
 </template>
@@ -111,6 +108,8 @@ export default {
 			self.clear();
 			self.init();
 		});
+
+		this.infoSummary = "Module: " + this.selectedNode["name"];
 	},
 
 	methods: {

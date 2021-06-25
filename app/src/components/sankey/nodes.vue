@@ -128,8 +128,7 @@ export default {
 			this.ensemblePath();
 			this.text();
 
-			// TODO: Fix this.
-			if (this.showTarget && this.selectedMode === "ESG") {
+			if (this.showTarget && this.selectedMode === "ESG" && !this.isComparisonMode) {
 				this.$refs.TargetLine.init(this.graph.nodes, this.containerG);
 				this.$refs.Guides.init(this.graph.nodes, this.containerG);
 				this.targetPath();
@@ -222,7 +221,7 @@ export default {
 				const nodeSVG = this.containerG.select("#callsite-" + node.id);
 
 				// Make appropriate event requests (Single and Ensemble).
-				if (this.selectedMode == "ESG") {
+				if (this.selectedMode == "ESG" && !this.isComparisonMode) {
 					if (!this.drawGuidesMap[node.id]) {
 						this.$refs.Guides.visualize(node, "permanent", nodeSVG);
 						this.drawGuidesMap[node.id] = true;
@@ -243,14 +242,14 @@ export default {
 
 		mouseover(node) {
 			this.$refs.ToolTip.visualize(self.graph, node);
-			if (this.selectedMode === "ESG") {
+			if (this.selectedMode === "ESG" && !this.isComparisonMode) {
 				this.$refs.Guides.visualize(node, "temporary");
 			}
 		},
 
 		mouseout(node) {
 			this.$refs.ToolTip.clear();
-			if (this.$store.selectedMode == "Ensemble") {
+			if (this.selectedMode == "ESG") {
 				this.$refs.Guides.clear(node, "temporary");
 				if (this.permanentGuides == false) {
 					d3.selectAll(".ensemble-edge")

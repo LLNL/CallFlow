@@ -103,7 +103,7 @@ export default {
 
 			// Assign the height and width of container
 			this.width = window.innerWidth * 0.25;
-			this.height = this.$store.viewHeight * 0.33;
+			this.height = this.$store.viewHeight * 0.30;
 
 			// Assign width and height for histogram and rankLine SVG.
 			this.boxWidth = this.width - 1 * (this.padding.right + this.padding.left);

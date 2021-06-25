@@ -161,9 +161,14 @@ export default {
 
 		EventHandler.$on("update-ensemble-colors", () => {
 			self.$refs.ColorMap.clear();
-			self.singleColors();
-			self.ensembleColors();
-			this.colormaps();
+			if (self.isComparisonMode) {
+				// EventHandler.$emit("setup-diff-colormap");
+			}
+			else {
+				self.singleColors();
+				self.ensembleColors();
+			}
+			this.initColorMaps();
 		});
 	},
 
@@ -282,16 +287,21 @@ export default {
 			this.$refs.Edges.init(this.data);
 			this.$refs.MiniHistograms.init(this.data);
 
-			this.colormaps();
+			this.initColorMaps();
 		},
 
-		colormaps() {
+		initColorMaps() {
 			if (this.selectedMode == "SG") {
 				this.$refs.ColorMap.init(this.$store.runtimeColor);
 			}
 			else if(this.selectedMode == "ESG") {
-				this.$refs.ColorMap.init(this.$store.runtimeColor);
-				this.$refs.ColorMap.init(this.$store.distributionColor);
+				if (this.isComparisonMode) {
+					this.$refs.ColorMap.init(this.$store.diffColor);
+				}
+				else {
+					this.$refs.ColorMap.init(this.$store.runtimeColor);
+					this.$refs.ColorMap.init(this.$store.distributionColor);
+				}
 			}
 		},
 
