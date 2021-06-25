@@ -79,6 +79,8 @@ export default {
 		let self = this;
 		EventHandler.$on("update-node-encoding", function (data) {
 			self.clearEncoding();
+			self.clearTargetLines();
+			// TODO: Move the emitter to the store.js possibly. 
 			EventHandler.$emit("update-ensemble-colors");
 			self.visualize();
 		});
@@ -387,6 +389,10 @@ export default {
 			else if (this.prevEncoding == "RANK_DIFF") {
 				this.$refs.RankDiff.clear(this.graph.nodes, this.containerG);
 			}
+		},
+
+		clearTargetLines() {
+			d3.selectAll(".targetLines").remove();
 		},
 
 		clear() {

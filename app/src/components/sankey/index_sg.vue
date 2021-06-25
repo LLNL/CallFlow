@@ -162,7 +162,7 @@ export default {
 		EventHandler.$on("update-ensemble-colors", () => {
 			self.$refs.ColorMap.clear();
 			if (self.isComparisonMode) {
-				// EventHandler.$emit("setup-diff-colormap");
+				// TODO: Need to call the diffColor setup here. 
 			}
 			else {
 				self.singleColors();
