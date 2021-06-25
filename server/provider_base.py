@@ -474,7 +474,7 @@ class BaseProvider:
                 grp_column="group_path",    
                 sg=sg,
                 esg=e_sg,
-                nbins=operation.get("nbins", 20),
+                nbins=int(operation.get("nbins", 20)),
                 reveal_callsites=operation.get("reveal_callsites", []),
                 split_entry_module=operation.get("split_entry_module", []),
                 split_callee_module= operation.get("split_callee_module", []),
@@ -482,7 +482,8 @@ class BaseProvider:
             return ssg.nxg
 
         elif operation_name == "module_hierarchy":
-            hl = HierarchyLayout(esg=e_sg, node=operation.get("node"), nbins=operation.get("nbins", 20))
+            nbins = int(operation.get("nbins", 20))
+            hl = HierarchyLayout(esg=e_sg, node=operation.get("node"), nbins=nbins)
             return hl.nxg
 
         elif operation_name == "projection":
@@ -506,11 +507,12 @@ class BaseProvider:
 
         elif operation_name == "histogram":
             node = operation["node"]
-            nbins = operation["nbins"]
+            nbins = int(operation.get("nbins", 20))
 
             hist = Histogram(dataframe=t_aux_dict[node], relative_to_df=e_aux_dict[node],
                         histo_types=["rank"],
                         node_type=ntype,
+                        bins=nbins,
                         proxy_columns=t_sg.proxy_columns)
 
             return hist.unpack()

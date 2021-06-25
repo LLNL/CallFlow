@@ -368,7 +368,8 @@ export default new Vuex.Store({
 
 		updateRunBinCount({ state, dispatch }, payload) {
 			state.runBinCount = payload;
-			EventHandler.$emit("reset-ensemble-histogram");
+			// EventHandler.$emit("reset-ensemble-histogram");
+			dispatch("reset");
 		},
 
 		updateRuntimeSortBy({ state, dispatch }, payload) {
