@@ -9,7 +9,8 @@ CallFlow's operation API.
 from .filter import Filter
 from .group import Group
 from .unify import Unify
+from .config import Config
 
-__all__ = ["Filter", "Group", "Unify"]
+__all__ = ["Filter", "Group", "Unify", "Config"]
 
 # ------------------------------------------------------------------------------
