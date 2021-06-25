@@ -106,6 +106,11 @@ export default {
 			self.clear();
 			self.init();
 		});
+
+		EventHandler.$on("update-node-encoding", function() {
+			self.clear();
+			self.init();
+		});
 	},
 
 	methods: {
@@ -221,12 +226,11 @@ export default {
 		},
 
 		clear() {
-			// d3.selectAll(".icicleNode").remove();
-			// d3.selectAll(".icicleText").remove();
-			// d3.selectAll(".hierarchy-targetLines").remove();
-			// d3.selectAll(".linear-gradient").remove();
 			d3.select("#module-hierarchy-svg").remove();
-			// this.$refs.ToolTipModuleHierarchy.clear()
+		},
+
+		clearEncoding() {
+			d3.select(".hierarchy-gradient").remove();
 		},
 
 		descendents(root) {
@@ -461,7 +465,7 @@ export default {
 			const linearGradient = defs
 				.append("linearGradient")
 				.attr("id", "hierarchy-gradient" + nid)
-				.attr("class", "linear-gradient");
+				.attr("class", "hierarchy-gradient");
 
 			linearGradient
 				.attr("x1", "0%")

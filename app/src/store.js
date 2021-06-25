@@ -345,7 +345,7 @@ export default new Vuex.Store({
 
 		updateDistributionColorMap({ state, dispatch }, payload) {
 			state.distributionColorMap = payload;
-			EventHandler.$emit("update-ensemble-colors");
+			EventHandler.$emit("update-node-encoding");
 		},
 
 		updateSelectedColorPoint({ state, dispatch }, payload) {

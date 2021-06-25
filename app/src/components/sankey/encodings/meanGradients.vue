@@ -79,12 +79,13 @@ export default {
 
 			let nid = d.attr_dict.nid;
 
-			const defs = d3.select("#" + this.id).append("defs");
+			const defs = d3.select("#" + this.id)
+				.append("defs");
 
 			const linearGradient = defs
 				.append("linearGradient")
 				.attr("id", "mean-gradient" + nid)
-				.attr("class", "linear-gradient");
+				.attr("class", "mean-gradient");
 
 			linearGradient
 				.attr("x1", "0%")
@@ -107,7 +108,7 @@ export default {
 		},
 
 		clear() {
-			d3.select("#" + this.id).remove();
+			d3.selectAll(".mean-gradient").remove();
 		}
 	},
 };

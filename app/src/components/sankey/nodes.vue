@@ -78,8 +78,9 @@ export default {
 	mounted() {
 		let self = this;
 		EventHandler.$on("update-node-encoding", function (data) {
-			self.clear();
-			self.init(self.graph);
+			self.clearEncoding();
+			EventHandler.$emit("update-ensemble-colors");
+			self.visualize();
 		});
 	},
 

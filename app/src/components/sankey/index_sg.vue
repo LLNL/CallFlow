@@ -160,11 +160,9 @@ export default {
 		});
 
 		EventHandler.$on("update-ensemble-colors", () => {
-			d3.selectAll(".callsite").remove();
 			self.$refs.ColorMap.clear();
 			self.singleColors();
 			self.ensembleColors();
-			self.$refs.Nodes.init(self.data);
 			this.colormaps();
 		});
 	},
