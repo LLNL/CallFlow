@@ -31,7 +31,7 @@ class BoxPlot:
         Boxplot for callsite or module
         
         :param sg: (callflow.SuperGraph) 
-        :param realtive_sg: (callflow.SuperGraph) Relative supergraph
+        :param relative_sg: (callflow.SuperGraph) Relative supergraph
         :param name: (str) Node name
         :param ntype: (str) Node type (e.g., "callsite" or "module")
         :param proxy_columns: (dict) Proxy for names.

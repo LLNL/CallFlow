@@ -7,8 +7,6 @@
 """
 CallFlow's operation to filter a super graph using runtime threshold's.
 """
-import numpy as np
-import networkx as nx
 from ast import literal_eval as make_list
 
 import callflow
@@ -70,7 +68,6 @@ class Filter:
         LOGGER.info(f'Filtered graph comprises of: "{nxg_info(self.nxg)}"')
         LOGGER.profile('-----> Finished Filtering')
 
-
     # --------------------------------------------------------------------------
     def compute(self):
         """
@@ -110,7 +107,7 @@ class Filter:
                 # If source is present in the callsites list
                 if edge[0] in self.callsites and edge[1] in self.callsites:
                     nxg.add_edge(edge[0], edge[1])
-                #else:
+                # else:
                 #    LOGGER.debug(f"Removing the edge: {edge}")
 
         elif filter_by == "time":
@@ -122,7 +119,5 @@ class Filter:
                 nxg.add_path(path)
 
         self.nxg = nxg
-
-
 
 # ------------------------------------------------------------------------------
