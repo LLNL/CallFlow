@@ -30,8 +30,10 @@ class Gradients:
         Constructor function for the class
 
         :param df: Dictinary of dataframes keyed by the dataset_name. For e.g., { "dataset_name": df }.
-        :param callsiteOrModule: callsiteOrModule (can be a moddule) of a given call graph
+        :param node_id: Node id from the supergraph
+        :param node_type: Node type from the supergraph
         :param bins: Number of bins to distribute the runtime information.
+        :param proxy_columns: Proxy columns
         """
         assert isinstance(df, pd.DataFrame)
         assert isinstance(node_id, int)
@@ -58,12 +60,6 @@ class Gradients:
         self.rank_dict = {_d: df_count(_df, "rank")
                           for _d, _df in self.df_dict.items()}
         self.max_ranks = max(self.rank_dict.values())
-
-        # TODO: Generalize this.
-        if node_type == "callsite":
-            grp_type = "name"
-        elif node_type == "module":
-            grp_type = "module"
         
         self.result = self.compute()
 
@@ -95,8 +91,8 @@ class Gradients:
         Map dataset information to the corresponding bins.
 
         :param bins: (int) Bin size
-        :param dataset_dict: 
-        :return:
+        :param dataset_dict: Dataset dictionary
+        :return: Mapping of the datases to the corresponding bins.
         """
         # TODO: previously, this logic applied to bin edges
         # but, now, we aer working on bin_centers
