@@ -7,7 +7,41 @@
 
 <template>
   <v-layout row wrap :id="id">
-    <InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
+    <InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info"
+    />
+	<v-layout row wrap class="pl-8 pb-3">
+      <v-btn
+        class="reveal-button"
+        small
+        tile
+        outlined
+        @click="revealCallsite"
+      >
+        Reveal
+      </v-btn>
+
+      <v-btn
+        class="reveal-button"
+        small
+        tile
+        outlined
+        :class="isEntryFunctionSelected"
+        @click="showEntryFunctions"
+      >
+        Split caller
+      </v-btn>
+      <v-btn
+        class="reveal-button"
+        small
+        tile
+        outlined
+        :class="isCalleeSelected"
+        @click="showExitFunctions"
+      >
+        Split callee
+      </v-btn>
+    </v-layout>
+
     
     <v-container
       class="ml-4 ci-node"
@@ -15,12 +49,11 @@
       :key="getID(callsite.nid)"
     >
       <v-row>
-         <v-col cols="1">
+         <v-col cols="2">
           <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
               <template v-slot:activator="{on}">
-                <v-row
-                  class="pl-2"
+                <v-row align="center" justify="center"
                   :id="callsite.name"
                   v-on="on"
                   :class="selectClassName[callsite.name]"
@@ -36,7 +69,7 @@
           </v-card>
         </v-col>
 
-        <v-col cols="5">
+        <v-col cols="10">
           <v-tooltip bottom>
             <template v-slot:activator="{on}">
               <v-row class="mt-0 pl-2 subtitle-2 font-weight-black" v-on="on">
@@ -99,7 +132,7 @@ export default {
 		informationHeight: 50,
 		revealCallsites: [],
 		isModuleSelected: false,
-		isCallsiteSelected: false,
+		isCallsiteSelected: true,
 		isEntryFunctionSelected: "unselect-callsite",
 		isCalleeSelected: "unselect-callsite",
 		showSplitButton: "false",
@@ -560,7 +593,7 @@ export default {
 .reveal-button {
   float: right;
   margin: 1px;
-  color: #009688 !important;
+  /* color: #009688 !important; */
   font-size: 75%;
   padding: 2px;
 }

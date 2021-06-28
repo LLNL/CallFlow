@@ -8,6 +8,38 @@
   <v-layout row wrap :id="id">
     <InfoChip ref="InfoChip" :title="title" :summary="infoSummary" />
 
+	<v-layout row wrap class="pl-8 pb-3">
+      <v-btn
+        class="reveal-button"
+        small
+        tile
+        outlined
+        @click="revealCallsite"
+      >
+        Reveal
+      </v-btn>
+      <v-btn
+        class="reveal-button"
+        small
+        tile
+        outlined
+        :class="isEntryFunctionSelected"
+        @click="showEntryFunctions"
+      >
+        Split caller
+      </v-btn>
+      <v-btn
+        class="reveal-button"
+        small
+        tile
+        outlined
+        :class="isCalleeSelected"
+        @click="showExitFunctions"
+      >
+        Split callee
+      </v-btn>
+    </v-layout>
+
 	<v-row class="ml-4">
 		<v-col>
 		<p class="subtitle-2">
