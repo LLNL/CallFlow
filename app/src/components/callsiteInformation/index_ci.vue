@@ -46,10 +46,6 @@
             <span>{{ callsite.name }}</span>
           </v-tooltip>
         </v-col>
-
-		<!-- <v-col cols="5">
-			{{ callsite.module }}
-		</v-col> -->
       </v-row>
 
 		<Statistics ref="ci-Statistics" :tData="stats[callsite.name]" />
@@ -222,7 +218,7 @@ export default {
 				
 				// Set the data for the boxplot.
 				this.boxplot[callsite_name] = {"q": callsite["q"], "outliers": callsite["outliers"], "nid": callsite["nid"]};
-
+				
 				// Set the selection for a callsite. 
 				this.selectClassName[callsite_name] = "unselect-callsite";
 

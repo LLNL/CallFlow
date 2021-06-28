@@ -8,25 +8,16 @@
   <v-layout row wrap :id="id">
     <InfoChip ref="InfoChip" :title="title" :summary="infoSummary" />
 
-	<v-row class="ml-4">
-		<v-col>
-		<p class="subtitle-2">
-			Matched {{ numberOfIntersectionCallsites }} callsites.
-		</p>
-		</v-col>
-		<v-col>
-		<p class="subtitle-2">
-			Unmatched {{ numberOfDifferenceCallsites }}
-			callsites.
-		</p>
-		</v-col>
-	</v-row>
-
-    <!-- <v-container
-      class="ml-4 callsite-information-node"
+    <v-container
+	:v-show="differenceCallsites.length > 0"
+      class="ml-4 cc-node"
       v-for="callsite in differenceCallsites"
-      :key="getID(callsite.id)"
+      :key="getID(callsite.nid)"
     >
+	<v-row class="subtitle-2">
+		Unmatched {{ numberOfDifferenceCallsites }}
+		callsites.
+	</v-row>
       <v-row>
         <v-col cols="12">
           <v-tooltip bottom>
@@ -50,13 +41,16 @@
 				showTarget="false" />
 		</v-row>   
 		
-    </v-container> -->
+    </v-container>
 
     <v-container
       class="ml-4 cc-node"
       v-for="callsite in intersectionCallsites"
       :key="getID(callsite.nid)"
     >
+	<v-row class="subtitle-2">
+		Matched {{ numberOfIntersectionCallsites }} callsites.
+	</v-row>
       <v-row>
         <!-- <v-col cols="1">
           <v-card class="ma-2 ml-4" tile outlined>
