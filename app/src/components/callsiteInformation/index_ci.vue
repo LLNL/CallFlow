@@ -16,7 +16,7 @@
     >
       <v-row>
          <v-col cols="1">
-          <!-- <v-card class="ma-2 ml-4" tile outlined>
+          <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
               <template v-slot:activator="{on}">
                 <v-row
@@ -26,14 +26,14 @@
                   :class="selectClassName[callsite.name]"
                   @click="changeSelectedClassName"
                 >
-                  {{ formatNumberOfHops(callsite.component_path) }}
+                  {{ formatNumberOfHops(cpath[callsite.name]) }}
                 </v-row>
               </template>
               <span>
-                Callsite depth:{{ formatNumberOfHops(callsite.component_path) }}
+                Callsite path: {{ formatPath(cpath[callsite.name][0]) }}
               </span>
             </v-tooltip>
-          </v-card> -->
+          </v-card>
         </v-col>
 
         <v-col cols="5">
@@ -108,6 +108,7 @@ export default {
 		selectedOutlierDatasets: {},
 		boxplot: {},
 		stats: {},
+		cpath: {},
 	}),
 
 	computed: {
@@ -219,6 +220,8 @@ export default {
 				// Set the data for the boxplot.
 				this.boxplot[callsite_name] = {"q": callsite["q"], "outliers": callsite["outliers"], "nid": callsite["nid"]};
 				
+				this.cpath[callsite_name] = callsite["cpath"];
+
 				// Set the selection for a callsite. 
 				this.selectClassName[callsite_name] = "unselect-callsite";
 
@@ -348,7 +351,7 @@ export default {
      * @param {*} path
      */
 		formatNumberOfHops(path) {
-			return path.length - 1;
+			return path[0].length;
 		},
 
 		/**
@@ -358,6 +361,15 @@ export default {
 		formatRuntime(val) {
 			let format = d3.format(".2");
 			let ret = format(val) + " \u03BCs";
+			return ret;
+		},
+
+		formatPath(val) {
+			const cMap = this.summary[this.selectedTargetRun]["callsites"];
+			let ret = [];
+			for (let c of val) {	
+				ret.push(cMap[c]);
+			}
 			return ret;
 		},
 

@@ -49,6 +49,10 @@ class BoxPlot:
         nid = sg.get_idx(name, ntype)
         node = {"id": nid, "type": ntype, "name": name}
 
+        # TODO: Avoid this.
+        self.c_path = None
+        self.rel_c_path = None
+
         if ntype == "callsite":
             df = sg.callsite_aux_dict[name]
             if 'component_path' in sg.dataframe.columns:
@@ -123,10 +127,10 @@ class BoxPlot:
                 ret[tk]['odset'] = df['dataset'].to_numpy()[mask]
 
             # TODO: Find a better way to send the component_path from data.
-            if self.c_path:
+            if self.c_path is not None:
                 ret[tk]['cpath'] = self.c_path
             
-            if self.rel_c_path:
+            if self.rel_c_path is not None:
                 ret[tk]['rel_cpath'] = self.rel_c_path
 
         return ret

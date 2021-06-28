@@ -296,6 +296,8 @@ export default {
 				};
 
 				this.cpath[callsite_name] =  bCallsite["cpath"];
+
+				this.selectClassName[callsite_name] = "unselect-callsite";
 			}
 
 		},
@@ -389,7 +391,7 @@ export default {
 		},
 
 		formatNumberOfHops(path) {
-			return path[0].length - 1;
+			return path[0].length;
 		},
 
 		formatRuntime(val) {
