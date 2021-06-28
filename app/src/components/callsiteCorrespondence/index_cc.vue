@@ -8,16 +8,26 @@
   <v-layout row wrap :id="id">
     <InfoChip ref="InfoChip" :title="title" :summary="infoSummary" />
 
+	<v-row class="ml-4">
+		<v-col>
+		<p class="subtitle-2">
+			Matched {{ numberOfIntersectionCallsites }} callsites.
+		</p>
+		</v-col>
+		<v-col>
+		<p class="subtitle-2">
+			Unmatched {{ numberOfDifferenceCallsites }}
+			callsites.
+		</p>
+		</v-col>
+	</v-row>v
+
     <v-container
-	:v-show="differenceCallsites.length > 0"
+	:v-if="numberOfDifferenceCallsites > 0"
       class="ml-4 cc-node"
       v-for="callsite in differenceCallsites"
       :key="getID(callsite.nid)"
     >
-	<v-row class="subtitle-2">
-		Unmatched {{ numberOfDifferenceCallsites }}
-		callsites.
-	</v-row>
       <v-row>
         <v-col cols="12">
           <v-tooltip bottom>
@@ -40,20 +50,16 @@
 				:bData="intersectionCallsites[callsite.name]['bBoxplot']" 
 				showTarget="false" />
 		</v-row>   
-		
     </v-container>
 
     <v-container
       class="ml-4 cc-node"
       v-for="callsite in intersectionCallsites"
-      :key="getID(callsite.nid)"
+      :key="getID(callsite.name)"
     >
-	<v-row class="subtitle-2">
-		Matched {{ numberOfIntersectionCallsites }} callsites.
-	</v-row>
       <v-row>
-        <!-- <v-col cols="1">
-          <v-card class="ma-2 ml-4" tile outlined>
+        <v-col cols="1">
+          <!-- <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
               <template v-slot:activator="{on}">
                 <v-row
@@ -71,8 +77,8 @@
                 Callsite depth:{{ formatNumberOfHops(callsite.component_path) }}
               </span>
             </v-tooltip>
-          </v-card>
-        </v-col> -->
+          </v-card> -->
+        </v-col>
 
         <v-col cols="11">
           <v-tooltip bottom>
@@ -120,35 +126,24 @@ export default {
 		Statistics
 	},
 	data: () => ({
-		id: "ci-overview",
+		id: "cc-overview",
 		title: "Call Site Correspondence",
 		infoSummary: "Call site Correspondence view provides an insight into the runtime distribution among its MPI ranks. Boxplots are calculated to represent the range of the distribution and outliers (dots) correspond to the ranks which are beyond the 1.5*IQR. Additionally, several statistical measures are also provided. The (green) boxplots and dots belong to the target run's statistics. Both matched (callsites in both target and ensemble) and unmatched (callsites not in target but in ensemble) are shown in separate lists",
 		callsites: [],
-		dataReady: false,
 		numberOfIntersectionCallsites: 0,
 		numberOfDifferenceCallsites: 0,
-		firstRender: true,
 		padding: {top: 0, right: 10, bottom: 0, left: 10},
-		textOffset: 25,
 		boxplotHeight: 340,
 		boxplotWidth: 0,
-		iqrFactor: 0.15,
-		outlierRadius: 4,
-		targetOutlierList: {},
-		outlierList: {},
 		revealCallsites: [],
-		targetColor: "",
 		differenceCallsites: {},
 		intersectionCallsites: {},
 		isModuleSelected: false,
 		isCallsiteSelected: false,
 		isEntryFunctionSelected: "unselect-callsite",
 		isCalleeSelected: "unselect-callsite",
-		showSplitButton: "false",
-		selectedOutlierRanks: {},
-		selectedOutlierDatasets: {},
+		showSplitButton: "true",
 		showKNCCallsite: {},
-		showuKNCCallsite: {},
 		tStats: {},
 		bStats: {},
 		tBoxplot: {},
@@ -163,6 +158,8 @@ export default {
 			data: "getEnsembleBoxplots",
 			summary: "getSummary",
 			generalColors: "getGeneralColors",
+			runtimeSortBy: "getRuntimeSortBy",
+			iqrFactor: "getIQRFactor",	
 		})
 	},
 
@@ -217,6 +214,7 @@ export default {
 				metric: this.selectedMetric,
 				callsites: callsites,
 				ntype: "callsite",
+				iqr: this.iqrFactor,
 			});
 
 			this.width = document.getElementById(this.id).clientWidth;
@@ -226,8 +224,8 @@ export default {
 		},
 
 		visualize() {
-			this.tCallsites = this.sortByAttribute(this.data, this.selectedMetric, "mean", "tgt");
-			this.bCallsites = this.sortByAttribute(this.data, this.selectedMetric, "mean", "bkg");
+			this.tCallsites = this.sortByAttribute(this.data, this.selectedMetric, this.runtimeSortBy, "tgt");
+			this.bCallsites = this.sortByAttribute(this.data, this.selectedMetric, this.runtimeSortBy, "bkg");
 			
 			this.knc = this.KNC(this.tCallsites, this.bCallsites);
 			this.numberOfIntersectionCallsites = this.knc["intersection"].length;
@@ -328,7 +326,7 @@ export default {
 
 		// create unique ID for each callsite.
 		getID(callsiteID) {
-			return "callsite-correspondence-" + callsiteID;
+			return "cc-node-" + callsiteID;
 		},
 
 		// // Code to select the callsite by the component-level button
@@ -587,7 +585,7 @@ export default {
 </script>
 
 <style>
-#ci-overview {
+#cc-overview {
   overflow: auto;
 }
 
