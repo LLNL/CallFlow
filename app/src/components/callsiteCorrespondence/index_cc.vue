@@ -59,7 +59,7 @@
     >
       <v-row>
         <v-col cols="1">
-          <!-- <v-card class="ma-2 ml-4" tile outlined>
+          <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
               <template v-slot:activator="{on}">
                 <v-row
@@ -68,16 +68,15 @@
                   text-xs-center
                   v-on="on"
                   :class="selectClassName[callsite.name]"
-                  @click="changeSelectedClassName"
                 >
-                  {{ formatNumberOfHops(callsite.component_path) }}
+                  {{ formatNumberOfHops(cpath[callsite.name]) }}
                 </v-row>
               </template>
               <span>
-                Callsite depth:{{ formatNumberOfHops(callsite.component_path) }}
+                Callsite path:{{ formatPath(cpath[callsite.name][0]) }}
               </span>
             </v-tooltip>
-          </v-card> -->
+          </v-card>
         </v-col>
 
         <v-col cols="11">
@@ -147,7 +146,9 @@ export default {
 		tStats: {},
 		bStats: {},
 		tBoxplot: {},
-		bBoxplot: {}
+		bBoxplot: {},
+		cpath: {},
+		selectClassName: {},
 	}),
 
 	computed: {
@@ -279,6 +280,10 @@ export default {
 					"tBoxplot": this.getBoxplot(tCallsite),
 					"bBoxplot": this.getBoxplot(bCallsite)
 				};
+
+				this.cpath[callsite_name] = tCallsite["cpath"];
+
+				this.selectClassName[callsite_name] = "unselect-callsite";
 			}
 
 			for (let callsite_name of this.knc["difference"]) {
@@ -289,6 +294,8 @@ export default {
 					"bStats": this.getStatistics(bCallsite),
 					"bBoxplot": this.getBoxplot(bCallsite)
 				};
+
+				this.cpath[callsite_name] =  bCallsite["cpath"];
 			}
 
 		},
@@ -382,12 +389,21 @@ export default {
 		},
 
 		formatNumberOfHops(path) {
-			return path.length - 1;
+			return path[0].length - 1;
 		},
 
 		formatRuntime(val) {
 			let format = d3.format(".2");
 			let ret = format(val) + " \u03BCs";
+			return ret;
+		},
+
+		formatPath(val) {
+			const cMap = this.summary[this.selectedTargetRun]["callsites"];
+			let ret = [];
+			for (let c of val) {	
+				ret.push(cMap[c]);
+			}
 			return ret;
 		},
 

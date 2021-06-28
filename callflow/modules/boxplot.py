@@ -11,7 +11,7 @@ import numpy as np
 from scipy.stats import kurtosis, skew
 
 import callflow
-from callflow.utils.df import df_count
+from callflow.utils.df import df_count, df_group_by
 from callflow.utils.utils import outliers
 from callflow.datastructures.metrics import TIME_COLUMNS
 
@@ -46,10 +46,20 @@ class BoxPlot:
         if relative_sg is not None:
             self.box_types = ["tgt", "bkg"]
 
+        nid = sg.get_idx(name, ntype)
+        node = {"id": nid, "type": ntype, "name": name}
+
         if ntype == "callsite":
             df = sg.callsite_aux_dict[name]
+            if 'component_path' in sg.dataframe.columns:
+                self.c_path = sg.get_component_path(node)
+                
             if relative_sg is not None:
                 rel_df = relative_sg.callsite_aux_dict[name]
+
+                if 'component_path' in relative_sg.dataframe.columns:
+                    self.rel_c_path = sg.get_component_path(node)
+            
         elif ntype == "module":
             module_idx = sg.get_idx(name, "module")
             df = sg.module_aux_dict[module_idx]
@@ -112,6 +122,13 @@ class BoxPlot:
             if 'dataset' in df.columns:
                 ret[tk]['odset'] = df['dataset'].to_numpy()[mask]
 
+            # TODO: Find a better way to send the component_path from data.
+            if self.c_path:
+                ret[tk]['cpath'] = self.c_path
+            
+            if self.rel_c_path:
+                ret[tk]['rel_cpath'] = self.rel_c_path
+
         return ret
             
     def unpack(self):
@@ -143,7 +160,13 @@ class BoxPlot:
                 
                 if 'odset' in box:
                     result[box_type][metric]['odset'] = box['odset'].tolist()
-        
+
+                if 'cpath' in box:
+                    result[box_type][metric]['cpath'] = box['cpath']
+
+                if 'rel_cpath' in box:
+                    result[box_type][metric]['rel_cpath'] = box['rel_cpath']
+
         return result
 
 # ------------------------------------------------------------------------------
