@@ -89,7 +89,7 @@ class SuperGraph(ht.GraphFrame):
     # --------------------------------------------------------------------------
     def __str__(self):
         """SuperGraph string representation"""
-        return f"SuperGraph<{self.name}; df = {self.dataframe.shape}>"
+        return f"SuperGraph<{self.name}; df = {self.dataframe.shape}, cols = {list(self.dataframe.columns)}>"
 
     def __repr__(self):
         """SuperGraph string representation"""
@@ -158,6 +158,23 @@ class SuperGraph(ht.GraphFrame):
         unique_names = self.df_lookup_with_column("nid", nid)['name'].unique()
         assert len(unique_names) == 1
         return unique_names[0]
+
+    def get_modules(self):
+        """
+        Getter to obtain the datasets in the ensemble.
+        """
+        if "module" in self.df_columns():
+            return [self.get_name(mod_idx, "module") for mod_idx in self.df_unique('module')]
+
+    def get_module_to_callsite_mapping(self):
+        ret = {}
+        for k, v in enumerate(self.module_callsite_map):
+            _k = self.get_name(k, "module")
+            _v = self.get_name(v, "callsite")
+            if _k not in ret:
+                ret[_k] = []
+            ret[_k].append(_v)
+        return ret
 
     def get_datasets(self):
         """
@@ -303,7 +320,7 @@ class SuperGraph(ht.GraphFrame):
         self.add_time_proxies()
         # self.df_reset_index() # TODO: This might be cause a possible side
         # effect. Beware!!
-        self.roots = self.nxg_get_roots(self.nxg)
+        self.roots = self.nxg_get_roots()
         self.add_callsites_and_modules_maps(module_callsite_map)
 
         self.callsite_aux_dict = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns + ["nid"], group_by=["rank"], apply_func=lambda _: _.mean())
