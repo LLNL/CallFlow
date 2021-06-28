@@ -18,7 +18,7 @@ JSONSCHEMA_CONFIG = {
         "filter_by": {"type": "string"},
         "group_by": {"type": "string"},
         "module_callsite_map": {"type": "object"},
-        "chunk_idx": {"type": ""},
+        "chunk_idx": {"type": "number"},
         "chunk_size": {"type": "number"},
         "ensemble_process": {"type": "boolean"},
         "experiment": {"type": "string"},
