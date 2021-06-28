@@ -13,7 +13,6 @@ from sklearn import preprocessing
 from sklearn.manifold import TSNE, MDS
 from sklearn.cluster import KMeans
 
-from callflow import EnsembleGraph
 from callflow.algorithms import KMedoids
 from callflow.datastructures.metrics import TIME_COLUMNS
 
@@ -30,7 +29,6 @@ class ParameterProjection:
         :param selected_runs:
         :param n_cluster:
         """
-        assert isinstance(sg, EnsembleGraph)
         assert len(selected_runs) > 0
         assert isinstance(n_cluster, int)
 
