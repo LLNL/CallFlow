@@ -89,7 +89,8 @@ class SuperGraph(ht.GraphFrame):
     # --------------------------------------------------------------------------
     def __str__(self):
         """SuperGraph string representation"""
-        return f"SuperGraph<{self.name}; df = {self.dataframe.shape}>"
+        return f"SuperGraph<{self.name}" \
+               f"df = {self.dataframe.shape}, cols = {list(self.dataframe.columns)}>"
 
     def __repr__(self):
         """SuperGraph string representation"""
@@ -186,7 +187,21 @@ class SuperGraph(ht.GraphFrame):
             proxy_columns=self.proxy_columns).unpack()
 
     def get_entry_functions(self, node):
-        return []
+        ret = []
+        if node.get("type") == "module":
+            cp = list(df_lookup_by_column(self.dataframe, node.get("type"), node.get("id"))["component_path"])
+            unique_cp = list(set([tuple(line) for line in cp]))
+            entry_funcs = [list(_)[0] for _ in unique_cp if len(_) == 1]
+
+            for nid in entry_funcs:
+                name = self.get_name(nid, "callsite")
+                ret.append({
+                    "nid": nid,
+                    "name": name,
+                    "time": self.get_runtime(name, "callsite", "time"),
+                    "time (inc)": self.get_runtime(name, "callsite", "time (inc)")
+                })
+        return ret
 
     def get_node(self, node): 
         return {
@@ -303,7 +318,7 @@ class SuperGraph(ht.GraphFrame):
         self.add_time_proxies()
         # self.df_reset_index() # TODO: This might be cause a possible side
         # effect. Beware!!
-        self.roots = self.nxg_get_roots(self.nxg)
+        self.roots = self.nxg_get_roots()
         self.add_callsites_and_modules_maps(module_callsite_map)
 
         self.callsite_aux_dict = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns + ["nid"], group_by=["rank"], apply_func=lambda _: _.mean())
