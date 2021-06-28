@@ -80,7 +80,7 @@
           :menu-props="{maxHeight: '200'}"
           persistent-hint
           :disabled="
-            selectedMode === 'ESG' || selectedMode == 'SG' ? false : true
+            selectedMode == 'SG' ? false : true
           "
 		@change="updateRankBinCount"
 
@@ -122,7 +122,7 @@
           :value="selectedProp"
           :menu-props="{maxHeight: '200'}"
           persistent-hint
-          :disabled="selectedMode === 'ESG' ? false : true"
+          :disabled="true"
           @change="updateProp"
         >
         </v-select>
