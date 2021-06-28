@@ -77,7 +77,7 @@ export default {
 		Statistics,
 	},
 	data: () => ({
-		id: "cc-overview",
+		id: "ci-overview",
 		title: "Call site Information",
 		infoSummary: "Call site Information view provides an insight into the runtime distribution among its MPI ranks. Boxplots are calculated to represent the range of the distribution and outliers (dots) correspond to the ranks which are beyond the 1.5*IQR. Additionally, several statistical measures are also provided.",
 		info: "",
@@ -525,7 +525,7 @@ export default {
 </script>
 
 <style>
-#callsite-information-overview {
+#ci-overview {
   overflow: auto;
 }
 
