@@ -31,7 +31,7 @@ class BoxPlot:
         Boxplot for callsite or module
         
         :param sg: (callflow.SuperGraph) 
-        :param realtive_sg: (callflow.SuperGraph) Relative supergraph
+        :param relative_sg: (callflow.SuperGraph) Relative supergraph
         :param name: (str) Node name
         :param ntype: (str) Node type (e.g., "callsite" or "module")
         :param proxy_columns: (dict) Proxy for names.
@@ -73,6 +73,13 @@ class BoxPlot:
         self.result["tgt"] = self.compute(df)
         
     def compute(self, df):
+        """
+        Compute boxplot related information.
+
+        :param df: Dataframe to calculate the boxplot information.
+        :return:
+        """
+
         ret = {_: {} for _ in TIME_COLUMNS}
         for tk, tv in zip(TIME_COLUMNS, self.time_columns):
             q = np.percentile(df[tv], [0.0, 25.0, 50.0, 75.0, 100.0])
@@ -109,7 +116,7 @@ class BoxPlot:
             
     def unpack(self):
         """
-        Unpack the boxplot data.
+        Unpack the boxplot data into JSON format.
         """
         result = {}
         for box_type in self.box_types:

@@ -149,6 +149,7 @@ class Histogram:
     # --------------------------------------------------------------------------
     def _get_data_by_histo_type(self, df, histo_type):
         """
+        Compute data based on the requested histo_type (e.g., rank, dataset, name).
 
         :param df: (pandas.DataFrame) df
         :param histo_type: (str) histogram type to work with
@@ -180,8 +181,14 @@ class Histogram:
     @staticmethod
     def _format_data(histo):
         """
-        :param histo:
-        :return:
+        Format data according to the desired format.
+
+        :param histo: Histogram data (computed by utils.histogram).
+        :return: Dict ({
+            "b": bins, (x-axis)
+            "h" histograms, (y-axis)
+            "dig": digitized information on where the bin values are located. (used by rankLines).
+        })
         """
         return {"b": histo[0], "h": histo[1], "dig": histo[2]}
 
