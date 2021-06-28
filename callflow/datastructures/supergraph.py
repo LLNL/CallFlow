@@ -8,8 +8,6 @@ CallFlow's data structure to construct Super Graphs.
 """
 import os
 import json
-import numpy as np
-import pandas as pd
 import hatchet as ht
 import networkx as nx
 from ast import literal_eval as make_list
@@ -184,6 +182,7 @@ class SuperGraph(ht.GraphFrame):
         return Histogram(dataframe=aux_dict[nid], relative_to_df=None,
             histo_types=["rank"],
             node_type=node.get("type"),
+            bins=nbins,
             proxy_columns=self.proxy_columns).unpack()
 
     def get_entry_functions(self, node):
@@ -237,9 +236,9 @@ class SuperGraph(ht.GraphFrame):
         # Hatchet requires node and rank to be indexes.
         # remove the indexes to maintain consistency.
         # We will remove node since it gets droped when `gf.drop_index_levels()`
-        #self.indexes = list(self.dataframe.index.names)
-        #LOGGER.debug(f'Dataframe indexes = {self.indexes}')
-        #self.df_reset_index()
+        # self.indexes = list(self.dataframe.index.names)
+        # LOGGER.debug(f'Dataframe indexes = {self.indexes}')
+        # self.df_reset_index()
 
         # ----------------------------------------------------------------------
         # TODO: For faster searches, bring this back.
@@ -274,7 +273,7 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def load(
-        self, path,  module_callsite_map: dict = {}, read_graph=False, read_parameter=False, read_aux=False
+        self, path,  module_callsite_map: dict = {}, read_graph=False, read_parameter=False
     ) -> None:
         """
         Load the SuperGraph class from reading .callflow data.
@@ -312,9 +311,8 @@ class SuperGraph(ht.GraphFrame):
 
         if self.name == "ensemble" and "dataset" in self.dataframe.columns:
             self.rel_callsite_aux_dict = df_bi_level_group(self.dataframe, "name", None, cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
-            self.rel_module_aux_dict = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean()) 
+            self.rel_module_aux_dict = df_bi_level_group(self.dataframe, "module", "name", cols=self.time_columns, group_by=["dataset", "rank"], apply_func=lambda _: _.mean())
 
-        
     # --------------------------------------------------------------------------
     def add_callsites_and_modules_maps(self, module_callsite_map={}):
         LOGGER.debug(f"DataFrame columns: {list(self.dataframe.columns)}")
@@ -333,7 +331,7 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         if has_modules_in_map:
             LOGGER.debug(f'[{self.name}] Using the supplied module map')
-            self.modules = { i: m for i, m in enumerate(module_callsite_map.keys()) }
+            self.modules = {i: m for i, m in enumerate(module_callsite_map.keys())}
             _modules_inv = dict((v, k) for k, v in self.modules.items())
 
             _nid = lambda _: self.df_lookup_with_column("name", _)["nid"].unique().tolist()
@@ -341,10 +339,10 @@ class SuperGraph(ht.GraphFrame):
 
             #self.module_callsite_map = {_mid(i): [_nid(_cs) for _cs in m] for i, m in module_callsite_map.items() }
             self.module_callsite_map = {}
-            for i,m in module_callsite_map.items():
+            for i, m in module_callsite_map.items():
                 for _cs in m:
-                    if(_mid(i) in self.module_callsite_map.keys()):
-                        self.module_callsite_map[_mid(i)]= np.append(self.module_callsite_map[_mid(i)],_nid(_cs)).tolist()
+                    if _mid(i) in self.module_callsite_map.keys():
+                        self.module_callsite_map[_mid(i)]= np.append(self.module_callsite_map[_mid(i)], _nid(_cs)).tolist()
                     else: 
                         self.module_callsite_map[_mid(i)] = _nid(_cs)
 
@@ -375,28 +373,27 @@ class SuperGraph(ht.GraphFrame):
             self.modules = {i: v for i, v in enumerate(self.modules)}
         
             self.callsite_module_map = df_as_dict(self.dataframe, 'nid', 'module')
-            self.module_callsite_map = {m: [] for m,c in self.modules.items()}
-            self.module_callsite_map[-1] = [] # @harsh: Why have assigned the index=-1 as empty array?
+            self.module_callsite_map = {m: [] for m, c in self.modules.items()}
+            self.module_callsite_map[-1] = []
             for ccode, mcode in self.callsite_module_map.items():
                 self.module_callsite_map[mcode].append(ccode)
 
-            
         # ----------------------------------------------------------------------
         else:
             LOGGER.debug(f'[{self.name}] No module map found. Defaulting to \"module=callsite\"')
             self.modules = self.callsites
-            self.callsite_module_map = {c: c for c,m in self.callsites.items()}
-            self.module_callsite_map = {m: [m] for m,c in self.modules.items()}
+            self.callsite_module_map = {c: c for c, m in self.callsites.items()}
+            self.module_callsite_map = {m: [m] for m, c in self.modules.items()}
             self.df_add_column('module', apply_func=lambda _: _, apply_on='name')
 
         # ----------------------------------------------------------------------
-        self.inv_callsites = {v: i for i,v in self.callsites.items()}
+        self.inv_callsites = {v: i for i, v in self.callsites.items()}
         self.inv_modules = {v: i for i, v in self.modules.items()}
 
         self.callsites_list = np.array(list(self.inv_callsites.keys()))
         self.modules_list = np.array(list(self.inv_modules.keys()))
-        assert all([isinstance(m,int) for c,m in self.callsite_module_map.items()])
-        assert all([isinstance(c,list) for m,c in self.module_callsite_map.items()])
+        assert all([isinstance(m, int) for c, m in self.callsite_module_map.items()])
+        assert all([isinstance(c, list) for m, c in self.module_callsite_map.items()])
 
         LOGGER.info(f'Created (\"module-to-callsite\" = {len(self.module_callsite_map)}) '
                     f'and (\"callsite-to-module\" = {len(self.callsite_module_map)}) '
@@ -482,8 +479,7 @@ class SuperGraph(ht.GraphFrame):
         grp_df = self.df_group_by(ntype)
         LOGGER.debug(f'Nodes: {nodes}; ntype: {ntype}; metric: {metric}')
 
-        data = {} 
-        data = { str(node) : df_column_mean(grp_df.get_group(self.get_idx(node, ntype)), metric, self.proxy_columns) for node in nodes }    
+        data = {str(node): df_column_mean(grp_df.get_group(self.get_idx(node, ntype)), metric, self.proxy_columns) for node in nodes}
         data['root_time_inc'] = self.df_root_max_mean_runtime(self.roots, "time (inc)")
         data['name'] = self.name
         return data
@@ -609,7 +605,7 @@ class SuperGraph(ht.GraphFrame):
         """
         Wrapper to filter a dataframe by a list of names on the "name" column.
 
-        :param names: (list) list of values to filter
+        :param values: (list) list of values to filter
         :return: (pandas.dataframe) Filtered dataframe
         """
         assert isinstance(values, list)
@@ -782,7 +778,7 @@ class SuperGraph(ht.GraphFrame):
         self.gf.dataframe.set_index(index_names)
         index_names.remove("node")
 
-         # create dict that stores aggregation function for each column
+        # create dict that stores aggregation function for each column
         agg_dict = {}
         for col in self.gf.dataframe.columns.tolist():
             if col in self.gf.exc_metrics + self.gf.inc_metrics:
@@ -795,7 +791,6 @@ class SuperGraph(ht.GraphFrame):
         if "node" in agg_df.columns:
             agg_df = agg_df.drop("node", axis=1)
 
-
         gf_copy = ht.GraphFrame(self.gf.graph, agg_df, self.gf.exc_metrics, self.gf.inc_metrics)
 
         # Filter the graphframe using hatchet (initial filtering) using QueryMatcher.
@@ -803,11 +798,11 @@ class SuperGraph(ht.GraphFrame):
 
         return df_unique(fgf.dataframe, "name")
 
-    def nxg_get_roots(self, nxg):
+    def nxg_get_roots(self):
         roots = []
-        for component in nx.weakly_connected_components(nxg):
-            G_sub = nxg.subgraph(component)
-            roots.extend([n for n,d in G_sub.in_degree() if d==0])
+        for component in nx.weakly_connected_components(self.nxg):
+            g_sub = self.nxg.subgraph(component)
+            roots.extend([n for n, d in g_sub.in_degree() if d == 0])
         return roots
 
     # --------------------------------------------------------------------------
@@ -947,26 +942,6 @@ class SuperGraph(ht.GraphFrame):
             fptr.write(graph_str)
 
     @staticmethod
-    def todelete_write_aux(path, data, name):
-        """
-
-        :param path:
-        :param data:
-        :return:
-        """
-        fname = os.path.join(path, SuperGraph._FILENAMES["aux"].format(name))
-        LOGGER.debug(f"Writing ({fname})")
-
-        ext = os.path.splitext(SuperGraph._FILENAMES["aux"])[-1]
-        if '.json' == ext:
-            with open(fname, "w") as f:
-                json.dump(data, f, cls=NumpyEncoder)
-        elif '.npz' == ext:
-            np.savez_compressed(fname, **data)
-        else:
-            assert False
-
-    @staticmethod
     def read_df(path):
         """
 
@@ -1017,29 +992,6 @@ class SuperGraph(ht.GraphFrame):
         if not isinstance(graph, ht.GraphFrame.Graph):
             raise ValueError(f"Did not find a valid graph in ({fname}).")
         return graph
-
-    @staticmethod
-    def todelete_read_aux(path, name):
-        """
-
-        :param path:
-        :return:
-        """
-        fname = os.path.join(path, SuperGraph._FILENAMES["aux"].format(name))
-        LOGGER.debug(f"Reading ({fname})")
-
-        data = {}
-        ext = os.path.splitext(SuperGraph._FILENAMES["aux"])[-1]
-        try:
-            if '.json' == ext:
-                with open(fname, "r") as fptr:
-                    data = json.load(fptr)
-            elif '.npz' == ext:
-                data = np.load(fname, allow_pickle=True)
-
-        except Exception as e:
-            LOGGER.critical(f"Failed to read aux file: {e}")
-        return data
 
     @staticmethod
     def read_env_params(path):
