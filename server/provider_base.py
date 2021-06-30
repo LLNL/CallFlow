@@ -281,26 +281,26 @@ class BaseProvider:
             if len(self.datasets) > 1:
                 sg = self.supergraphs["ensemble"]
             else:
-                sg = self.supergraphs[self.datasets[0].name]
+                sg = self.supergraphs[self.datasets[0]["name"]]
 
             time_columns = sg.time_columns
             
-            # if "module_callsite_map" not in self.config.keys():
-            #     module_callsite_map = sg.module_callsite_map
-            # else:
-            #     module_callsite_map = self.config.module_callsite_map
+            if "module_callsite_map" not in self.config.keys():
+                module_callsite_map = sg.module_callsite_map
+            else:
+                module_callsite_map = self.config.module_callsite_map
 
-            # if "callsite_module_map" not in self.config.keys():
-            #     callsite_module_map = sg.module_callsite_map
-            # else:
-            #     callsite_module_map = self.config.callsite_module_map
+            if "callsite_module_map" not in self.config.keys():
+                callsite_module_map = sg.module_callsite_map
+            else:
+                callsite_module_map = self.config.callsite_module_map
 
             return { 
                 **self.config,
                 "time_columns": time_columns,
                 "profile_format_summary": list(set(map(lambda d: d["profile_format"], self.datasets))),
-                # "module_callsite_map": module_callsite_map,
-                # "callsite_module_map": callsite_module_map
+                "module_callsite_map": module_callsite_map,
+                "callsite_module_map": callsite_module_map
             }
 
         elif operation_name == "summary":
@@ -312,11 +312,15 @@ class BaseProvider:
             assert isinstance(operation["ncount"], int)
             assert operation["metric"] in ["time", "time (inc)"]
 
+            if "ensemble" not in self.supergraphs:
+                dataset = list(self.supergraphs.keys())[0]
+            else:
+                dataset = "ensemble"
             # Get the top-n nodes from the "ensemble" based on the ntype.
-            top_nodes_idx = self.supergraphs["ensemble"].df_get_top_by_attr(operation["ntype"], operation["ncount"], operation["metric"])
+            top_nodes_idx = self.supergraphs[dataset].df_get_top_by_attr(operation["ntype"], operation["ncount"], operation["metric"])
             
             # Convert the indexs to the modules. 
-            top_nodes = [ self.supergraphs["ensemble"].get_name(node_idx, operation["ntype"]) for node_idx in top_nodes_idx]
+            top_nodes = [ self.supergraphs[dataset].get_name(node_idx, operation["ntype"]) for node_idx in top_nodes_idx]
             # Construct the per-supergraph timeline data. 
             data = {}
             data['d'] = { sg: self.supergraphs[sg].timeline(top_nodes, operation["ntype"], operation["metric"]) for sg in self.supergraphs if sg != "ensemble"}

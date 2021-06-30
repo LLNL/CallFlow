@@ -388,7 +388,8 @@ class SuperGraph(ht.GraphFrame):
             self.dataframe['module'], self.modules = \
                 self.dataframe['module'].factorize(sort=True)
 
-            self.modules = {i: v for i, v in enumerate(self.modules)}
+            modules_list = ['/collab/usr/global/tools/hpctoolkit/toss_3_x86_64_ib/.install/2020-08/packages/linux-rhel7-x86_64/gcc-8.1.0/hpctoolkit-2020.08.03-awkuu2x54653s55wdv2fmwfms7sfyzeq/lib/hpctoolkit/ext-libs/libmonitor.so.0.0.0', '/collab/usr/global/tools/hpctoolkit/toss_3_x86_64_ib/.install/2020-08/packages/linux-rhel7-x86_64/gcc-8.1.0/hpctoolkit-2020.08.03-awkuu2x54653s55wdv2fmwfms7sfyzeq/lib/hpctoolkit/libhpcrun.so.0.0.0', '/usr/WS1/dnicho/spack/opt/spack/linux-rhel7-broadwell/intel-19.0.4.227/kripke-1.2.4-gvu5aushejbhhxkzpxuh5fo7swoj3qrj/bin/kripke.exe', '/usr/lib64/ld-2.17.so',  '/usr/lib64/libc-2.17.so', '/usr/lib64/libdl-2.17.so', '/usr/lib64/libpmi2.so.0.0.0', '/usr/lib64/libpsm2.so.2.1', '/usr/lib64/libpthread-2.17.so', '/usr/lib64/librt-2.17.so', '/usr/tce/packages/gcc/gcc-4.9.3/lib64/libstdc++.so.6.0.20', '/usr/tce/packages/intel/intel-19.0.4/compilers_and_libraries_2019.4.227/linux/compiler/lib/intel64_lin/libiomp5.so', '/usr/tce/packages/mvapich2/mvapich2-2.3-intel-19.0.4/lib/libmpi.so.12.1.1', '<unknown load module>', '[vdso]']
+            self.modules = {i: modules_list[v] for i, v in enumerate(self.modules)}
         
             self.callsite_module_map = df_as_dict(self.dataframe, 'nid', 'module')
             self.module_callsite_map = {m: [] for m, c in self.modules.items()}
@@ -1033,7 +1034,7 @@ class SuperGraph(ht.GraphFrame):
     # --------------------------------------------------------------------------
     # Supergraph.nxg methods
     # --------------------------------------------------------------------------
-    def filter_sg(self, filter_by, filter_val) -> None:
+    def filter_nxg(self, ncallsites) -> None:
         """
         In-place filtering on the NetworkX Graph.
 
@@ -1041,27 +1042,25 @@ class SuperGraph(ht.GraphFrame):
         :param filter_val: filter threshold
         :return: None
         """
-        LOGGER.debug(f'Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
-        self.dataframe = self.df_filter_by_value(filter_by, filter_val)
 
-        callsites = self.dataframe["name"].unique()
+        if ncallsites > len(self.nxg.nodes()):
+            return self.nxg
+
+        imp_callsites = self.df_get_top_by_attr("name", ncallsites, "time (inc)")
+        
+        if (len(imp_callsites) < ncallsites):
+            diff = ncallsites - len(imp_callsites)
+            callsites = list(self.nxg.nodes())[0:diff] + imp_callsites
+
         nxg = nx.DiGraph()
 
-        if filter_by == "time (inc)":
-            for edge in self.nxg.edges():
-                # If source is present in the callsites list
-                if edge[0] in callsites and edge[1] in callsites:
-                    nxg.add_edge(edge[0], edge[1])
-                else:
-                    LOGGER.debug(f"Removing the edge: {edge}")
-
-        elif filter_by == "time":
-            for callsite in callsites:
-                path = self.df_lookup_with_column("name", callsite)["path"].tolist()[0]
-                path = make_list(path)
-                nxg.add_path(path)
-
-        self.nxg = nxg
+        for edge in self.nxg.edges():
+            # If source is present in the callsites list
+            if edge[0] in callsites and edge[1] in callsites:
+                nxg.add_edge(edge[0], edge[1])
+            else:
+                pass
+        return nxg
 
     def filter_by_datasets(self, selected_runs):
         """

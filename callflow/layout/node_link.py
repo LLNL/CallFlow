@@ -13,7 +13,6 @@ import callflow
 from callflow.utils.timer import Timer
 from callflow.utils.sanitizer import Sanitizer
 
-
 class NodeLinkLayout:
     """
     Node link layout computation
@@ -42,7 +41,8 @@ class NodeLinkLayout:
             sg.nxg_filter_by_datasets(selected_runs)
 
         self.runs = selected_runs
-        self.nxg = sg.nxg
+        ncallsites = 100
+        self.nxg = sg.filter_nxg(ncallsites)
         
         # Add node and edge attributes.
         self._add_node_attributes()
@@ -66,17 +66,21 @@ class NodeLinkLayout:
                     datamap[column] = {}
 
                 callsite_idx = self.sg.get_idx(callsite, "callsite")
-                _df =  self.sg.df_lookup_with_column("name", callsite)
+                if callsite_idx is not None:
+                    _df =  self.sg.df_lookup_with_column("name", callsite)
 
-                if column == self.time_inc:
-                    datamap[column][callsite] = _df["time (inc)"].mean()
-                elif column == self.time_exc:
-                    datamap[column][callsite] = _df["time"].mean()
-                elif column == "name":
-                    datamap[column][callsite] = callsite
-                elif column == "module":
-                    datamap[column][callsite] = self.sg.get_module(callsite_idx)
+                    if column == self.time_inc:
+                        datamap[column][callsite] = _df["time (inc)"].mean()
+                    elif column == self.time_exc:
+                        datamap[column][callsite] = _df["time"].mean()
+                    elif column == "module":
+                        module = self.sg.get_module(callsite_idx)
+                        if module is None:
+                            module = ""
+                        datamap[column][callsite] = module
 
+                if column == "name":
+                        datamap[column][callsite] = callsite
         # ----------------------------------------------------------------------
         for idx, key in enumerate(datamap):
             nx.set_node_attributes(self.nxg, name=key, values=datamap[key])
