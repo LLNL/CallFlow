@@ -372,3 +372,20 @@ export function leastSquares(xSeries, ySeries) {
 
 	return [slope, intercept, rSquare];
 }
+
+export function getMinMax(data) {
+	const colorMin = parseFloat(Math.min(...data));
+	const colorMax = parseFloat(Math.max(...data));
+
+	return [colorMin, colorMax];
+}
+
+export function getArrayMinMax(arrayOfData) {
+	let colorMin = 0;
+	let colorMax = 0;
+	for (let d of arrayOfData) {
+		colorMin = parseFloat(Math.min(colorMin, Math.min(...d)));
+		colorMax = parseFloat(Math.max(colorMax, Math.max(...d)));
+	}
+	return [colorMin, colorMax];
+}
