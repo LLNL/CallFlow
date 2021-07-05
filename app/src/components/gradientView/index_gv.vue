@@ -10,6 +10,8 @@ import * as d3 from "d3";
 import "d3-selection-multi";
 import { mapGetters } from "vuex";
 
+import * as utils from "lib/utils";
+import Color from "lib/color/";
 import InfoChip from "../general/infoChip";
 
 export default {
@@ -41,6 +43,9 @@ export default {
 			bottom: 10,
 			left: 15,
 		},
+		defaultStrokeWidth: 10,
+		runtimeColor: null,
+		distributionColor: null,
 	}),
 
 	watch: {
@@ -77,41 +82,59 @@ export default {
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
 
-			console.log(this.$store.distributionColor);
+			this.setupColors();
 
 			this.svg.append("rect")
 				.attrs({
 					width: this.boxWidth,
 					height: this.boxHeight,
-					opacity: 1,
-					// stroke: (d) => this.stroke_by_metric(d, this.selectedMetric),
-					// "stroke-width": (d) =>
-					// 	d.type == "intermediate"
-					// 		? this.intermediateStrokeWidth
-					// 		: this.defaultStrokeWidth,
-					fill: this.fill_with_gradients(
-						this.data,
-						this.selectedMetric,
-						this.$store.distributionColor
-					),
-				});        
+				})
+				.style("stroke", this.stroke_by_metric(this.data, this.selectedMetric))
+				.style("stroke-width",  this.defaultStrokeWidth)
+				.style("fill", this.fill_with_gradients(
+					this.data,
+					this.selectedMetric,
+					this.distributionColor));
+
+			this.svg.append("text")
+				.style("fill", (d) => {
+					return this.runtimeColor.setContrast(
+						this.runtimeColor.getColor(this.data[this.selectedMetric].dataset.mean[this.selectedTargetRun])
+					);
+				})
+				.style("font-size", "14px")
+				.text(this.selectedNode["name"]);
+		},
+
+		singleColors() {
+			const data = this.summary[this.selectedTargetRun][this.selectedMetric];
+			const [ colorMin, colorMax ]  = utils.getMinMax(data);
+			this.runtimeColor = new Color(this.selectedMetric, colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);
+		},
+
+		ensembleColors() {
+			const data = this.data[this.selectedMetric]["hist"]["h"];
+			const [ colorMin, colorMax ]  = utils.getMinMax(data);
+			this.distributionColor = new Color("MeanGradients", colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);			
+		},
+
+		setupColors() {
+			this.singleColors();
+			this.ensembleColors();
 		},
 
 		fill_with_gradients(d, metric, color) {
-			
 			const defs = d3.select("#" + this.id).append("defs");
 
 			const linearGradient = defs
 				.append("linearGradient")
-				.attr("id", "#node-gradient" + this.selectedNode["name"]);
+				.attr("id", "node-gradient-" + this.selectedNode["name"]);
 
 			linearGradient
 				.attr("x1", "0%")
 				.attr("y1", "0%")
 				.attr("x2", "100%")
 				.attr("y2", "0%");
-
-			console.log(d);
 
 			const grid = d[metric]["hist"]["b"];
 			const val = d[metric]["hist"]["h"];	
@@ -124,17 +147,11 @@ export default {
 					.attr("stop-color", color.getColorByValue(val[i]));
 			}
 
-			return "url(#node-gradient-" + this.selectedNode + ")";
+			return "url(#node-gradient-" + this.selectedNode["name"] + ")";
 		},
 
 		stroke_by_metric(d, metric) {
-			if (d.attr_dict.type == "intermediate") {
-				return this.generalColors.intermediate;
-			} else if (d.attr_dict.type == "callsite") {
-				return d3.rgb(this.$store.runtimeColor.getColor(d, metric));
-			} else if (d.attr_dict.type == "module") {
-				return d3.rgb(this.$store.runtimeColor.getColor(d, metric));
-			}
+			return d3.rgb(this.runtimeColor.getColor(d[metric].dataset.mean[this.selectedTargetRun], metric));
 		},
         
 	}

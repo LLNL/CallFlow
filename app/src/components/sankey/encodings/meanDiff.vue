@@ -45,7 +45,6 @@ export default {
 	watch: {
 		data: function() {
 			this.process();
-			this.colorScale();
 			this.visualize();
 		}
 	},
@@ -67,17 +66,12 @@ export default {
 				this.mean_diff_max = Math.max(this.mean_diff_max, this.data[i]["mean_diff"]);
 				this.meanDiff[this.data[i]["name"]] = this.data[i]["mean_diff"];
 			}
-		},
 
-		colorScale() {
-			this.$store.diffColor = new Color();
-
-			this.$store.diffColor.setColorScale("MeanDiff", 
+			this.$store.diffColor = new Color("MeanDiff", 
 				this.mean_diff_min, 
 				this.mean_diff_max, 
 				this.distributionColorMap, 
-				this.selectedColorPoint);
-			// this.$parent.$parent.$refs.EnsembleColorMap.update("MeanDiff", this.$store.diffColor, this.mean_diff_min, this.mean_diff_max);
+				this.selectedColorPoint);		
 		},
 
 		visualize() {
