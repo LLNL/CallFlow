@@ -103,6 +103,8 @@ export default new Vuex.Store({
 
 		encoding: "MEAN",
 		IQRFactor: 1.5,
+
+		gradients: {}
 	},
 
 	mutations: {
@@ -228,6 +230,10 @@ export default new Vuex.Store({
 		setTargetColor(state, payload) {
 			state.targetColor = payload;
 		},
+
+		setGradients(state, payload) {
+			state.gradients = payload;
+		}
 	},
 	
 	actions: {
@@ -322,7 +328,7 @@ export default new Vuex.Store({
 		async fetchGradients({ commit }, payload) {
 			const grad = await APIService.POSTRequest("gradients", payload);
 			console.log("[Data] ESG Gradients: ", grad);
-			commit("setParameterProjection", grad);
+			commit("setGradients", grad);
 		},
 
 		async fetchHierarchy({ commit }, payload) {
@@ -471,7 +477,8 @@ export default new Vuex.Store({
 		getIQRFactor: state => state.IQRFactor,
 		getHierarchy: state => state.hierarchy,
 		getProp: state => state.prop,
-
-		getCompareData: state => state.compareData
+		
+		getCompareData: state => state.compareData,
+		getGradients: state => state.gradients,
 	}
 });
