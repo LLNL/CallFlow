@@ -295,6 +295,7 @@ export default {
 			
 			trendline.enter()
 				.append("line")
+				.attr("class", "trendline")
 				.attr("id", "trendline" + id)
 				.attr("x1", (d) => this.xScale(d[0]))
 				.attr("y1", (d) => this.yScale(d[1]))
@@ -422,6 +423,7 @@ export default {
 			d3.selectAll(".trend-line").remove();
 			d3.selectAll(".scatterplot-axis-label").remove();
 			d3.selectAll(".text").remove();
+			d3.selectAll(".trendline").remove();
 		},
 	}
 };
