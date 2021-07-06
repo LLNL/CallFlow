@@ -65,10 +65,9 @@ class BoxPlot:
                     self.rel_c_path = sg.get_component_path(node)
             
         elif ntype == "module":
-            module_idx = sg.get_idx(name, "module")
-            df = sg.module_aux_dict[module_idx]
+            df = sg.module_aux_dict[self.nid]
             if relative_sg is not None:
-                rel_df = relative_sg.module_aux_dict[name]
+                rel_df = relative_sg.module_aux_dict[self.nid]
         
         if relative_sg is not None and "dataset" in rel_df.columns:
             self.ndataset = df_count(rel_df, 'dataset')
