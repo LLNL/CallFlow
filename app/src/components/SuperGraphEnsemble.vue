@@ -46,6 +46,7 @@
 
 			<!-- Right column-->
 			<splitpanes horizontal splitpanes-size="20" :push-other-panes="true">
+				<GradientView ref="GradientView" />
 				<CallsiteCorrespondence ref="CallsiteCorrespondence" />
 				<ParameterProjection ref="ParameterProjection" />
 			</splitpanes>
@@ -72,6 +73,7 @@ import ParameterProjection from "./parameterProjection/index_pp";
 import Sankey from "./sankey/index_sg";
 import Toolbar from "./general/toolbar";
 import Settings from "./general/settings";
+import GradientView from "./gradientView/index_gv";
 
 export default {
 	name: "EnsembleSuperGraph",
@@ -87,6 +89,7 @@ export default {
 		ParameterProjection,
 		CallsiteCorrespondence,
 		Settings,
+		GradientView,
 	},
 
 	// Not used currently. 
@@ -156,7 +159,6 @@ export default {
 			this.$store.commit("setEncoding", "MEAN_GRADIENTS");
 
 			console.log("[ESG] Selected Run: ", this.selectedTargetRun);
-			console.log("[ESG] Selected Mode: ", this.selectedMode);
 			console.log("[ESG] Selected Metric: ", this.selectedMetric);
 
 			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
@@ -173,7 +175,8 @@ export default {
 				this.$refs.CallsiteCorrespondence,
 				this.$refs.ParameterProjection,
 				this.$refs.ModuleHierarchy,
-				this.$refs.Settings
+				this.$refs.Settings,
+				this.$refs.GradientView,
 			];
 		},
 

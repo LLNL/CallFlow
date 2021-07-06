@@ -40,7 +40,7 @@
       </v-select>
     </v-flex>
 
-    <v-flex xs12 class="ma-1">
+    <!-- <v-flex xs12 class="ma-1">
       <v-select
         label="Target Color"
         :items="targetColors"
@@ -51,7 +51,7 @@
         @change="updateTargetColor"
       >
       </v-select>
-    </v-flex>
+    </v-flex> -->
 
     <v-flex xs12 class="ma-1">
       <v-text-field
@@ -190,7 +190,7 @@ export default {
 			selectedMetric: "getSelectedMetric",
 			selectedRuntimeColorMap: "getRuntimeColorMap",
 			selectedDistributionColorMap: "getDistributionColorMap",
-			selectedColorPoint: "getSelectedColorPoint",
+			selectedColorPoint: "getColorPoint",
 			selectedMode: "getSelectedMode",
 			selectedRunBinCount: "getRunBinCount",
 			selectedRankBinCount: "getRankBinCount",

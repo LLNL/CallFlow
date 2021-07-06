@@ -58,7 +58,7 @@ export default {
 					"fill": (d) => {
 						if (d.type == "intermediate") {
 							return this.generalColors.silver;
-						}						
+						}	
 						return this.$store.runtimeColor.getColor(d, this.selectedMetric);						
 					}
 				});

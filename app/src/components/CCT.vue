@@ -83,7 +83,7 @@ export default {
 			selectedMetric: "getSelectedMetric",
 			metricTimeMap: "getMetricTimeMap",
 			runtimeColorMap: "getRuntimeColorMap",
-			colorPoint: "getSelectedColorPoint",
+			colorPoint: "getColorPoint",
 			isComparisonMode: "getComparisonMode",
 			selectedCompareRun: "getSelectedCompareRun",
 			selectedMode: "getSelectedMode",
@@ -130,27 +130,9 @@ export default {
 		}, 
 
 		setupColors() {
-			this.$store.runtimeColor = new Color();
-			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
-
-			const _d = this.summary[this.selectedTargetRun][this.selectedMetric];
-			const colorMin = parseFloat(_d[0]);
-			const colorMax = parseFloat(_d[1]);
-
-			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMin)
-			);
-			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMax)
-			);
-
-			this.$store.runtimeColor.setColorScale(
-				this.selectedMetric,
-				colorMin,
-				colorMax,
-				this.runtimeColorMap,
-				this.colorPoint
-			);
+			const data = this.summary[this.selectedTargetRun][this.selectedMetric];
+			const [ colorMin, colorMax ]  = utils.getMinMax(data);
+			this.$store.runtimeColor = new Color(this.selectedMetric, colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);
 		},
 
 		// ----------------------------------------------------------------

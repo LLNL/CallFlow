@@ -26,7 +26,7 @@
 				class="pt-8 pl-2"
 				dark
 				:label="compareLabel"
-				:items="datasets"
+				:items="datasetsWNoRun"
 				v-model="compareRun"
 				:menu-props="{maxHeight: '400'}"
 				@input="updateCompareRun"
@@ -52,13 +52,14 @@ export default {
 	data: () => ({
 		name: "RunSelection",
 		datasets: [],
+		datasetsWNoRun: [],
 		targetLabel: "",
 		compareLabel: "",
 	}),
 
 	mounted() {
 		this.datasets = Object.keys(this.metricTimeMap);
-		this.datasetsWNoRun = this.datasets.push(NaN);
+		this.datasetsWNoRun = [ ...this.datasets, NaN];
 		this.targetLabel = "Select Target run (Sorted by " + this.selectedMetric + ")";
 		this.compareLabel = "Select Compare run (Sorted by " + this.selectedMetric + ")";
 	},

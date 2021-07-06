@@ -89,7 +89,8 @@ class SuperGraph(ht.GraphFrame):
     # --------------------------------------------------------------------------
     def __str__(self):
         """SuperGraph string representation"""
-        return f"SuperGraph<{self.name}; df = {self.dataframe.shape}, cols = {list(self.dataframe.columns)}>"
+        return f"SuperGraph<{self.name}" \
+               f"df = {self.dataframe.shape}, cols = {list(self.dataframe.columns)}>"
 
     def __repr__(self):
         """SuperGraph string representation"""
@@ -204,12 +205,44 @@ class SuperGraph(ht.GraphFrame):
             proxy_columns=self.proxy_columns).unpack()
 
     def get_entry_functions(self, node):
-        return []
+        assert (node.get("type") == "module")
+        ret = []
+        unique_cp = self.get_component_path(node)
+        entry_funcs = [list(_)[0] for _ in unique_cp if len(_) == 1]
 
+        for nid in entry_funcs:
+            name = self.get_name(nid, "callsite")
+            ret.append({
+                "nid": nid,
+                "name": name,
+                "time": self.get_runtime(name, "callsite", "time"),
+                "time (inc)": self.get_runtime(name, "callsite", "time (inc)")
+            })
+        return ret
+
+    # TODO: Generalize on what a node is in context of CallFlow.
     def get_node(self, node): 
         return {
 
         }
+
+    # TODO: get_component_path would return list for node.type == "callsite" and
+    # returns a list of lists for node.type == "module". Avoid this confusion or
+    # try to figure a way to do it differently.
+    # Additionally this function returns the component path expressed with
+    # nid's. This would not be pleasant if one uses CallFlow's API.
+    def get_component_path(self, node):
+        ntype = node.get("type")
+        if ntype == "callsite":
+            lk_column = "name"
+            lk_name = node.get("name")
+        elif ntype == "module":
+            lk_column = "module"
+            lk_name = node.get("id")
+        cp = list(df_lookup_by_column(self.dataframe, lk_column, lk_name)["component_path"])
+        unique_cp = list(set([tuple(line) for line in cp]))
+
+        return unique_cp
 
     # --------------------------------------------------------------------------
     def create(self, path, profile_format, module_callsite_map: dict = {},  filter_by="time (inc)", filter_perc=10.0) -> None: 

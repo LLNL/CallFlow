@@ -399,7 +399,7 @@ export default {
 			d3.selectAll(".callsite").remove();
 			d3.selectAll(".callsite-text").remove();
 			d3.selectAll(".path").remove();
-			d3.selectAll(".targetLines").remove();
+			this.clearTargetLines();
 			this.clearEncoding(this.encoding);
 			this.clearTargetPath();
 			this.$refs.ToolTip.clear();

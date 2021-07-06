@@ -94,7 +94,7 @@ export default {
 			selectedMode: "getSelectedMode",
 			comparisonMode: "getComparisonMode",
 			runBinCount: "getRunBinCount",
-			selectedColorPoint: "getSelectedColorPoint",
+			selectedColorPoint: "getColorPoint",
 			summary: "getSummary",
 			targetColor: "getTargetColor",
 			runtimeColorMap: "getRuntimeColorMap",
@@ -209,59 +209,15 @@ export default {
 		},
 
 		singleColors() {
-			this.$store.runtimeColor = new Color();
-			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
-
-			const _d = this.summary[this.selectedTargetRun][this.selectedMetric];
-			const colorMin = parseFloat(_d[0]);
-			const colorMax = parseFloat(_d[1]);
-
-			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMin)
-			);
-			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMax)
-			);
-
-			this.$store.runtimeColor.setColorScale(
-				this.selectedMetric,
-				colorMin,
-				colorMax,
-				this.runtimeColorMap,
-				this.selectedColorPoint
-			);
+			const data = this.summary[this.selectedTargetRun][this.selectedMetric];
+			const [ colorMin, colorMax ]  = utils.getMinMax(data);
+			this.$store.runtimeColor = new Color(this.selectedMetric, colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);
 		},
 
 		ensembleColors() {
-			this.$store.distributionColor = new Color();
-			this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
-			
-			let hist_min = 0;
-			let hist_max = 0;
-			for (let node of this.data.nodes) {
-				const vals = node.attr_dict["gradients"][this.selectedMetric]["hist"]["h"];
-				hist_min = Math.min(
-					hist_min,
-					Math.min(...vals)
-				);
-				hist_max = Math.max(
-					hist_max,
-					Math.max(...vals)
-				);
-			}
-			this.$store.distributionColor.setColorScale(
-				"MeanGradients",
-				hist_min,
-				hist_max,
-				this.distributionColorMap,
-				this.selectedColorPoint
-			);
-
-			this.$store.distributionColor.target = this.targetColorMap[
-				this.targetColor
-			];
-			this.$store.distributionColor.ensemble = "#C0C0C0";
-			this.$store.distributionColor.compare = "#043060";
+			const arrayOfData = this.data.nodes.map((d) => d.attr_dict.gradients[this.selectedMetric]["hist"]["h"]);
+			const [ colorMin, colorMax ]  = utils.getArrayMinMax(arrayOfData);
+			this.$store.distributionColor = new Color("MeanGradients", colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);			
 		},
 
 		clear() {
