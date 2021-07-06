@@ -20,7 +20,7 @@ class HierarchyLayout:
     Hierarchy Layout computation
     """
 
-    def __init__(self, esg, node, nbins):
+    def __init__(self, sg, esg, dataset, node, nbins):
         """
         Hierarchy Layout computation
 
@@ -32,9 +32,11 @@ class HierarchyLayout:
         assert node in list(esg.modules_list)
 
         self.node = node
-        module_idx = esg.get_idx(node, "module")
+        module_idx = sg.get_idx(node, "module")
+
+        self.sg = sg
         self.esg = esg
-        module_df = esg.dataframe.loc[esg.dataframe["module"] == module_idx]
+        module_df = sg.dataframe.loc[sg.dataframe["module"] == module_idx]
 
         self.time_exc = self.esg.df_get_proxy("time")
         self.time_inc = self.esg.df_get_proxy("time (inc)")
