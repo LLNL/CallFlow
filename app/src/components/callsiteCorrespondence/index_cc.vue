@@ -224,6 +224,7 @@ export default {
 		});
 
 		EventHandler.$on("reset-ensemble-boxplots", () =>  {
+			self.clear();
 			self.init();
 			self.visualize();
 		});
@@ -495,6 +496,7 @@ export default {
 		},
 
 		clear() {
+			d3.selectAll(".cc-node").remove();
 			EventHandler.$emit("clear-boxplot");
 		},
 
