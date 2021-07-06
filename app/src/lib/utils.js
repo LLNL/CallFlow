@@ -83,7 +83,7 @@ export function formatRuntimeWithUnits(val) {
 	if (val == 0) {
 		return val;
 	}
-	let format = d3.format(".2");
+	let format = d3.format(".3");
 	return format(val);
 }
 
