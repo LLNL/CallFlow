@@ -502,7 +502,7 @@ export default {
 			return this.labels[idx];
 		},
 
-		clickCallsite(event) {
+		revealCallsite(event) {
 			event.stopPropagation();
 			let callsite = event.currentTarget.id;
 			this.$socket.emit("reveal_callsite", {
