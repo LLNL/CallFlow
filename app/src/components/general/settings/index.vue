@@ -190,7 +190,7 @@ export default {
 			selectedMetric: "getSelectedMetric",
 			selectedRuntimeColorMap: "getRuntimeColorMap",
 			selectedDistributionColorMap: "getDistributionColorMap",
-			selectedColorPoint: "getSelectedColorPoint",
+			selectedColorPoint: "getColorPoint",
 			selectedMode: "getSelectedMode",
 			selectedRunBinCount: "getRunBinCount",
 			selectedRankBinCount: "getRankBinCount",

@@ -38,7 +38,7 @@ export default {
 			selectedMetric: "getSelectedMetric",
 			data: "getCompareData",
 			distributionColorMap: "getDistributionColorMap",
-			selectedColorPoint: "getSelectedColorPoint",
+			selectedColorPoint: "getColorPoint",
 		})
 	},
 

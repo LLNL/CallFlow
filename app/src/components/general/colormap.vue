@@ -42,7 +42,7 @@ export default {
 			showTarget: "getShowTarget",
 			comparisonMode: "getComparisonMode",
 			generalColors: "getGeneralColors",
-			selectedColorPoint: "getSelectedColorPoint"
+			selectedColorPoint: "getColorPoint"
 		})
 	},
 

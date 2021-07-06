@@ -94,7 +94,7 @@ export default {
 			selectedMode: "getSelectedMode",
 			comparisonMode: "getComparisonMode",
 			runBinCount: "getRunBinCount",
-			selectedColorPoint: "getSelectedColorPoint",
+			selectedColorPoint: "getColorPoint",
 			summary: "getSummary",
 			targetColor: "getTargetColor",
 			runtimeColorMap: "getRuntimeColorMap",

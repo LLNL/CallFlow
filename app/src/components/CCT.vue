@@ -83,7 +83,7 @@ export default {
 			selectedMetric: "getSelectedMetric",
 			metricTimeMap: "getMetricTimeMap",
 			runtimeColorMap: "getRuntimeColorMap",
-			colorPoint: "getSelectedColorPoint",
+			colorPoint: "getColorPoint",
 			isComparisonMode: "getComparisonMode",
 			selectedCompareRun: "getSelectedCompareRun",
 			selectedMode: "getSelectedMode",
