@@ -402,54 +402,21 @@ export default {
 			this.totalSize = root.value;
 		},
 
+		singleColors() {
+			const data = this.summary[this.selectedTargetRun][this.selectedMetric];
+			const [ colorMin, colorMax ]  = utils.getMinMax(data);
+			this.runtimeColor = new Color(this.selectedMetric, colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);
+		},
+
+		ensembleColors() {
+			const arrayOfData = this.nodes.map((node) => node.data.attr_dict.grad[this.selectedMetric]["hist"]["h"]);
+			const [ colorMin, colorMax ]  = utils.getArrayMinMax(arrayOfData);
+			this.distributionColor = new Color("MeanGradients", colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);			
+		},
+
 		setupColors() {
-			this.runtimeColor = new Color();
-			
-			const _d = this.summary[this.selectedTargetRun][this.selectedMetric];
-			const colorMin = parseFloat(_d[0]);
-			const colorMax = parseFloat(_d[1]);
-
-			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMin)
-			);
-			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMax)
-			);
-
-			this.runtimeColor.setColorScale(
-				this.selectedMetric,
-				colorMin,
-				colorMax,
-				this.runtimeColorMap,
-				this.selectedColorPoint
-			);
-
-			this.distributionColor = new Color();
-			
-			let hist_min = 0;
-			let hist_max = 0;
-			for (let node of this.nodes) {
-				const vals = node.data.attr_dict["grad"][this.selectedMetric]["hist"]["h"];
-				hist_min = Math.min(
-					hist_min,
-					Math.min(...vals)
-				);
-				hist_max = Math.max(
-					hist_max,
-					Math.max(...vals)
-				);
-			}
-			this.distributionColor.setColorScale(
-				"MeanGradients",
-				hist_min,
-				hist_max,
-				this.distributionColorMap,
-				this.selectedColorPoint
-			);
-
-			this.distributionColor.target = this.targetColorMap[
-				this.targetColor
-			];
+			this.singleColors();
+			this.ensembleColors();
 		},
 
 		fill_with_gradients(d, metric, color) {

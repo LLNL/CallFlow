@@ -160,6 +160,24 @@ class SuperGraph(ht.GraphFrame):
         assert len(unique_names) == 1
         return unique_names[0]
 
+    def get_modules(self):
+        """
+        Getter to obtain the datasets in the ensemble.
+        """
+        if "module" in self.df_columns():
+            return [self.get_name(mod_idx, "module") for mod_idx in self.df_unique('module')]
+
+    def get_module_to_callsite_mapping(self):
+        ret = {}
+    
+        for k, v in enumerate(self.module_callsite_map):
+            _k = self.get_name(k, "module")
+            _v = self.get_name(v, "callsite")
+            if _k not in ret:
+                ret[_k] = []
+            ret[_k].append(_v)
+        return ret
+
     def get_datasets(self):
         """
         Getter to obtain the datasets in the ensemble.

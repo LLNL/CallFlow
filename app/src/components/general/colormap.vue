@@ -42,15 +42,15 @@ export default {
 			showTarget: "getShowTarget",
 			comparisonMode: "getComparisonMode",
 			generalColors: "getGeneralColors",
-			selectedColorPoint: "getSelectedColorPoint"
+			selectedColorPoint: "getColorPoint"
 		})
 	},
 
 	methods: {
 		init(color) {
 			this.color = color;
-			this.colorMin = this.color.getScale().domain()[0];
-			this.colorMax = this.color.getScale().domain()[1];
+			this.colorMin = this.color.getDomain()[0];
+			this.colorMax = this.color.getDomain()[1];
 
 			this.svg = d3.select("#" + this.id)
 				.append("g")
