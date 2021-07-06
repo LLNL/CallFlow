@@ -46,8 +46,8 @@ class BoxPlot:
         if relative_sg is not None:
             self.box_types = ["tgt", "bkg"]
 
-        nid = sg.get_idx(name, ntype)
-        node = {"id": nid, "type": ntype, "name": name}
+        self.nid = sg.get_idx(name, ntype)
+        node = {"id": self.nid, "type": ntype, "name": name}
 
         # TODO: Avoid this.
         self.c_path = None
@@ -121,7 +121,7 @@ class BoxPlot:
                 "uv": (_mean, _var),
                 "imb": _imb,
                 "ks": (_kurt, _skew),
-                "nid": df["nid"].unique(),
+                "nid": self.nid,
             }
             if 'dataset' in df.columns:
                 ret[tk]['odset'] = df['dataset'].to_numpy()[mask]
@@ -157,7 +157,7 @@ class BoxPlot:
                     "imb": box["imb"],
                     "kurt": box["ks"][0],
                     "skew": box["ks"][1],
-                    "nid": box["nid"][0],
+                    "nid": box["nid"],
                     "name": self.result["name"],
                 }
                 result["name"] = self.result["name"]
