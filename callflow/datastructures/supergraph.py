@@ -145,10 +145,17 @@ class SuperGraph(ht.GraphFrame):
         :return (float): runtime of a node
         """
         if ntype == 'callsite':
-            return self.df_lookup_with_column("name", node_idx)[metric].mean()
+            lk_column = "name"
         elif ntype == 'module':
-            return self.df_lookup_with_column("module", node_idx)[metric].mean()
+            lk_column = "module"
 
+        _df = self.df_lookup_with_column(lk_column, node_idx)
+        if _df.empty:
+            return 0.0
+
+        assert metric in _df.columns
+        return _df[metric].mean()
+        
     def get_name_by_nid(self, nid):
         """
         Getter to obtain node's name by nid.
@@ -196,7 +203,10 @@ class SuperGraph(ht.GraphFrame):
         if ntype == "callsite":
             aux_dict = self.callsite_aux_dict
         elif ntype == "module":
-            aux_dict = self.module_aux_dict
+            aux_dict = self.module_aux_dict 
+
+        if nid not in aux_dict.keys():
+            return {}
 
         return Histogram(dataframe=aux_dict[nid], relative_to_df=None,
             histo_types=["rank"],
@@ -205,6 +215,9 @@ class SuperGraph(ht.GraphFrame):
             proxy_columns=self.proxy_columns).unpack()
 
     def get_entry_functions(self, node):
+        if node.get("type") == "callsite":
+            return []
+
         assert (node.get("type") == "module")
         ret = []
         unique_cp = self.get_component_path(node)
