@@ -63,8 +63,8 @@ export default {
 			}
 			const gradients = node.attr_dict.gradients[this.selectedMetric];
 			const targetPos = gradients["dataset"]["position"][this.selectedTargetRun];
-			const binWidth = node.height / (this.selectedRunBinCount);
-			return binWidth * targetPos;
+			const binWidth = node.height / (this.selectedRunBinCount - 1);
+			return binWidth * targetPos - binWidth / 2;
 		},
 
 		clear() {
