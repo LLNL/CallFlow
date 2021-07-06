@@ -29,6 +29,9 @@ export default {
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMetric: "getSelectedMetric",
 			runBinCount: "getRunBinCount",
+			colorPoint: "getColorPoint",
+			runtimeColorMap: "getRuntimeColorMap",
+			distributionColorMap: "getDistributionColorMap"
 		})
 	},
     
@@ -66,7 +69,7 @@ export default {
 		},
 
 		visualize() {
-			this.width = this.$store.viewWidth * 0.25;
+			this.width = this.$store.viewWidth * 0.20;
 			this.height = 150;
 
 			this.boxWidth = this.width - 1 * (this.padding.right + this.padding.left);
@@ -97,25 +100,28 @@ export default {
 					this.distributionColor));
 
 			this.svg.append("text")
+				.attrs({
+					x: 20,
+					y: 30,
+				})
 				.style("fill", (d) => {
 					return this.runtimeColor.setContrast(
 						this.runtimeColor.getColor(this.data[this.selectedMetric].dataset.mean[this.selectedTargetRun])
 					);
 				})
-				.style("font-size", "14px")
+				.style("font-size", "16px")
 				.text(this.selectedNode["name"]);
 		},
 
 		singleColors() {
 			const data = this.summary[this.selectedTargetRun][this.selectedMetric];
-			const [ colorMin, colorMax ]  = utils.getMinMax(data);
-			this.runtimeColor = new Color(this.selectedMetric, colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);
+			this.runtimeColor = new Color(this.selectedMetric, data[0], data[1], this.runtimeColorMap, this.colorPoint);
 		},
 
 		ensembleColors() {
 			const data = this.data[this.selectedMetric]["hist"]["h"];
 			const [ colorMin, colorMax ]  = utils.getMinMax(data);
-			this.distributionColor = new Color("MeanGradients", colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);			
+			this.distributionColor = new Color("MeanGradients", colorMin, colorMax, this.distributionColorMap, this.colorPoint);			
 		},
 
 		setupColors() {
@@ -151,7 +157,9 @@ export default {
 		},
 
 		stroke_by_metric(d, metric) {
-			return d3.rgb(this.runtimeColor.getColor(d[metric].dataset.mean[this.selectedTargetRun], metric));
+			const data = d[metric].dataset.mean[this.selectedTargetRun];
+			const color = this.runtimeColor.getColorByValue(data);
+			return d3.rgb(color);
 		},
         
 	}

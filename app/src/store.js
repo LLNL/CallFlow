@@ -56,7 +56,6 @@ export default new Vuex.Store({
 			ensemble: "#d9d9d9",
 			text: "#888888",
 		},
-		selectedColorPoint: 9,
 		runtimeColorMap: "OrRd",
 		distributionColorMap: "Reds",
 		targetColor: "Green",
@@ -198,7 +197,7 @@ export default new Vuex.Store({
 		},
 
 		setSelectedColorPoint(state, payload) {
-			state.selectedColorPoint = payload;
+			state.colorPoint = payload;
 		}, 
 
 		setHierarchy(state, payload) {
@@ -363,7 +362,7 @@ export default new Vuex.Store({
 		},
 
 		updateSelectedColorPoint({ state, dispatch }, payload) {
-			state.selectedColorPoint = payload;
+			state.colorPoint = payload;
 			dispatch("reset");
 		},
 
@@ -472,7 +471,7 @@ export default new Vuex.Store({
 
 		getGeneralColors: state => state.generalColors,
 		getEncoding: state => state.encoding,
-		getSelectedColorPoint: state => state.selectedColorPoint,	
+		getColorPoint: state => state.colorPoint,	
 		getRuntimeSortBy: state => state.runtimeSortBy,
 		getIQRFactor: state => state.IQRFactor,
 		getHierarchy: state => state.hierarchy,
