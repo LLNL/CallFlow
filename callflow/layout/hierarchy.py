@@ -103,15 +103,18 @@ class HierarchyLayout:
         if ntype == "callsite":
             time_inc = self.esg.get_runtime(name, ntype, self.time_inc)
             time_exc = self.esg.get_runtime(name, ntype, self.time_exc)
+            grads = self.esg.get_gradients(name, ntype, nbins)
         elif ntype == "module":
             time_inc = self.esg.get_runtime(nid, ntype, self.time_inc)
             time_exc = self.esg.get_runtime(nid, ntype, self.time_exc)
+            grads = self.esg.get_gradients(nid, ntype, nbins)
+
 
         return {
             "id": nid,
             "type": ntype,
             "name": name,
-            "grad": self.esg.get_gradients(nid, ntype, nbins),
+            "grad": grads,
             self.time_inc: time_inc,
             self.time_exc: time_exc
         }

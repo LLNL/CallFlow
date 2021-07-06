@@ -9,6 +9,9 @@ CallFlow's operation to calculate ensemble gradients per-callsite or per-module.
 """
 import numpy as np
 import pandas as pd
+# TODO: Avoid the performance error in the future pass.
+import warnings
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 import callflow
 from callflow.utils.utils import histogram
@@ -25,7 +28,7 @@ class Gradients:
     Computes the ensemble gradients for the a given dictionary of dataframes.
     """
 
-    def __init__(self, df, node_id: str, node_type: str="callsite", bins: int = 20, proxy_columns={}):
+    def __init__(self, df, nid: int, ntype: str="callsite", bins: int = 20, proxy_columns={}):
         """
         Constructor function for the class
 
@@ -36,33 +39,26 @@ class Gradients:
         :param proxy_columns: Proxy columns
         """
         assert isinstance(df, pd.DataFrame)
-        assert isinstance(node_id, int)
-        assert node_type in ["callsite", "module"]
+        assert ntype in ["callsite", "module"]
         assert isinstance(bins, int)
         assert isinstance(proxy_columns, dict)
         assert bins > 0
 
         # # gradient should be computed only for ensemble dataframe
         # # i.e., multiple values in dataframe column
-        datasets = df_unique(df, "dataset")
-        assert len(datasets) >= 1
+        self.datasets = list(df.index.levels[0])
+        assert len(self.datasets) >= 1
 
         self.bins = bins
-        self.callsiteOrModule = node_id
+        self.nid = nid
+        self.df = df
 
         self.proxy_columns = proxy_columns
         self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
-        # TODO: this looks like a lot of wasted copy
-        self.df_dict = {_d: df_lookup_by_column(df, "dataset", _d)
-                        for _d in datasets}
-
-        self.rank_dict = {_d: df_count(_df, "rank")
-                          for _d, _df in self.df_dict.items()}
-        self.max_ranks = max(self.rank_dict.values())
-        
+        self.max_ranks = max(df_unique(df, "rank"))
         self.result = self.compute()
-
+ 
     @staticmethod
     def convert_dictmean_to_list(dictionary):
         """
@@ -126,8 +122,8 @@ class Gradients:
         dists = {tk: {} for tk,tv in zip(TIME_COLUMNS, self.time_columns)}
 
         # Get the runtimes for all the runs.
-        for idx, dataset in enumerate(self.df_dict):
-            node_df = self.df_dict[dataset]
+        for idx, dataset in enumerate(self.datasets):
+            node_df = self.df.xs((dataset, self.nid))
             for tk, tv in zip(TIME_COLUMNS, self.time_columns):
                 if node_df.empty:
                     dists[tk][dataset] = dict((rank, 0) for rank in range(0, self.max_ranks))
