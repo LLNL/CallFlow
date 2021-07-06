@@ -105,9 +105,9 @@ export default {
 					y: 30,
 				})
 				.style("fill", (d) => {
-					return this.runtimeColor.setContrast(
-						this.runtimeColor.getColor(this.data[this.selectedMetric].dataset.mean[this.selectedTargetRun])
-					);
+					const data = this.data[this.selectedMetric].dataset.mean[this.selectedTargetRun];
+					const color = this.runtimeColor.getColor(data);
+					return this.runtimeColor.setContrast(color);
 				})
 				.style("font-size", "16px")
 				.text(this.selectedNode["name"]);
