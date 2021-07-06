@@ -95,7 +95,7 @@ class Gradients:
         :return: Mapping of the datases to the corresponding bins.
         """
         # TODO: previously, this logic applied to bin edges
-        # but, now, we aer working on bin_centers
+        # but, now, we are working on bin_centers
         binw = bins[1] - bins[0]
         bin_edges = np.append(bins - 0.5 * binw, bins[-1] + 0.5 * binw)
 
@@ -105,11 +105,15 @@ class Gradients:
             mean = dataset_dict[dataset]
             for idx, x in np.ndenumerate(bin_edges):
                 if x > float(mean):
-                    dataset_position_dict[dataset] = idx[0]
+                    if idx[0] != 0:
+                        pos = idx[0] - 1
+                    else:
+                        pos = idx[0]
+                    dataset_position_dict[dataset] = pos
                     break
                 if idx[0] == len(bin_edges) - 1:
                     dataset_position_dict[dataset] = len(bin_edges) - 2
-
+        
         return dataset_position_dict
 
     # --------------------------------------------------------------------------
