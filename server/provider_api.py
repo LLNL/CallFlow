@@ -235,4 +235,12 @@ class APIProvider(BaseProvider):
             result = self.request_ensemble({"name": "boxplots", **data})
             return APIProvider.emit_json("ensemble_boxplots", result)
 
+        @app.route("/gradients", methods=["POST"])
+        @cross_origin()
+        def gradients():
+            data = request.json
+            result = self.request_ensemble({"name": "gradients", **data})
+            return APIProvider.emit_json("gradients", result)
+
+
 # ------------------------------------------------------------------------------

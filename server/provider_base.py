@@ -538,3 +538,14 @@ class BaseProvider:
                 result[callsite] = bp.unpack()
             
             return result
+
+        elif operation_name == "gradients":
+            name = operation.get("node", None)
+            ntype = operation.get("ntype", None)
+            nbins = int(operation.get("nbins", 20))
+
+            # Gradients are computed only for the ensemble mode.
+            esg = self.supergraphs["ensemble"]
+            esg_nid = esg.get_idx(name, ntype)
+
+            return esg.get_gradients(esg_nid, ntype, nbins)
