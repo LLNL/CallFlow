@@ -158,7 +158,7 @@ export default {
 				.attr("y1", this.height - this.padding.bottom / 2)
 				.attr("x2", this.lineLength)
 				.attr("y2", this.height - this.padding.bottom / 2)
-				.attr("stroke-width", 1.5)
+				.attr("stroke-width", 3)
 				.attr("stroke", "black")
 			// .attr("marker-end", "url(#triangle)")
 				.style("opacity", 0.5);
@@ -169,7 +169,7 @@ export default {
 				.attr("y1", this.height - this.padding.bottom / 2)
 				.attr("x2", this.padding.bottom)
 				.attr("y2", this.height - this.lineLength * 0.75)
-				.attr("stroke-width", 1.5)
+				.attr("stroke-width", 3)
 				.attr("stroke", "black")
 			// .attr("marker-end", "url(#triangle)")
 				.style("opacity", 0.5);
@@ -285,9 +285,7 @@ export default {
 					id: (d) => {
 						return "dot-" + d[2];
 					},
-					r: (d) => {
-						return 6.0;
-					},
+					r:  6.0,
 					fill: (d) => {
 						let color = "";
 						if (
@@ -323,7 +321,7 @@ export default {
 					id: (d) => {
 						return "outer-circle-" + d[2];
 					},
-					r: 8.0,
+					r: 6.0,
 					"stroke-width": 3.0,
 					stroke: (d) => {
 						if (
@@ -625,22 +623,20 @@ export default {
 		highlight(dataset) {
 			let datasetID = this.selectedTargetRun;
 
-			this.circles = this.svg.selectAll("#dot-" + datasetID).attrs({
+			this.svg.selectAll(".dot").attrs({
 				opacity: 1.0,
-				stroke: this.generalColors.target,
-				"stroke-width": 3.0,
+				"stroke-width": 0,
 			});
-
-			this.circles = this.svg.selectAll("#dot-" + datasetID).attrs({
-				opacity: 1.0,
+			
+			this.svg.selectAll("#dot-" + datasetID).attrs({
+				"stroke-width": 3,
 				stroke: this.generalColors.target,
-				"stroke-width": 4.5,
 			});
 		},
 
 		clear() {
 			d3.selectAll("#parameter-projection-tooltip").remove();
-			// this.svg.selectAll('.dot').remove()
+			this.svg.selectAll(".dot").attrs({"stroke": "#fff"});
 			d3.selectAll(".outer-circle").remove();
 			this.svg.selectAll(".lasso").remove();
 			this.svg.selectAll(".projection-axis-label").remove();

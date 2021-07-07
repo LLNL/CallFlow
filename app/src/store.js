@@ -232,6 +232,14 @@ export default new Vuex.Store({
 
 		setGradients(state, payload) {
 			state.gradients = payload;
+		},
+
+		setRuntimeColorMap(state, payload) {
+			state.runtimeColorMap = payload;
+		},
+
+		setDistributionColorMap(state, payload) {
+			state.distributionColorMap = payload;
 		}
 	},
 	

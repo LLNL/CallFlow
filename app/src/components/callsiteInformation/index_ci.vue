@@ -167,6 +167,7 @@ export default {
 		let self = this;
 
 		EventHandler.$on("reset-single-boxplots", () =>  {
+			self.clear();
 			self.init();
 			self.visualize();
 		});
@@ -268,6 +269,7 @@ export default {
 		 * @param {*} callsiteID
 		 */
 		getID(callsiteID) {
+			console.log(callsiteID);
 			return "callsite-information-node-" + callsiteID;
 		},
 

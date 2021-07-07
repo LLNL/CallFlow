@@ -233,6 +233,7 @@ export default {
 					EventHandler.$emit("reset-ensemble-scatterplot");
 					EventHandler.$emit("reset-ensemble-boxplots");
 					EventHandler.$emit("reset-module-hierarchy");
+					EventHandler.$emit("reset-ensemble-gradients");
 				}
 				else if (this.selectedMode == "SG") {
 					EventHandler.$emit("reset-single-histogram");

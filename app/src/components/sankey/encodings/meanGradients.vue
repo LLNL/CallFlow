@@ -97,7 +97,7 @@ export default {
 			const val = d.attr_dict["gradients"][metric]["hist"]["h"];	
 
 			for (let i = 0; i < grid.length; i += 1) {
-				let x = (i + i + 1) / (2 * grid.length);
+				let x = (i + 0.5) / grid.length;
 				linearGradient
 					.append("stop")
 					.attr("offset", 100 * x + "%")
