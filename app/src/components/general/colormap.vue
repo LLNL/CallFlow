@@ -67,7 +67,7 @@ export default {
 
 		_legends() {
 			this.clearLegends();
-			if (this.selectedMode == "Ensemble") {
+			if (this.selectedMode == "ESG") {
 				if (this.showTarget && !this.comparisonMode) {
 					this.drawLegend("Target run", this.padding.right, 4 * this.padding.bottom, this.generalColors.target);
 				}
@@ -80,26 +80,26 @@ export default {
 			let text = "";
 			let yOffsetCount = 1;
 
-			if (this.color.type == "time") {
-				text = this.color.type;
+			if (this.color.metric == "time") {
+				text = this.color.metric;
 			}
-			else if (this.color.type == "time (inc)") {
-				text = this.color.type;
+			else if (this.color.metric == "time (inc)") {
+				text = this.color.metric;
 			}
-			else if (this.color.type == "MeanGradients") {
+			else if (this.color.metric == "MeanGradients") {
 				text = "Distribution colormap";
 				yOffsetCount = 2;
 			}
-			else if (this.color.type == "MeanDiff") {
+			else if (this.color.metric == "MeanDiff") {
 				text = "Mean Difference colormap";
 				yOffsetCount = 2;
 			}
-			else if (this.color.type == "RankDiff") {
+			else if (this.color.metric == "RankDiff") {
 				text = "Rank Difference colormap";
 				yOffsetCount = 2;
 			}
 
-			if (this.color.type !== "MeanGradients") {
+			if (this.color.metric !== "MeanGradients") {
 				this.colorMinText = utils.formatRuntimeWithUnits(this.colorMin);
 				this.colorMaxText = utils.formatRuntimeWithUnits(this.colorMax);
 			}
@@ -107,6 +107,7 @@ export default {
 				this.colorMinText = this.colorMin;
 				this.colorMaxText = this.colorMax;
 			}
+			console.log(yOffsetCount);
 			this.drawColorMap(text, this.containerWidth/2 - this.padding.right, this.padding.bottom * yOffsetCount);
 		},
 

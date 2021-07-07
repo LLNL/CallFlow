@@ -80,6 +80,7 @@ export default {
 		sankeyHeight: 0,
 		existingIntermediateNodes: {},
 		title: "Super Graph View",
+		firstRender: true,
 		message: "",
 		info: "",
 		infoSummary: "Super Graphs provides an overview of the application's control during execution using a Sankey Diagram. The Sankey diagram incorporates a flow-based metaphor to the call graph by show the resource flow from left to right. Each node's performance is mapped based on the runtime colormap. The mini-histograms (on top of the node) provides an overview of each node's runtime distribution across processes",
@@ -109,6 +110,7 @@ export default {
 			this.data = val;
 			this.singleColors();
 			this.visualize();
+			this.firstRender = false;
 		},
 
 		esg_data: function (val) {
@@ -116,6 +118,7 @@ export default {
 			this.singleColors();
 			this.ensembleColors();
 			this.visualize();
+			this.firstRender = false;
 		},
 
 		compare_data: function (val) {
@@ -211,13 +214,26 @@ export default {
 		singleColors() {
 			const data = this.summary[this.selectedTargetRun][this.selectedMetric];
 			const [ colorMin, colorMax ]  = utils.getMinMax(data);
+
+			if (this.firstRender) {
+				let runtimeColorMap = "";
+				if (this.selectedMode === "SG") {
+					runtimeColorMap = "OrRd";
+				}
+				else if (this.selectedMode === "ESG") {
+					runtimeColorMap = "Blues";
+				}
+				this.$store.commit("setRuntimeColorMap", runtimeColorMap);
+			}
 			this.$store.runtimeColor = new Color(this.selectedMetric, colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);
 		},
 
 		ensembleColors() {
 			const arrayOfData = this.data.nodes.map((d) => d.attr_dict.gradients[this.selectedMetric]["hist"]["h"]);
 			const [ colorMin, colorMax ]  = utils.getArrayMinMax(arrayOfData);
-			this.$store.distributionColor = new Color("MeanGradients", colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);			
+			this.$store.commit("setDistributionColorMap", "Reds");
+			this.$store.distributionColor = new Color("MeanGradients", colorMin, colorMax, this.distributionColorMap, this.selectedColorPoint);			
+
 		},
 
 		clear() {
