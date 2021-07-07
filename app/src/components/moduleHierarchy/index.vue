@@ -65,7 +65,8 @@ export default {
 		title: "Super node Hierarchy",
 		infoSummary: "",
 		info: "",
-		selectedHierarchyMode: "Uniform"
+		selectedHierarchyMode: "Uniform",
+		firstRender: true,
 	}),
 
 	computed: {
@@ -78,9 +79,11 @@ export default {
 			selectedTargetRun: "getSelectedTargetRun",
 			runBinCount: "getRunBinCount",
 			selectedMetric: "getSelectedMetric",
+			runtimeColorMap: "getRuntimeColorMap",
 			distributionColorMap: "getDistributionColorMap",
 			targetColorMap: "getTargetColorMap",
 			summary: "getSummary",
+			selectedMode: "getSelectedMode",
 		})
 	},
 
@@ -143,6 +146,7 @@ export default {
 		visualize() {
 			const hierarchy = this.bfs(this.data);
 			this.drawIcicles(hierarchy);
+			this.firstRender = false;
 		},
 
 		// Formatting for the html view
@@ -388,7 +392,8 @@ export default {
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition);
 
-			this.setupColors();
+			this.singleColors();
+			this.ensembleColors();			
 			this.addNodes();
 			this.addText();
 			if (this.showTarget) {
@@ -405,18 +410,24 @@ export default {
 		singleColors() {
 			const data = this.summary[this.selectedTargetRun][this.selectedMetric];
 			const [ colorMin, colorMax ]  = utils.getMinMax(data);
-			this.runtimeColor = new Color(this.selectedMetric, colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);
+			let runtimeColorMap = this.runtimeColorMap;
+			if (this.firstRender) {
+				if (this.selectedMode === "SG") {
+					runtimeColorMap = "OrRd";
+				}
+				else if (this.selectedMode === "ESG") {
+					runtimeColorMap = "Blues";
+				}
+				this.$store.commit("setRuntimeColorMap", runtimeColorMap);
+			}
+			this.runtimeColor = new Color(this.selectedMetric, colorMin, colorMax, runtimeColorMap, this.selectedColorPoint);
 		},
 
 		ensembleColors() {
 			const arrayOfData = this.nodes.map((node) => node.data.attr_dict.grad[this.selectedMetric]["hist"]["h"]);
 			const [ colorMin, colorMax ]  = utils.getArrayMinMax(arrayOfData);
-			this.distributionColor = new Color("MeanGradients", colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);			
-		},
-
-		setupColors() {
-			this.singleColors();
-			this.ensembleColors();
+			this.$store.commit("setDistributionColorMap", "Reds");
+			this.distributionColor = new Color("MeanGradients", colorMin, colorMax, this.distributionColorMap, this.selectedColorPoint);			
 		},
 
 		fill_with_gradients(d, metric, color) {
