@@ -132,7 +132,9 @@ export default {
 		setupColors() {
 			const data = this.summary[this.selectedTargetRun][this.selectedMetric];
 			const [ colorMin, colorMax ]  = utils.getMinMax(data);
-			this.$store.runtimeColor = new Color(this.selectedMetric, colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);
+			const runtimeColorMap = "OrRd";
+			this.$store.commit("setRuntimeColorMap", runtimeColorMap);
+			this.$store.runtimeColor = new Color(this.selectedMetric, colorMin, colorMax, runtimeColorMap, this.selectedColorPoint);
 		},
 
 		// ----------------------------------------------------------------

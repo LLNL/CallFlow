@@ -13,6 +13,7 @@ import { mapGetters } from "vuex";
 import * as utils from "lib/utils";
 import Color from "lib/color/";
 import InfoChip from "../general/infoChip";
+import EventHandler from "lib/routing/EventHandler";
 
 export default {
 	name: "GradientView",
@@ -58,6 +59,14 @@ export default {
 		}
 	},
 
+	mounted() {
+		let self = this;
+		EventHandler.$on("reset-ensemble-gradients", function () {
+			self.clear();
+			self.init();
+		});
+	},
+
 	methods: {
 		init() {
 			this.$store.dispatch("fetchGradients", {
@@ -91,6 +100,7 @@ export default {
 				.attrs({
 					width: this.boxWidth,
 					height: this.boxHeight,
+					id: "ensemble-gradient-rect"
 				})
 				.style("stroke", this.stroke_by_metric(this.data, this.selectedMetric))
 				.style("stroke-width",  this.defaultStrokeWidth)
@@ -103,6 +113,7 @@ export default {
 				.attrs({
 					x: 20,
 					y: 30,
+					id: "ensemble-gradient-text"
 				})
 				.style("fill", (d) => {
 					const data = this.data[this.selectedMetric].dataset.mean[this.selectedTargetRun];
@@ -134,7 +145,8 @@ export default {
 
 			const linearGradient = defs
 				.append("linearGradient")
-				.attr("id", "node-gradient-" + this.selectedNode["name"]);
+				.attr("class", "ensemble-gradient-defs")
+				.attr("id", "ensemble-gradient-defs-" + this.selectedNode["name"]);
 
 			linearGradient
 				.attr("x1", "0%")
@@ -153,13 +165,20 @@ export default {
 					.attr("stop-color", color.getColorByValue(val[i]));
 			}
 
-			return "url(#node-gradient-" + this.selectedNode["name"] + ")";
+			return "url(#ensemble-gradient-defs-" + this.selectedNode["name"] + ")";
 		},
 
 		stroke_by_metric(d, metric) {
 			const data = d[metric].dataset.mean[this.selectedTargetRun];
 			const color = this.runtimeColor.getColorByValue(data);
 			return d3.rgb(color);
+		},
+
+		clear() {
+			d3.selectAll(".ensemble-gradient-rect").remove();
+			d3.selectAll(".ensemble-gradient-text").remove();
+			d3.selectAll(".ensemble-gradient-defs").remove();
+
 		},
         
 	}

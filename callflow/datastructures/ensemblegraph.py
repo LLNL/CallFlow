@@ -36,6 +36,8 @@ class EnsembleGraph(SuperGraph):
         self.exc_metrics = []
         self.inc_metrics = []
         self.roots = [] # TODO: Populate this!
+        self.module_df = None
+        self.callsite_df = None
 
     def __str__(self):
         """
@@ -71,9 +73,19 @@ class EnsembleGraph(SuperGraph):
         """
         Getter to obtain the gradients of a node by the runtime metrics.
         """
-        return Gradients(self.dataframe, bins=nbins,
-            node_id=nid,
-            node_type=ntype,
+        if self.module_df is None:
+            self.module_df = self.dataframe.set_index(["dataset", "module"])
+        if self.callsite_df is None:
+            self.callsite_df = self.dataframe.set_index(["dataset", "name"])
+
+        if ntype == "callsite":
+            df = self.callsite_df
+        elif ntype == "module":
+            df = self.module_df
+
+        return Gradients(df, bins=nbins,
+            nid=nid,
+            ntype=ntype,
             proxy_columns=self.proxy_columns).result
 
 # ------------------------------------------------------------------------------

@@ -380,9 +380,11 @@ class SankeyLayout:
                     else:
                         edge_type = "caller"
 
+                    weight = self.sg.get_runtime(tgt.get("id"), "module", "time (inc)")
+
                     edge_dict = {
                         "edge_type": edge_type,
-                        "weight": self.sg.get_runtime(tgt.get("id"), "module", "time (inc)", lambda _: _),
+                        "weight": weight,
                     }  
 
                     if not nxg.has_edge(src_name, tgt_name) and edge_dict["weight"] > 0:

@@ -14,6 +14,7 @@
         small
         tile
         outlined
+		:class="isEntryFunctionSelected"
         @click="revealCallsite"
       >
         Reveal
@@ -224,6 +225,7 @@ export default {
 		});
 
 		EventHandler.$on("reset-ensemble-boxplots", () =>  {
+			self.clear();
 			self.init();
 			self.visualize();
 		});
@@ -495,6 +497,7 @@ export default {
 		},
 
 		clear() {
+			d3.selectAll(".cc-node").remove();
 			EventHandler.$emit("clear-boxplot");
 		},
 
@@ -502,7 +505,7 @@ export default {
 			return this.labels[idx];
 		},
 
-		clickCallsite(event) {
+		revealCallsite(event) {
 			event.stopPropagation();
 			let callsite = event.currentTarget.id;
 			this.$socket.emit("reveal_callsite", {

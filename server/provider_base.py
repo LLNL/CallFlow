@@ -483,7 +483,8 @@ class BaseProvider:
 
         elif operation_name == "module_hierarchy":
             nbins = int(operation.get("nbins", 20))
-            hl = HierarchyLayout(esg=e_sg, node=operation.get("node"), nbins=nbins)
+            dataset =operation.get("dataset")
+            hl = HierarchyLayout(sg=sg, esg=e_sg, dataset=dataset, node=operation.get("node"), nbins=nbins)
             return hl.nxg
 
         elif operation_name == "projection":
