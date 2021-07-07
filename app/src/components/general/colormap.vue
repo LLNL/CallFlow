@@ -107,7 +107,6 @@ export default {
 				this.colorMinText = this.colorMin;
 				this.colorMaxText = this.colorMax;
 			}
-			console.log(yOffsetCount);
 			this.drawColorMap(text, this.containerWidth/2 - this.padding.right, this.padding.bottom * yOffsetCount);
 		},
 
