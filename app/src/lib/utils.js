@@ -95,7 +95,7 @@ export function formatRunCounts(val) {
 }
 
 export function formatRuntimeWithoutUnits(val) {
-	let format = d3.format(".2");
+	let format = d3.format(".3");
 	return format(val);
 }
 
@@ -103,6 +103,7 @@ export function formatRuntimeWithoutUnits(val) {
 export function formatRuntimeWithExponent(val, min_exponent = 0) {
 	let format = d3.format(".3");
 	let ret = format(val);
+	console.log(ret, ret.indexOf("e"));
 	if (ret == 0) {
 		return [0, 0, min_exponent];
 	}
@@ -116,12 +117,15 @@ export function formatRuntimeWithExponent(val, min_exponent = 0) {
 		multiplier = parseInt(exponent) - min_exponent;
 		mantessa = parseFloat(split_ret_by_e[0]);
 	}
-	return [mantessa.toFixed(2), exponent, min_exponent];
+	else {
+		return [ret, 0, 0];
+	}
+	return [mantessa.toFixed(3), exponent, min_exponent];
 }
 
 // Returns only the exponenet of the value. 
 export function formatExponent(val) {
-	let format = d3.format(".2");
+	let format = d3.format(".3");
 	let ret = format(val);
 	let exponent = ret;
 	if (ret.indexOf("e") != -1) {
