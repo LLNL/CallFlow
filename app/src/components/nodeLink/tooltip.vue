@@ -11,11 +11,18 @@
 <script>
 import * as d3 from "d3";
 import * as utils from "lib/utils";
+import { mapGetters } from "vuex";
 
 export default {
 	template: "",
 	name: "ToolTip",
-	components: {},
+
+	computed: {
+		...mapGetters({ 
+			summary: "getSummary",
+			selectedTargetRun: "getSelectedTargetRun",
+		})
+	},
 
 	data: () => ({
 		id: "node-tooltip",
@@ -23,7 +30,6 @@ export default {
 		textxOffset: 20,
 		textyOffset: 20,
 		textPadding: 15,
-		// height: 100,
 		margin: 35,
 		mousePosX: 0,
 		mousePosY: 0,
@@ -31,9 +37,10 @@ export default {
 		prevMousePosY: undefined
 	}),
 
+
+
 	methods: {
 		init(id) {
-			console.log(id);
 			this.id = id;
 			const toolTipDiv = d3.select("#" + this.id);
 			this.toolTipG = toolTipDiv.append("g");
@@ -75,13 +82,9 @@ export default {
 			this.mousePosX = this.mousePos[0];
 			this.mousePosY = this.mousePos[1];
 
-			// Draw the tooltip again only if the distance is more than the width of the supernode.
-			// console.log(this.prevMousePosY, this.prevMousePosX, utils.distanceBtwnPoints(this.mousePosX, this.mousePosY, this.prevMousePosX, this.prevMousePosY))
-			// if (this.prevMousePosX && this.prevMousePosY && utils.distanceBtwnPoints(this.mousePosX, this.mousePosY, this.prevMousePosX, this.prevMousePosY) > 0 ) {
 			this.clear();
 			this.render(node);
-			// }
-
+			
 			// Store the previous mouse positions to calculate the distance.
 			this.prevMousePosX = this.mousePosX;
 			this.prevMousePosY = this.mousePosY;
@@ -89,17 +92,14 @@ export default {
 
 		/**
 		 * 
-		 * @param {*} graph 
 		 * @param {*} node 
 		 */
-		render(graph, node) {
+		render(node) {
 			this.xOffset = this.positionX() + 40;
 			this.yOffset = this.positionY() + 40;
-			this.nodeHeight = node.height;
 
 			const svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
 
-			const height = 3 * 33.3 + node.attr_dict["entry_functions"].length * 33.3;
 			this.toolTipG.attr("height", svgScale(10) + "px");
 			this.toolTipRect = this.toolTipG
 				.append("rect")
@@ -109,8 +109,8 @@ export default {
 					"stroke": "black",
 					"rx": "10px",
 					"fill-opacity": 1,
-					"width": "325",
-					"height": height,
+					"width": 325,
+					"height": 100,
 				})
 				.attrs({
 					"x": this.xOffset,
@@ -118,7 +118,6 @@ export default {
 				});
 
 			this.runtimeInformation(node);
-			this.pathInformation(node);
 		},
 
 		/**
@@ -127,6 +126,7 @@ export default {
 		 * @param {*} text 
 		 */
 		addText(text) {
+			let maxWidth = 350;
 			this.textCount += 1;
 			this.toolTipText = this.toolTipG
 				.append("text")
@@ -141,7 +141,8 @@ export default {
 						return this.yOffset + this.textyOffset + this.textPadding * this.textCount + "px";
 					}
 				})
-				.text(text);
+				.text(text)
+				.call(utils.textWrap, maxWidth);
 		},
 
 		/**
@@ -150,8 +151,9 @@ export default {
 		 */
 		runtimeInformation(node) {
 			this.addText("Name: " + utils.truncNames(node.id, 40));
-			this.addText("Inclusive Time: " + utils.formatRuntimeWithUnits(node.attr_dict["time (inc)"]));
-			this.addText("Exclusive Time: " + utils.formatRuntimeWithUnits(node.attr_dict["time"]));
+			this.addText("Module: " + this.summary[this.selectedTargetRun].modules[node.module]);
+			this.addText("Inclusive Time: " + utils.formatRuntimeWithUnits(node["time (inc)"]));
+			this.addText("Exclusive Time: " + utils.formatRuntimeWithUnits(node["time"]));
 		},
 
 		/**

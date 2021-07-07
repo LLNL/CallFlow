@@ -142,11 +142,10 @@ export default {
 
 			this.$refs.ColorMap.init(this.$store.runtimeColor);
 
-			// this.$refs.Tooltip.init(this.id);
-			// this.svg.selectAll("g.node").on("mouseover", function (v) {
-			// 	console.log(v);
-			// 	self.$refs.ToolTip.visualize(v);
-			// });
+			this.$refs.ToolTip.init(this.id);
+			this.svg.selectAll(".cct-node").on("mouseover", function (v, d) {
+				self.$refs.ToolTip.visualize(self.data.nodes[d]);
+			});
 
 			// Add tooltip
 			inner.selectAll("g.node")
