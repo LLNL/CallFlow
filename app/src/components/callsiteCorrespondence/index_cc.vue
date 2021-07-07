@@ -14,6 +14,7 @@
         small
         tile
         outlined
+		:class="isEntryFunctionSelected"
         @click="revealCallsite"
       >
         Reveal
