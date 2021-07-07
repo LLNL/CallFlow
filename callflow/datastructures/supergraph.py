@@ -153,6 +153,12 @@ class SuperGraph(ht.GraphFrame):
         if _df.empty:
             return 0.0
 
+        if lk_column == "module":
+            callsites = df_unique(_df, 'name')
+            _df_mean = _df.set_index("name")
+            runtimes = [self.get_runtime(cs, "callsite", metric) for cs in callsites]
+            return max(runtimes)
+
         assert metric in _df.columns
         return _df[metric].mean()
         
