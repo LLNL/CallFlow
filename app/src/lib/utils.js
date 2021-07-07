@@ -103,7 +103,6 @@ export function formatRuntimeWithoutUnits(val) {
 export function formatRuntimeWithExponent(val, min_exponent = 0) {
 	let format = d3.format(".3");
 	let ret = format(val);
-	console.log(ret, ret.indexOf("e"));
 	if (ret == 0) {
 		return [0, 0, min_exponent];
 	}

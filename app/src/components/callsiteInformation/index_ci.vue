@@ -15,6 +15,7 @@
         small
         tile
         outlined
+		:class="isEntryFunctionSelected"
         @click="revealCallsite"
       >
         Reveal
@@ -269,7 +270,6 @@ export default {
 		 * @param {*} callsiteID
 		 */
 		getID(callsiteID) {
-			console.log(callsiteID);
 			return "callsite-information-node-" + callsiteID;
 		},
 
