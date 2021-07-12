@@ -10,7 +10,6 @@ import networkx as nx
 
 # CallFlow imports
 import callflow
-from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.df import df_as_dict
 
 LOGGER = callflow.get_logger(__name__)

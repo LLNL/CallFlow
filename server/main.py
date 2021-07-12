@@ -51,7 +51,7 @@ def main():
     LOGGER.info(
         f" ------------ Initializing CallFlow {callflow.__version__} ------------"
     )
-    LOGGER.profile(f"Initialized CallFlow")
+    LOGGER.profile("Initialized CallFlow")
 
     # --------------------------------------------------------------------------
     args = ArgParser(sys.argv)
@@ -70,9 +70,9 @@ def main():
     if process:
         assert endpoint_env == "TERMINAL"
         cf = BaseProvider(config=args.config)
-        LOGGER.profile(f"-----> Created BaseProvider")
+        LOGGER.profile("-----> Created BaseProvider")
         cf.process(reset)
-        LOGGER.profile(f"-----> Processed BaseProvider")
+        LOGGER.profile("-----> Processed BaseProvider")
 
     # --------------------------------------------------------------------------
     # start a server based on endpoint_access = "REST" | "SOCKET"

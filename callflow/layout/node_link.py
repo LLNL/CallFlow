@@ -211,7 +211,6 @@ class NodeLinkLayout:
         :return:
         """
         assert isinstance(paths, list)
-        from ast import literal_eval as make_tuple
 
         nxg = nx.DiGraph()
 

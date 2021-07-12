@@ -102,8 +102,6 @@ class BaseProvider:
             )
         self.supergraphs = {sg.name: sg for sg in supergraphs}
 
-        selected_runs = list(self.supergraphs.keys())
-
         # ensemble case
         if not is_not_ensemble:
             name = "ensemble"
@@ -460,7 +458,7 @@ class BaseProvider:
                 ranks=selected_ranks,
             )
 
-            return {selected_nxg: selected_sg.nxg, non_selected_sg: non_selected_sg.nxg}
+            return {"selected": selected_sg.nxg, "non_selected": non_selected_sg.nxg}
 
         elif operation_name == "histogram":
             node = operation.get("node", None)
@@ -503,7 +501,7 @@ class BaseProvider:
 
             return result
 
-    def request_ensemble(self, operation):
+    def request_ensemble(self, operation):  # noqa: C901
         """
         Handles all the socket requests connected to Single CallFlow.
         """

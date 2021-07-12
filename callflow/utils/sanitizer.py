@@ -54,7 +54,7 @@ class Sanitizer:
         fmt_to = "%Y-%m-%d %H:%M:%S"
 
         toks = string.split("_")
-        dataname, tstamp = toks[0], "_".join(toks[1:])
+        dataname, tstamp = toks[0], "_".join(toks[1:])  # noqa
         dt = datetime.datetime.strptime(tstamp, fmt_from)
         return datetime.datetime.strftime(dt, fmt_to)
 

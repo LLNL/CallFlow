@@ -31,7 +31,14 @@ except Exception:
 
 from callflow import get_logger
 from callflow.utils.sanitizer import Sanitizer
-from callflow.utils.df import *
+from callflow.utils.df import (
+    df_unique,
+    df_info,
+    df_lookup_by_column,
+    df_as_dict,
+    df_bi_level_group,
+    df_column_mean,
+)
 from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
 from callflow.modules import Histogram
 
@@ -352,7 +359,7 @@ class SuperGraph(ht.GraphFrame):
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
         LOGGER.debug(f"Found {len(self.roots)} graph roots; and converted to nxg")
 
-        _csidx = lambda _: self.get_idx(_, "callsite")
+        _csidx = lambda _: self.get_idx(_, "callsite")  # noqa E731
         for node in self.graph.traverse():
             node_name = Sanitizer.from_htframe(node.frame)
             node_idx = _csidx(node_name)
@@ -365,7 +372,7 @@ class SuperGraph(ht.GraphFrame):
                 _csidx(_.frame.get("name")) for _ in node.children
             ]
 
-        LOGGER.info(f"Processed graph")
+        LOGGER.info("Processed graph")
         LOGGER.profile("-----> Processed Graph properties")
 
         self.df_add_column(
@@ -477,7 +484,7 @@ class SuperGraph(ht.GraphFrame):
             _nid = (
                 lambda _: self.df_lookup_with_column("name", _)["nid"].unique().tolist()
             )
-            _mid = lambda _: _modules_inv.get(_)
+            _mid = lambda _: _modules_inv.get(_)  # noqa E731
 
             # self.module_callsite_map = {_mid(i): [_nid(_cs) for _cs in m] for i, m in module_callsite_map.items() }
             self.module_callsite_map = {}

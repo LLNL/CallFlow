@@ -150,24 +150,24 @@ def outliers(data, scale=1.5, side="both"):
         return np.logical_or(upper_outlier, lower_outlier)
 
 
-def kde(
-    data, gridsize=10, fft=True, kernel="gau", bw="scott", cut=3, clip=(-np.inf, np.inf)
-):
-    assert isinstance(data, (pd.Series, np.ndarray))
+# def kde(
+#     data, gridsize=10, fft=True, kernel="gau", bw="scott", cut=3, clip=(-np.inf, np.inf)
+# ):
+#     assert isinstance(data, (pd.Series, np.ndarray))
 
-    if bw == "scott":
-        bw = stats.gaussian_kde(data).scotts_factor() * data.std(ddof=1)
+#     if bw == "scott":
+#         bw = stats.gaussian_kde(data).scotts_factor() * data.std(ddof=1)
 
-    kde = smnp.KDEUnivariate(data)
+#     kde = smnp.KDEUnivariate(data)
 
-    # create the grid to fit the estimation.
-    support_min = min(max(data.min() - bw * cut, clip[0]), 0)
-    support_max = min(data.max() + bw * cut, clip[1])
-    x = np.linspace(support_min, support_max, gridsize)
+#     # create the grid to fit the estimation.
+#     support_min = min(max(data.min() - bw * cut, clip[0]), 0)
+#     support_max = min(data.max() + bw * cut, clip[1])
+#     x = np.linspace(support_min, support_max, gridsize)
 
-    kde.fit("gau", bw, fft, gridsize=gridsize, cut=cut, clip=clip)
-    y = kde.density
-    return x, y
+#     kde.fit("gau", bw, fft, gridsize=gridsize, cut=cut, clip=clip)
+#     y = kde.density
+#     return x, y
 
 
 # ------------------------------------------------------------------------------

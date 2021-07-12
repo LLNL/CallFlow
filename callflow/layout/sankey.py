@@ -6,11 +6,10 @@
 """
 CallFlow's layout - Sankey.
 """
-from callflow.modules.gradients import Gradients
 import networkx as nx
 import numpy as np
 from ast import literal_eval as make_list
-from callflow.utils.df import df_group_by, df_as_dict
+from callflow.utils.df import df_as_dict
 
 # CallFlow imports
 import callflow
@@ -152,9 +151,6 @@ class SankeyLayout:
         for path in paths:
             component_edges = SankeyLayout.create_source_targets(path["component_path"])
             for idx, edge in enumerate(component_edges):
-                module = edge["module"]
-
-                # format module +  '=' + callsite
                 source = edge["source"]
                 target = edge["target"]
 
@@ -167,13 +163,13 @@ class SankeyLayout:
                         source_node_type = "component-node"
 
                     target_callsite = target.split("=")[1]
-                    target_df = self.secondary_primary_group_df.get_group(
-                        (module, target_callsite)
-                    )
+                    # target_df = self.secondary_primary_group_df.get_group(
+                    # (module, target_callsite)
+                    # )
                     target_node_type = "component-node"
 
                     # source_weight = source_df[self.time_inc].max()
-                    target_weight = target_df[self.time_inc].mean()
+                    # target_weight = target_df[self.time_inc].mean()
 
                     print(f"Adding edge: {source_callsite}, {target_callsite}")
                     self.nxg.add_node(source, attr_dict={"type": source_node_type})

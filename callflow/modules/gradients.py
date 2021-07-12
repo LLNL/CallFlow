@@ -13,15 +13,14 @@ import pandas as pd
 # TODO: Avoid the performance error in the future pass.
 import warnings
 
-warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
-
 import callflow
 from callflow.utils.utils import histogram
-from callflow.utils.df import df_count, df_unique, df_lookup_by_column
+from callflow.utils.df import df_unique
 from callflow.datastructures.metrics import TIME_COLUMNS
 from callflow.modules.histogram import Histogram
 
 LOGGER = callflow.get_logger(__name__)
+warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
 
 # ------------------------------------------------------------------------------

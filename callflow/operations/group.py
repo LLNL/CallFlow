@@ -199,7 +199,7 @@ class Group:
         self.sg.df_add_column(
             "component_path", apply_dict=component_path, dict_default="", apply_on="nid"
         )
-        LOGGER.profile(f"Finished Grouping.")
+        LOGGER.profile("Finished Grouping.")
 
 
 # ------------------------------------------------------------------------------

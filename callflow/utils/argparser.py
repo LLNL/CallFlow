@@ -34,6 +34,7 @@ JSONSCHEMA_CONFIG = {
 
 CONFIG_KEYS = list(JSONSCHEMA_CONFIG["properties"].keys())
 
+
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 class ArgParser:
@@ -335,7 +336,7 @@ class ArgParser:
         if len(scheme["experiment"]) == 0:
             scheme["experiment"] = os.path.basename(json["data_path"])
 
-        if self.args.get("save_path") is not "":
+        if self.args.get("save_path") != "":
             scheme["save_path"] = os.path.join(
                 os.path.abspath(self.args.get("save_path")), ".callflow"
             )

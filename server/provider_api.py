@@ -91,7 +91,7 @@ class APIProvider(BaseProvider):
             warnings.warn(f"[API: {endpoint}] emits no data.")
             return jsonify(isError=True, message="Error", statusCode=500)
 
-    def handle_routes(self) -> None:
+    def handle_routes(self) -> None:  # noqa: C901
         """
         API endpoints
         """

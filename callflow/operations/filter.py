@@ -9,10 +9,11 @@ CallFlow's operation to filter a super graph using runtime threshold's.
 """
 from ast import literal_eval as make_list
 import numpy as np
+import networkx as nx
 
 import callflow
-from callflow.utils.df import *
-from callflow.utils.nxg import *
+from callflow.utils.df import df_info
+from callflow.utils.nxg import nxg_info
 
 LOGGER = callflow.get_logger(__name__)
 

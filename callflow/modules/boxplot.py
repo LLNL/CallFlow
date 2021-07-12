@@ -11,7 +11,7 @@ import numpy as np
 from scipy.stats import kurtosis, skew
 
 import callflow
-from callflow.utils.df import df_count, df_group_by
+from callflow.utils.df import df_count
 from callflow.utils.utils import outliers
 from callflow.datastructures.metrics import TIME_COLUMNS
 
