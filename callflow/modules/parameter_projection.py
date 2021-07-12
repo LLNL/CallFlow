@@ -16,6 +16,7 @@ from sklearn.cluster import KMeans
 from callflow.algorithms import KMedoids
 from callflow.datastructures.metrics import TIME_COLUMNS
 
+
 class ParameterProjection:
     """
     Calculate Parameter projections using common projection techniques like MDS, t-SNE.

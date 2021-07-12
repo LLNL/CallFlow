@@ -13,6 +13,7 @@ from functools import reduce
 
 import callflow
 from callflow.utils.utils import create_reindex_map
+
 LOGGER = callflow.get_logger(__name__)
 
 
@@ -36,7 +37,9 @@ class Unify:
         self.eg.supergraphs = supergraphs
 
         # collect all modules and compute a superset
-        self.eg.modules_list = reduce(np.union1d, [v.modules_list for k, v in supergraphs.items()])
+        self.eg.modules_list = reduce(
+            np.union1d, [v.modules_list for k, v in supergraphs.items()]
+        )
 
         self.compute()
         self.eg.add_time_proxies()
@@ -63,16 +66,21 @@ class Unify:
             # remap the modules in this supergraph to the one in ensemble graph
             _mod_map = create_reindex_map(sg.modules_list, self.eg.modules_list)
 
-            if 1:       # edit directly in the supergraph
-                sg.df_add_column('dataset', apply_value=sg.name)
-                sg.df_add_column('module', update=True,
-                                 apply_func=lambda _: _mod_map[_],
-                                 apply_on='module')
-                self.eg.dataframe = pd.concat([self.eg.dataframe, sg.dataframe], sort=True)
+            if 1:  # edit directly in the supergraph
+                sg.df_add_column("dataset", apply_value=sg.name)
+                sg.df_add_column(
+                    "module",
+                    update=True,
+                    apply_func=lambda _: _mod_map[_],
+                    apply_on="module",
+                )
+                self.eg.dataframe = pd.concat(
+                    [self.eg.dataframe, sg.dataframe], sort=True
+                )
 
-            else:       # create a new copy
+            else:  # create a new copy
                 _sg = sg.dataframe.assign(dataset=sg.name)
-                _sg['module'] = _sg['module'].apply(lambda _: _mod_map[_])
+                _sg["module"] = _sg["module"].apply(lambda _: _mod_map[_])
                 self.eg.dataframe = pd.concat([self.eg.dataframe, _sg], sort=True)
 
             # TODO: *later*, avoid creating the concatenated dataframe
@@ -100,5 +108,6 @@ class Unify:
             self.eg.nxg.add_edges_from(new_edges)
 
             # ------------------------------------------------------------------
+
 
 # ------------------------------------------------------------------------------

@@ -8,6 +8,7 @@
 CallFlow's operation to filter a super graph using runtime threshold's.
 """
 from ast import literal_eval as make_list
+import numpy as np
 
 import callflow
 from callflow.utils.df import *
@@ -42,15 +43,22 @@ class Filter:
         LOGGER.info(
             f'Filtering ({self.sg}) by "{self.filter_by}" = {self.filter_perc}%'
         )
-        
+
         self.callsites = self.sg.callsites
 
         # if 0:
-        self.mean_root_inctime = self.sg.df_root_max_mean_runtime(self.sg.roots, "time (inc)")
+        self.mean_root_inctime = self.sg.df_root_max_mean_runtime(
+            self.sg.roots, "time (inc)"
+        )
 
         # Formulate the hatchet query.
         query = [
-            ("*", {f"{self.sg.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
+            (
+                "*",
+                {
+                    f"{self.sg.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"
+                },
+            )
         ]
 
         LOGGER.info(f"Filtering GraphFrame by Hatchet Query :{query}")
@@ -59,14 +67,16 @@ class Filter:
         self.callsites = self.sg.hatchet_filter_callsites_by_query(query)
 
         LOGGER.debug(f"Number of callsites after QueryMatcher: {len(self.callsites)}")
-        LOGGER.info(f"Removed {len(self.sg.callsites) - len(self.callsites)} callsites.")
-        
+        LOGGER.info(
+            f"Removed {len(self.sg.callsites) - len(self.callsites)} callsites."
+        )
+
         LOGGER.debug(f"Callsites: {','.join(self.callsites[:50]) }")
 
         self.compute()
 
         LOGGER.info(f'Filtered graph comprises of: "{nxg_info(self.nxg)}"')
-        LOGGER.profile('-----> Finished Filtering')
+        LOGGER.profile("-----> Finished Filtering")
 
     # --------------------------------------------------------------------------
     def compute(self):
@@ -97,7 +107,9 @@ class Filter:
         LOGGER.debug(f'Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
 
         if len(self.callsites) > 0:
-            self.sg.dataframe = self.sg.dataframe[self.sg.dataframe["name"].isin(self.callsites)]
+            self.sg.dataframe = self.sg.dataframe[
+                self.sg.dataframe["name"].isin(self.callsites)
+            ]
         LOGGER.info(f'Filtered dataframe comprises of: "{df_info(self.sg.dataframe)}"')
 
         nxg = nx.DiGraph()
@@ -119,5 +131,6 @@ class Filter:
                 nxg.add_path(path)
 
         self.nxg = nxg
+
 
 # ------------------------------------------------------------------------------

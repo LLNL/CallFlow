@@ -178,7 +178,7 @@ class ArgParser:
         parser.add_argument(
             "--reset",
             action="store_true",
-            help="Resets the .callflow directory to re-process entire ensemble"
+            help="Resets the .callflow directory to re-process entire ensemble",
         )
 
         parser.add_argument(
@@ -303,7 +303,8 @@ class ArgParser:
 
         # Set the datasets key, according to the format.
         scheme["runs"] = ArgParser._scheme_dataset_map(
-            self.args.get("profile_format", "default"), os.path.join(scheme["data_path"], scheme["append_path"])
+            self.args.get("profile_format", "default"),
+            os.path.join(scheme["data_path"], scheme["append_path"]),
         )
 
         return scheme
@@ -334,8 +335,10 @@ class ArgParser:
         if len(scheme["experiment"]) == 0:
             scheme["experiment"] = os.path.basename(json["data_path"])
 
-        if self.args.get('save_path') is not "":
-            scheme["save_path"] = os.path.join(os.path.abspath(self.args.get("save_path")), ".callflow")
+        if self.args.get("save_path") is not "":
+            scheme["save_path"] = os.path.join(
+                os.path.abspath(self.args.get("save_path")), ".callflow"
+            )
 
         if len(scheme["save_path"]) == 0:
             scheme["save_path"] = os.path.join(scheme["data_path"], ".callflow")

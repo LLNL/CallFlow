@@ -9,15 +9,17 @@ CallFlow's operation to calculate ensemble gradients per-callsite or per-module.
 """
 import numpy as np
 import pandas as pd
+
 # TODO: Avoid the performance error in the future pass.
 import warnings
-warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
+
+warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
 import callflow
 from callflow.utils.utils import histogram
 from callflow.utils.df import df_count, df_unique, df_lookup_by_column
 from callflow.datastructures.metrics import TIME_COLUMNS
-from .histogram import Histogram
+from callflow.modules.histogram import Histogram
 
 LOGGER = callflow.get_logger(__name__)
 
@@ -28,7 +30,9 @@ class Gradients:
     Computes the ensemble gradients for the a given dictionary of dataframes.
     """
 
-    def __init__(self, df, nid: int, ntype: str="callsite", bins: int = 20, proxy_columns={}):
+    def __init__(
+        self, df, nid: int, ntype: str = "callsite", bins: int = 20, proxy_columns={}
+    ):
         """
         Constructor function for the class
 
@@ -58,11 +62,11 @@ class Gradients:
 
         self.max_ranks = max(df_unique(df, "rank"))
         self.result = self.compute()
- 
+
     @staticmethod
     def convert_dictmean_to_list(dictionary):
         """
-        Convert a dictionary by taking its mean and converting to a list. 
+        Convert a dictionary by taking its mean and converting to a list.
 
         :param dictionary: (dict) Input dictionary
         :return: (list) mean of all values in the dictionary
@@ -72,7 +76,7 @@ class Gradients:
     @staticmethod
     def convert_dictmean_to_dict(dictionary):
         """
-        Convert a dictionary by taking its mean and converting to a list. 
+        Convert a dictionary by taking its mean and converting to a list.
 
         :param dictionary: (dict) Input dictionary
         :return: (dict) Dictionary of mean values indexed by the keys in the
@@ -109,24 +113,26 @@ class Gradients:
                     break
                 if idx[0] == len(bin_edges) - 1:
                     dataset_position_dict[dataset] = len(bin_edges) - 2
-        
+
         return dataset_position_dict
 
     # --------------------------------------------------------------------------
     def compute(self):
         """
-        Compute the required results. 
+        Compute the required results.
 
         :return: (JSON) data
         """
-        dists = {tk: {} for tk,tv in zip(TIME_COLUMNS, self.time_columns)}
+        dists = {tk: {} for tk, tv in zip(TIME_COLUMNS, self.time_columns)}
 
         # Get the runtimes for all the runs.
         for idx, dataset in enumerate(self.datasets):
             node_df = self.df.xs((dataset, self.nid))
             for tk, tv in zip(TIME_COLUMNS, self.time_columns):
                 if node_df.empty:
-                    dists[tk][dataset] = dict((rank, 0) for rank in range(0, self.max_ranks))
+                    dists[tk][dataset] = dict(
+                        (rank, 0) for rank in range(0, self.max_ranks)
+                    )
                 else:
                     dists[tk][dataset] = dict(zip(node_df["rank"], node_df[tv]))
 
@@ -154,5 +160,6 @@ class Gradients:
             }
 
         return results
+
 
 # ------------------------------------------------------------------------------

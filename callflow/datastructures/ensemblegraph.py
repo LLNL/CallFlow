@@ -35,7 +35,7 @@ class EnsembleGraph(SuperGraph):
         self.graph = None
         self.exc_metrics = []
         self.inc_metrics = []
-        self.roots = [] # TODO: Populate this!
+        self.roots = []  # TODO: Populate this!
         self.module_df = None
         self.callsite_df = None
 
@@ -44,8 +44,10 @@ class EnsembleGraph(SuperGraph):
         String representation for an ensemble super graph.
         :return:
         """
-        return f"EnsembleGraph<{self.name} of {len(self.supergraphs)} supergraphs; " \
-               f"df = {self.dataframe.shape}, cols = {list(self.dataframe.columns)}>"
+        return (
+            f"EnsembleGraph<{self.name} of {len(self.supergraphs)} supergraphs; "
+            f"df = {self.dataframe.shape}, cols = {list(self.dataframe.columns)}>"
+        )
 
     def __repr__(self):
         """
@@ -83,9 +85,9 @@ class EnsembleGraph(SuperGraph):
         elif ntype == "module":
             df = self.module_df
 
-        return Gradients(df, bins=nbins,
-            nid=nid,
-            ntype=ntype,
-            proxy_columns=self.proxy_columns).result
+        return Gradients(
+            df, bins=nbins, nid=nid, ntype=ntype, proxy_columns=self.proxy_columns
+        ).result
+
 
 # ------------------------------------------------------------------------------

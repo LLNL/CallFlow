@@ -6,7 +6,6 @@
 
 import os
 import warnings
-import numpy as np
 
 from flask import Flask, request, json, jsonify
 from flask_cors import CORS, cross_origin
@@ -112,20 +111,24 @@ class APIProvider(BaseProvider):
         @cross_origin()
         def summary():
             data = request.json
-            result = self.request_general({
-                "name": "summary",
-                **data,
-            })
+            result = self.request_general(
+                {
+                    "name": "summary",
+                    **data,
+                }
+            )
             return APIProvider.emit_json("summary", result)
 
-        @app.route("/timeline", methods=['POST'])
+        @app.route("/timeline", methods=["POST"])
         @cross_origin()
         def time_series():
             data = request.json
-            result = self.request_general({
-                "name": "timeline",
-                **data,
-            })
+            result = self.request_general(
+                {
+                    "name": "timeline",
+                    **data,
+                }
+            )
             return APIProvider.emit_json("timeline", result)
 
         @app.route("/single_supergraph", methods=["POST"])

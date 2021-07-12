@@ -12,7 +12,7 @@ import pandas as pd
 # pandas dataframe utils
 # ------------------------------------------------------------------------------
 def df_info(df):
-    return f'{df.shape} {list(df.index.names)} {list(df.columns)}'
+    return f"{df.shape} {list(df.index.names)} {list(df.columns)}"
 
 
 def df_unique(df, column, proxy={}):
@@ -77,7 +77,7 @@ def df_as_dict(df, from_col, to_col):
     assert from_col in df.columns and to_col in df.columns
     df = df[[from_col, to_col]]
     df.set_index(from_col, inplace=True)
-    df = df[~df.index.duplicated(keep='first')]
+    df = df[~df.index.duplicated(keep="first")]
     return df.to_dict()[to_col]
 
 
@@ -89,7 +89,9 @@ def df_lookup_by_column(df, column, value, proxy={}):
 def df_lookup_and_list(df, col_lookup, val_lookup, col_list, proxy={}):
     col_lookup = proxy.get(col_lookup, col_lookup)
     col_list = proxy.get(col_list, col_list)
-    return np.array(list(set(df_lookup_by_column(df, col_lookup, val_lookup)[col_list].values)))
+    return np.array(
+        list(set(df_lookup_by_column(df, col_lookup, val_lookup)[col_list].values))
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -102,12 +104,15 @@ def df_group_by(df, columns, proxy={}):
         columns = proxy.get(columns, columns)
         return df.groupby([columns])
 
-# TODO: Generalize to apply_func. 
-# Performs a 2-level grouping based on frst_group_attr and scnd_group_attr. 
+
+# TODO: Generalize to apply_func.
+# Performs a 2-level grouping based on frst_group_attr and scnd_group_attr.
 # Example use case:
 #   Group the dataframe by "module" and "name".
-# Returns a dict 
-def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, group_by, apply_func, proxy={}):
+# Returns a dict
+def df_bi_level_group(
+    df, frst_group_attr, scnd_group_attr, cols, group_by, apply_func, proxy={}
+):
     _cols = [proxy.get(_, _) for _ in cols] + group_by
 
     # If there is only one attribute to group by, we use the 1st index.
@@ -123,29 +128,36 @@ def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, group_by, appl
     # Set the df.index as the _groups
     _df = df.set_index(_groups)
     _levels = _df.index.unique().tolist()
-        
+
     # If "rank" is present in the columns, we will group by "rank".
     if "rank" in _df.columns and len(df["rank"].unique().tolist()) > 1:
         if scnd_group_attr is not None:
             if len(group_by) == 0:
                 _cols = _cols + ["rank"]
-                return { _ : _df.xs(_)[_cols] for (_, __) in _levels }
-            return { _ : (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index() for (_, __) in _levels }
+                return {_: _df.xs(_)[_cols] for (_, __) in _levels}
+            return {
+                _: (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index()
+                for (_, __) in _levels
+            }
         else:
             if len(group_by) == 0:
                 _cols = _cols + ["rank"]
-                return { _ : _df.xs(_)[_cols] for _ in _levels }
-            return { _ : (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index() for _ in _levels }
-    else: 
-        return { _ : _df.xs(_)[_cols] for _ in _levels}
+                return {_: _df.xs(_)[_cols] for _ in _levels}
+            return {
+                _: (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index()
+                for _ in _levels
+            }
+    else:
+        return {_: _df.xs(_)[_cols] for _ in _levels}
+
 
 def df_column_mean(df, column, proxy={}):
     """
     Apply a function to the df.column
 
-    :param column: column to apply on. 
-    :param proxy: 
-    :return: 
+    :param column: column to apply on.
+    :param proxy:
+    :return:
     """
     assert isinstance(column, str)
     column = proxy.get(column, column)

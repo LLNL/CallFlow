@@ -43,7 +43,7 @@ class NodeLinkLayout:
 
         self.runs = selected_runs
         self.nxg = sg.nxg
-        
+
         # Add node and edge attributes.
         self._add_node_attributes()
         self._add_edge_attributes()
@@ -66,7 +66,7 @@ class NodeLinkLayout:
                     datamap[column] = {}
 
                 callsite_idx = self.sg.get_idx(callsite, "callsite")
-                _df =  self.sg.df_lookup_with_column("name", callsite)
+                _df = self.sg.df_lookup_with_column("name", callsite)
 
                 if column == self.time_inc:
                     datamap[column][callsite] = _df["time (inc)"].mean()

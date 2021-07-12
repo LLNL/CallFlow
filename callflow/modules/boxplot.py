@@ -26,11 +26,13 @@ class BoxPlot:
     Boxplot computation for a dataframe segment
     """
 
-    def __init__(self, sg, relative_sg=None, name="", ntype="", iqr_scale=1.5, proxy_columns={}):
+    def __init__(
+        self, sg, relative_sg=None, name="", ntype="", iqr_scale=1.5, proxy_columns={}
+    ):
         """
         Boxplot for callsite or module
-        
-        :param sg: (callflow.SuperGraph) 
+
+        :param sg: (callflow.SuperGraph)
         :param relative_sg: (callflow.SuperGraph) Relative supergraph
         :param name: (str) Node name
         :param ntype: (str) Node type (e.g., "callsite" or "module")
@@ -42,7 +44,7 @@ class BoxPlot:
         assert isinstance(proxy_columns, dict)
         assert isinstance(iqr_scale, float)
 
-        self.box_types = ["tgt"]        
+        self.box_types = ["tgt"]
         if relative_sg is not None:
             self.box_types = ["tgt", "bkg"]
 
@@ -55,22 +57,22 @@ class BoxPlot:
 
         if ntype == "callsite":
             df = sg.callsite_aux_dict[name]
-            if 'component_path' in sg.dataframe.columns:
+            if "component_path" in sg.dataframe.columns:
                 self.c_path = sg.get_component_path(node)
-                
+
             if relative_sg is not None:
                 rel_df = relative_sg.callsite_aux_dict[name]
 
-                if 'component_path' in relative_sg.dataframe.columns:
+                if "component_path" in relative_sg.dataframe.columns:
                     self.rel_c_path = sg.get_component_path(node)
-            
+
         elif ntype == "module":
             df = sg.module_aux_dict[self.nid]
             if relative_sg is not None:
                 rel_df = relative_sg.module_aux_dict[self.nid]
-        
+
         if relative_sg is not None and "dataset" in rel_df.columns:
-            self.ndataset = df_count(rel_df, 'dataset')
+            self.ndataset = df_count(rel_df, "dataset")
 
         self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
         self.result = {}
@@ -84,7 +86,7 @@ class BoxPlot:
         if relative_sg is not None:
             self.result["bkg"] = self.compute(rel_df)
         self.result["tgt"] = self.compute(df)
-        
+
     def compute(self, df):
         """
         Compute boxplot related information.
@@ -99,8 +101,8 @@ class BoxPlot:
             mask = outliers(df[tv], scale=self.iqr_scale)
             mask = np.where(mask)[0]
 
-            if 'rank' in df.columns:
-                rank = df['rank'].to_numpy()[mask]
+            if "rank" in df.columns:
+                rank = df["rank"].to_numpy()[mask]
             else:
                 rank = np.zeros(mask.shape[0], dtype=int)
 
@@ -122,18 +124,18 @@ class BoxPlot:
                 "ks": (_kurt, _skew),
                 "nid": self.nid,
             }
-            if 'dataset' in df.columns:
-                ret[tk]['odset'] = df['dataset'].to_numpy()[mask]
+            if "dataset" in df.columns:
+                ret[tk]["odset"] = df["dataset"].to_numpy()[mask]
 
             # TODO: Find a better way to send the component_path from data.
             if self.c_path is not None:
-                ret[tk]['cpath'] = self.c_path
-            
+                ret[tk]["cpath"] = self.c_path
+
             if self.rel_c_path is not None:
-                ret[tk]['rel_cpath'] = self.rel_c_path
+                ret[tk]["rel_cpath"] = self.rel_c_path
 
         return ret
-            
+
     def unpack(self):
         """
         Unpack the boxplot data into JSON format.
@@ -147,7 +149,7 @@ class BoxPlot:
                     "q": box["q"].tolist(),
                     "outliers": {
                         "values": box["oval"].tolist(),
-                        "ranks": box["orank"].tolist()
+                        "ranks": box["orank"].tolist(),
                     },
                     "min": box["rng"][0],
                     "max": box["rng"][1],
@@ -160,16 +162,17 @@ class BoxPlot:
                     "name": self.result["name"],
                 }
                 result["name"] = self.result["name"]
-                
-                if 'odset' in box:
-                    result[box_type][metric]['odset'] = box['odset'].tolist()
 
-                if 'cpath' in box:
-                    result[box_type][metric]['cpath'] = box['cpath']
+                if "odset" in box:
+                    result[box_type][metric]["odset"] = box["odset"].tolist()
 
-                if 'rel_cpath' in box:
-                    result[box_type][metric]['rel_cpath'] = box['rel_cpath']
+                if "cpath" in box:
+                    result[box_type][metric]["cpath"] = box["cpath"]
+
+                if "rel_cpath" in box:
+                    result[box_type][metric]["rel_cpath"] = box["rel_cpath"]
 
         return result
+
 
 # ------------------------------------------------------------------------------

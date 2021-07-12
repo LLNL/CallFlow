@@ -15,8 +15,9 @@ LOG_PROFILE = logging.CRITICAL + 1
 
 def _log_profile(self, message, *args, **kws):
     from .utils import get_memory_usage
+
     if self.isEnabledFor(LOG_PROFILE):
-        message = f'[{get_memory_usage()}]: {message}'
+        message = f"[{get_memory_usage()}]: {message}"
         self._log(LOG_PROFILE, message, args, **kws)
 
 
@@ -31,7 +32,7 @@ def init_logger(**kwargs):
     # extract the logging parameters (defaults given)
     level = int(kwargs.get("level", 2))
     do_color = str(kwargs.get("color", True))
-    file = str(kwargs.get("file", ''))
+    file = str(kwargs.get("file", ""))
 
     # --------------------------------------------------------------------------
     # get logging level in "logging" format
@@ -63,7 +64,7 @@ def init_logger(**kwargs):
     }
 
     # create the actual formatter
-    if do_color and file == '':
+    if do_color and file == "":
         formatter = colorlog.ColoredFormatter(
             "%(log_color)s" + LOG_FMT, log_colors=LOG_COLORS
         )
@@ -71,7 +72,7 @@ def init_logger(**kwargs):
         formatter = logging.Formatter(LOG_FMT)
 
     # create a handler
-    if file == '':
+    if file == "":
         sh = logging.StreamHandler()
         sh.setFormatter(formatter)
     else:

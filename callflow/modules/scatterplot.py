@@ -22,7 +22,9 @@ class Scatterplot:
     Scatterplot plotting Inclusive vs Exclusive runtime.
     """
 
-    def __init__(self, df, relative_to_df=None, node_type="", orientation=[],  proxy_columns={}):
+    def __init__(
+        self, df, relative_to_df=None, node_type="", orientation=[], proxy_columns={}
+    ):
         """
         Calculate Scatterplot for the callsite/module dataframe.
 
@@ -56,7 +58,7 @@ class Scatterplot:
     def compute(self, df):
         assert isinstance(df, pd.DataFrame)
 
-        ret = { _: {} for _ in TIME_COLUMNS }
+        ret = {_: {} for _ in TIME_COLUMNS}
         for tk, tv in zip(TIME_COLUMNS, self.time_columns):
 
             if self.node_type == "callsite":
@@ -68,7 +70,7 @@ class Scatterplot:
 
             if "rank" in df.columns:
                 _ranks = df["rank"].to_numpy()
-            else: 
+            else:
                 _ranks = np.array([])
 
             ret[tv] = {
@@ -76,16 +78,16 @@ class Scatterplot:
                 "ranks": _ranks,
                 "min": _min,
                 "max": _max,
-                "mean": _mean
+                "mean": _mean,
             }
-        
+
         return ret
 
     def unpack(self):
         """
-        Unpack the data into JSON-supported format. 
+        Unpack the data into JSON-supported format.
 
-        :return: (JSON) 
+        :return: (JSON)
         """
         ret = {}
         for scat_type in self.result.keys():

@@ -41,7 +41,7 @@ class SankeyLayout:
 
         :param grp_column: grouped column to consider, e.g., path, group_path, component_path
         :param sg: SuperGraph
-        :param esg: 
+        :param esg:
         :param reveal_callsites: array of callsites to reveal
         :param split_entry_module: array of entry modules to split
         :param split_callee_module: array of callees to split
@@ -73,11 +73,11 @@ class SankeyLayout:
             self.df = self.sg.dataframe
             self.mode = "SG"
 
-        self.gp_dict = df_as_dict(self.df, 'name', grp_column)
-        self.cp_dict = df_as_dict(self.df, 'name', 'component_path')
+        self.gp_dict = df_as_dict(self.df, "name", grp_column)
+        self.cp_dict = df_as_dict(self.df, "name", "component_path")
 
         self.nxg = self._create_nxg_from_paths()
-        
+
         if len(self.reveal_callsites) > 0:
             self.add_reveal_paths(self.reveal_callsites)
 
@@ -349,7 +349,7 @@ class SankeyLayout:
         for c_name, path in self.gp_dict.items():
             if isinstance(path, str):
                 continue
-            
+
             if path.shape[0] > 2:
                 path = SankeyLayout._break_cycles_in_paths(path)
                 for depth in range(0, len(path) - 1):
@@ -358,7 +358,7 @@ class SankeyLayout:
 
                     src_name = self.sg.get_name(src.get("id"), src.get("type"))
                     tgt_name = self.sg.get_name(tgt.get("id"), tgt.get("type"))
-                        
+
                     if not nxg.has_node(src_name):
                         if self.mode == "ESG":
                             src_dict = self.esg_node_construct(c_name, src)
@@ -368,7 +368,7 @@ class SankeyLayout:
 
                     if not nxg.has_node(tgt):
                         if self.mode == "ESG":
-                            tgt_dict = self.esg_node_construct(c_name, tgt) 
+                            tgt_dict = self.esg_node_construct(c_name, tgt)
                         else:
                             tgt_dict = self.sg_node_construct(c_name, tgt)
                         nxg.add_node(tgt_name, attr_dict=tgt_dict)
@@ -385,7 +385,7 @@ class SankeyLayout:
                     edge_dict = {
                         "edge_type": edge_type,
                         "weight": weight,
-                    }  
+                    }
 
                     if not nxg.has_edge(src_name, tgt_name) and edge_dict["weight"] > 0:
                         nxg.add_edge(src_name, tgt_name, attr_dict=edge_dict)
@@ -394,13 +394,17 @@ class SankeyLayout:
 
     def sg_node_construct(self, callsite_name, node):
         name = self.sg.get_name(node.get("id"), node.get("type"))
-        return  {
+        return {
             "name": name,
             "type": node.get("type"),
             "level": node.get("level"),
             "cp_path": self.cp_dict[callsite_name],
-            self.time_inc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_inc),
-            self.time_exc: self.sg.get_runtime(node.get("id"), node.get("type"), self.time_exc),
+            self.time_inc: self.sg.get_runtime(
+                node.get("id"), node.get("type"), self.time_inc
+            ),
+            self.time_exc: self.sg.get_runtime(
+                node.get("id"), node.get("type"), self.time_exc
+            ),
             "hists": self.sg.get_histograms(node, nbins=20),
             "entry_functions": self.sg.get_entry_functions(node),
             "nid": node.get("id"),
@@ -410,7 +414,7 @@ class SankeyLayout:
         grads = self.esg.get_gradients(node.get("id"), node.get("type"), self.nbins)
 
         ret = self.sg_node_construct(callsite_name, node)
-        ret['gradients'] = grads
+        ret["gradients"] = grads
         return ret
 
     @staticmethod

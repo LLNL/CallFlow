@@ -6,5 +6,6 @@
 
 import networkx as nx
 
+
 def nxg_info(nxg):
-    return f'Nodes: {len(nxg.nodes())}, edges: {len(nxg.edges())}.'
+    return f"Nodes: {len(nxg.nodes())}, edges: {len(nxg.edges())}."
