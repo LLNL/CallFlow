@@ -33,7 +33,6 @@ class Group:
 
         self.sg = sg
         self.group_by = group_by
-
         LOGGER.info(f'Grouping ({self.sg}) by "{self.group_by}"')
         self.compute()
 

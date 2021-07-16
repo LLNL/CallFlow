@@ -70,9 +70,9 @@ def main():
     if process:
         assert endpoint_env == "TERMINAL"
         cf = BaseProvider(config=args.config)
-        LOGGER.profile("-----> Created BaseProvider")
+        LOGGER.profile("Created BaseProvider")
         cf.process(reset)
-        LOGGER.profile("-----> Processed BaseProvider")
+        LOGGER.profile("Processed BaseProvider")
 
     # --------------------------------------------------------------------------
     # start a server based on endpoint_access = "REST" | "SOCKET"

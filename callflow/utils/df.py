@@ -12,7 +12,7 @@ import pandas as pd
 # pandas dataframe utils
 # ------------------------------------------------------------------------------
 def df_info(df):
-    return f"{df.shape} {list(df.index.names)} {list(df.columns)}"
+    return f"{df.shape}; index={list(df.index.names)}; cols={list(df.columns)}"
 
 
 def df_unique(df, column, proxy={}):

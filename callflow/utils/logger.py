@@ -14,6 +14,7 @@ LOG_PROFILE = logging.CRITICAL + 1
 
 
 def _log_profile(self, message, *args, **kws):
+    return
     from .utils import get_memory_usage
 
     if self.isEnabledFor(LOG_PROFILE):
