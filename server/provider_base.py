@@ -130,6 +130,8 @@ class BaseProvider:
             module_callsite_map=self.config.get("module_callsite_map", {}),
             read_parameter=read_param,
         )
+        if 'module' in sg.dataframe:
+            print ('after load:', sg.dataframe['module'])
         return sg
 
     def split_process_load_datasets(self):
@@ -188,7 +190,7 @@ class BaseProvider:
 
         return ret
 
-    def process_single(self, process_datasets):
+    def process_single(self, process_datasets, save_supergraphs):
         append_path = self.config.get("append_path", "")
         load_path = self.config["data_path"]
         module_callsite_map = self.config.get("module_callsite_map", {})
@@ -206,6 +208,9 @@ class BaseProvider:
             )
             for _ in self.config["runs"]
         }
+
+        if save_supergraphs:
+            self.supergraphs = {}
 
         for idx, dataset in enumerate(process_datasets):
             name = dataset["name"]
@@ -232,17 +237,24 @@ class BaseProvider:
                 filter_by=filter_by,
                 filter_perc=filter_perc,
             )
+            #print('outside create:', sg.dataframe['module'])
 
             LOGGER.profile(f"Created supergraph {name}")
             Group(sg, group_by=group_by)
             LOGGER.profile(f"Grouped supergraph {name}")
+            #print('after group:', sg.dataframe['module'])
 
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             LOGGER.profile(f"Filtered supergraph {name}")
+            #print('after filter:', sg.dataframe['module'])
 
             sg.write(os.path.join(save_path, name))
+            #print('after write:', sg.dataframe['module'])
+            #exit()
 
             LOGGER.profile(f"Stored in dictionary {name}")
+            if save_supergraphs:
+                self.supergraphs[sg.name] = sg
 
     def load_single(self, load_datasets):
         save_path = self.config.get("save_path", "")
@@ -256,6 +268,8 @@ class BaseProvider:
             self.config["runs"] = [
                 d for d in processed_folders if d is not None
             ]  # Filter the none's
+
+            #self.mp_dataset_load(load_datasets[0] , save_path=save_path)
 
             with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
                 load_supergraphs = pool.map(
@@ -298,13 +312,10 @@ class BaseProvider:
         else:
             process_datasets, load_datasets = self.split_process_load_datasets()
 
-        if ensemble_process:
-            process_datasets, load_datasets = [], self.datasets
-
         LOGGER.warning(
             f"-------------------- PROCESSING {len(process_datasets)} SUPERGRAPHS --------------------"
         )
-        self.process_single(process_datasets)
+        self.process_single(process_datasets, save_supergraphs=ensemble_process)
 
         LOGGER.warning(
             f"-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------"

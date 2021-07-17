@@ -46,6 +46,7 @@ class Filter:
         )
 
         self.callsites = self.sg.callsites
+        #self.callsites = self.sg.new_callsites
 
         # if 0:
         self.mean_root_inctime = self.sg.df_root_max_mean_runtime(
@@ -69,6 +70,7 @@ class Filter:
 
         LOGGER.debug(f"Number of callsites after QueryMatcher: {len(self.callsites)}")
         LOGGER.info(
+            #f"Removed {len(self.sg.new_callsites) - len(self.callsites)} callsites."
             f"Removed {len(self.sg.callsites) - len(self.callsites)} callsites."
         )
 

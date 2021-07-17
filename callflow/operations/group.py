@@ -78,6 +78,7 @@ class Group:
 
             if debug:
                 for _ in path:
+                    #_m = self.sg.new_callsite2module[_]
                     _m = self.sg.callsite_module_map[_]
                     print(
                         "\t:",
@@ -91,6 +92,7 @@ class Group:
                     )
 
             # extract the modules in the path
+            #mod_path = np.array([self.sg.new_callsite2module[_] for _ in path])
             mod_path = np.array([self.sg.callsite_module_map[_] for _ in path])
 
             if debug:
