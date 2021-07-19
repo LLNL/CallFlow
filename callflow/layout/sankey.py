@@ -347,8 +347,12 @@ class SankeyLayout:
         nxg = nx.DiGraph()
 
         for c_name, path in self.gp_dict.items():
-            if isinstance(path, str):
+            if isinstance(path, str) or not isinstance(path, np.ndarray):
                 continue
+
+            print("here:", self.gp_dict)
+
+            print("path: ", path)
             
             if path.shape[0] > 2:
                 path = SankeyLayout._break_cycles_in_paths(path)
@@ -358,7 +362,9 @@ class SankeyLayout:
 
                     src_name = self.sg.get_name(src.get("id"), src.get("type"))
                     tgt_name = self.sg.get_name(tgt.get("id"), tgt.get("type"))
-                        
+
+                    print(src_name, tgt_name)
+
                     if not nxg.has_node(src_name):
                         if self.mode == "ESG":
                             src_dict = self.esg_node_construct(c_name, src)
@@ -387,7 +393,7 @@ class SankeyLayout:
                         "weight": weight,
                     }  
 
-                    if not nxg.has_edge(src_name, tgt_name) and edge_dict["weight"] > 0:
+                    if not nxg.has_edge(src_name, tgt_name):
                         nxg.add_edge(src_name, tgt_name, attr_dict=edge_dict)
 
         return nxg

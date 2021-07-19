@@ -76,26 +76,26 @@ class Group:
             # cs_path = self.sg.callsites[path]
             # print('path callsites =', type(cs_path), len(cs_path), cs_path)
 
-            if debug:
-                for _ in path:
-                    _m = self.sg.callsite_module_map[_]
-                    print('\t:', _, '::', self.sg.get_name(_, 'callsite'), '--', _m, '::', self.sg.get_name(_m, 'module'))
+            # if debug:
+            #     for _ in path:
+            #         _m = self.sg.callsite_module_map[_]
+            #         print('\t:', _, '::', self.sg.get_name(_, 'callsite'), '--', _m, '::', self.sg.get_name(_m, 'module'))
 
             # extract the modules in the path
             mod_path = np.array([self.sg.callsite_module_map[_] for _ in path])
 
-            if debug:
-                print('path modules =', type(mod_path), mod_path.shape, mod_path)
+            # if debug:
+            #     print('path modules =', type(mod_path), mod_path.shape, mod_path)
 
             # callsite-to-module map stores a vector and that is a problem
-            if debug:
-                if any([len(_) > 1 for _ in mod_path]):
-                    LOGGER.warning('need to fix this problem')
+            # if debug:
+            #     if any([len(_) > 1 for _ in mod_path]):
+            #         LOGGER.warning('need to fix this problem')
 
             # TODO: seeing some empty list here for "loops"
-            if debug:
-                mod_path = np.array([_[0] if len(_) > 0 else None for _ in mod_path])
-                print('path modules:', type(mod_path), mod_path.shape, mod_path)
+            # if debug:
+            #     mod_path = np.array([_[0] if len(_) > 0 else None for _ in mod_path])
+            #     print('path modules:', type(mod_path), mod_path.shape, mod_path)
 
             # root
             if len(path) == 1:
@@ -127,19 +127,19 @@ class Group:
             cpath = path[last_diff_mod+1:]
 
             # ------------------------------------------------------------------
-            if debug:
-                snode = path[-1]
-                print('--> snode', snode, '::', self.sg.get_name(snode, 'callsite'))
-                print('--> path')
-                for _ in path:
-                    _m = self.sg.callsite_module_map[_]
-                    print('\t:', _, '::', self.sg.get_name(_, 'callsite'), '--', _m, '::', self.sg.get_name(_m, 'module'))
-                print('--> gpath')
-                for _ in gpath:
-                    print('\t:', _, '::', self.sg.get_name(_, 'module'))
-                print('--> cpath')
-                for _ in cpath:
-                    print('\t:', _, '::', self.sg.get_name(_, 'callsite'))
+            # if debug:
+            #     snode = path[-1]
+            #     print('--> snode', snode, '::', self.sg.get_name(snode, 'callsite'))
+            #     print('--> path')
+            #     for _ in path:
+            #         _m = self.sg.callsite_module_map[_]
+            #         print('\t:', _, '::', self.sg.get_name(_, 'callsite'), '--', _m, '::', self.sg.get_name(_m, 'module'))
+            #     print('--> gpath')
+            #     for _ in gpath:
+            #         print('\t:', _, '::', self.sg.get_name(_, 'module'))
+            #     print('--> cpath')
+            #     for _ in cpath:
+            #         print('\t:', _, '::', self.sg.get_name(_, 'callsite'))
 
             # ------------------------------------------------------------------
             return gpath, cpath
@@ -160,13 +160,13 @@ class Group:
                 spath = self.sg.paths[snode]
                 tpath = self.sg.paths[tnode]
 
-                group_path[snode], component_path[snode] = _construct_paths(spath)
+                group_path[snode], component_path[snode] = _construct_paths(spath, True)
                 # --------------------------------------------------------------
                 # no need to reprocess if this has already been added
                 if tnode in group_path:
                     continue
 
-                group_path[tnode], component_path[tnode] = _construct_paths(tpath)
+                group_path[tnode], component_path[tnode] = _construct_paths(tpath, True)
 
         # update the dataframe
         self.sg.df_add_column("group_path", apply_dict=group_path, dict_default='', apply_on="nid")

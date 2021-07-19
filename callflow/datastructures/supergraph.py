@@ -427,9 +427,11 @@ class SuperGraph(ht.GraphFrame):
                                apply_dict=self.callsite_module_map,
                                apply_on="nid")
 
-            missing_callsites = [self.get_name_by_nid(c) for c in self.callsites if self.callsite_module_map[c] == -1]
+            missing_callsites = list(set([self.get_name_by_nid(c) for c in self.callsites if self.callsite_module_map[c] == -1]))
             if len(missing_callsites) > 0:
-                LOGGER.error(f"Missing callistes: {missing_callsites}")
+                LOGGER.error(f"Missing callistes: {len(missing_callsites)}")
+                for cs in missing_callsites:
+                    print(f"{cs}")
                 LOGGER.error("Please add the missing callsite's module map in the config file.")
                 assert 0          
 
@@ -440,8 +442,24 @@ class SuperGraph(ht.GraphFrame):
             self.dataframe['module'], self.modules = \
                 self.dataframe['module'].factorize(sort=True)
 
-            modules_list = ['/collab/usr/global/tools/hpctoolkit/toss_3_x86_64_ib/.install/2020-08/packages/linux-rhel7-x86_64/gcc-8.1.0/hpctoolkit-2020.08.03-awkuu2x54653s55wdv2fmwfms7sfyzeq/lib/hpctoolkit/ext-libs/libmonitor.so.0.0.0', '/collab/usr/global/tools/hpctoolkit/toss_3_x86_64_ib/.install/2020-08/packages/linux-rhel7-x86_64/gcc-8.1.0/hpctoolkit-2020.08.03-awkuu2x54653s55wdv2fmwfms7sfyzeq/lib/hpctoolkit/libhpcrun.so.0.0.0', '/usr/WS1/dnicho/spack/opt/spack/linux-rhel7-broadwell/intel-19.0.4.227/kripke-1.2.4-gvu5aushejbhhxkzpxuh5fo7swoj3qrj/bin/kripke.exe', '/usr/lib64/ld-2.17.so',  '/usr/lib64/libc-2.17.so', '/usr/lib64/libdl-2.17.so', '/usr/lib64/libpmi2.so.0.0.0', '/usr/lib64/libpsm2.so.2.1', '/usr/lib64/libpthread-2.17.so', '/usr/lib64/librt-2.17.so', '/usr/tce/packages/gcc/gcc-4.9.3/lib64/libstdc++.so.6.0.20', '/usr/tce/packages/intel/intel-19.0.4/compilers_and_libraries_2019.4.227/linux/compiler/lib/intel64_lin/libiomp5.so', '/usr/tce/packages/mvapich2/mvapich2-2.3-intel-19.0.4/lib/libmpi.so.12.1.1', '<unknown load module>', '[vdso]']
-            self.modules = {i: modules_list[v] for i, v in enumerate(self.modules)}
+            modules_list = [
+                '/collab/usr/global/tools/hpctoolkit/toss_3_x86_64_ib/.install/2020-08/packages/linux-rhel7-x86_64/gcc-8.1.0/hpctoolkit-2020.08.03-awkuu2x54653s55wdv2fmwfms7sfyzeq/lib/hpctoolkit/ext-libs/libmonitor.so.0.0.0', 
+                '/collab/usr/global/tools/hpctoolkit/toss_3_x86_64_ib/.install/2020-08/packages/linux-rhel7-x86_64/gcc-8.1.0/hpctoolkit-2020.08.03-awkuu2x54653s55wdv2fmwfms7sfyzeq/lib/hpctoolkit/libhpcrun.so.0.0.0', 
+                '/usr/WS1/dnicho/spack/opt/spack/linux-rhel7-broadwell/intel-19.0.4.227/kripke-1.2.4-gvu5aushejbhhxkzpxuh5fo7swoj3qrj/bin/kripke.exe', 
+                '/usr/lib64/ld-2.17.so',  
+                '/usr/lib64/libc-2.17.so', 
+                '/usr/lib64/libdl-2.17.so', 
+                '/usr/lib64/libpmi2.so.0.0.0', 
+                '/usr/lib64/libpsm2.so.2.1', 
+                '/usr/lib64/libpthread-2.17.so', 
+                '/usr/lib64/librt-2.17.so', 
+                '/usr/tce/packages/gcc/gcc-4.9.3/lib64/libstdc++.so.6.0.20', 
+                '/usr/tce/packages/intel/intel-19.0.4/compilers_and_libraries_2019.4.227/linux/compiler/lib/intel64_lin/libiomp5.so', 
+                '/usr/tce/packages/mvapich2/mvapich2-2.3-intel-19.0.4/lib/libmpi.so.12.1.1', 
+                '<unknown load module>', 
+                '[vdso]']
+            self.modules = {i: v for i, v in enumerate(modules_list)}
+
         
             self.callsite_module_map = df_as_dict(self.dataframe, 'nid', 'module')
             self.module_callsite_map = {m: [] for m, c in self.modules.items()}
