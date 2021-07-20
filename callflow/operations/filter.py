@@ -66,15 +66,15 @@ class Filter:
         LOGGER.info(f"Filtering GraphFrame by Hatchet Query :{query}")
         LOGGER.debug(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
 
-        self.callsites = self.sg.hatchet_filter_callsites_by_query(query)
+        filtered_callsites = self.sg.hatchet_filter_callsites_by_query(query)
 
-        LOGGER.debug(f"Number of callsites after QueryMatcher: {len(self.callsites)}")
+        LOGGER.debug(f"Number of callsites after QueryMatcher: {len(filtered_callsites)}")
         LOGGER.info(
-            #f"Removed {len(self.sg.new_callsites) - len(self.callsites)} callsites."
-            f"Removed {len(self.sg.callsites) - len(self.callsites)} callsites."
+            f"Removed {len(self.sg.callsites) - len(filtered_callsites)} callsites."
+            # f"Removed {len(self.sg.callsites) - len(self.callsites)} callsites."
         )
 
-        LOGGER.debug(f"Callsites: {','.join(self.callsites[:50]) }")
+        # LOGGER.debug(f"Callsites: {','.join(self.callsites[:50]) }")
 
         self.compute()
 
@@ -120,7 +120,7 @@ class Filter:
         if filter_by == "time (inc)":
             for edge in self.sg.nxg.edges():
                 # If source is present in the callsites list
-                if edge[0] in self.callsites and edge[1] in self.callsites:
+                if (edge[0] in self.callsites) and (edge[1] in self.callsites):
                     nxg.add_edge(edge[0], edge[1])
                 # else:
                 #    LOGGER.debug(f"Removing the edge: {edge}")

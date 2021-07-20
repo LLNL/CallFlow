@@ -110,7 +110,7 @@ class SuperGraph(ht.GraphFrame):
     def __str__(self):
         """SuperGraph string representation"""
         return (
-            f"SuperGraph<{self.name}"
+            f"SuperGraph<{self.name}>"
             f"df = {self.dataframe.shape}, cols = {list(self.dataframe.columns)}>"
         )
 
@@ -433,14 +433,17 @@ class SuperGraph(ht.GraphFrame):
 
         if read_maps:
             maps = SuperGraph.read_module_callsite_maps(path)
-            self.new_module2idx = maps["m2idx"]
-            self.new_callsite2idx = maps["c2idx"]
-            self.new_module2callsite = maps["m2c"]
+            self.module2idx = maps["m2idx"]
+            self.callsite2idx = maps["c2idx"]
+            self.module2callsite = maps["m2c"]
 
         # Calculate inverse mappings
-        self.new_idx2module = {v: k for k, v in self.new_module2idx.items()}
-        self.new_idx2callsite = {v: k for k, v in self.new_callsite2idx.items()}
-        # self.new_callsite2module = {v: k for k, v in self.new_callsite2module.items()}
+        self.idx2module = {v: k for k, v in self.module2idx.items()}
+        self.idx2callsite = {v: k for k, v in self.callsite2idx.items()}
+        
+        self.modules = list(module_callsite_map.keys());
+        # for m in self.module2callsite.keys():
+        #     print(m)
 
         # print('--- new_idx2module:', self.new_idx2module, self.new_module2idx)
 
@@ -534,7 +537,7 @@ class SuperGraph(ht.GraphFrame):
         self.idx2callsite, self.callsite2idx = self.df_factorize_column('name')
 
         # create a list of unique callsite names
-        self.callsites = np.sort(self.dataframe['name'].unique())
+        self.callsites = self.dataframe['name'].unique().tolist()
 
         ncallsites = len(self.callsites)
         LOGGER.debug(f'Found {ncallsites} callsites: {list(self.callsites)}')
@@ -544,7 +547,8 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         if has_modules_in_map:
             LOGGER.debug(f"[{self.name}] Using the supplied module map")
-            self.modules = module_callsite_map.keys()
+            self.modules = np.array(list(module_callsite_map.keys()))
+
 
             self.idx2module = {i: m for i, m in enumerate(self.modules)}
             self.module2idx = dict((v, k) for k, v in self.idx2module.items())
@@ -604,12 +608,12 @@ class SuperGraph(ht.GraphFrame):
                 f'[{self.name}] No module map found. Defaulting to "module=callsite"'
             )
 
-            self.new_modules = np.copy(self.new_callsites)
-            self.new_module2idx = {m: midx for midx, m in enumerate(self.new_modules)}
+            self.modules = np.copy(self.callsites)
+            self.module2idx = {m: midx for midx, m in enumerate(self.modules)}
             self.df_add_column("module", apply_func=lambda _: _, apply_on="name")
 
-            self.new_callsite2module = {c: c for c in range(len(self.new_callsites))}
-            self.new_module2callsite = {m: [m] for m in range(len(self.new_modules))}
+            self.callsite2module = {c: c for c in range(len(self.callsites))}
+            self.module2callsite = {m: [m] for m in range(len(self.modules))}
 
         # ----------------------------------------------------------------------
         # self.inv_callsites = {v: i for i, v in self.callsites.items()}
