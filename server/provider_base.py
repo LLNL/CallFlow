@@ -138,8 +138,9 @@ class BaseProvider:
         # TODO: This is a copy of _FILENAMES and also exists in supergraph.py.
         # Not quite sure where this should reside to avoid duplication.
         _FILENAMES = {
-            "df": "df.pkl",
-            "nxg": "nxg.json",
+            "df": "cf-df.pkl",
+            "nxg": "cf-nxg.json",
+            "maps": "cf-maps.json"
         }
 
         save_path = self.config["save_path"]
@@ -147,7 +148,7 @@ class BaseProvider:
         ret = []
         unret = []
 
-        # Parallelize this.
+        # TODO: Parallelize this.
         for dataset in self.config["runs"]:
             process = False
             _name = dataset["name"]
@@ -155,15 +156,15 @@ class BaseProvider:
             for f_type, f_run in _FILENAMES.items():
                 f_path = os.path.join(_path, f_run)
                 if not os.path.isfile(f_path):
+                    LOGGER.debug(f'{f_path} not found!!')
                     process = True
+
 
             if process:
                 ret.append(dataset)
             else:
                 unret.append(dataset)
 
-        # if len(ret) == 0:
-        #     raise Warning("All datasets have been processed already. To re-process, use --reset.")
         return ret, unret
 
     @staticmethod
@@ -312,20 +313,27 @@ class BaseProvider:
         else:
             process_datasets, load_datasets = self.split_process_load_datasets()
 
+        if len(process_datasets) == 0 and not ensemble_process:
+            LOGGER.warning("All datasets have been processed already. To re-process once again, use --reset. To re-process only the ensemble, use --ensemble_process.")
+ 
+
         LOGGER.warning(
             f"-------------------- PROCESSING {len(process_datasets)} SUPERGRAPHS --------------------"
         )
         self.process_single(process_datasets, save_supergraphs=ensemble_process)
 
-        LOGGER.warning(
-            f"-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------"
-        )
-        self.load_single(load_datasets)
+        if len(load_datasets) > 1:
+            LOGGER.warning(
+                f"-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------"
+            )
+            self.load_single(load_datasets)
 
-        LOGGER.warning(
-            "-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------"
-        )
-        self.process_ensemble(save_path)
+
+        if ensemble_process:
+            LOGGER.warning(
+                "-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------"
+            )
+            self.process_ensemble(save_path)
 
     def request_general(self, operation):
         """
