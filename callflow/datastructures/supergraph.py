@@ -41,6 +41,7 @@ from callflow.utils.df import (
 )
 from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
 from callflow.modules import Histogram
+from callflow.utils.utils import get_file_size
 
 LOGGER = get_logger(__name__)
 
@@ -1235,6 +1236,19 @@ class SuperGraph(ht.GraphFrame):
             fptr.write(graph_str)
 
     @staticmethod
+    def write_module_callsite_maps(path, data):
+        """
+        Write the callsite-idx, module-idx, callsite-module mappings into a
+        pickle file.
+
+        :param path: Path to where the maps should be written.
+        """
+        fname = os.path.join(path, SuperGraph._FILENAMES["maps"])
+        LOGGER.debug(f"Writing ({fname})")
+        with open(fname, 'w') as handle:
+            json.dump(data, handle)
+
+    @staticmethod
     def read_df(path):
         """
 
@@ -1242,7 +1256,7 @@ class SuperGraph(ht.GraphFrame):
         :return:
         """
         fname = os.path.join(path, SuperGraph._FILENAMES["df"])
-        LOGGER.debug(f"Reading ({fname})")
+        LOGGER.debug(f"Reading ({fname}) [{get_file_size(fname)}]")
 
         df = None
         ext = os.path.splitext(SuperGraph._FILENAMES["df"])[-1]
@@ -1263,7 +1277,7 @@ class SuperGraph(ht.GraphFrame):
         :return:
         """
         fname = os.path.join(path, SuperGraph._FILENAMES["nxg"])
-        LOGGER.debug(f"Reading ({fname})")
+        LOGGER.debug(f"Reading ({fname}) [{get_file_size(fname)}]")
         with open(fname, "r") as nxg_file:
             graph = json.load(nxg_file)
             nxg = nx.readwrite.json_graph.node_link_graph(graph)
@@ -1279,7 +1293,7 @@ class SuperGraph(ht.GraphFrame):
         :return:
         """
         fname = os.path.join(path, SuperGraph._FILENAMES["ht"])
-        LOGGER.debug(f"Reading ({fname})")
+        LOGGER.debug(f"Reading ({fname}) [{get_file_size(fname)}]")
         with open(fname, "r") as graph_file:
             graph = json.load(graph_file)
         if not isinstance(graph, ht.GraphFrame.Graph):
@@ -1296,7 +1310,7 @@ class SuperGraph(ht.GraphFrame):
         data = {}
         try:
             fname = os.path.join(path, SuperGraph._FILENAMES["params"])
-            LOGGER.debug(f"Reading ({fname})")
+            LOGGER.debug(f"Reading ({fname}) [{get_file_size(fname)}]")
             for line in open(fname, "r"):
                 for num in line.strip().split(","):
                     split_num = num.split("=")
@@ -1306,22 +1320,9 @@ class SuperGraph(ht.GraphFrame):
         return data
 
     @staticmethod
-    def write_module_callsite_maps(path, data):
-        """
-        Write the callsite-idx, module-idx, callsite-module mappings into a
-        pickle file.
-
-        :param path: Path to where the maps should be written.
-        """
-        fname = os.path.join(path, SuperGraph._FILENAMES["maps"])
-        LOGGER.debug(f"Writing ({fname})")
-        with open(fname, 'w') as handle:
-            json.dump(data, handle)
-
-    @staticmethod
     def read_module_callsite_maps(path):        
         fname = os.path.join(path, SuperGraph._FILENAMES["maps"])
-        LOGGER.debug(f"Reading ({fname})")
+        LOGGER.debug(f"Reading ({fname}) [{get_file_size(fname)}]")
         with open(fname, 'r') as f:
             data = json.load(f)
 
