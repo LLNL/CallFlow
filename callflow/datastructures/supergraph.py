@@ -285,7 +285,7 @@ class SuperGraph(ht.GraphFrame):
         ntype = node.get("type")
         if ntype == "callsite":
             lk_column = "name"
-            lk_name = node.get("name")
+            lk_name = node.get("id")
         elif ntype == "module":
             lk_column = "module"
             lk_name = node.get("id")
@@ -442,9 +442,14 @@ class SuperGraph(ht.GraphFrame):
         self.idx2callsite = {v: k for k, v in self.callsite2idx.items()}
         
         self.modules = list(module_callsite_map.keys());
-        # for m in self.module2callsite.keys():
-        #     print(m)
-
+        unique_callsites = self.df_unique("name").tolist()
+        self.callsite2module = { _: -1 for _ in unique_callsites }
+        for mcode, mname in enumerate(self.module2callsite.keys()):
+            clist = self.module2callsite[mname]
+            for c in clist:
+                if c in unique_callsites:
+                    self.callsite2module[c] = mname
+ 
         # print('--- new_idx2module:', self.new_idx2module, self.new_module2idx)
 
         # ----------------------------------------------------------------------
@@ -722,14 +727,10 @@ class SuperGraph(ht.GraphFrame):
             "meantime": self.df_root_max_mean_runtime(self.roots, "time (inc)"),
             "roots": self.roots,
             "ncallsites": self.df_count("name"),
-            "modules": self.modules,
-            "callsites": self.callsites,
-            "m2c": self.module_callsite_map,
-            "c2m": self.callsite_module_map,
-            #"modules": self.new_modules,
-            #"callsites": self.new_callsites,
-            #"m2c": self.new_module2callsite,
-            #"c2m": self.new_callsite2module,
+            "modules": self.idx2module,
+            "callsites": self.idx2callsite,
+            "m2c": self.module2callsite,
+            "c2m": self.callsite2module,
             "nmodules": self.df_count("module"),  # if "module" in cols else 0,
             "nranks": self.df_count("rank") if "rank" in cols else 1,
             "nedges": len(self.nxg.edges()),
@@ -737,10 +738,8 @@ class SuperGraph(ht.GraphFrame):
             "maxmodule": self.get_name(
                 self.df_get_top_by_attr("module", 1, "time")[0], "module"
             ),
-            "invcallsites": self.inv_callsites,
-            "invmodules": self.inv_modules,
-            #"invcallsites": self.new_callsite2nid,
-            #"invmodules": self.new_module2nid,
+            "invcallsites": self.callsite2idx,
+            "invmodules": self.module2idx,
             "timecolumns": TIME_COLUMNS,
         }
 
@@ -922,7 +921,7 @@ class SuperGraph(ht.GraphFrame):
         :param value: (int, or float) Value to lookup by
         :return: (pandas.dataframe) Lookup dataframe
         """
-        assert isinstance(value, (int, float, str))
+        # assert isinstance(value, (int, float, str))
 
         column = self.df_get_proxy(column)
         return self.dataframe.loc[self.dataframe[column] == value]
