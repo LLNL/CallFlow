@@ -248,9 +248,9 @@ class BaseProvider:
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             LOGGER.profile(f"Filtered supergraph {name}")
             #print('after filter:', sg.dataframe['module'])
-
+            
             sg.write(os.path.join(save_path, name))
-            #print('after write:', sg.dataframe['module'])
+            # print('after write:', sg.dataframe['module'])
             #exit()
 
             LOGGER.profile(f"Stored in dictionary {name}")
@@ -313,7 +313,7 @@ class BaseProvider:
         else:
             process_datasets, load_datasets = self.split_process_load_datasets()
 
-        if len(process_datasets) == 0:
+        if len(process_datasets) == 0 and not ensemble_process:
             LOGGER.warning("All datasets have been processed already. To re-process once again, use --reset. To process an ensemble of datasets, use --ensemble_process.")
             return 
             

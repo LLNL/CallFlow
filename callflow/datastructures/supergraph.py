@@ -616,8 +616,6 @@ class SuperGraph(ht.GraphFrame):
             self.module2callsite = {m: [m] for m in range(len(self.modules))}
 
         # ----------------------------------------------------------------------
-        # self.inv_callsites = {v: i for i, v in self.callsites.items()}
-        # self.inv_modules = {v: i for i, v in self.modules.items()}
 
         self.callsites_list = np.array(list(self.callsite2module.keys()))
         self.modules_list = np.array(list(self.module2callsite.keys()))
@@ -651,9 +649,12 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_column("name", apply_dict=self.callsite2idx,
                            apply_on="name", update=True)
 
+        self.callsites_idx = self.dataframe["name"].unique().tolist()
+
         LOGGER.debug(f"Factorizing modules")
         self.df_add_column("module", apply_dict=self.module2idx,
                            apply_on="module", update=True)
+        self.modules_idx = self.dataframe["module"].unique().tolist()
 
     # --------------------------------------------------------------------------
     def add_time_proxies(self):
