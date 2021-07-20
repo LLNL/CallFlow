@@ -130,8 +130,8 @@ class BaseProvider:
             module_callsite_map=self.config.get("module_callsite_map", {}),
             read_parameter=read_param,
         )
-        if 'module' in sg.dataframe:
-            print ('after load:', sg.dataframe['module'])
+        # if 'module' in sg.dataframe:
+        #     print ('after load:', sg.dataframe['module'])
         return sg
 
     def split_process_load_datasets(self):
@@ -313,10 +313,10 @@ class BaseProvider:
         else:
             process_datasets, load_datasets = self.split_process_load_datasets()
 
-        if len(process_datasets) == 0 and not ensemble_process:
-            LOGGER.warning("All datasets have been processed already. To re-process once again, use --reset. To re-process only the ensemble, use --ensemble_process.")
- 
-
+        if len(process_datasets) == 0:
+            LOGGER.warning("All datasets have been processed already. To re-process once again, use --reset. To process an ensemble of datasets, use --ensemble_process.")
+            return 
+            
         LOGGER.warning(
             f"-------------------- PROCESSING {len(process_datasets)} SUPERGRAPHS --------------------"
         )
@@ -329,11 +329,11 @@ class BaseProvider:
             self.load_single(load_datasets)
 
 
-        if ensemble_process:
-            LOGGER.warning(
-                "-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------"
-            )
-            self.process_ensemble(save_path)
+            if ensemble_process:
+                LOGGER.warning(
+                    "-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------"
+                )
+                self.process_ensemble(save_path)
 
     def request_general(self, operation):
         """
