@@ -38,10 +38,10 @@ class Unify:
         self.eg.supergraphs = supergraphs
 
         # collect all modules and compute a superset
-        self.eg.modules_list = reduce(
-            np.union1d, [v.modules_list for k, v in supergraphs.items()]
+        self.eg_modules_list = reduce(
+            np.union1d, [np.array(list(v.module2idx.keys())) for k, v in supergraphs.items()]
         )
-        self.eg.callsites_list = reduce(np.union1d, [v.callsites_list for k, v in supergraphs.items()])
+        self.eg_callsites_list = reduce(np.union1d, [np.array(list(v.callsite2idx.keys())) for k, v in supergraphs.items()])
 
         self.compute()
         self.eg.add_time_proxies()
@@ -65,21 +65,23 @@ class Unify:
             # ------------------------------------------------------------------
             # unify the dataframe
             # remap the modules in this supergraph to the one in ensemble graph
-            _mod_map = create_reindex_map(sg.modules_list, self.eg.modules_list)
-            _cs_map = create_reindex_map(sg.callsites_list, self.eg.callsites_list)
+            sg_modules_list = np.array(list(sg.module2idx.keys()))
+            sg_callsites_list = np.array(list(sg.callsite2idx.keys()))
+            _mod_map = create_reindex_map(sg_modules_list, self.eg_modules_list)
+            _cs_map = create_reindex_map(sg_callsites_list, self.eg_callsites_list)
 
             if 1:  # edit directly in the supergraph
                 sg.df_add_column("dataset", apply_value=sg.name)
                 sg.df_add_column(
                     "module",
                     update=True,
-                    apply_func=lambda _: self.eg.modules_list[_mod_map[_]],
+                    apply_func=lambda _: self.eg_modules_list[_mod_map[_]],
                     apply_on="module",
                 )
                 sg.df_add_column(
                     "name",
                     update=True,
-                    apply_func=lambda _: self.eg.callsites_list[_cs_map[_]],
+                    apply_func=lambda _: self.eg_callsites_list[_cs_map[_]],
                     apply_on="name",
                 )
 
@@ -152,38 +154,17 @@ class Unify:
             self.eg.nxg.add_edges_from(new_edges)
 
             # ------------------------------------------------------------------
-
-        self.eg.callsite2idx = {cs:idx for idx, cs in enumerate(self.eg.callsites_list)}
-        self.eg.module2idx = {m: idx for idx, m in enumerate(self.eg.modules_list)}
+        # Calculate the index maps for the updated ensemble mapping.
+        self.eg.callsite2idx = {cs:idx for idx, cs in enumerate(self.eg_callsites_list)}
+        self.eg.module2idx = {m: idx for idx, m in enumerate(self.eg_modules_list)}
         
         self.eg.idx2callsite = {idx:cs for cs, idx in self.eg.callsite2idx.items()}
         self.eg.idx2module = {idx:m for m, idx in self.eg.module2idx.items()}
         
-        _cs_idx = lambda _: self.eg.callsite2idx.get(_) # noqa E731
-        _m_idx = lambda _: self.eg.module2idx.get(_)  # noqa E731
-
-        callsite2module_list = self.eg.dataframe.groupby('name')['module'].apply(lambda x: x.unique().tolist()).to_dict()
-
-        # Calculate the callsite2module mapping.
-        self.eg.callsite2module = { cs_idx: -1 for cs_idx in self.eg.idx2callsite.keys() }
-        # Make sure each callsite maps to a single module and create
-        # callsite2module mapping, if not raise an exception.
-        for c, mlist in callsite2module_list.items():
-            assert len(set(mlist)) == 1, \
-                f'Found multiple modules ({mlist}) for callsite ({c})'
-            self.eg.callsite2module[_cs_idx(c)] = _m_idx(mlist[0])
-
-        # Calculate module2callsite mapping from the callsite2module mapping.
-        self.eg.module2callsite = { midx: [] for midx in self.eg.idx2module.keys() }
-        for cs_idx in self.eg.callsite2module.keys():
-            m_idx = self.eg.callsite2module[cs_idx]
-            self.eg.module2callsite[m_idx].append(cs_idx)
-
-
-        self.eg.module2callsite = {_m_idx(m): [] for m in self.eg.modules_list}
-
-
+        # Calculate the callsite2module mapping for the updated index maps.
+        self.eg.callsite2module_from_indexmaps(self.eg.callsite2idx, self.eg.module2idx)
+        
+        # Update the dataframe with the updated indexes.
         self.eg.factorize_callsites_and_modules()
-
 
 # ------------------------------------------------------------------------------

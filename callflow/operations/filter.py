@@ -71,7 +71,7 @@ class Filter:
 
         LOGGER.debug(f"Number of callsites after QueryMatcher: {len(self.callsites)}")
         LOGGER.info(
-            f"Removed {len(self.sg.callsites) - len(self.callsites)} callsites."
+            f"Removed {len(self.sg.callsites_idx) - len(self.callsites)} callsites."
         )
 
         # LOGGER.debug(f"Callsites: {','.join(self.callsites[:50]) }")
