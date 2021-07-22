@@ -45,7 +45,7 @@ class BaseProvider:
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
         LOGGER.warning(
-            f'-------------------- TOTAL {len(self.config["runs"])} datasets detected from  in the CallFlow.config --------------------'
+            f'-------------------- TOTAL {len(self.config["runs"])} datasets detected from the CallFlow.config --------------------'
         )
         self.datasets = self.config["runs"]
 
@@ -130,14 +130,17 @@ class BaseProvider:
             module_callsite_map=self.config.get("module_callsite_map", {}),
             read_parameter=read_param,
         )
+        # if 'module' in sg.dataframe:
+        #     print ('after load:', sg.dataframe['module'])
         return sg
 
     def split_process_load_datasets(self):
         # TODO: This is a copy of _FILENAMES and also exists in supergraph.py.
         # Not quite sure where this should reside to avoid duplication.
         _FILENAMES = {
-            "df": "df.pkl",
-            "nxg": "nxg.json",
+            "df": "cf-df.pkl",
+            "nxg": "cf-nxg.json",
+            "maps": "cf-maps.json"
         }
 
         save_path = self.config["save_path"]
@@ -145,7 +148,7 @@ class BaseProvider:
         ret = []
         unret = []
 
-        # Parallelize this.
+        # TODO: Parallelize this.
         for dataset in self.config["runs"]:
             process = False
             _name = dataset["name"]
@@ -153,15 +156,15 @@ class BaseProvider:
             for f_type, f_run in _FILENAMES.items():
                 f_path = os.path.join(_path, f_run)
                 if not os.path.isfile(f_path):
+                    LOGGER.debug(f'{f_path} not found!!')
                     process = True
+
 
             if process:
                 ret.append(dataset)
             else:
                 unret.append(dataset)
 
-        # if len(ret) == 0:
-        #     raise Warning("All datasets have been processed already. To re-process, use --reset.")
         return ret, unret
 
     @staticmethod
@@ -188,7 +191,7 @@ class BaseProvider:
 
         return ret
 
-    def process_single(self, process_datasets):
+    def process_single(self, process_datasets, save_supergraphs):
         append_path = self.config.get("append_path", "")
         load_path = self.config["data_path"]
         module_callsite_map = self.config.get("module_callsite_map", {})
@@ -206,6 +209,9 @@ class BaseProvider:
             )
             for _ in self.config["runs"]
         }
+
+        if save_supergraphs:
+            self.supergraphs = {}
 
         for idx, dataset in enumerate(process_datasets):
             name = dataset["name"]
@@ -228,21 +234,26 @@ class BaseProvider:
             sg.create(
                 path=data_path,
                 profile_format=_prop[1],
-                module_callsite_map=module_callsite_map,
-                filter_by=filter_by,
-                filter_perc=filter_perc,
+                module_callsite_map=module_callsite_map
             )
+            #print('outside create:', sg.dataframe['module'])
 
             LOGGER.profile(f"Created supergraph {name}")
             Group(sg, group_by=group_by)
             LOGGER.profile(f"Grouped supergraph {name}")
+            #print('after group:', sg.dataframe['module'])
 
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             LOGGER.profile(f"Filtered supergraph {name}")
-
+            #print('after filter:', sg.dataframe['module'])
+            
             sg.write(os.path.join(save_path, name))
+            # print('after write:', sg.dataframe['module'])
+            #exit()
 
             LOGGER.profile(f"Stored in dictionary {name}")
+            if save_supergraphs:
+                self.supergraphs[sg.name] = sg
 
     def load_single(self, load_datasets):
         save_path = self.config.get("save_path", "")
@@ -256,6 +267,8 @@ class BaseProvider:
             self.config["runs"] = [
                 d for d in processed_folders if d is not None
             ]  # Filter the none's
+
+            #self.mp_dataset_load(load_datasets[0] , save_path=save_path)
 
             with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
                 load_supergraphs = pool.map(
@@ -298,23 +311,27 @@ class BaseProvider:
         else:
             process_datasets, load_datasets = self.split_process_load_datasets()
 
-        if ensemble_process:
-            process_datasets, load_datasets = [], self.datasets
-
+        if len(process_datasets) == 0 and not ensemble_process:
+            LOGGER.warning("All datasets have been processed already. To re-process once again, use --reset. To process an ensemble of datasets, use --ensemble_process.")
+            return 
+            
         LOGGER.warning(
             f"-------------------- PROCESSING {len(process_datasets)} SUPERGRAPHS --------------------"
         )
-        self.process_single(process_datasets)
+        self.process_single(process_datasets, save_supergraphs=ensemble_process)
 
-        LOGGER.warning(
-            f"-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------"
-        )
-        self.load_single(load_datasets)
+        if len(load_datasets) > 1:
+            LOGGER.warning(
+                f"-------------------- LOADING {len(load_datasets)} SUPERGRAPHS --------------------"
+            )
+            self.load_single(load_datasets)
 
-        LOGGER.warning(
-            "-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------"
-        )
-        self.process_ensemble(save_path)
+
+            if ensemble_process:
+                LOGGER.warning(
+                    "-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------"
+                )
+                self.process_ensemble(save_path)
 
     def request_general(self, operation):
         """
@@ -331,8 +348,7 @@ class BaseProvider:
             if len(self.datasets) > 1:
                 sg = self.supergraphs["ensemble"]
             else:
-                sg = self.supergraphs[self.datasets[0].name]
-
+                sg = self.supergraphs[self.datasets[0]['name']]
             time_columns = sg.time_columns
 
             # if "module_callsite_map" not in self.config.keys():
@@ -364,14 +380,19 @@ class BaseProvider:
             assert isinstance(operation["ncount"], int)
             assert operation["metric"] in ["time", "time (inc)"]
 
+            if(len(self.supergraphs) == 1):
+                supergraph = self.supergraphs[self.datasets[0]['name']]
+            else:
+                supergraph = self.supergraphs["ensemble"]
+            
             # Get the top-n nodes from the "ensemble" based on the ntype.
-            top_nodes_idx = self.supergraphs["ensemble"].df_get_top_by_attr(
+            top_nodes_idx = supergraph.df_get_top_by_attr(
                 operation["ntype"], operation["ncount"], operation["metric"]
             )
 
             # Convert the indexs to the modules.
             top_nodes = [
-                self.supergraphs["ensemble"].get_name(node_idx, operation["ntype"])
+                supergraph.get_name(node_idx, operation["ntype"])
                 for node_idx in top_nodes_idx
             ]
             # Construct the per-supergraph timeline data.
@@ -584,7 +605,6 @@ class BaseProvider:
             nbins = int(operation.get("nbins", 20))
             dataset = operation.get("dataset")
             hl = HierarchyLayout(
-                sg=sg,
                 esg=e_sg,
                 dataset=dataset,
                 node=operation.get("node"),

@@ -66,7 +66,7 @@ class NodeLinkLayout:
                     datamap[column] = {}
 
                 callsite_idx = self.sg.get_idx(callsite, "callsite")
-                _df = self.sg.df_lookup_with_column("name", callsite)
+                _df = self.sg.df_lookup_with_column("name", callsite_idx)
 
                 if column == self.time_inc:
                     datamap[column][callsite] = _df["time (inc)"].mean()

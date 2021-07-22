@@ -45,7 +45,9 @@ class Filter:
             f'Filtering ({self.sg}) by "{self.filter_by}" = {self.filter_perc}%'
         )
 
-        self.callsites = self.sg.callsites
+        # TODO: Since we factorize the name and module column after creating
+        # the CallFlow.dataframe, we need to filter by the callsite indexes. 
+        self.callsites = self.sg.callsites_idx
 
         # if 0:
         self.mean_root_inctime = self.sg.df_root_max_mean_runtime(
@@ -69,10 +71,10 @@ class Filter:
 
         LOGGER.debug(f"Number of callsites after QueryMatcher: {len(self.callsites)}")
         LOGGER.info(
-            f"Removed {len(self.sg.callsites) - len(self.callsites)} callsites."
+            f"Removed {len(self.sg.callsites_idx) - len(self.callsites)} callsites."
         )
 
-        LOGGER.debug(f"Callsites: {','.join(self.callsites[:50]) }")
+        # LOGGER.debug(f"Callsites: {','.join(self.callsites[:50]) }")
 
         self.compute()
 
@@ -117,8 +119,10 @@ class Filter:
 
         if filter_by == "time (inc)":
             for edge in self.sg.nxg.edges():
+                edge0_idx = self.sg.get_idx(edge[0], 'callsite')
+                edge1_idx = self.sg.get_idx(edge[1], 'callsite')
                 # If source is present in the callsites list
-                if edge[0] in self.callsites and edge[1] in self.callsites:
+                if (edge0_idx in self.callsites) and (edge1_idx in self.callsites):
                     nxg.add_edge(edge[0], edge[1])
                 # else:
                 #    LOGGER.debug(f"Removing the edge: {edge}")

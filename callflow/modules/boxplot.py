@@ -48,28 +48,28 @@ class BoxPlot:
         if relative_sg is not None:
             self.box_types = ["tgt", "bkg"]
 
-        self.nid = sg.get_idx(name, ntype)
-        node = {"id": self.nid, "type": ntype, "name": name}
+        self.idx = sg.get_idx(name, ntype)
+        node = {"id": self.idx, "type": ntype, "name": name}
 
         # TODO: Avoid this.
         self.c_path = None
         self.rel_c_path = None
 
         if ntype == "callsite":
-            df = sg.callsite_aux_dict[name]
+            df = sg.callsite_aux_dict[self.idx]
             if "component_path" in sg.dataframe.columns:
                 self.c_path = sg.get_component_path(node)
 
             if relative_sg is not None:
-                rel_df = relative_sg.callsite_aux_dict[name]
+                rel_df = relative_sg.callsite_aux_dict[self.idx]
 
                 if "component_path" in relative_sg.dataframe.columns:
                     self.rel_c_path = sg.get_component_path(node)
 
         elif ntype == "module":
-            df = sg.module_aux_dict[self.nid]
+            df = sg.module_aux_dict[self.idx]
             if relative_sg is not None:
-                rel_df = relative_sg.module_aux_dict[self.nid]
+                rel_df = relative_sg.module_aux_dict[self.idx]
 
         if relative_sg is not None and "dataset" in rel_df.columns:
             self.ndataset = df_count(rel_df, "dataset")
@@ -122,7 +122,7 @@ class BoxPlot:
                 "uv": (_mean, _var),
                 "imb": _imb,
                 "ks": (_kurt, _skew),
-                "nid": self.nid,
+                "idx": self.idx,
             }
             if "dataset" in df.columns:
                 ret[tk]["odset"] = df["dataset"].to_numpy()[mask]
@@ -158,7 +158,7 @@ class BoxPlot:
                     "imb": box["imb"],
                     "kurt": box["ks"][0],
                     "skew": box["ks"][1],
-                    "nid": box["nid"],
+                    "nid": box["idx"],
                     "name": self.result["name"],
                 }
                 result["name"] = self.result["name"]
