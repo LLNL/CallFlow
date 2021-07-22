@@ -178,7 +178,7 @@ class ArgParser:
 
         parser.add_argument(
             "--reset",
-            action="store_true",
+            action="store_false",
             help="Resets the .callflow directory to re-process entire ensemble",
         )
 

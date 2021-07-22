@@ -360,9 +360,6 @@ class SuperGraph(ht.GraphFrame):
                 _csidx(_.frame.get("name")) for _ in node.children
             ]
 
-        LOGGER.info(f"[{self.name}] Processed graph")
-        LOGGER.profile("Processed Graph properties")
-
         # ----------------------------------------------------------------------
         self.df_add_column(
             "callees", apply_dict=self.callees, dict_default=[], apply_on="name"
@@ -373,6 +370,8 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_column(
             "path", apply_dict=self.paths, dict_default=[], apply_on="name"
         )
+
+        LOGGER.info(f"[{self.name}] Successfully created supergraph")
 
     # --------------------------------------------------------------------------
     def load(
@@ -413,7 +412,7 @@ class SuperGraph(ht.GraphFrame):
             self.module2callsite = maps["m2c"]
 
         # ----------------------------------------------------------------------
-        LOGGER.info(f"Calculating inverse mappings from maps.json")
+        LOGGER.debug(f"[{self.name}] Calculating inverse mappings of callsites and modules")
         self.idx2module = {v: k for k, v in self.module2idx.items()}
         self.idx2callsite = {v: k for k, v in self.callsite2idx.items()}
 
@@ -429,7 +428,7 @@ class SuperGraph(ht.GraphFrame):
         self.add_time_proxies()
 
         # ----------------------------------------------------------------------
-        LOGGER.debug(f"Calculating callsite and module auxiliary dictionaries.")
+        LOGGER.debug(f"[{self.name}] Calculating callsite and module auxiliary dictionaries")
 
         self.roots = self.nxg_get_roots()
 
@@ -468,7 +467,7 @@ class SuperGraph(ht.GraphFrame):
                 apply_func=lambda _: _.mean(),
             )
 
-        LOGGER.profile(f"-----> Loaded SuperGraph :{self.name}")
+        LOGGER.info(f"[{self.name}] Successfully loaded supergraph")
 
     def callsite2module_from_indexmaps(self, callsite2idx, module2idx):
 
@@ -550,12 +549,7 @@ class SuperGraph(ht.GraphFrame):
                 for c in unique_callsites
                 if callsite_module_map[c] == -1
             ]
-            if len(missing_callsites) > 0:
-                LOGGER.error(f"[{self.name}] Missing callistes: {missing_callsites}")
-                LOGGER.error(
-                    "Please fix callsite's module map for the missing callsites."
-                )
-                assert 0
+            assert len(missing_callsites) == 0, f"[{self.name}] Missing callistes: {missing_callsites}"
 
             # Update the "module" column with the provided callsite_module_map.
             self.df_add_column("module", apply_dict=callsite_module_map,
@@ -579,7 +573,7 @@ class SuperGraph(ht.GraphFrame):
             self.module2idx[None], self.idx2module[-1] = -1, None
 
             nmodules = len(self.module2idx.keys())
-            LOGGER.debug(f'Found {nmodules} modules: {list(self.module2idx.keys())}')
+            LOGGER.debug(f'[{self.name}] Found {nmodules} modules: {list(self.module2idx.keys())}')
 
         # ----------------------------------------------------------------------
         # default module map
@@ -607,8 +601,8 @@ class SuperGraph(ht.GraphFrame):
         assert all([_valid_idx(cidx) and _valid_name(c) for c, cidx in self.callsite2idx.items()])
 
         self.callsite2module, self.module2callsite = self.callsite2module_from_indexmaps(self.callsite2idx, self.module2idx)
-        LOGGER.debug(f"module2callsite: [{len(self.module2callsite)}] : {self.module2callsite}")
-        LOGGER.debug(f"callsite2module: [{len(self.callsite2module)}] : {self.callsite2module}")
+        LOGGER.debug(f"[{self.name}] module2callsite: [{len(self.module2callsite)}] : {self.module2callsite}")
+        LOGGER.debug(f"[{self.name}] callsite2module: [{len(self.callsite2module)}] : {self.callsite2module}")
 
         # Verify formats of the callsite2module and module2callsite mapping.
         assert all([_valid_idx(m) and _valid_idx(c) for c, m in self.callsite2module.items()])
@@ -629,13 +623,13 @@ class SuperGraph(ht.GraphFrame):
         Note: We cannot use df.factorize() because we want to do it consistently
         with respect to the order we have
         """
-        LOGGER.debug(f"Factorizing callsites")
+        LOGGER.debug(f"[{self.name}] Factorizing callsites")
         self.df_add_column("name", apply_dict=self.callsite2idx,
                            apply_on="name", update=True)
 
         self.callsites_idx = self.dataframe["name"].unique().tolist()
 
-        LOGGER.debug(f"Factorizing modules")
+        LOGGER.debug(f"[{self.name}] Factorizing modules")
         self.df_add_column("module", apply_dict=self.module2idx,
                            apply_on="module", update=True)
         self.modules_idx = self.dataframe["module"].unique().tolist()
@@ -806,23 +800,26 @@ class SuperGraph(ht.GraphFrame):
         has_dict = apply_dict is not None
         assert 1 == int(has_value) + int(has_func) + int(has_dict)
 
-        if column_name in self.dataframe.columns and not update:
+        already_has_column = column_name in self.dataframe.columns
+        if already_has_column and not update:
             return
+
+        action = "updating" if already_has_column and update else "appending"
 
         if has_value:
             assert isinstance(apply_value, (int, float, str))
-            LOGGER.debug(f'[{self.name}] appending column "{column_name}" = "{apply_value}"')
+            LOGGER.debug(f'[{self.name}] {action} column "{column_name}" = "{apply_value}"')
             self.dataframe[column_name] = apply_value
 
         if has_func:
             assert callable(apply_func) and isinstance(apply_on, str)
-            LOGGER.debug(f'[{self.name}] appending column "{column_name}" = {apply_func}')
+            LOGGER.debug(f'[{self.name}] {action} column "{column_name}" = {apply_func}')
             self.dataframe[column_name] = self.dataframe[apply_on].apply(apply_func)
 
         if has_dict:
             assert isinstance(apply_dict, dict) and isinstance(apply_on, str)
             LOGGER.debug(
-                f'[{self.name}] appending column "{column_name}" = (dict); default=({dict_default})'
+                f'[{self.name}] {action} column "{column_name}" = (dict); default=({dict_default})'
             )
             self.dataframe[column_name] = self.dataframe[apply_on].apply(
                 lambda _: apply_dict.get(_, dict_default)
@@ -1315,7 +1312,7 @@ class SuperGraph(ht.GraphFrame):
                     split_num = num.split("=")
                     data[split_num[0]] = split_num[1]
         except Exception as e:
-            LOGGER.critical(f"Failed to read env_params file: {e}")
+            LOGGER.critical(f"[{self.name}] Failed to read env_params file: {e}")
         return data
 
     @staticmethod

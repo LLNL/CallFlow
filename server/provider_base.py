@@ -200,8 +200,6 @@ class BaseProvider:
         if len(process_datasets) == 0:
             return
 
-        LOGGER.info(f"Processing {len(process_datasets)} supergraphs")
-
         append_path = self.config.get("append_path", "")
         load_path = self.config["data_path"]
         module_callsite_map = self.config.get("module_callsite_map", {})
@@ -227,7 +225,7 @@ class BaseProvider:
             name = dataset["name"]
             _prop = run_props[name]
 
-            LOGGER.info(f"Processing dataset [{idx+1}/{len(process_datasets)}] ({name})")
+            LOGGER.info(f"Processing dataset [{idx+1}/{len(process_datasets)}] ({name}) (save={save_supergraphs})")
             LOGGER.profile(f"Starting supergraph ({name})")
 
             data_path = os.path.join(load_path, _prop[0])
@@ -295,7 +293,6 @@ class BaseProvider:
 
     def process_ensemble(self, save_path):
 
-        print(f'processing ensembe..... {len(self.supergraphs)}')
         if len(self.supergraphs) <= 1:
             return
 
@@ -331,7 +328,7 @@ class BaseProvider:
         if ensemble_process:
             process_datasets, load_datasets = [], self.datasets
 
-        self.process_single(process_datasets)
+        self.process_single(process_datasets, save_supergraphs=ensemble_process)
         self.load_single(load_datasets)
         self.process_ensemble(save_path)
 
