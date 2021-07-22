@@ -234,9 +234,7 @@ class BaseProvider:
             sg.create(
                 path=data_path,
                 profile_format=_prop[1],
-                module_callsite_map=module_callsite_map,
-                filter_by=filter_by,
-                filter_perc=filter_perc,
+                module_callsite_map=module_callsite_map
             )
             #print('outside create:', sg.dataframe['module'])
 

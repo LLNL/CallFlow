@@ -69,14 +69,13 @@ class SuperGraph(ht.GraphFrame):
         self.callers = {}
         self.callees = {}
         self.paths = {}
-        self.hatchet_nodes = {}
 
         # meta information to manage the callsites and modules
-        self.idx2callsite = {}          # callsite id to callsite name
-        self.idx2module = {}            # module id to module name
-        self.callsite2idx = {}          # callsite name to callsite id
-        self.module2idx = {}            # module name to module id
-        self.callsite2module = {}       # callsite idx to module id
+        self.idx2callsite = {}          # callsite idx to callsite name
+        self.idx2module = {}            # module idx to module name
+        self.callsite2idx = {}          # callsite name to callsite idx
+        self.module2idx = {}            # module name to module idx
+        self.callsite2module = {}       # callsite idx to module idx
         self.module2callsite = {}       # module idx to [callsite idx]
 
         # TODO: This is currently being used by filter operation. Seems like we
@@ -92,7 +91,7 @@ class SuperGraph(ht.GraphFrame):
     def __str__(self):
         """SuperGraph string representation"""
         return (
-            f"SuperGraph<{self.name}>"
+            f"SuperGraph<{self.name} "
             f"df = {self.dataframe.shape}, cols = {list(self.dataframe.columns)}>"
         )
 
@@ -357,7 +356,6 @@ class SuperGraph(ht.GraphFrame):
         for node in self.graph.traverse():
             node_name = Sanitizer.from_htframe(node.frame)
             cs_idx = _csidx(node_name)
-            self.hatchet_nodes[cs_idx] = node
             self.paths[cs_idx] = [
                 _csidx(Sanitizer.from_htframe(_)) for _ in node.paths()[0]
             ]
@@ -479,7 +477,7 @@ class SuperGraph(ht.GraphFrame):
     def callsite2module_from_indexmaps(self, callsite2idx, module2idx):
         _cs_idx = lambda _: callsite2idx.get(_) # noqa E731
         _m_idx = lambda _: module2idx.get(_)  # noqa E731
-        
+
         idx2callsite = {idx:cs for cs, idx in callsite2idx.items()}
         idx2module = {idx:m for m, idx in module2idx.items()}
 
@@ -500,8 +498,8 @@ class SuperGraph(ht.GraphFrame):
             m_idx = callsite2module[cs_idx]
             module2callsite[m_idx].append(cs_idx)
 
-        LOGGER.debug(f"Callsite dict: [{len(self.module2callsite)} : {self.module2callsite}")
-        LOGGER.debug(f"Module dict: [{len(self.callsite2module)} : {self.callsite2module}")
+        LOGGER.debug(f"Callsite dict: [{len(module2callsite)} : {module2callsite}")
+        LOGGER.debug(f"Module dict: [{len(callsite2module)} : {callsite2module}")
 
         return callsite2module, module2callsite
 
@@ -539,7 +537,7 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.debug(f'Found {ncallsites} callsites.')
 
         # ----------------------------------------------------------------------
-        # if the dataframe already has columns
+        # if the modules are given as an explicit map
         # ----------------------------------------------------------------------
         if has_modules_in_map:
             LOGGER.debug(f"[{self.name}] Using the supplied module map")
@@ -572,16 +570,19 @@ class SuperGraph(ht.GraphFrame):
 
             self.idx2module = {i: m for i, m in enumerate(list(module_callsite_map.keys()))}
             self.module2idx = dict((v, k) for k, v in self.idx2module.items())
-            
+
+        # ----------------------------------------------------------------------
+        # if the dataframe already has columns
+        # ----------------------------------------------------------------------
         elif has_modules_in_df:
             LOGGER.debug(f"[{self.name}] Extracting the module map from the dataframe")
 
-            # TODO: Can we factorize on both "name" and "module" column ??
-            self.idx2module, self.module2idx = self.df_factorize_column('module') 
-            
+            self.idx2module, self.module2idx = self.df_factorize_column('module')
             nmodules = len(self.module2idx.keys())
             LOGGER.debug(f'Found {nmodules} modules: {list(self.modules)}')
 
+        # ----------------------------------------------------------------------
+        # default module map
         # ----------------------------------------------------------------------
         else:
             LOGGER.debug(
@@ -594,12 +595,13 @@ class SuperGraph(ht.GraphFrame):
             # Add a "module" columns to the dataframe, where callsite == module.
             self.df_add_column("module", apply_func=lambda _: _, apply_on="name")
 
+        # ----------------------------------------------------------------------
         self.callsite2module, self.module2callsite = self.callsite2module_from_indexmaps(self.callsite2idx, self.module2idx)
 
         # Verify formats of the idx2module and module2idx mapping.
         assert all([isinstance(midx, int) and isinstance(m, str) for midx, m in self.idx2module.items()])
         assert all([isinstance(midx, int) and isinstance(m, str) for m, midx in self.module2idx.items()])
-        
+
         # Verify formats of the idx2callsite and callsite2idx mapping.
         assert all([isinstance(cidx, int) and isinstance(c, str) for cidx, c in self.idx2callsite.items()])
         assert all([isinstance(cidx, int) and isinstance(c, str) for c, cidx in self.callsite2idx.items()])
@@ -607,7 +609,7 @@ class SuperGraph(ht.GraphFrame):
         # Verify formats of the callsite2module and module2callsite mapping.
         assert all([isinstance(m, int) and isinstance(c, int) for c, m in self.callsite2module.items()])
         assert all([isinstance(c, list) and isinstance(m, int) for m, c in self.module2callsite.items()])
-        
+
         # ----------------------------------------------------------------------
         LOGGER.info(
             f'Created ("module-to-callsite" = {len(self.callsite2module)}) '
@@ -941,7 +943,7 @@ class SuperGraph(ht.GraphFrame):
         :return:
         """
         column = self.df_get_proxy(column)
-        _fct = self.dataframe[column].factorize()
+        _fct = self.dataframe[column].factorize(sort=True)
         if update_df:
             self.dataframe[column] = _fct[0]
         return {i: v for i, v in enumerate(_fct[1])}, {v: i for i, v in enumerate(_fct[1])}
