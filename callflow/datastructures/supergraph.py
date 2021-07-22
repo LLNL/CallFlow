@@ -475,31 +475,28 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.profile(f"-----> Loaded SuperGraph :{self.name}")
 
     def callsite2module_from_indexmaps(self, callsite2idx, module2idx):
-        _cs_idx = lambda _: callsite2idx.get(_) # noqa E731
-        _m_idx = lambda _: module2idx.get(_)  # noqa E731
 
         idx2callsite = {idx:cs for cs, idx in callsite2idx.items()}
         idx2module = {idx:m for m, idx in module2idx.items()}
 
-        callsite2module_list = self.dataframe.groupby('name')['module'].apply(lambda x: x.unique().tolist()).to_dict()
+        # default values of callsite2module and module2callsite mappings
+        callsite2module = {cs_idx: -1 for cs_idx in idx2callsite.keys()}
+        module2callsite = {m_idx: [] for m_idx in idx2module.keys()}
 
-        # Calculate the callsite2module mapping.
-        callsite2module = { cs_idx: -1 for cs_idx in idx2callsite.keys() }
+        # get the mapping from the dataframe
+        callsite2module_dict = self.dataframe.groupby('name')['module'].apply(lambda x: x.unique().tolist()).to_dict()
+
         # Make sure each callsite maps to a single module and create
         # callsite2module mapping, if not raise an exception.
-        for c, mlist in callsite2module_list.items():
-            assert len(set(mlist)) == 1, \
-                f'Found multiple modules ({mlist}) for callsite ({c})'
-            callsite2module[_cs_idx(c)] = _m_idx(mlist[0])
+        for c, mlist in callsite2module_dict.items():
+            unq_mods = set(mlist)
+            assert len(unq_mods) == 1, \
+                f'Found {len(unq_mods)} modules mapped to callsite ({c}): {unq_mods}'
 
-        # Calculate module2callsite mapping from the callsite2module mapping.
-        module2callsite = { midx: [] for midx in idx2module.keys() }
-        for cs_idx in callsite2module.keys():
-            m_idx = callsite2module[cs_idx]
-            module2callsite[m_idx].append(cs_idx)
-
-        LOGGER.debug(f"Callsite dict: [{len(module2callsite)} : {module2callsite}")
-        LOGGER.debug(f"Module dict: [{len(callsite2module)} : {callsite2module}")
+            cidx =  callsite2idx[c]
+            midx = module2idx[mlist[0]]
+            callsite2module[cidx] = midx
+            module2callsite[midx].append(cidx)
 
         return callsite2module, module2callsite
 
@@ -533,14 +530,17 @@ class SuperGraph(ht.GraphFrame):
         # create a map of callsite-indexes
         self.idx2callsite, self.callsite2idx = self.df_factorize_column('name')
 
+        # append None to easily handle the entire graph
+        self.callsite2idx[None], self.idx2callsite[-1] = -1, None
+
         ncallsites = len(self.callsite2idx.keys())
-        LOGGER.debug(f'Found {ncallsites} callsites.')
+        LOGGER.debug(f'Found {ncallsites} callsites: {list(self.callsite2idx.keys())}')
 
         # ----------------------------------------------------------------------
         # if the modules are given as an explicit map
         # ----------------------------------------------------------------------
         if has_modules_in_map:
-            LOGGER.debug(f"[{self.name}] Using the supplied module map")
+            LOGGER.info(f"[{self.name}] Using the supplied module map")
 
             # Add module column: here the module column's type is String.
             unique_callsites = self.df_unique("name")
@@ -571,21 +571,28 @@ class SuperGraph(ht.GraphFrame):
             self.idx2module = {i: m for i, m in enumerate(list(module_callsite_map.keys()))}
             self.module2idx = dict((v, k) for k, v in self.idx2module.items())
 
+            # append None to easily handle the entire graph
+            self.module2idx[None], self.idx2module[-1] = -1, None
+
         # ----------------------------------------------------------------------
         # if the dataframe already has columns
         # ----------------------------------------------------------------------
         elif has_modules_in_df:
-            LOGGER.debug(f"[{self.name}] Extracting the module map from the dataframe")
+            LOGGER.info(f"[{self.name}] Extracting the module map from the dataframe")
 
             self.idx2module, self.module2idx = self.df_factorize_column('module')
+
+            # append None to easily handle the entire graph
+            self.module2idx[None], self.idx2module[-1] = -1, None
+
             nmodules = len(self.module2idx.keys())
-            LOGGER.debug(f'Found {nmodules} modules: {list(self.modules)}')
+            LOGGER.debug(f'Found {nmodules} modules: {list(self.module2idx.keys())}')
 
         # ----------------------------------------------------------------------
         # default module map
         # ----------------------------------------------------------------------
         else:
-            LOGGER.debug(
+            LOGGER.info(
                 f'[{self.name}] No module map found. Defaulting to "module=callsite"'
             )
 
@@ -596,19 +603,23 @@ class SuperGraph(ht.GraphFrame):
             self.df_add_column("module", apply_func=lambda _: _, apply_on="name")
 
         # ----------------------------------------------------------------------
-        self.callsite2module, self.module2callsite = self.callsite2module_from_indexmaps(self.callsite2idx, self.module2idx)
+        _valid_name = lambda _: _ is None or isinstance(_, str)
+        _valid_idx = lambda _: _ is None or isinstance(_, int)
+        _valid_lst = lambda _: isinstance(_, list)
 
         # Verify formats of the idx2module and module2idx mapping.
-        assert all([isinstance(midx, int) and isinstance(m, str) for midx, m in self.idx2module.items()])
-        assert all([isinstance(midx, int) and isinstance(m, str) for m, midx in self.module2idx.items()])
+        assert all([_valid_idx(midx) and _valid_name(m) for midx, m in self.idx2module.items()])
+        assert all([_valid_idx(cidx) and _valid_name(c) for cidx, c in self.idx2callsite.items()])
+        assert all([_valid_idx(midx) and _valid_name(m) for m, midx in self.module2idx.items()])
+        assert all([_valid_idx(cidx) and _valid_name(c) for c, cidx in self.callsite2idx.items()])
 
-        # Verify formats of the idx2callsite and callsite2idx mapping.
-        assert all([isinstance(cidx, int) and isinstance(c, str) for cidx, c in self.idx2callsite.items()])
-        assert all([isinstance(cidx, int) and isinstance(c, str) for c, cidx in self.callsite2idx.items()])
+        self.callsite2module, self.module2callsite = self.callsite2module_from_indexmaps(self.callsite2idx, self.module2idx)
+        LOGGER.debug(f"module2callsite: [{len(self.module2callsite)}] : {self.module2callsite}")
+        LOGGER.debug(f"callsite2module: [{len(self.callsite2module)}] : {self.callsite2module}")
 
         # Verify formats of the callsite2module and module2callsite mapping.
-        assert all([isinstance(m, int) and isinstance(c, int) for c, m in self.callsite2module.items()])
-        assert all([isinstance(c, list) and isinstance(m, int) for m, c in self.module2callsite.items()])
+        assert all([_valid_idx(m) and _valid_idx(c) for c, m in self.callsite2module.items()])
+        assert all([_valid_idx(m) and _valid_lst(c) for m, c in self.module2callsite.items()])
 
         # ----------------------------------------------------------------------
         LOGGER.info(
@@ -943,10 +954,22 @@ class SuperGraph(ht.GraphFrame):
         :return:
         """
         column = self.df_get_proxy(column)
-        _fct = self.dataframe[column].factorize(sort=True)
+        codes, vals = self.dataframe[column].factorize(sort=True)
+
         if update_df:
-            self.dataframe[column] = _fct[0]
-        return {i: v for i, v in enumerate(_fct[1])}, {v: i for i, v in enumerate(_fct[1])}
+            self.dataframe[column] = codes
+
+        c2v, v2c = {}, {}
+        for i, v in enumerate(vals):
+            c2v[i] = v
+            v2c[v] = i
+
+        # if there were any invalid values, insert a value for None
+        if -1 in codes:
+            c2v[-1] = None
+            v2c[None] = -1
+
+        return c2v, v2c
 
     def df_xs_group_column(self, name, column, groups=[], apply_func=None):
         """
