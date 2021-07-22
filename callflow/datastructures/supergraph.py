@@ -559,12 +559,8 @@ class SuperGraph(ht.GraphFrame):
         # create a map of callsite-indexes
         self.idx2callsite, self.callsite2idx = self.df_factorize_column('name')
 
-        # create a list of unique callsite names
-        # TODO: remove this variable. 
-        self.callsites = self.dataframe['name'].unique().tolist()
-
-        ncallsites = len(self.callsites)
-        LOGGER.debug(f'Found {ncallsites} callsites: {list(self.callsites)}')
+        ncallsites = len(self.callsite2idx.keys())
+        LOGGER.debug(f'Found {ncallsites} callsites.')
 
         # ----------------------------------------------------------------------
         # if the dataframe already has columns
@@ -577,12 +573,12 @@ class SuperGraph(ht.GraphFrame):
             self.idx2module = {i: m for i, m in enumerate(self.modules)}
             self.module2idx = dict((v, k) for k, v in self.idx2module.items())
             
-            _nid = lambda _: self.callsite2idx.get(_) # noqa E731
-            _mid = lambda _: self.module2idx.get(_)  # noqa E731
+            _cs_idx = lambda _: self.callsite2idx.get(_) # noqa E731
+            _m_idx = lambda _: self.module2idx.get(_)  # noqa E731
 
             # Add module column: here the module column's type is String.
             callsite_module_map = self.df_add_module_column(module_callsite_map)
-            self.callsite2module = { _nid(k): _mid(v) for k,v in callsite_module_map.items() }
+            self.callsite2module = { _cs_idx(k): _m_idx(v) for k,v in callsite_module_map.items() }
 
             self.module2callsite = {}
             for i, m in module_callsite_map.items():
@@ -590,44 +586,42 @@ class SuperGraph(ht.GraphFrame):
                     # Check if the particular callsite is present in the
                     # corresponding dataframe.
                     if _cs in self.df_unique('name'):
-                        if _mid(i) in self.module2callsite.keys():
-                            self.module2callsite[_mid(i)] = np.append(
-                                self.module2callsite[_mid(i)], _nid(_cs)
+                        if _m_idx(i) in self.module2callsite.keys():
+                            self.module2callsite[_m_idx(i)] = np.append(
+                                self.module2callsite[_m_idx(i)], _cs_idx(_cs)
                             ).tolist()
                         else:
-                            self.module2callsite[_mid(i)] = [_nid(_cs)]
+                            self.module2callsite[_m_idx(i)] = [_cs_idx(_cs)]
 
-        # TODO: Need to verify if this is working. 
         elif has_modules_in_df:
             LOGGER.debug(f"[{self.name}] Extracting the module map from the dataframe")
 
             # TODO: Can we factorize on both "name" and "module" column ??
             self.idx2module, self.module2idx = self.df_factorize_column('module') 
             
-            # TODO: remove this. 
-            self.modules = np.sort(self.dataframe['module'].unique())
-
-            nmodules = len(self.modules)
-            ncallsites = len(self.callsites)
-
+            nmodules = len(self.module2idx.keys())
             LOGGER.debug(f'Found {nmodules} modules: {list(self.modules)}')
-            LOGGER.debug(f'Found {ncallsites} callsites.')
 
-            self.callsite2module = {cidx: [] for cidx in range(ncallsites)}
-            self.module2callsite = {midx: [] for midx in range(nmodules)}
+            _cs_idx = lambda _: self.callsite2idx.get(_) # noqa E731
+            _m_idx = lambda _: self.module2idx.get(_)  # noqa E731
 
-            # TODO: not quite sure what to do here.
-            for callsite in self.callsites:
-                c = self.callsite2idx[self.new_nid2callsite[nid]]
-                m = self.module2idx[self.new_nid2module[nid]]
-                self.new_callsite2module[c].append(m)
-                self.new_module2callsite[m].append(c)
+            # Find out all modules mapped to a callsite (including duplicates).
+            callsite2module_list = self.dataframe.groupby('name')['module'].apply(lambda x: x.unique().tolist()).to_dict()
 
-            # now, we need to make sure each callsite maps to a single module
-            for c, mlist in self.callsite2module.items():
+            # Calculate the callsite2module mapping.
+            self.callsite2module = { cs_idx: -1 for cs_idx in self.idx2callsite.keys() }
+            # Make sure each callsite maps to a single module and create
+            # callsite2module mapping, if not raise an exception.
+            for c, mlist in callsite2module_list.items():
                 assert len(set(mlist)) == 1, \
                     f'Found multiple modules ({mlist}) for callsite ({c})'
-                self.callsite2module[c] = mlist[0]
+                self.callsite2module[_cs_idx(c)] = _m_idx(mlist[0])
+
+            # Calculate module2callsite mapping from the callsite2module mapping.
+            self.module2callsite = { midx: [] for midx in self.idx2module.keys() }
+            for cs_idx in self.callsite2module.keys():
+                m_idx = self.callsite2module[cs_idx]
+                self.module2callsite[m_idx].append(cs_idx)
 
         # ----------------------------------------------------------------------
         else:
@@ -653,11 +647,15 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.debug(f"Callsite dict: [{len(self.module2callsite)} : {self.module2callsite}")
         LOGGER.debug(f"Module dict: [{len(self.callsite2module)} : {self.callsite2module}")
 
-        assert(len(self.callsites) == len(self.callsites_list))
-        assert(len(self.modules) == len(self.modules_list))
+        # Verify formats of the idx2module and module2idx mapping.
+        assert all([isinstance(midx, int) and isinstance(m, str) for midx, m in self.idx2module.items()])
+        assert all([isinstance(midx, int) and isinstance(m, str) for m, midx in self.module2idx.items()])
+        
+        # Verify formats of the idx2callsite and callsite2idx mapping.
+        assert all([isinstance(cidx, int) and isinstance(c, str) for cidx, c in self.idx2callsite.items()])
+        assert all([isinstance(cidx, int) and isinstance(c, str) for c, cidx in self.callsite2idx.items()])
 
-        # Verify if the callsite2module and module2callsite mapping is in the
-        # correct form.
+        # Verify formats of the callsite2module and module2callsite mapping.
         assert all([isinstance(m, int) and isinstance(c, int) for c, m in self.callsite2module.items()])
         assert all([isinstance(c, list) and isinstance(m, int) for m, c in self.module2callsite.items()])
         
@@ -711,20 +709,19 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def write(
-        self, path, write_df=True, write_graph=False, write_nxg=True, write_aux=True, write_maps=True
+        self, path, write_df=True, write_graph=False, write_nxg=True, write_maps=True
     ):
         """
         Write the SuperGraph (refer _FILENAMES for file name mapping).
 
         :param path: path to write the files. (.callflow directory)
         :param write_df: (bool) write dataframe
-        :param write_graph: (bool) write graph
+        :param write_graph: (bool) write hatchet graph
         :param write_nxg: (bool) write networkX graph
-        :param write_aux: (bool) write auxiliary data
         :param write_maps: (bool) write callsite-module maps
         :return:
         """
-        if not write_df and not write_graph and not write_nxg and not write_maps:
+        if not write_df and not write_nxg and not write_maps:
             return
 
         LOGGER.info(f"Writing SuperGraph to ({path})")

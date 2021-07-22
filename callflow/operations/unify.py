@@ -73,13 +73,13 @@ class Unify:
                 sg.df_add_column(
                     "module",
                     update=True,
-                    apply_func=lambda _: _mod_map[_],
+                    apply_func=lambda _: self.eg.modules_list[_mod_map[_]],
                     apply_on="module",
                 )
                 sg.df_add_column(
                     "name",
                     update=True,
-                    apply_func=lambda _: _cs_map[_],
+                    apply_func=lambda _: self.eg.callsites_list[_cs_map[_]],
                     apply_on="name",
                 )
 
@@ -152,6 +152,9 @@ class Unify:
             self.eg.nxg.add_edges_from(new_edges)
 
             # ------------------------------------------------------------------
+
+        self.eg.add_callsites_and_modules_maps()
+        self.eg.factorize_callsites_and_modules()
 
 
 # ------------------------------------------------------------------------------
