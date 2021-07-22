@@ -128,10 +128,8 @@ class SuperGraph(ht.GraphFrame):
         """
         if ntype == "callsite":
             return self.idx2callsite[idx]
-            # return self.callsites.get(idx, None)
         if ntype == "module":
             return self.idx2module[idx]
-            # return self.modules.get(idx, None)
         assert 0
 
     def get_idx(self, name, ntype):
@@ -144,10 +142,8 @@ class SuperGraph(ht.GraphFrame):
         """
         if ntype == "callsite":
             return self.callsite2idx[name]
-            # return self.inv_callsites.get(name, None)
         if ntype == "module":
             return self.module2idx[name]
-            # return self.inv_modules.get(name, None)
         assert 0
 
     def get_module(self, callsite_idx):
@@ -158,7 +154,6 @@ class SuperGraph(ht.GraphFrame):
         :return (str): module for a call site
         """
         assert isinstance(callsite_idx, int)
-        #return self.new_modules[self.new_callsite2module[callsite_idx]]
         return self.callsite2module[callsite_idx]
 
     def get_runtime(self, node_idx, ntype, metric, apply_func=None):
@@ -340,11 +335,17 @@ class SuperGraph(ht.GraphFrame):
         # Create a hatchet.GraphFrame using the calculated graph and graphframe.
         super().__init__(
             gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics
-        )  # Initialize here so that we dont drop index levels.
+        )  # Initialize here so that we don't drop index levels.
 
-        # ----------------------------------------------------------------------
+        # Add callsite2idx, module2idx, callsite2module and corresponding
+        # mappings.
         self.add_callsites_and_modules_maps(module_callsite_map)
+
+        # Update the dataframe columns (i.e., name and module). We update the
+        # columns with their corresponding indexes.
         self.factorize_callsites_and_modules()
+
+        # Add time proxies 
         self.add_time_proxies()
 
         # ----------------------------------------------------------------------
@@ -365,23 +366,25 @@ class SuperGraph(ht.GraphFrame):
         self.profiler.stop()
 
         # ----------------------------------------------------------------------
-        # Find the roots of the super graph. Used to get the mean inclusive runtime.
+        # Find the roots of the super graph. Used to get the mean inclusive
+        # runtime.
+        # Note: contains all unfiltered roots as well.
         self.roots = SuperGraph.hatchet_get_roots(
             gf.graph
-        )  # Contains all unfiltered roots as well.
+        )
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
         LOGGER.debug(f"Found {len(self.roots)} graph roots; and converted to nxg")
 
         _csidx = lambda _: self.get_idx(_, "callsite")  # noqa E731
         for node in self.graph.traverse():
             node_name = Sanitizer.from_htframe(node.frame)
-            node_idx = _csidx(node_name)
-            self.hatchet_nodes[node_idx] = node
-            self.paths[node_idx] = [
+            cs_idx = _csidx(node_name)
+            self.hatchet_nodes[cs_idx] = node
+            self.paths[cs_idx] = [
                 _csidx(Sanitizer.from_htframe(_)) for _ in node.paths()[0]
             ]
-            self.callers[node_idx] = [_csidx(_.frame.get("name")) for _ in node.parents]
-            self.callees[node_idx] = [
+            self.callers[cs_idx] = [_csidx(_.frame.get("name")) for _ in node.parents]
+            self.callees[cs_idx] = [
                 _csidx(_.frame.get("name")) for _ in node.children
             ]
 
@@ -390,13 +393,13 @@ class SuperGraph(ht.GraphFrame):
 
         # ----------------------------------------------------------------------
         self.df_add_column(
-            "callees", apply_dict=self.callees, dict_default=[], apply_on="nid"
+            "callees", apply_dict=self.callees, dict_default=[], apply_on="name"
         )
         self.df_add_column(
-            "callers", apply_dict=self.callers, dict_default=[], apply_on="nid"
+            "callers", apply_dict=self.callers, dict_default=[], apply_on="name"
         )
         self.df_add_column(
-            "path", apply_dict=self.paths, dict_default=[], apply_on="nid"
+            "path", apply_dict=self.paths, dict_default=[], apply_on="name"
         )
 
     # --------------------------------------------------------------------------
@@ -437,7 +440,8 @@ class SuperGraph(ht.GraphFrame):
             self.callsite2idx = maps["c2idx"]
             self.module2callsite = maps["m2c"]
 
-        # Calculate inverse mappings
+        # ----------------------------------------------------------------------
+        LOGGER.info(f"Calculating inverse mappings from maps.json")
         self.idx2module = {v: k for k, v in self.module2idx.items()}
         self.idx2callsite = {v: k for k, v in self.callsite2idx.items()}
         
@@ -449,16 +453,16 @@ class SuperGraph(ht.GraphFrame):
             for c in clist:
                 if c in unique_callsites:
                     self.callsite2module[c] = mname
- 
-        # print('--- new_idx2module:', self.new_idx2module, self.new_module2idx)
 
+        self.callsites_list = np.array(list(self.callsite2idx.keys()))
+        self.modules_list = np.array(list(self.module2idx.keys()))
+ 
         # ----------------------------------------------------------------------
         self.add_time_proxies()
 
-        # print('in load before call:', self.dataframe['module'])
-        # print('--- module_callsite_map:', module_callsite_map)
-
         # ----------------------------------------------------------------------
+        LOGGER.debug(f"Calculating callsite and module auxiliary dictionaries.")
+
         self.roots = self.nxg_get_roots()
 
         self.callsite_aux_dict = df_bi_level_group(
@@ -498,7 +502,6 @@ class SuperGraph(ht.GraphFrame):
 
         LOGGER.profile(f"-----> Loaded SuperGraph :{self.name}")
 
-
     def df_add_module_column(self, module_callsite_map):
         unique_callsites = self.df_unique("name")
         callsite2module = { _: -1 for _ in unique_callsites }
@@ -528,6 +531,21 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def add_callsites_and_modules_maps(self, module_callsite_map={}):
+        """
+        Add callsite and module-index mappings. We assign the callsites and modules
+        in the dataframe to an unique index (not hatchet's nid) to save the
+        corresponding dataframe in the most compressed format. 
+
+        Note: We calculate the mappings based on the 3 following cases:
+            1) from user provided module-callsite mapping.
+            2) from the dataframe with a module column (commonly hpctoolkit
+            format).
+            3) No unique module mapping exists (i.e., modules == callsites). 
+
+        Note 2: We do not update the dataframe from these mappings here!.
+
+        :param module_callsite_map (dict): User provided module-callsite mapping.
+        """
         LOGGER.debug(f"DataFrame columns: {list(self.dataframe.columns)}")
 
         has_modules_in_df = "module" in self.dataframe.columns
@@ -542,6 +560,7 @@ class SuperGraph(ht.GraphFrame):
         self.idx2callsite, self.callsite2idx = self.df_factorize_column('name')
 
         # create a list of unique callsite names
+        # TODO: remove this variable. 
         self.callsites = self.dataframe['name'].unique().tolist()
 
         ncallsites = len(self.callsites)
@@ -552,8 +571,8 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         if has_modules_in_map:
             LOGGER.debug(f"[{self.name}] Using the supplied module map")
+            # TODO: Remove
             self.modules = np.array(list(module_callsite_map.keys()))
-
 
             self.idx2module = {i: m for i, m in enumerate(self.modules)}
             self.module2idx = dict((v, k) for k, v in self.idx2module.items())
@@ -578,11 +597,14 @@ class SuperGraph(ht.GraphFrame):
                         else:
                             self.module2callsite[_mid(i)] = [_nid(_cs)]
 
+        # TODO: Need to verify if this is working. 
         elif has_modules_in_df:
             LOGGER.debug(f"[{self.name}] Extracting the module map from the dataframe")
 
+            # TODO: Can we factorize on both "name" and "module" column ??
             self.idx2module, self.module2idx = self.df_factorize_column('module') 
             
+            # TODO: remove this. 
             self.modules = np.sort(self.dataframe['module'].unique())
 
             nmodules = len(self.modules)
@@ -622,8 +644,8 @@ class SuperGraph(ht.GraphFrame):
 
         # ----------------------------------------------------------------------
 
-        self.callsites_list = np.array(list(self.callsite2module.keys()))
-        self.modules_list = np.array(list(self.module2callsite.keys()))
+        self.callsites_list = np.array(list(self.callsite2idx.keys()))
+        self.modules_list = np.array(list(self.module2idx.keys()))
 
         LOGGER.debug(f"Callsite list: [length={len(self.callsites_list)}] : {self.callsites_list}")
         LOGGER.debug(f"Module list: [length = {len(self.modules_list)}] : {self.modules_list}")
@@ -647,9 +669,13 @@ class SuperGraph(ht.GraphFrame):
         )
 
     def factorize_callsites_and_modules(self):
+        """
+        Factorize the columns ("name" and "module") using the corresponding
+        mappings (i.e., callsite2idx for name, module2idx for module).
 
-        # we cannot use df.factorize() because
-        # we want to do it consistently with respect to the order we have
+        Note: We cannot use df.factorize() because we want to do it consistently
+        with respect to the order we have
+        """
         LOGGER.debug(f"Factorizing callsites")
         self.df_add_column("name", apply_dict=self.callsite2idx,
                            apply_on="name", update=True)
@@ -664,10 +690,13 @@ class SuperGraph(ht.GraphFrame):
     # --------------------------------------------------------------------------
     def add_time_proxies(self):
         """
+        Add time proxies for the metric columns from the metrics.py file.
+        Assigns the self.proxy_columns.
 
-        :return:
+        TODO: we should use ht.gf.exc_metric and ht.gf.inc_metric for this
+
+        :return: None
         """
-        ## TODO: we should use ht.gf.exc_metric and ht.gf.inc_metric for this
         for key, proxies in METRIC_PROXIES.items():
             if key in self.dataframe.columns:
                 continue
@@ -957,6 +986,7 @@ class SuperGraph(ht.GraphFrame):
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
 
+    # TODO: add an argument override to factorization to the dataframe.
     def df_factorize_column(self, column):
         """
         Wrapper to factorize a column.

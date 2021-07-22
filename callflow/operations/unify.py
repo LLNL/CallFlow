@@ -41,6 +41,7 @@ class Unify:
         self.eg.modules_list = reduce(
             np.union1d, [v.modules_list for k, v in supergraphs.items()]
         )
+        self.eg.callsites_list = reduce(np.union1d, [v.callsites_list for k, v in supergraphs.items()])
 
         self.compute()
         self.eg.add_time_proxies()
@@ -61,11 +62,11 @@ class Unify:
         self.eg.nxg = nx.DiGraph()
 
         for name, sg in self.eg.supergraphs.items():
-
             # ------------------------------------------------------------------
             # unify the dataframe
             # remap the modules in this supergraph to the one in ensemble graph
             _mod_map = create_reindex_map(sg.modules_list, self.eg.modules_list)
+            _cs_map = create_reindex_map(sg.callsites_list, self.eg.callsites_list)
 
             if 1:  # edit directly in the supergraph
                 sg.df_add_column("dataset", apply_value=sg.name)
@@ -75,6 +76,48 @@ class Unify:
                     apply_func=lambda _: _mod_map[_],
                     apply_on="module",
                 )
+                sg.df_add_column(
+                    "name",
+                    update=True,
+                    apply_func=lambda _: _cs_map[_],
+                    apply_on="name",
+                )
+
+                sg.df_add_column(
+                    "callers",
+                    update=True,
+                    apply_func=lambda _: [_cs_map[__] for __ in _],
+                    apply_on="callers",
+                )
+
+                sg.df_add_column(
+                    "callees",
+                    update=True,
+                    apply_func=lambda _: [_cs_map[__] for __ in _],
+                    apply_on="callees",
+                )
+
+                sg.df_add_column(
+                    "path",
+                    update=True,
+                    apply_func=lambda _: [_cs_map[__] for __ in _],
+                    apply_on="path",
+                )
+
+                sg.df_add_column(
+                    "group_path",
+                    update=True,
+                    apply_func=lambda _: [_mod_map[__] for __ in _],
+                    apply_on="group_path",
+                )
+
+                sg.df_add_column(
+                    "component_path",
+                    update=True,
+                    apply_func=lambda _: [_cs_map[__] for __ in _],
+                    apply_on="component_path",
+                )
+
                 self.eg.dataframe = pd.concat(
                     [self.eg.dataframe, sg.dataframe], sort=True
                 )
