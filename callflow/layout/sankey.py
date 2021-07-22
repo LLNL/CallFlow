@@ -54,23 +54,21 @@ class SankeyLayout:
         LOGGER.info(f"Creating the Single SankeyLayout for {sg.name}.")
 
         # Set the current graph being rendered.
-        self.sg = sg
-        self.esg = esg
         self.reveal_callsites = reveal_callsites
         self.split_entry_module = split_entry_module
         self.split_callee_module = split_callee_module
         self.nbins = nbins
 
+        if esg:
+            self.sg = esg
+            self.runs = self.sg.get_datasets()
+        else:
+            self.sg = sg
+
         self.time_exc = self.sg.df_get_proxy("time")
         self.time_inc = self.sg.df_get_proxy("time (inc)")
 
-        if esg:
-            self.df = self.esg.dataframe
-            self.runs = self.esg.get_datasets()
-            self.mode = "ESG"
-        else:
-            self.df = self.sg.dataframe
-            self.mode = "SG"
+        self.df = self.sg.dataframe
 
         self.gp_dict = df_as_dict(self.df, "name", grp_column)
         self.cp_dict = df_as_dict(self.df, "name", "component_path")
@@ -346,7 +344,7 @@ class SankeyLayout:
             if isinstance(path, str):
                 continue
 
-            if path.shape[0] > 2:
+            if len(path) > 2:
                 path = SankeyLayout._break_cycles_in_paths(path)
                 for depth in range(0, len(path) - 1):
                     src = path[depth]
@@ -356,17 +354,11 @@ class SankeyLayout:
                     tgt_name = self.sg.get_name(tgt.get("id"), tgt.get("type"))
 
                     if not nxg.has_node(src_name):
-                        if self.mode == "ESG":
-                            src_dict = self.esg_node_construct(c_name, src)
-                        else:
-                            src_dict = self.sg_node_construct(c_name, src)
+                        src_dict = self.sg_node_construct(c_name, src)
                         nxg.add_node(src_name, attr_dict=src_dict)
 
                     if not nxg.has_node(tgt):
-                        if self.mode == "ESG":
-                            tgt_dict = self.esg_node_construct(c_name, tgt)
-                        else:
-                            tgt_dict = self.sg_node_construct(c_name, tgt)
+                        tgt_dict = self.sg_node_construct(c_name, tgt)
                         nxg.add_node(tgt_name, attr_dict=tgt_dict)
 
                     has_callback_edge = nxg.has_edge(src_name, tgt_name)
@@ -390,7 +382,8 @@ class SankeyLayout:
 
     def sg_node_construct(self, callsite_name, node):
         name = self.sg.get_name(node.get("id"), node.get("type"))
-        return {
+
+        ret = {
             "name": name,
             "type": node.get("type"),
             "level": node.get("level"),
@@ -405,12 +398,10 @@ class SankeyLayout:
             "entry_functions": self.sg.get_entry_functions(node),
             "nid": node.get("id"),
         }
-
-    def esg_node_construct(self, callsite_name, node):
-        grads = self.esg.get_gradients(node.get("id"), node.get("type"), self.nbins)
-
-        ret = self.sg_node_construct(callsite_name, node)
-        ret["gradients"] = grads
+        
+        if self.sg.name == "ensemble":
+            ret["gradients"] = self.sg.get_gradients(node.get("id"), node.get("type"), self.nbins)
+        
         return ret
 
     @staticmethod

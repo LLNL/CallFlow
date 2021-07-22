@@ -153,7 +153,36 @@ class Unify:
 
             # ------------------------------------------------------------------
 
-        self.eg.add_callsites_and_modules_maps()
+        self.eg.callsite2idx = {cs:idx for idx, cs in enumerate(self.eg.callsites_list)}
+        self.eg.module2idx = {m: idx for idx, m in enumerate(self.eg.modules_list)}
+        
+        self.eg.idx2callsite = {idx:cs for cs, idx in self.eg.callsite2idx.items()}
+        self.eg.idx2module = {idx:m for m, idx in self.eg.module2idx.items()}
+        
+        _cs_idx = lambda _: self.eg.callsite2idx.get(_) # noqa E731
+        _m_idx = lambda _: self.eg.module2idx.get(_)  # noqa E731
+
+        callsite2module_list = self.eg.dataframe.groupby('name')['module'].apply(lambda x: x.unique().tolist()).to_dict()
+
+        # Calculate the callsite2module mapping.
+        self.eg.callsite2module = { cs_idx: -1 for cs_idx in self.eg.idx2callsite.keys() }
+        # Make sure each callsite maps to a single module and create
+        # callsite2module mapping, if not raise an exception.
+        for c, mlist in callsite2module_list.items():
+            assert len(set(mlist)) == 1, \
+                f'Found multiple modules ({mlist}) for callsite ({c})'
+            self.eg.callsite2module[_cs_idx(c)] = _m_idx(mlist[0])
+
+        # Calculate module2callsite mapping from the callsite2module mapping.
+        self.eg.module2callsite = { midx: [] for midx in self.eg.idx2module.keys() }
+        for cs_idx in self.eg.callsite2module.keys():
+            m_idx = self.eg.callsite2module[cs_idx]
+            self.eg.module2callsite[m_idx].append(cs_idx)
+
+
+        self.eg.module2callsite = {_m_idx(m): [] for m in self.eg.modules_list}
+
+
         self.eg.factorize_callsites_and_modules()
 
 

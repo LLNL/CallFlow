@@ -61,7 +61,7 @@ class BoxPlot:
                 self.c_path = sg.get_component_path(node)
 
             if relative_sg is not None:
-                rel_df = relative_sg.callsite_aux_dict[name]
+                rel_df = relative_sg.callsite_aux_dict[self.idx]
 
                 if "component_path" in relative_sg.dataframe.columns:
                     self.rel_c_path = sg.get_component_path(node)

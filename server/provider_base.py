@@ -45,7 +45,7 @@ class BaseProvider:
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
         LOGGER.warning(
-            f'-------------------- TOTAL {len(self.config["runs"])} datasets detected from  in the CallFlow.config --------------------'
+            f'-------------------- TOTAL {len(self.config["runs"])} datasets detected from the CallFlow.config --------------------'
         )
         self.datasets = self.config["runs"]
 
@@ -350,8 +350,7 @@ class BaseProvider:
             if len(self.datasets) > 1:
                 sg = self.supergraphs["ensemble"]
             else:
-                sg = self.supergraphs[self.datasets[0].name]
-
+                sg = self.supergraphs[self.datasets[0]['name']]
             time_columns = sg.time_columns
 
             # if "module_callsite_map" not in self.config.keys():
@@ -383,14 +382,19 @@ class BaseProvider:
             assert isinstance(operation["ncount"], int)
             assert operation["metric"] in ["time", "time (inc)"]
 
+            if(len(self.supergraphs) == 1):
+                supergraph = self.supergraphs[self.datasets[0]['name']]
+            else:
+                supergraph = self.supergraphs["ensemble"]
+            
             # Get the top-n nodes from the "ensemble" based on the ntype.
-            top_nodes_idx = self.supergraphs["ensemble"].df_get_top_by_attr(
+            top_nodes_idx = supergraph.df_get_top_by_attr(
                 operation["ntype"], operation["ncount"], operation["metric"]
             )
 
             # Convert the indexs to the modules.
             top_nodes = [
-                self.supergraphs["ensemble"].get_name(node_idx, operation["ntype"])
+                supergraph.get_name(node_idx, operation["ntype"])
                 for node_idx in top_nodes_idx
             ]
             # Construct the per-supergraph timeline data.
@@ -603,7 +607,6 @@ class BaseProvider:
             nbins = int(operation.get("nbins", 20))
             dataset = operation.get("dataset")
             hl = HierarchyLayout(
-                sg=sg,
                 esg=e_sg,
                 dataset=dataset,
                 node=operation.get("node"),
