@@ -45,8 +45,8 @@ class BaseProvider:
 
         # check if we need caliper
         pfmts = list(set([r['profile_format'] for r in self.config['runs']]))
-        if 'caliper' in pfmts and shutil.which("caliper") is None:
-            raise ValueError('Could not find "caliper" executable in path')
+        if 'caliper' in pfmts and shutil.which("cali-query") is None:
+            raise ValueError('Could not find "cali-query" executable in path')
 
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
