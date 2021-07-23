@@ -300,7 +300,6 @@ class SuperGraph(ht.GraphFrame):
         assert isinstance(gf, ht.GraphFrame)
         assert gf.graph is not None
         LOGGER.info(f"[{self.name}] Loaded Hatchet GraphFrame: {df_info(gf.dataframe)}")
-        LOGGER.profile("Created Hatchet GraphFrame")
         self.gf = gf
 
         if 0:
@@ -336,7 +335,6 @@ class SuperGraph(ht.GraphFrame):
         # self.dataframe.set_index(self.indexes, inplace=True, drop=True)
 
         LOGGER.info(f"[{self.name}] Processed dataframe: {df_info(self.dataframe)}")
-        LOGGER.profile("Processed DataFrame properties")
 
         # ----------------------------------------------------------------------
         # Find the roots of the super graph. Used to get the mean inclusive

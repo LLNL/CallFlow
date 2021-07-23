@@ -44,14 +44,13 @@ def main():
         if log_file.startswith("--"):
             raise ValueError("Please provide a valid filename to go with --log option")
         break
+
     log_level = 1 if "--verbose" in sys.argv else 2
-    callflow.init_logger(level=log_level, file=log_file)
+    mem_usage = "--verbose" in sys.argv     # show mem usage in verbose mode
+    callflow.init_logger(level=log_level, file=log_file, mem_usage=mem_usage)
 
     # --------------------------------------------------------------------------
-    LOGGER.info(
-        f" ------------ Initializing CallFlow {callflow.__version__} ------------"
-    )
-    LOGGER.profile("Initialized CallFlow")
+    LOGGER.info(f" ------- Initializing CallFlow {callflow.__version__} --------")
 
     # --------------------------------------------------------------------------
     args = ArgParser(sys.argv)
@@ -70,9 +69,7 @@ def main():
     if process:
         assert endpoint_env == "TERMINAL"
         cf = BaseProvider(config=args.config)
-        LOGGER.profile("Created BaseProvider")
         cf.process(reset)
-        LOGGER.profile("Processed BaseProvider")
 
     # --------------------------------------------------------------------------
     # start a server based on endpoint_access = "REST" | "SOCKET"

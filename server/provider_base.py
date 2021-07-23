@@ -226,8 +226,6 @@ class BaseProvider:
             _prop = run_props[name]
 
             LOGGER.info(f"Processing dataset [{idx+1}/{len(process_datasets)}] ({name}) (save={save_supergraphs})")
-            LOGGER.profile(f"Starting supergraph ({name})")
-
             data_path = os.path.join(load_path, _prop[0])
             if _prop[1] == "hpctoolkit" and not os.path.isfile(
                 os.path.join(data_path, "experiment.xml")
@@ -243,19 +241,18 @@ class BaseProvider:
                 profile_format=_prop[1],
                 module_callsite_map=module_callsite_map
             )
-            LOGGER.profile(f"Created supergraph ({name})")
+            LOGGER.info(f"Created supergraph ({name})")
 
             Group(sg, group_by=group_by)
-            LOGGER.profile(f"Grouped supergraph {name}")
+            LOGGER.info(f"Grouped supergraph {name}")
 
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
-            LOGGER.profile(f"Filtered supergraph {name}")
+            LOGGER.info(f"Filtered supergraph {name}")
 
             sg.write(os.path.join(save_path, name))
-
             if save_supergraphs:
                 self.supergraphs[sg.name] = sg
-                LOGGER.profile(f"Stored in dictionary ({name})")
+                LOGGER.debug(f"Stored in dictionary ({name})")
 
     def load_single(self, load_datasets):
 
@@ -298,15 +295,14 @@ class BaseProvider:
 
         LOGGER.info(f"Processing Ensemble supergraph")
         name = "ensemble"
-        LOGGER.profile(f"Starting supergraph ({name})")
-        sg = EnsembleGraph(name)
 
+        sg = EnsembleGraph(name)
         Unify(sg, self.supergraphs)
-        LOGGER.profile(f"Created supergraph ({name})")
+        LOGGER.info(f"Created supergraph ({name})")
 
         sg.write(os.path.join(save_path, name))
         self.supergraphs[name] = sg
-        LOGGER.profile(f"Stored in dictionary ({name})")
+        LOGGER.debug(f"Stored in dictionary ({name})")
 
     # --------------------------------------------------------------------------
     def process(self, reset=False):
