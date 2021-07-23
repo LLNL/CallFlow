@@ -10,22 +10,38 @@ from logging import getLogger as get_logger  # noqa
 
 
 # ------------------------------------------------------------------------------
-LOG_PROFILE = logging.CRITICAL + 1
+LOG_FMT = (
+    "%(asctime)s - %(name)s:%(funcName)s:%(lineno)s - %(levelname)s - %(message)s"
+)
+LOG_COLORS = {
+    "DEBUG": "cyan",
+    "INFO": "green",
+    "WARNING": "purple",
+    "ERROR": "bold_red",
+    "CRITICAL": "red",
+}
 
-
-def _log_profile(self, message, *args, **kws):
-    from .utils import get_memory_usage
-
-    if self.isEnabledFor(LOG_PROFILE):
-        message = f"[{get_memory_usage()}]: {message}"
-        self._log(LOG_PROFILE, message, args, **kws)
-
-
-logging.addLevelName(LOG_PROFILE, "PROFILE")
-logging.Logger.profile = _log_profile
 # ------------------------------------------------------------------------------
+def append_mem_usage(message):
+    from .utils import get_memory_usage
+    return f"[{get_memory_usage()}]: {message}"
 
+def _log_debug_with_memory(self, message, *args, **kws):
+    self._log(logging.DEBUG, append_mem_usage(message), args, **kws)
 
+def _log_info_with_memory(self, message, *args, **kws):
+    self._log(logging.INFO, append_mem_usage(message), args, **kws)
+
+def _log_warning_with_memory(self, message, *args, **kws):
+    self._log(logging.WARNING, append_mem_usage(message), args, **kws)
+
+def _log_error_with_memory(self, message, *args, **kws):
+    self._log(logging.ERROR, append_mem_usage(message), args, **kws)
+
+def _log_critical_with_memory(self, message, *args, **kws):
+    self._log(logging.CRITICAL, append_mem_usage(message), args, **kws)
+
+# ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 def init_logger(**kwargs):
 
@@ -33,6 +49,7 @@ def init_logger(**kwargs):
     level = int(kwargs.get("level", 2))
     do_color = str(kwargs.get("color", True))
     file = str(kwargs.get("file", ""))
+    mem_usage = bool(kwargs.get("mem_usage", False))
 
     # --------------------------------------------------------------------------
     # get logging level in "logging" format
@@ -51,18 +68,6 @@ def init_logger(**kwargs):
     # -------------------------------------------------------------------------
     # get logging format
     # here, the initialization of the format doesnt depend upon "level"
-    LOG_FMT = (
-        "%(asctime)s - %(name)s:%(funcName)s:%(lineno)s - %(levelname)s - %(message)s"
-    )
-    LOG_COLORS = {
-        "DEBUG": "cyan",
-        "INFO": "green",
-        "WARNING": "purple",
-        "ERROR": "bold_red",
-        "CRITICAL": "red",
-        "PROFILE": "bold_red",
-    }
-
     # create the actual formatter
     if do_color and file == "":
         formatter = colorlog.ColoredFormatter(
@@ -84,7 +89,15 @@ def init_logger(**kwargs):
     logger.setLevel(level)
     logger.addHandler(sh)
 
-    return
+    # --------------------------------------------------------------------------
+    # if we want to show the memory usage
+    if mem_usage:
+        logging.Logger.info = _log_info_with_memory
+        logging.Logger.debug = _log_debug_with_memory
+        logging.Logger.warning = _log_warning_with_memory
+        logging.Logger.error = _log_error_with_memory
+        logging.Logger.critical = _log_critical_with_memory
+
     # --------------------------------------------------------------------------
     # Print the level of logging.
     logger.debug("Enabled")
@@ -92,6 +105,5 @@ def init_logger(**kwargs):
     logger.warning("Enabled")
     logger.error("Enabled")
     logger.critical("Enabled")
-
 
 # ------------------------------------------------------------------------------

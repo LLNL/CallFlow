@@ -38,12 +38,17 @@ class SuperGraph(ht.GraphFrame):
     """
 
     _FILENAMES = {
-        "df": "cf-df.pkl",
-        "ht": "ht-graph.json",
-        "nxg": "cf-nxg.json",
+        "df": "df.pkl",
+        "ht": "graph.json",
+        "nxg": "nxg.json",
         "env_params": "env_params.txt",
         "aux": "aux-{}.npz",
-        "maps": "cf-maps.json"
+        "maps": "maps.json",
+
+        # these filenames are for storing a processed hatchet graph frame
+        "ht-df": "ht-df.pkl",
+        "ht-graph": "ht-graph.pkl",
+        "ht-metrics": "ht-metrics.npz"
     }
 
     # --------------------------------------------------------------------------
@@ -90,10 +95,7 @@ class SuperGraph(ht.GraphFrame):
     # --------------------------------------------------------------------------
     def __str__(self):
         """SuperGraph string representation"""
-        return (
-            f"SuperGraph<{self.name} "
-            f"df = {self.dataframe.shape}, cols = {list(self.dataframe.columns)}>"
-        )
+        return (f"SuperGraph<{self.name}>: df = {df_info(self.dataframe)}")
 
     def __repr__(self):
         """SuperGraph string representation"""
@@ -294,17 +296,15 @@ class SuperGraph(ht.GraphFrame):
         :return:
         """
         self.profile_format = profile_format
-        LOGGER.info(
-            f"Creating SuperGraph ({self.name}) from ({path}) "
-            f"using ({self.profile_format}) format"
-        )
+        LOGGER.info(f"[{self.name}] Creating SuperGraph from ({path}) "
+                    f"using ({self.profile_format}) format"
+                    )
 
         # Create the hatchet.GraphFrame based on the profile format.
         gf = SuperGraph.from_config(path, self.profile_format)
         assert isinstance(gf, ht.GraphFrame)
         assert gf.graph is not None
-        LOGGER.info(f"Loaded Hatchet GraphFrame: {df_info(gf.dataframe)}")
-        LOGGER.profile("-----> Created Hatchet GraphFrame")
+        LOGGER.info(f"[{self.name}] Loaded Hatchet GraphFrame: {df_info(gf.dataframe)}")
         self.gf = gf
 
         if 0:
@@ -339,8 +339,7 @@ class SuperGraph(ht.GraphFrame):
         # self.indexes.insert(0, 'dataset')
         # self.dataframe.set_index(self.indexes, inplace=True, drop=True)
 
-        LOGGER.info(f"Processed dataframe: {df_info(self.dataframe)}")
-        LOGGER.profile("-----> Processed DataFrame properties")
+        LOGGER.info(f"[{self.name}] Processed dataframe: {df_info(self.dataframe)}")
 
         # ----------------------------------------------------------------------
         # Find the roots of the super graph. Used to get the mean inclusive
@@ -350,7 +349,7 @@ class SuperGraph(ht.GraphFrame):
             gf.graph
         )
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
-        LOGGER.debug(f"Found {len(self.roots)} graph roots; and converted to nxg")
+        LOGGER.debug(f"[{self.name}] Found {len(self.roots)} graph roots; and converted to nxg")
 
         _csidx = lambda _: self.get_idx(_, "callsite")  # noqa E731
         for node in self.graph.traverse():
@@ -364,9 +363,6 @@ class SuperGraph(ht.GraphFrame):
                 _csidx(_.frame.get("name")) for _ in node.children
             ]
 
-        LOGGER.info("Processed graph")
-        LOGGER.profile("-----> Processed Graph properties")
-
         # ----------------------------------------------------------------------
         self.df_add_column(
             "callees", apply_dict=self.callees, dict_default=[], apply_on="name"
@@ -377,6 +373,8 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_column(
             "path", apply_dict=self.paths, dict_default=[], apply_on="name"
         )
+
+        LOGGER.info(f"[{self.name}] Successfully created supergraph")
 
     # --------------------------------------------------------------------------
     def load(
@@ -396,7 +394,7 @@ class SuperGraph(ht.GraphFrame):
         :param read_aux: (bool) Read auxiliary data, default is True.
         :return:
         """
-        LOGGER.info(f"Reading SuperGraph ({self.name}) from ({path})")
+        LOGGER.info(f"[{self.name}] Reading SuperGraph from ({path})")
 
         if True:
             self.dataframe = SuperGraph.read_df(path)
@@ -417,10 +415,10 @@ class SuperGraph(ht.GraphFrame):
             self.module2callsite = maps["m2c"]
 
         # ----------------------------------------------------------------------
-        LOGGER.info(f"Calculating inverse mappings from maps.json")
+        LOGGER.debug(f"[{self.name}] Calculating inverse mappings of callsites and modules")
         self.idx2module = {v: k for k, v in self.module2idx.items()}
         self.idx2callsite = {v: k for k, v in self.callsite2idx.items()}
-        
+
         unique_callsites = self.df_unique("name").tolist()
         self.callsite2module = { _: -1 for _ in unique_callsites }
         for mcode, mname in enumerate(self.module2callsite.keys()):
@@ -433,22 +431,20 @@ class SuperGraph(ht.GraphFrame):
         self.add_time_proxies()
 
         # ----------------------------------------------------------------------
-        LOGGER.debug(f"Calculating callsite and module auxiliary dictionaries.")
+        LOGGER.debug(f"[{self.name}] Calculating callsite and module auxiliary dictionaries")
 
         self.roots = self.nxg_get_roots()
 
         self.callsite_aux_dict = df_bi_level_group(
             self.dataframe,
-            "name",
-            None,
+            group_attrs=["name"],
             cols=self.time_columns + ["nid"],
             group_by=["rank"],
             apply_func=lambda _: _.mean(),
         )
         self.module_aux_dict = df_bi_level_group(
             self.dataframe,
-            "module",
-            "name",
+            group_attrs = ["module","name"],
             cols=self.time_columns + ["nid"],
             group_by=["rank"],
             apply_func=lambda _: _.mean(),
@@ -457,22 +453,20 @@ class SuperGraph(ht.GraphFrame):
         if self.name == "ensemble" and "dataset" in self.dataframe.columns:
             self.rel_callsite_aux_dict = df_bi_level_group(
                 self.dataframe,
-                "name",
-                None,
+                group_attrs=["name"],
                 cols=self.time_columns,
                 group_by=["dataset", "rank"],
                 apply_func=lambda _: _.mean(),
             )
             self.rel_module_aux_dict = df_bi_level_group(
                 self.dataframe,
-                "module",
-                "name",
+                group_attrs = ["module","name"],
                 cols=self.time_columns,
                 group_by=["dataset", "rank"],
                 apply_func=lambda _: _.mean(),
             )
 
-        LOGGER.profile(f"-----> Loaded SuperGraph :{self.name}")
+        LOGGER.info(f"[{self.name}] Successfully loaded supergraph")
 
     def callsite2module_from_indexmaps(self, callsite2idx, module2idx):
 
@@ -517,21 +511,18 @@ class SuperGraph(ht.GraphFrame):
 
         :param module_callsite_map (dict): User provided module-callsite mapping.
         """
-        LOGGER.debug(f"DataFrame columns: {list(self.dataframe.columns)}")
+        LOGGER.info(f'[{self.name}] Creating "module-callsite" and "callsite-module" maps')
+        LOGGER.debug(f"[{self.name}] DataFrame columns: {list(self.dataframe.columns)}")
 
         has_modules_in_df = "module" in self.dataframe.columns
         has_modules_in_map = len(module_callsite_map) > 0
 
         # ----------------------------------------------------------------------
-        LOGGER.info(
-            f'[{self.name}] Creating "module-callsite" and "callsite-module" maps'
-        )
-
         # create a map of callsite-indexes
         self.idx2callsite, self.callsite2idx = self.df_factorize_column('name')
 
         # append None to easily handle the entire graph
-        self.callsite2idx[None], self.idx2callsite[-1] = -1, None
+        self.callsite2idx[""], self.idx2callsite[-1] = -1, ""
 
         ncallsites = len(self.callsite2idx.keys())
         LOGGER.debug(f'Found {ncallsites} callsites: {list(self.callsite2idx.keys())}')
@@ -557,12 +548,7 @@ class SuperGraph(ht.GraphFrame):
                 for c in unique_callsites
                 if callsite_module_map[c] == -1
             ]
-            if len(missing_callsites) > 0:
-                LOGGER.error(f"Missing callistes: {missing_callsites}")
-                LOGGER.error(
-                    "Please fix callsite's module map for the missing callsites."
-                )
-                assert 0
+            assert len(missing_callsites) == 0, f"[{self.name}] Missing callistes: {missing_callsites}"
 
             # Update the "module" column with the provided callsite_module_map.
             self.df_add_column("module", apply_dict=callsite_module_map,
@@ -571,8 +557,8 @@ class SuperGraph(ht.GraphFrame):
             self.idx2module = {i: m for i, m in enumerate(list(module_callsite_map.keys()))}
             self.module2idx = dict((v, k) for k, v in self.idx2module.items())
 
-            # append None to easily handle the entire graph
-            self.module2idx[None], self.idx2module[-1] = -1, None
+            # append empty string to easily handle the entire graph
+            self.module2idx[""], self.idx2module[-1] = -1, ""
 
         # ----------------------------------------------------------------------
         # if the dataframe already has columns
@@ -586,7 +572,7 @@ class SuperGraph(ht.GraphFrame):
             self.module2idx[None], self.idx2module[-1] = -1, None
 
             nmodules = len(self.module2idx.keys())
-            LOGGER.debug(f'Found {nmodules} modules: {list(self.module2idx.keys())}')
+            LOGGER.debug(f'[{self.name}] Found {nmodules} modules: {list(self.module2idx.keys())}')
 
         # ----------------------------------------------------------------------
         # default module map
@@ -614,8 +600,8 @@ class SuperGraph(ht.GraphFrame):
         assert all([_valid_idx(cidx) and _valid_name(c) for c, cidx in self.callsite2idx.items()])
 
         self.callsite2module, self.module2callsite = self.callsite2module_from_indexmaps(self.callsite2idx, self.module2idx)
-        LOGGER.debug(f"module2callsite: [{len(self.module2callsite)}] : {self.module2callsite}")
-        LOGGER.debug(f"callsite2module: [{len(self.callsite2module)}] : {self.callsite2module}")
+        LOGGER.debug(f"[{self.name}] module2callsite: [{len(self.module2callsite)}] : {self.module2callsite}")
+        LOGGER.debug(f"[{self.name}] callsite2module: [{len(self.callsite2module)}] : {self.callsite2module}")
 
         # Verify formats of the callsite2module and module2callsite mapping.
         assert all([_valid_idx(m) and _valid_idx(c) for c, m in self.callsite2module.items()])
@@ -623,7 +609,7 @@ class SuperGraph(ht.GraphFrame):
 
         # ----------------------------------------------------------------------
         LOGGER.info(
-            f'Created ("module-to-callsite" = {len(self.callsite2module)}) '
+            f'[{self.name}] Created ("module-to-callsite" = {len(self.callsite2module)}) '
             f'and ("callsite-to-module" = {len(self.module2callsite)}) '
             "maps"
         )
@@ -636,13 +622,13 @@ class SuperGraph(ht.GraphFrame):
         Note: We cannot use df.factorize() because we want to do it consistently
         with respect to the order we have
         """
-        LOGGER.debug(f"Factorizing callsites")
+        LOGGER.debug(f"[{self.name}] Factorizing callsites")
         self.df_add_column("name", apply_dict=self.callsite2idx,
                            apply_on="name", update=True)
 
         self.callsites_idx = self.dataframe["name"].unique().tolist()
 
-        LOGGER.debug(f"Factorizing modules")
+        LOGGER.debug(f"[{self.name}] Factorizing modules")
         self.df_add_column("module", apply_dict=self.module2idx,
                            apply_on="module", update=True)
         self.modules_idx = self.dataframe["module"].unique().tolist()
@@ -667,7 +653,7 @@ class SuperGraph(ht.GraphFrame):
             assert key in self.proxy_columns.keys()
 
         if len(self.proxy_columns) > 0:
-            LOGGER.info(f"created column proxies: {self.proxy_columns}")
+            LOGGER.info(f"[{self.name}] Created column proxies: {self.proxy_columns}")
 
     # --------------------------------------------------------------------------
     def write(
@@ -686,7 +672,7 @@ class SuperGraph(ht.GraphFrame):
         if not write_df and not write_nxg and not write_maps:
             return
 
-        LOGGER.info(f"Writing SuperGraph to ({path})")
+        LOGGER.info(f"[{self.name}] Writing SuperGraph to ({path})")
         if write_df:
             SuperGraph.write_df(path, self.dataframe)
 
@@ -738,7 +724,7 @@ class SuperGraph(ht.GraphFrame):
 
     def timeline(self, nodes, ntype, metric):
         grp_df = self.df_group_by(ntype)
-        LOGGER.debug(f"Nodes: {nodes}; ntype: {ntype}; metric: {metric}")
+        LOGGER.debug(f"[{self.name}] Nodes: {nodes}; ntype: {ntype}; metric: {metric}")
 
         data = {
             str(node): df_column_mean(
@@ -813,23 +799,26 @@ class SuperGraph(ht.GraphFrame):
         has_dict = apply_dict is not None
         assert 1 == int(has_value) + int(has_func) + int(has_dict)
 
-        if column_name in self.dataframe.columns and not update:
+        already_has_column = column_name in self.dataframe.columns
+        if already_has_column and not update:
             return
+
+        action = "updating" if already_has_column and update else "appending"
 
         if has_value:
             assert isinstance(apply_value, (int, float, str))
-            LOGGER.debug(f'appending column "{column_name}" = "{apply_value}"')
+            LOGGER.debug(f'[{self.name}] {action} column "{column_name}" = "{apply_value}"')
             self.dataframe[column_name] = apply_value
 
         if has_func:
             assert callable(apply_func) and isinstance(apply_on, str)
-            LOGGER.debug(f'appending column "{column_name}" = {apply_func}')
+            LOGGER.debug(f'[{self.name}] {action} column "{column_name}" = {apply_func}')
             self.dataframe[column_name] = self.dataframe[apply_on].apply(apply_func)
 
         if has_dict:
             assert isinstance(apply_dict, dict) and isinstance(apply_on, str)
             LOGGER.debug(
-                f'appending column "{column_name}" = (dict); default=({dict_default})'
+                f'[{self.name}] {action} column "{column_name}" = (dict); default=({dict_default})'
             )
             self.dataframe[column_name] = self.dataframe[apply_on].apply(
                 lambda _: apply_dict.get(_, dict_default)
@@ -964,10 +953,10 @@ class SuperGraph(ht.GraphFrame):
             c2v[i] = v
             v2c[v] = i
 
-        # if there were any invalid values, insert a value for None
+        # if there were any invalid values, insert a value for "empty" string
         if -1 in codes:
-            c2v[-1] = None
-            v2c[None] = -1
+            c2v[-1] = ""
+            v2c[""] = -1
 
         return c2v, v2c
 
@@ -1162,9 +1151,9 @@ class SuperGraph(ht.GraphFrame):
         assert isinstance(gf, ht.GraphFrame)
 
         LOGGER.debug(f"Writing Hatchet GraphFrame to ({path})")
-        fdf = os.path.join(path, "ht-df.pkl")
-        fdg = os.path.join(path, "ht-graph.pkl")
-        fdm = os.path.join(path, "ht-metrics.npz")
+        fdf = os.path.join(path, SuperGraph._FILENAMES["ht-df"])
+        fdg = os.path.join(path, SuperGraph._FILENAMES["ht-graph"])
+        fdm = os.path.join(path, SuperGraph._FILENAMES["ht-metrics"])
 
         gf.dataframe.to_pickle(fdf)
         with open(fdg, "wb") as fptr:
@@ -1176,9 +1165,9 @@ class SuperGraph(ht.GraphFrame):
 
         import pickle
 
-        fdf = os.path.join(path, "ht-df.pkl")
-        fdg = os.path.join(path, "ht-graph.pkl")
-        fdm = os.path.join(path, "ht-metrics.npz")
+        fdf = os.path.join(path, SuperGraph._FILENAMES["ht-df"])
+        fdg = os.path.join(path, SuperGraph._FILENAMES["ht-graph"])
+        fdm = os.path.join(path, SuperGraph._FILENAMES["ht-metrics"])
 
         if (
             not os.path.exists(fdf)
@@ -1193,6 +1182,7 @@ class SuperGraph(ht.GraphFrame):
             graph = pickle.load(fptr)
         met = np.load(fdm)
         ext_metrics, int_metrics = list(met["exc"][()]), list(met["inc"][()])
+        met.close()
         return ht.GraphFrame(graph, df, ext_metrics, int_metrics)
 
     # --------------------------------------------------------------------------
@@ -1322,11 +1312,11 @@ class SuperGraph(ht.GraphFrame):
                     split_num = num.split("=")
                     data[split_num[0]] = split_num[1]
         except Exception as e:
-            LOGGER.critical(f"Failed to read env_params file: {e}")
+            LOGGER.critical(f"[{self.name}] Failed to read env_params file: {e}")
         return data
 
     @staticmethod
-    def read_module_callsite_maps(path):        
+    def read_module_callsite_maps(path):
         fname = os.path.join(path, SuperGraph._FILENAMES["maps"])
         LOGGER.debug(f"Reading ({fname}) [{get_file_size(fname)}]")
         with open(fname, 'r') as f:
@@ -1345,7 +1335,7 @@ class SuperGraph(ht.GraphFrame):
         :param filter_val: filter threshold
         :return: None
         """
-        LOGGER.debug(f'Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
+        LOGGER.debug(f'[{self.name}] Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
         self.dataframe = self.df_filter_by_value(filter_by, filter_val)
 
         callsites = self.dataframe["name"].unique()
@@ -1357,7 +1347,7 @@ class SuperGraph(ht.GraphFrame):
                 if edge[0] in callsites and edge[1] in callsites:
                     nxg.add_edge(edge[0], edge[1])
                 else:
-                    LOGGER.debug(f"Removing the edge: {edge}")
+                    LOGGER.debug(f"[{self.name}] Removing the edge: {edge}")
 
         elif filter_by == "time":
             for callsite in callsites:
@@ -1385,4 +1375,6 @@ class SuperGraph(ht.GraphFrame):
 
         return runs
 
-    # --------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+

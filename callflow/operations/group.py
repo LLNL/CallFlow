@@ -33,7 +33,6 @@ class Group:
 
         self.sg = sg
         self.group_by = group_by
-
         LOGGER.info(f'Grouping ({self.sg}) by "{self.group_by}"')
         self.compute()
 
@@ -201,7 +200,6 @@ class Group:
         self.sg.df_add_column(
             "component_path", apply_dict=component_path, dict_default="", apply_on="name"
         )
-        LOGGER.profile("Finished Grouping.")
 
 
 # ------------------------------------------------------------------------------

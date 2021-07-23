@@ -12,7 +12,7 @@ import pandas as pd
 # pandas dataframe utils
 # ------------------------------------------------------------------------------
 def df_info(df):
-    return f"{df.shape} {list(df.index.names)} {list(df.columns)}"
+    return f"{df.shape}; index={list(df.index.names)}; cols={list(df.columns)}"
 
 
 def df_unique(df, column, proxy={}):
@@ -104,51 +104,44 @@ def df_group_by(df, columns, proxy={}):
         columns = proxy.get(columns, columns)
         return df.groupby([columns])
 
+def df_bi_level_group(df, group_attrs, cols, group_by, apply_func, proxy={}):
 
-# TODO: Generalize to apply_func.
-# Performs a 2-level grouping based on frst_group_attr and scnd_group_attr.
-# Example use case:
-#   Group the dataframe by "module" and "name".
-# Returns a dict
-def df_bi_level_group(
-    df, frst_group_attr, scnd_group_attr, cols, group_by, apply_func, proxy={}
-):
+    assert len(group_attrs) in [1, 2]
     _cols = [proxy.get(_, _) for _ in cols] + group_by
 
-    # If there is only one attribute to group by, we use the 1st index.
-    if len(group_by) == 1:
-        group_by = group_by[0]
-
-    # Find the grouping
-    if scnd_group_attr is not None:
-        _groups = [frst_group_attr, scnd_group_attr]
-    else:
-        _groups = [frst_group_attr]
-
-    # Set the df.index as the _groups
-    _df = df.set_index(_groups)
+    # Set the df.index as the group_attrs
+    _df = df.set_index(group_attrs)
     _levels = _df.index.unique().tolist()
 
     # If "rank" is present in the columns, we will group by "rank".
-    if "rank" in _df.columns and len(df["rank"].unique().tolist()) > 1:
-        if scnd_group_attr is not None:
-            if len(group_by) == 0:
-                _cols = _cols + ["rank"]
-                return {_: _df.xs(_)[_cols] for (_, __) in _levels}
-            return {
-                _: (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index()
-                for (_, __) in _levels
-            }
-        else:
-            if len(group_by) == 0:
-                _cols = _cols + ["rank"]
-                return {_: _df.xs(_)[_cols] for _ in _levels}
-            return {
-                _: (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index()
-                for _ in _levels
-            }
-    else:
+    has_rank = "rank" in _df.columns
+    if has_rank:
+        has_rank = df["rank"].unique().shape[0] > 1
+
+    # --------------------------------------------------------------------------
+    if not has_rank:
+        _cols = [c for c in _cols if c is not "rank"]
         return {_: _df.xs(_)[_cols] for _ in _levels}
+
+    elif len(group_attrs) == 1:
+        if len(group_by) == 0:
+            _cols = _cols + ["rank"]
+            return {_: _df.xs(_)[_cols] for _ in _levels}
+        else:
+            return {_: (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index()
+                    for _ in _levels}
+
+    elif len(group_attrs) == 2:
+        if len(group_by) == 0:
+            _cols = _cols + ["rank"]
+            return {_: _df.xs(_)[_cols] for (_,__) in _levels}
+        else:
+            return {_: (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index()
+                    for (_, __) in _levels
+            }
+
+    # --------------------------------------------------------------------------
+    assert False, 'Invalid scenario'
 
 
 def df_column_mean(df, column, proxy={}):

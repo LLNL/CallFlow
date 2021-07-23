@@ -74,12 +74,8 @@ class Filter:
             f"Removed {len(self.sg.callsites_idx) - len(self.callsites)} callsites."
         )
 
-        # LOGGER.debug(f"Callsites: {','.join(self.callsites[:50]) }")
-
         self.compute()
-
-        LOGGER.info(f'Filtered graph comprises of: "{nxg_info(self.nxg)}"')
-        LOGGER.profile("-----> Finished Filtering")
+        LOGGER.info(f'Filtered graph: "{nxg_info(self.nxg)}"')
 
     # --------------------------------------------------------------------------
     def compute(self):
@@ -113,7 +109,7 @@ class Filter:
             self.sg.dataframe = self.sg.dataframe[
                 self.sg.dataframe["name"].isin(self.callsites)
             ]
-        LOGGER.info(f'Filtered dataframe comprises of: "{df_info(self.sg.dataframe)}"')
+        LOGGER.info(f'Filtered dataframe: "{df_info(self.sg.dataframe)}"')
 
         nxg = nx.DiGraph()
 

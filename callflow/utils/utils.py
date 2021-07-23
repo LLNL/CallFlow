@@ -18,10 +18,9 @@ import networkx as nx
 
 import psutil
 
+
 # ------------------------------------------------------------------------------
-
-
-def get_memory_usage(process = None):
+def get_memory_usage(process=None):
     if process is None:
         process = psutil.Process(os.getpid())
 

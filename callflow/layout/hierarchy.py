@@ -29,7 +29,6 @@ class HierarchyLayout:
         """
         assert isinstance(esg, callflow.SuperGraph)
         assert "module" in esg.dataframe.columns
-        assert node in list(esg.modules_list)
 
         self.node = node
         module_idx = esg.get_idx(node, "module")
