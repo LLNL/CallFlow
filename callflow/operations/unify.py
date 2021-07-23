@@ -172,7 +172,7 @@ class Unify:
         self.eg.idx2module = {idx:m for m, idx in self.eg.module2idx.items()}
 
         self.eg.callsite2idx[None], self.eg.idx2callsite[-1] = -1, None
-        self.eg.module2idx[None], self.eg.module2idx[-1] = -1, None
+        self.eg.module2idx[None], self.eg.idx2module[-1] = -1, None
         
         # Calculate the callsite2module mapping for the updated index maps.
         self.eg.callsite2module_from_indexmaps(self.eg.callsite2idx, self.eg.module2idx)

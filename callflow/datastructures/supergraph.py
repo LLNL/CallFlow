@@ -695,6 +695,9 @@ class SuperGraph(ht.GraphFrame):
     # These functions are used by the endpoints.
     # --------------------------------------------------------------------------
     def summary(self):
+        # We need to clean the dictionaries to not contain the `None` values. 
+        _clean = lambda x: "" if x is None else x
+        _clean_dict = lambda d: {_clean(k): _clean(v) for k, v in d.items()}
 
         cols = list(self.dataframe.columns)
         result = {
@@ -702,10 +705,10 @@ class SuperGraph(ht.GraphFrame):
             "meantime": self.df_root_max_mean_runtime(self.roots, "time (inc)"),
             "roots": self.roots,
             "ncallsites": self.df_count("name"),
-            "modules": self.idx2module,
-            "callsites": self.idx2callsite,
-            "m2c": self.module2callsite,
-            "c2m": self.callsite2module,
+            "modules": _clean_dict(self.idx2module),
+            "callsites": _clean_dict(self.idx2callsite),
+            "m2c": _clean_dict(self.module2callsite),
+            "c2m": _clean_dict(self.callsite2module),
             "nmodules": self.df_count("module"),  # if "module" in cols else 0,
             "nranks": self.df_count("rank") if "rank" in cols else 1,
             "nedges": len(self.nxg.edges()),
