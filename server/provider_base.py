@@ -325,8 +325,8 @@ class BaseProvider:
         else:
             process_datasets, load_datasets = self.split_process_load_datasets()
 
-        if ensemble_process:
-            process_datasets, load_datasets = [], self.datasets
+        #if ensemble_process:
+        #    process_datasets, load_datasets = [], self.datasets
 
         self.process_single(process_datasets, save_supergraphs=ensemble_process)
         self.load_single(load_datasets)
