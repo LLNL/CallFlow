@@ -80,15 +80,11 @@ class BaseProvider:
         """
         Outputs the directories that have the processed result. Others will be omitted during the loading.
         """
-        _FILENAMES = {
-            "df": "cf-df.pkl",
-            "nxg": "cf-nxg.json",
-        }
         _name = run_prop["name"]
         _path = os.path.join(save_path, _name)
         process = False
-        for f_type, f_run in _FILENAMES.items():
-            f_path = os.path.join(_path, f_run)
+        for f_type in ["df", "nxg"]:
+            f_path = os.path.join(_path, SuperGraph._FILENAMES[f_type])
             if not os.path.isfile(f_path):
                 process = True
 
@@ -139,13 +135,6 @@ class BaseProvider:
         return sg
 
     def split_process_load_datasets(self):
-        # TODO: This is a copy of _FILENAMES and also exists in supergraph.py.
-        # Not quite sure where this should reside to avoid duplication.
-        _FILENAMES = {
-            "df": "cf-df.pkl",
-            "nxg": "cf-nxg.json",
-            "maps": "cf-maps.json"
-        }
 
         save_path = self.config["save_path"]
 
@@ -157,8 +146,8 @@ class BaseProvider:
             process = False
             _name = dataset["name"]
             _path = os.path.join(save_path, _name)
-            for f_type, f_run in _FILENAMES.items():
-                f_path = os.path.join(_path, f_run)
+            for f_type in ["df", "nxg", "maps"]:
+                f_path = os.path.join(_path, SuperGraph._FILENAMES[f_type])
                 if not os.path.isfile(f_path):
                     LOGGER.debug(f'{f_path} not found!!')
                     process = True

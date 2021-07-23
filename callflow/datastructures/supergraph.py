@@ -38,12 +38,17 @@ class SuperGraph(ht.GraphFrame):
     """
 
     _FILENAMES = {
-        "df": "cf-df.pkl",
-        "ht": "ht-graph.json",
-        "nxg": "cf-nxg.json",
+        "df": "df.pkl",
+        "ht": "graph.json",
+        "nxg": "nxg.json",
         "env_params": "env_params.txt",
         "aux": "aux-{}.npz",
-        "maps": "cf-maps.json"
+        "maps": "maps.json",
+
+        # these filenames are for storing a processed hatchet graph frame
+        "ht-df": "ht-df.pkl",
+        "ht-graph": "ht-graph.pkl",
+        "ht-metrics": "ht-metrics.npz"
     }
 
     # --------------------------------------------------------------------------
@@ -1146,9 +1151,9 @@ class SuperGraph(ht.GraphFrame):
         assert isinstance(gf, ht.GraphFrame)
 
         LOGGER.debug(f"Writing Hatchet GraphFrame to ({path})")
-        fdf = os.path.join(path, "ht-df.pkl")
-        fdg = os.path.join(path, "ht-graph.pkl")
-        fdm = os.path.join(path, "ht-metrics.npz")
+        fdf = os.path.join(path, SuperGraph._FILENAMES["ht-df"])
+        fdg = os.path.join(path, SuperGraph._FILENAMES["ht-graph"])
+        fdm = os.path.join(path, SuperGraph._FILENAMES["ht-metrics"])
 
         gf.dataframe.to_pickle(fdf)
         with open(fdg, "wb") as fptr:
@@ -1160,9 +1165,9 @@ class SuperGraph(ht.GraphFrame):
 
         import pickle
 
-        fdf = os.path.join(path, "ht-df.pkl")
-        fdg = os.path.join(path, "ht-graph.pkl")
-        fdm = os.path.join(path, "ht-metrics.npz")
+        fdf = os.path.join(path, SuperGraph._FILENAMES["ht-df"])
+        fdg = os.path.join(path, SuperGraph._FILENAMES["ht-graph"])
+        fdm = os.path.join(path, SuperGraph._FILENAMES["ht-metrics"])
 
         if (
             not os.path.exists(fdf)
@@ -1177,6 +1182,7 @@ class SuperGraph(ht.GraphFrame):
             graph = pickle.load(fptr)
         met = np.load(fdm)
         ext_metrics, int_metrics = list(met["exc"][()]), list(met["inc"][()])
+        met.close()
         return ht.GraphFrame(graph, df, ext_metrics, int_metrics)
 
     # --------------------------------------------------------------------------
