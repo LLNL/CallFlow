@@ -434,16 +434,14 @@ class SuperGraph(ht.GraphFrame):
 
         self.callsite_aux_dict = df_bi_level_group(
             self.dataframe,
-            "name",
-            None,
+            group_attrs=["name"],
             cols=self.time_columns + ["nid"],
             group_by=["rank"],
             apply_func=lambda _: _.mean(),
         )
         self.module_aux_dict = df_bi_level_group(
             self.dataframe,
-            "module",
-            "name",
+            group_attrs = ["module","name"],
             cols=self.time_columns + ["nid"],
             group_by=["rank"],
             apply_func=lambda _: _.mean(),
@@ -452,16 +450,14 @@ class SuperGraph(ht.GraphFrame):
         if self.name == "ensemble" and "dataset" in self.dataframe.columns:
             self.rel_callsite_aux_dict = df_bi_level_group(
                 self.dataframe,
-                "name",
-                None,
+                group_attrs=["name"],
                 cols=self.time_columns,
                 group_by=["dataset", "rank"],
                 apply_func=lambda _: _.mean(),
             )
             self.rel_module_aux_dict = df_bi_level_group(
                 self.dataframe,
-                "module",
-                "name",
+                group_attrs = ["module","name"],
                 cols=self.time_columns,
                 group_by=["dataset", "rank"],
                 apply_func=lambda _: _.mean(),

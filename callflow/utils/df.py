@@ -110,6 +110,7 @@ def df_group_by(df, columns, proxy={}):
 # Example use case:
 #   Group the dataframe by "module" and "name".
 # Returns a dict
+'''
 def df_bi_level_group(
     df, frst_group_attr, scnd_group_attr, cols, group_by, apply_func, proxy={}
 ):
@@ -149,6 +150,46 @@ def df_bi_level_group(
             }
     else:
         return {_: _df.xs(_)[_cols] for _ in _levels}
+'''
+
+def df_bi_level_group(df, group_attrs, cols, group_by, apply_func, proxy={}):
+
+    assert len(group_attrs) in [1, 2]
+    _cols = [proxy.get(_, _) for _ in cols] + group_by
+
+    # Set the df.index as the group_attrs
+    _df = df.set_index(group_attrs)
+    _levels = _df.index.unique().tolist()
+
+    # If "rank" is present in the columns, we will group by "rank".
+    has_rank = "rank" in _df.columns
+    if has_rank:
+        has_rank = df["rank"].unique().shape[0] > 1
+
+    # --------------------------------------------------------------------------
+    if not has_rank:
+        _cols = [c for c in _cols if c is not "rank"]
+        return {_: _df.xs(_)[_cols] for _ in _levels}
+
+    elif len(group_attrs) == 1:
+        if len(group_by) == 0:
+            _cols = _cols + ["rank"]
+            return {_: _df.xs(_)[_cols] for _ in _levels}
+        else:
+            return {_: (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index()
+                    for _ in _levels}
+
+    elif len(group_attrs) == 2:
+        if len(group_by) == 0:
+            _cols = _cols + ["rank"]
+            return {_: _df.xs(_)[_cols] for (_,__) in _levels}
+        else:
+            return {_: (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index()
+                    for (_, __) in _levels
+            }
+
+    # --------------------------------------------------------------------------
+    assert False, 'Invalid scenario'
 
 
 def df_column_mean(df, column, proxy={}):
