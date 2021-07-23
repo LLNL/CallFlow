@@ -358,9 +358,9 @@ class SuperGraph(ht.GraphFrame):
             self.paths[cs_idx] = [
                 _csidx(Sanitizer.from_htframe(_)) for _ in node.paths()[0]
             ]
-            self.callers[cs_idx] = [_csidx(_.frame.get("name")) for _ in node.parents]
+            self.callers[cs_idx] = [_csidx(Sanitizer.from_htframe(_.frame)) for _ in node.parents]
             self.callees[cs_idx] = [
-                _csidx(_.frame.get("name")) for _ in node.children
+                _csidx(Sanitizer.from_htframe(_.frame)) for _ in node.children
             ]
 
         # ----------------------------------------------------------------------
@@ -519,10 +519,11 @@ class SuperGraph(ht.GraphFrame):
 
         # ----------------------------------------------------------------------
         # create a map of callsite-indexes
+        # ----------------------------------------------------------------------
         self.idx2callsite, self.callsite2idx = self.df_factorize_column('name')
 
         # append None to easily handle the entire graph
-        self.callsite2idx[""], self.idx2callsite[-1] = -1, ""
+        self.callsite2idx[None], self.idx2callsite[-1] = -1, None
 
         ncallsites = len(self.callsite2idx.keys())
         LOGGER.debug(f'Found {ncallsites} callsites: {list(self.callsite2idx.keys())}')
@@ -558,7 +559,7 @@ class SuperGraph(ht.GraphFrame):
             self.module2idx = dict((v, k) for k, v in self.idx2module.items())
 
             # append empty string to easily handle the entire graph
-            self.module2idx[""], self.idx2module[-1] = -1, ""
+            self.module2idx[None], self.idx2module[-1] = -1, None
 
         # ----------------------------------------------------------------------
         # if the dataframe already has columns
@@ -609,8 +610,8 @@ class SuperGraph(ht.GraphFrame):
 
         # ----------------------------------------------------------------------
         LOGGER.info(
-            f'[{self.name}] Created ("module-to-callsite" = {len(self.callsite2module)}) '
-            f'and ("callsite-to-module" = {len(self.module2callsite)}) '
+            f'[{self.name}] Created ("module-to-callsite" = {len(self.module2callsite)}) '
+            f'and ("callsite-to-module" = {len(self.callsite2module)}) '
             "maps"
         )
 
@@ -694,6 +695,9 @@ class SuperGraph(ht.GraphFrame):
     # These functions are used by the endpoints.
     # --------------------------------------------------------------------------
     def summary(self):
+        # We need to clean the dictionaries to not contain the `None` values. 
+        _clean = lambda x: "" if x is None else x
+        _clean_dict = lambda d: {_clean(k): _clean(v) for k, v in d.items()}
 
         cols = list(self.dataframe.columns)
         result = {
@@ -701,10 +705,10 @@ class SuperGraph(ht.GraphFrame):
             "meantime": self.df_root_max_mean_runtime(self.roots, "time (inc)"),
             "roots": self.roots,
             "ncallsites": self.df_count("name"),
-            "modules": self.idx2module,
-            "callsites": self.idx2callsite,
-            "m2c": self.module2callsite,
-            "c2m": self.callsite2module,
+            "modules": _clean_dict(self.idx2module),
+            "callsites": _clean_dict(self.idx2callsite),
+            "m2c": _clean_dict(self.module2callsite),
+            "c2m": _clean_dict(self.callsite2module),
             "nmodules": self.df_count("module"),  # if "module" in cols else 0,
             "nranks": self.df_count("rank") if "rank" in cols else 1,
             "nedges": len(self.nxg.edges()),
@@ -938,9 +942,10 @@ class SuperGraph(ht.GraphFrame):
         """
         Wrapper to factorize a column.
 
-        :param column: (name)
-        :param sanitize:
-        :return:
+        :param column: (name) Column to discretize into categorical indexes.
+        :param update_df: (bool) True will update the dataframe with the discretized values.
+        :return: c2v, v2c : (dict, dict) Dictionaries mapping the values to
+        indexes.
         """
         column = self.df_get_proxy(column)
         codes, vals = self.dataframe[column].factorize(sort=True)
@@ -955,8 +960,8 @@ class SuperGraph(ht.GraphFrame):
 
         # if there were any invalid values, insert a value for "empty" string
         if -1 in codes:
-            c2v[-1] = ""
-            v2c[""] = -1
+            c2v[-1] = None
+            v2c[None] = -1
 
         return c2v, v2c
 

@@ -395,7 +395,7 @@ class ArgParser:
                     name = os.path.basename(os.path.dirname(data_path))
                 return [_mdict(name, "", pformat)]
 
-            return [_mdict(_, _, pformat) for _ in list_subdirs(data_path)]
+            return [_mdict(_, _, pformat) for _ in list_subdirs(data_path, exclude_subdirs=['.callflow'])]
 
         if pformat == "caliper":
             return [
