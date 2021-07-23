@@ -522,7 +522,7 @@ class SuperGraph(ht.GraphFrame):
         self.idx2callsite, self.callsite2idx = self.df_factorize_column('name')
 
         # append None to easily handle the entire graph
-        self.callsite2idx[None], self.idx2callsite[-1] = -1, None
+        self.callsite2idx[""], self.idx2callsite[-1] = -1, ""
 
         ncallsites = len(self.callsite2idx.keys())
         LOGGER.debug(f'Found {ncallsites} callsites: {list(self.callsite2idx.keys())}')
@@ -557,8 +557,8 @@ class SuperGraph(ht.GraphFrame):
             self.idx2module = {i: m for i, m in enumerate(list(module_callsite_map.keys()))}
             self.module2idx = dict((v, k) for k, v in self.idx2module.items())
 
-            # append None to easily handle the entire graph
-            self.module2idx[None], self.idx2module[-1] = -1, None
+            # append empty string to easily handle the entire graph
+            self.module2idx[""], self.idx2module[-1] = -1, ""
 
         # ----------------------------------------------------------------------
         # if the dataframe already has columns
@@ -953,10 +953,10 @@ class SuperGraph(ht.GraphFrame):
             c2v[i] = v
             v2c[v] = i
 
-        # if there were any invalid values, insert a value for None
+        # if there were any invalid values, insert a value for "empty" string
         if -1 in codes:
-            c2v[-1] = None
-            v2c[None] = -1
+            c2v[-1] = ""
+            v2c[""] = -1
 
         return c2v, v2c
 
