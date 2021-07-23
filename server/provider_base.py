@@ -310,9 +310,6 @@ class BaseProvider:
         else:
             process_datasets, load_datasets = self.split_process_load_datasets()
 
-        #if ensemble_process:
-        #    process_datasets, load_datasets = [], self.datasets
-
         self.process_single(process_datasets, save_supergraphs=ensemble_process)
         self.load_single(load_datasets)
         self.process_ensemble(save_path)
@@ -332,19 +329,11 @@ class BaseProvider:
             if len(self.datasets) > 1:
                 sg = self.supergraphs["ensemble"]
             else:
-                sg = self.supergraphs[self.datasets[0].name]
+                sg = self.supergraphs[self.datasets[0]["name"]]
 
             time_columns = sg.time_columns
 
-            # if "module_callsite_map" not in self.config.keys():
-            #     module_callsite_map = sg.module_callsite_map
-            # else:
-            #     module_callsite_map = self.config.module_callsite_map
-
-            # if "callsite_module_map" not in self.config.keys():
-            #     callsite_module_map = sg.module_callsite_map
-            # else:
-            #     callsite_module_map = self.config.callsite_module_map
+            _clean_dict = lambda d: {k: v for k, v in d.items() if k is not None and v is not None}
 
             return {
                 **self.config,
@@ -352,8 +341,8 @@ class BaseProvider:
                 "profile_format_summary": list(
                     set(map(lambda d: d["profile_format"], self.datasets))
                 ),
-                # "module_callsite_map": module_callsite_map,
-                # "callsite_module_map": callsite_module_map
+                "module_callsite_map": _clean_dict(sg.module2callsite),
+                "callsite_module_map": _clean_dict(sg.callsite2module)
             }
 
         elif operation_name == "summary":
