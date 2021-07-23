@@ -6,9 +6,7 @@
  */
 
 import Vue from "vue";
-import * as Vuex from "vuex";
 import Router from "vue-router";
-import Vuetify from "vuetify";
 import BootstrapVue from "bootstrap-vue";
 import VueMaterial from "vue-material";
 import "vue-material/dist/vue-material.min.css";
@@ -21,16 +19,26 @@ import Summary from "./components/Summary";
 import CCT from "./components/CCT";
 import SuperGraph from "./components/SuperGraph";
 import EnsembleSuperGraph from "./components/SuperGraphEnsemble";
-import TimelineSuperGraph from "./components/SuperGraphTimeline";
-import vuetify from "./lib/plugins/vuetify";
 
-Vue.use(Vuex);
-const store = new Vuex.Store();
-// import store from "./store";
+// Setup vuetify.
+import Vuetify from "vuetify/lib/framework";
+Vue.use(Vuetify);
+const vuetify = new Vuetify({
+	icons: {
+		iconfont: "mdiSvg"
+	}
+});
 
+import store from "./store";
 
 const router = new Router({
 	routes: [
+		{
+			path: "/",
+			name: "Summary",
+			component: Summary,
+			props: true,
+		},
 		{
 			path: "/cct",
 			name: "CCT",
@@ -49,12 +57,6 @@ const router = new Router({
 			component: EnsembleSuperGraph,
 			props: true
 		},
-		{
-			path: "/timeline_super_graph",
-			name: "TimeLineSuperGraph",
-			component: TimelineSuperGraph,
-			props: true
-		}
 	]
 });
 

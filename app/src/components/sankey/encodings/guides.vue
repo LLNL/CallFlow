@@ -11,6 +11,7 @@
 <script>
 import * as d3 from "d3";
 import * as utils from "lib/utils";
+import { mapGetters } from "vuex";
 
 export default {
 	template: "",
@@ -25,14 +26,33 @@ export default {
 		positionDatasetMap: {}
 	}),
 
+	computed: {
+		...mapGetters({
+			generalColors: "getGeneralColors",
+			selectedMetric: "getSelectedMetric",
+		}),
+	},
+
 	methods: {
-		// TODO: This component is very sloooooowwww....
 		init(nodes) {
 			this.nodes = nodes;
 
 			// loop through each node and map the xAxis values 
 			for (let node of this.nodes) {
-				this.process(node);
+				if (node.type == "intermediate") {
+					return;
+				}
+				this.gradients[node.id] = node.attr_dict.gradients[this.selectedMetric];
+				let datasetPositionMap = node.attr_dict.gradients[this.selectedMetric]["dataset"]["position"];
+
+				this.positionDatasetMap[node] = {};
+				for (let dataset in datasetPositionMap) {
+					let datasetPosition = datasetPositionMap[dataset];
+					if (this.positionDatasetMap[node][datasetPosition] == undefined) {
+						this.positionDatasetMap[node][datasetPosition] = [];
+					}
+					this.positionDatasetMap[node][datasetPosition].push(dataset);
+				}
 			}
 		},
 
@@ -45,24 +65,6 @@ export default {
 				this.process(node);
 			}
 
-		},
-
-		process(node) {
-			this.gradients[node.id] = utils.getGradients(this.$store, node);
-
-			if (this.gradients[node.id]["dataset"] != undefined) {
-				let datasetPositionMap = this.gradients[node.id]["dataset"]["position"];
-
-				this.positionDatasetMap[node] = {};
-				// Create a position -> dataset map
-				for (let dataset in datasetPositionMap) {
-					let datasetPosition = datasetPositionMap[dataset];
-					if (this.positionDatasetMap[node][datasetPosition] == undefined) {
-						this.positionDatasetMap[node][datasetPosition] = [];
-					}
-					this.positionDatasetMap[node][datasetPosition].push(dataset);
-				}
-			}
 		},
 
 		drawLines(node, guideType) {
@@ -95,7 +97,6 @@ export default {
 			let yAxis = this.gradients[node.id]["hist"].h;
 
 			let binWidth = node.height / (xAxis.length);
-
 
 			for (let idx = 0; idx < xAxis.length; idx += 1) {
 				let y = binWidth * (idx);

@@ -8,4 +8,4 @@ CallFlow's data structure API.
 """
 from .supergraph import SuperGraph  # noqa
 from .ensemblegraph import EnsembleGraph  # noqa
-from .metrics import *
+from .metrics import *  # noqa

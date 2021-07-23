@@ -6,14 +6,14 @@
 			</div>
 			<router-link
 				to="/"
-				v-slot="{  navigate }">
+				v-slot="{ navigate }">
 				<a
 					@click="navigate.bind($event)">
-					<slot ></slot>
+					<slot></slot>
 					<div class="toolbar-title"> CallFlow </div>
 				</a>
 			</router-link>
-			<RunSelection ref="RunSelection" />
+			<RunSelection />
 		</v-app-bar>
 	</v-container>
 </template>
@@ -21,13 +21,11 @@
 <script>
 // Local imports
 import RunSelection from "./runSelection";
-// import ViewSelection from "./viewSelection";
 
 export default {
 	name: "Toolbar",
 	components: {
 		RunSelection,
-		// ViewSelection,
 	},
 	props: ["isSettingsOpen"],
 

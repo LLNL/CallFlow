@@ -10,6 +10,8 @@ CallFlow's ensemble super graph.
 from callflow import get_logger
 from .supergraph import SuperGraph
 
+from callflow.modules import Gradients
+
 LOGGER = get_logger(__name__)
 
 
@@ -33,15 +35,19 @@ class EnsembleGraph(SuperGraph):
         self.graph = None
         self.exc_metrics = []
         self.inc_metrics = []
-        self.roots = [] # TODO: Populate this!
+        self.roots = []  # TODO: Populate this!
+        self.module_df = None
+        self.callsite_df = None
 
     def __str__(self):
         """
         String representation for an ensemble super graph.
         :return:
         """
-        return f"EnsembleGraph<{self.name} of {len(self.supergraphs)} supergraphs; " \
-               f"df = {self.dataframe.shape}>"
+        return (
+            f"EnsembleGraph<{self.name} of {len(self.supergraphs)} supergraphs; "
+            f"df = {self.dataframe.shape}, cols = {list(self.dataframe.columns)}>"
+        )
 
     def __repr__(self):
         """
@@ -60,9 +66,28 @@ class EnsembleGraph(SuperGraph):
             runs = selected_runs
             self.dataframe = self.df_filter_by_search_string("dataset", runs)
         else:
-            runs = [k for k, v in self.supergraphs.items()]
+            runs = [name for name, sg in self.supergraphs.items()]
             self.dataframe = self.df_filter_by_search_string("dataset", runs)
 
         return runs
+
+    def get_gradients(self, nid, ntype, nbins):
+        """
+        Getter to obtain the gradients of a node by the runtime metrics.
+        """
+        if self.module_df is None:
+            self.module_df = self.dataframe.set_index(["dataset", "module"])
+        if self.callsite_df is None:
+            self.callsite_df = self.dataframe.set_index(["dataset", "name"])
+
+        if ntype == "callsite":
+            df = self.callsite_df
+        elif ntype == "module":
+            df = self.module_df
+
+        return Gradients(
+            df, bins=nbins, nid=nid, ntype=ntype, proxy_columns=self.proxy_columns
+        ).result
+
 
 # ------------------------------------------------------------------------------

@@ -7,9 +7,7 @@
 
 <template>
   <v-card :id="id">
-    <v-layout class="chip-container">
-		<InfoChip ref="InfoChip" :title="title" :summary="summary" />
-    </v-layout>
+	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" />
     <svg :id="svgId"></svg>
   </v-card>
 </template>
@@ -17,6 +15,7 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library
 import { lasso } from "lib/interactions/lasso";
@@ -24,7 +23,6 @@ import * as utils from "lib/utils";
 
 import InfoChip from "../general/infoChip";
 
-import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler.js";
 
 export default {
@@ -36,18 +34,12 @@ export default {
 	data: () => ({
 		id: "parameter-projection-view",
 		svgId: "parameter-projection-view-svg",
-		ts: null,
-		config: null,
-		vis: null,
-		colorBy: null,
 		zoomed: false,
 		xMin: 0,
 		xMax: 0,
 		yMin: 0,
 		yMax: 0,
-		title: "Parameter Projection",
-		summary: "",
-		showMessage: false,
+		title: "Projection View",
 		colorset: [
 			"#FF7F00",
 			"#16BECF",
@@ -59,7 +51,26 @@ export default {
 			"#4daf4a",
 			"#D62728",
 		],
+		infoSummary: ""
 	}),
+
+	computed: {
+		...mapGetters({ 
+			data: "getParameterProjection",
+			runs: "getRuns",
+			nclusters: "getNumOfClusters",
+			summary: "getSummary",
+			selectedTargetRun: "getSelectedTargetRun",
+			generalColors: "getGeneralColors",
+			targetColor: "getTargetColor"
+		})
+	},
+
+	watch: {
+		data: function (val) {
+			this.visualize(val);
+		}
+	},
 	
 	mounted() {
 		let self = this;
@@ -70,16 +81,19 @@ export default {
 
 		EventHandler.$on("update_number_of_clusters", (data) => {
 			self.clear();
-			APIService.POSTRequest("projection", {
-				datasets: self.$store.selectedDatasets,
-				targetDataset: self.$store.selectedTargetDataset,
-				groupBy: "module",
-				numOfClusters: self.$store.selectedNumOfClusters,
+			this.$store.dispatch("fetchParameterProjection", {
+				selected_runs: this.runs,
+				n_cluster: this.selectedNumOfClusters,
 			});
 		});
 	},
 	methods: {
-		async init() {
+		init() {
+			this.$store.dispatch("fetchParameterProjection", {
+				selected_runs: this.runs,
+				n_cluster: this.selectedNumOfClusters,
+			});
+
 			let visContainer = document.getElementById(this.id);
 
 			this.width = visContainer.clientWidth;
@@ -90,14 +104,6 @@ export default {
 			this.padding = { left: 50, top: 0, right: 50, bottom: 30 };
 			this.x = d3.scaleLinear().range([0, this.width]);
 			this.y = d3.scaleLinear().range([this.height, 0]);
-
-			let data = await APIService.POSTRequest("projection", {
-				selected_runs: this.$store.selectedDatasets,
-				n_cluster: this.$store.selectedNumOfClusters,
-			});
-			data = JSON.parse(data);
-			console.debug("[/projection] data: ", data);
-			this.visualize(data);
 		},
 
 		axis() {
@@ -152,7 +158,7 @@ export default {
 				.attr("y1", this.height - this.padding.bottom / 2)
 				.attr("x2", this.lineLength)
 				.attr("y2", this.height - this.padding.bottom / 2)
-				.attr("stroke-width", 1.5)
+				.attr("stroke-width", 3)
 				.attr("stroke", "black")
 			// .attr("marker-end", "url(#triangle)")
 				.style("opacity", 0.5);
@@ -163,7 +169,7 @@ export default {
 				.attr("y1", this.height - this.padding.bottom / 2)
 				.attr("x2", this.padding.bottom)
 				.attr("y2", this.height - this.lineLength * 0.75)
-				.attr("stroke-width", 1.5)
+				.attr("stroke-width", 3)
 				.attr("stroke", "black")
 			// .attr("marker-end", "url(#triangle)")
 				.style("opacity", 0.5);
@@ -213,8 +219,8 @@ export default {
 				ret[id].push(data["dataset"][id]);
 				ret[id].push(id);
 				ret[id].push(data["label"][id]);
-				ret[id].push(this.$store.summary[dataset]["time (inc)"][1]);
-				ret[id].push(this.$store.summary[dataset]["time"][1]);
+				ret[id].push(this.summary[dataset]["time (inc)"][1]);
+				ret[id].push(this.summary[dataset]["time"][1]);
 
 				let x = data["x"][id];
 				let y = data["y"][id];
@@ -277,11 +283,9 @@ export default {
 						return "dot";
 					},
 					id: (d) => {
-						return "dot-" + this.$store.datasetMap[d[2]];
+						return "dot-" + d[2];
 					},
-					r: (d) => {
-						return 6.0;
-					},
+					r:  6.0,
 					fill: (d) => {
 						let color = "";
 						if (
@@ -315,9 +319,9 @@ export default {
 						return "outer-circle";
 					},
 					id: (d) => {
-						return "outer-circle-" + self.$store.datasetMap[d[2]];
+						return "outer-circle-" + d[2];
 					},
-					r: 8.0,
+					r: 6.0,
 					"stroke-width": 3.0,
 					stroke: (d) => {
 						if (
@@ -326,7 +330,7 @@ export default {
 						) {
 							return this.colorset[d[4]];
 						} else {
-							return d3.rgb(self.$store.DistributionColor.ensemble);
+							return d3.rgb(self.generalColors.intermediate);
 						}
 					},
 					"fill-opacity": 0,
@@ -377,8 +381,8 @@ export default {
 			this.addTooltipTextBlock();
 
 			this.addLassoFeature();
-			this.highlight(this.$store.selectedTargetDataset);
-			this.showDetails(this.$store.selectedTargetDataset);
+			this.highlight(this.selectedTargetRun);
+			this.showDetails(this.selectedTargetRun);
 		},
 
 		showDetails(dataset) {
@@ -387,10 +391,10 @@ export default {
           dataset +
           "<br/>" +
           "[PC1] Inc. time (max): " +
-          utils.formatRuntimeWithUnits(this.$store.summary[dataset]["time (inc)"][1]) +
+          utils.formatRuntimeWithUnits(this.summary[dataset]["time (inc)"][1]) +
           "<br/>" +
           "[PC2] Exc. time (max): " +
-          utils.formatRuntimeWithUnits(this.$store.summary[dataset]["time"][1])
+          utils.formatRuntimeWithUnits(this.summary[dataset]["time"][1])
 			);
 		},
 
@@ -411,16 +415,16 @@ export default {
 			let self = this;
 			this.selectedRun = d[2];
 			d3.selectAll(".dot")
-				.attr("stroke", self.$store.distributionColor.ensemble)
+				.attr("stroke", self.generalColors.intermediate)
 				.attr("stroke-width", 3);
 
-			d3.select("#dot-" + self.$store.datasetMap[d[2]])
-				.attr("stroke", self.$store.distributionColor.compare)
+			d3.select("#dot-" + this.selectedRun)
+				.attr("stroke", self.generalColors.compare)
 				.attr("stroke-width", 3);
 			d3.select(
-				"#outer-dot" + self.$store.datasetMap[self.$store.selectedTargetDataset]
+				"#outer-dot" + this.selectedRun
 			)
-				.attr("stroke", self.$store.distributionColor.target)
+				.attr("stroke", this.targetColor)
 				.attr("stroke-width", 3);
 
 			// Set the local and global variables for compare dataset
@@ -434,7 +438,7 @@ export default {
 			this.$socket.emit("compare", {
 				targetDataset: self.$store.selectedTargetDataset,
 				compareDataset: this.compareDataset,
-				selectedMetric: this.$store.selectedMetric,
+				selectedMetric: this.selectedMetric,
 			});
 		},
 
@@ -516,9 +520,11 @@ export default {
 			// Reset the style of the not selected dots
 			this.lasso.notSelectedItems().attr("r", 4.5).attr("opacity", 0.3);
 
-			this.$store.selectedDatasets = this.selectedDatasets;
+			this.$store.commit("runs", this.selectedDatasets);
+
+			// this.$store.selectedDatasets = this.selectedDatasets;
 			// EventHandler.$emit('highlight_datasets', this.selectedDatasets)
-			EventHandler.$emit("lasso-selection", this.$store.selectedDatasets);
+			EventHandler.$emit("lasso-selection", this.runs);
 		},
 
 		zoom() {
@@ -615,24 +621,22 @@ export default {
 		},
 
 		highlight(dataset) {
-			let datasetID = this.$store.datasetMap[dataset];
+			let datasetID = this.selectedTargetRun;
 
-			this.circles = this.svg.selectAll("#dot-" + datasetID).attrs({
+			this.svg.selectAll(".dot").attrs({
 				opacity: 1.0,
-				stroke: this.$store.distributionColor.target,
-				"stroke-width": 3.0,
+				"stroke-width": 0,
 			});
-
-			this.circles = this.svg.selectAll("#dot-" + datasetID).attrs({
-				opacity: 1.0,
-				stroke: this.$store.distributionColor.target,
-				"stroke-width": 4.5,
+			
+			this.svg.selectAll("#dot-" + datasetID).attrs({
+				"stroke-width": 3,
+				stroke: this.generalColors.target,
 			});
 		},
 
 		clear() {
 			d3.selectAll("#parameter-projection-tooltip").remove();
-			// this.svg.selectAll('.dot').remove()
+			this.svg.selectAll(".dot").attrs({"stroke": "#fff"});
 			d3.selectAll(".outer-circle").remove();
 			this.svg.selectAll(".lasso").remove();
 			this.svg.selectAll(".projection-axis-label").remove();

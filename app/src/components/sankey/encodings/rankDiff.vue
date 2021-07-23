@@ -20,6 +20,7 @@ export default {
 		strokeWidth: 7,
 		id: "rank-diff-gradients",
 		renderZeroLine: {},
+		animationDuration: 1000,
 	}),
 
 	methods: {
@@ -161,7 +162,7 @@ export default {
 			// Transition
 			rectangles
 				.transition()
-				.duration(this.$store.transitionDuration)
+				.duration(this.animationDuration)
 				.attrs({
 					"opacity": d => {
 						if (d.type == "intermediate") {

@@ -1,5 +1,5 @@
 <template>
-    <v-row class="ml-2 mt-4">
+    <v-row class="ml-1 mt-2">
       <v-col cols="auto">
         <v-chip class="pa-1 chip" chips color="teal" label clearable>
           <span class="ma-2">
@@ -15,7 +15,7 @@
           </v-tooltip>
         </v-chip>
       </v-col>
-      <v-col cols="auto pt-4" class="chip-info">
+      <v-col cols="auto" class="chip-info" v-if="info">
           {{ info }}
       </v-col>
   </v-row>

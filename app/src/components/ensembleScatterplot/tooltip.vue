@@ -12,6 +12,7 @@
 <script>
 import * as d3 from "d3";
 import * as utils from "lib/utils";
+import { mapGetters } from "vuex";
 
 export default {
 	name: "ToolTip",
@@ -25,6 +26,12 @@ export default {
 		fontSize: 12,
 	}),
 
+	computed: {
+		...mapGetters({
+			selectedMetric: "getSelectedMetric"
+		})
+	},
+
 	methods: {
 		init(id) {
 			this.id = id;
@@ -34,7 +41,7 @@ export default {
 				.attr("class", "toolTipSVG");
 
 			this.toolTipG = this.toolTipDiv.append("g");
-			this.height = 80;
+			this.height = 50;
 			this.halfWidth = document.getElementById(this.id).clientWidth / 2;
 			this.halfHeight = document.getElementById(this.id).clientHeight / 2;
 		},
@@ -85,23 +92,11 @@ export default {
 			return str.length > n ? str.substr(0, n - 1) + "..." : str;
 		},
 
-		truncTimeLabel(str) {
-			if (str == "Inclusive") {
-				return "Inc.";
-			} else if (str == "Exclusive") {
-				return "Exc.";
-			}
-		},
-
 		info() {
-			this.addText("Callsite: " + utils.truncNames(this.data.callsite, 10));
-			this.addText(
-				"Mean " +
-          this.truncTimeLabel(this.$store.selectedMetric) +
-          " Time: " +
-          utils.formatRuntimeWithUnits(this.data.value)
-			);
-			this.addText("Run: " + this.data.run);
+			// this.addText("Callsite: " + utils.truncNames(this.data.callsite, 10));
+			this.addText(this.data.orientation[0] + " : " + utils.formatRuntimeWithUnits(this.data.x));
+			this.addText(this.data.orientation[1] + " : " + utils.formatRuntimeWithUnits(this.data.y));
+			// this.addText("Run: " + this.data.run);
 			// this.addText('QCD: ' + this.data.QCD.toFixed(3))
 		},
 
