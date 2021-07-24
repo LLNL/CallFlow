@@ -8,6 +8,39 @@
   <v-layout row wrap :id="id">
     <InfoChip ref="InfoChip" :title="title" :summary="infoSummary" />
 
+	<v-layout row wrap class="pl-8 pb-3">
+      <v-btn
+        class="reveal-button"
+        small
+        tile
+        outlined
+		:class="isEntryFunctionSelected"
+        @click="revealCallsite"
+      >
+        Reveal
+      </v-btn>
+      <v-btn
+        class="reveal-button"
+        small
+        tile
+        outlined
+        :class="isEntryFunctionSelected"
+        @click="showEntryFunctions"
+      >
+        Split caller
+      </v-btn>
+      <v-btn
+        class="reveal-button"
+        small
+        tile
+        outlined
+        :class="isCalleeSelected"
+        @click="showExitFunctions"
+      >
+        Split callee
+      </v-btn>
+    </v-layout>
+
 	<v-row class="ml-4">
 		<v-col>
 		<p class="subtitle-2">
@@ -20,12 +53,13 @@
 			callsites.
 		</p>
 		</v-col>
-	</v-row>
+	</v-row>v
 
-    <!-- <v-container
-      class="ml-4 callsite-information-node"
+    <v-container
+	:v-if="numberOfDifferenceCallsites > 0"
+      class="ml-4 cc-node"
       v-for="callsite in differenceCallsites"
-      :key="getID(callsite.id)"
+      :key="getID(callsite.nid)"
     >
       <v-row>
         <v-col cols="12">
@@ -49,16 +83,15 @@
 				:bData="intersectionCallsites[callsite.name]['bBoxplot']" 
 				showTarget="false" />
 		</v-row>   
-		
-    </v-container> -->
+    </v-container>
 
     <v-container
       class="ml-4 cc-node"
       v-for="callsite in intersectionCallsites"
-      :key="getID(callsite.nid)"
+      :key="getID(callsite.name)"
     >
       <v-row>
-        <!-- <v-col cols="1">
+        <v-col cols="1">
           <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
               <template v-slot:activator="{on}">
@@ -68,17 +101,16 @@
                   text-xs-center
                   v-on="on"
                   :class="selectClassName[callsite.name]"
-                  @click="changeSelectedClassName"
                 >
-                  {{ formatNumberOfHops(callsite.component_path) }}
+                  {{ formatNumberOfHops(cpath[callsite.name]) }}
                 </v-row>
               </template>
               <span>
-                Callsite depth:{{ formatNumberOfHops(callsite.component_path) }}
+                Callsite path:{{ formatPath(cpath[callsite.name][0]) }}
               </span>
             </v-tooltip>
           </v-card>
-        </v-col> -->
+        </v-col>
 
         <v-col cols="11">
           <v-tooltip bottom>
@@ -126,39 +158,30 @@ export default {
 		Statistics
 	},
 	data: () => ({
-		id: "ci-overview",
+		id: "cc-overview",
 		title: "Call Site Correspondence",
 		infoSummary: "Call site Correspondence view provides an insight into the runtime distribution among its MPI ranks. Boxplots are calculated to represent the range of the distribution and outliers (dots) correspond to the ranks which are beyond the 1.5*IQR. Additionally, several statistical measures are also provided. The (green) boxplots and dots belong to the target run's statistics. Both matched (callsites in both target and ensemble) and unmatched (callsites not in target but in ensemble) are shown in separate lists",
 		callsites: [],
-		dataReady: false,
 		numberOfIntersectionCallsites: 0,
 		numberOfDifferenceCallsites: 0,
-		firstRender: true,
 		padding: {top: 0, right: 10, bottom: 0, left: 10},
-		textOffset: 25,
 		boxplotHeight: 340,
 		boxplotWidth: 0,
-		iqrFactor: 0.15,
-		outlierRadius: 4,
-		targetOutlierList: {},
-		outlierList: {},
 		revealCallsites: [],
-		targetColor: "",
 		differenceCallsites: {},
 		intersectionCallsites: {},
 		isModuleSelected: false,
 		isCallsiteSelected: false,
 		isEntryFunctionSelected: "unselect-callsite",
 		isCalleeSelected: "unselect-callsite",
-		showSplitButton: "false",
-		selectedOutlierRanks: {},
-		selectedOutlierDatasets: {},
+		showSplitButton: "true",
 		showKNCCallsite: {},
-		showuKNCCallsite: {},
 		tStats: {},
 		bStats: {},
 		tBoxplot: {},
-		bBoxplot: {}
+		bBoxplot: {},
+		cpath: {},
+		selectClassName: {},
 	}),
 
 	computed: {
@@ -169,6 +192,8 @@ export default {
 			data: "getEnsembleBoxplots",
 			summary: "getSummary",
 			generalColors: "getGeneralColors",
+			runtimeSortBy: "getRuntimeSortBy",
+			iqrFactor: "getIQRFactor",	
 		})
 	},
 
@@ -200,6 +225,7 @@ export default {
 		});
 
 		EventHandler.$on("reset-ensemble-boxplots", () =>  {
+			self.clear();
 			self.init();
 			self.visualize();
 		});
@@ -223,6 +249,7 @@ export default {
 				metric: this.selectedMetric,
 				callsites: callsites,
 				ntype: "callsite",
+				iqr: this.iqrFactor,
 			});
 
 			this.width = document.getElementById(this.id).clientWidth;
@@ -232,8 +259,8 @@ export default {
 		},
 
 		visualize() {
-			this.tCallsites = this.sortByAttribute(this.data, this.selectedMetric, "mean", "tgt");
-			this.bCallsites = this.sortByAttribute(this.data, this.selectedMetric, "mean", "bkg");
+			this.tCallsites = this.sortByAttribute(this.data, this.selectedMetric, this.runtimeSortBy, "tgt");
+			this.bCallsites = this.sortByAttribute(this.data, this.selectedMetric, this.runtimeSortBy, "bkg");
 			
 			this.knc = this.KNC(this.tCallsites, this.bCallsites);
 			this.numberOfIntersectionCallsites = this.knc["intersection"].length;
@@ -287,6 +314,10 @@ export default {
 					"tBoxplot": this.getBoxplot(tCallsite),
 					"bBoxplot": this.getBoxplot(bCallsite)
 				};
+
+				this.cpath[callsite_name] = tCallsite["cpath"];
+
+				this.selectClassName[callsite_name] = "unselect-callsite";
 			}
 
 			for (let callsite_name of this.knc["difference"]) {
@@ -297,6 +328,10 @@ export default {
 					"bStats": this.getStatistics(bCallsite),
 					"bBoxplot": this.getBoxplot(bCallsite)
 				};
+
+				this.cpath[callsite_name] =  bCallsite["cpath"];
+
+				this.selectClassName[callsite_name] = "unselect-callsite";
 			}
 
 		},
@@ -334,7 +369,7 @@ export default {
 
 		// create unique ID for each callsite.
 		getID(callsiteID) {
-			return "callsite-correspondence-" + callsiteID;
+			return "cc-node-" + callsiteID;
 		},
 
 		// // Code to select the callsite by the component-level button
@@ -390,12 +425,21 @@ export default {
 		},
 
 		formatNumberOfHops(path) {
-			return path.length - 1;
+			return path[0].length;
 		},
 
 		formatRuntime(val) {
 			let format = d3.format(".2");
 			let ret = format(val) + " \u03BCs";
+			return ret;
+		},
+
+		formatPath(val) {
+			const cMap = this.summary[this.selectedTargetRun]["callsites"];
+			let ret = [];
+			for (let c of val) {	
+				ret.push(cMap[c]);
+			}
 			return ret;
 		},
 
@@ -453,6 +497,7 @@ export default {
 		},
 
 		clear() {
+			d3.selectAll(".cc-node").remove();
 			EventHandler.$emit("clear-boxplot");
 		},
 
@@ -460,7 +505,7 @@ export default {
 			return this.labels[idx];
 		},
 
-		clickCallsite(event) {
+		revealCallsite(event) {
 			event.stopPropagation();
 			let callsite = event.currentTarget.id;
 			this.$socket.emit("reveal_callsite", {
@@ -593,7 +638,7 @@ export default {
 </script>
 
 <style>
-#ci-overview {
+#cc-overview {
   overflow: auto;
 }
 

@@ -416,7 +416,7 @@ export default function Sankey() {
 					}
 				});
 			}
-			nodes = pushIntermediateNodeBottom(nodes);
+			// nodes = pushIntermediateNodeBottom(nodes);
 			// nodes = pushNodeBottomIfIntermediateTargets(nodes)
 
 			nodes.forEach(function (node, i) {
@@ -540,9 +540,9 @@ export default function Sankey() {
 		const i = nodesByBreadth.length >> 1;
 		const subject = nodesByBreadth[i];
 		subject.y = resolveCollisionsBottomToTop(nodesByBreadth, subject.y - nodePadding, i - 1, alpha);
-		// resolveCollisionsTopToBottom(nodesByBreadth, subject.y1 + nodePadding, i + 1, alpha);
+		resolveCollisionsTopToBottom(nodesByBreadth, subject.y1 + nodePadding, i + 1, alpha);
 		subject.y = resolveCollisionsBottomToTop(nodesByBreadth, subject.y, nodesByBreadth.length - 1, alpha);
-		// resolveCollisionsTopToBottom(nodesByBreadth, y0, 0, alpha);
+		resolveCollisionsTopToBottom(nodesByBreadth, subject.y0, 0, alpha);
 	}
 
 	// Push any overlapping nodes down.
@@ -615,12 +615,12 @@ export default function Sankey() {
 			// node.sourceLinks.sort(ascendingTargetDepth);
 			// node.targetLinks.sort(ascendingSourceDepth);
 
-			node.sourceLinks.sort(descendingTargetDepth);
-			node.targetLinks.sort(descendingSourceDepth);
+			// node.sourceLinks.sort(descendingTargetDepth);
+			// node.targetLinks.sort(descendingSourceDepth);
 
 			// Push links having less weight to the bottom.
-			// node.sourceLinks.sort(ascendingEdgeValue);
-			// node.targetLinks.sort(descendingEdgeValue);
+			node.sourceLinks.sort(descendingEdgeValue);
+			node.targetLinks.sort(ascendingEdgeValue);
 
 		});
 
@@ -666,11 +666,12 @@ export default function Sankey() {
 		}
 
 		function ascendingEdgeValue(a, b) {
-			return a["weight"] - b["weight"];
+			console.log(a, b);
+			return a.attr_dict["weight"] - b.attr_dict["weight"];
 		}
 
 		function descendingEdgeValue(a, b) {
-			return b["weight"] - a["weight"];
+			return b.attr_dict["weight"] - a.attr_dict["weight"];
 		}
 	}
 

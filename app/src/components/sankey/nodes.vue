@@ -233,6 +233,7 @@ export default {
 					EventHandler.$emit("reset-ensemble-scatterplot");
 					EventHandler.$emit("reset-ensemble-boxplots");
 					EventHandler.$emit("reset-module-hierarchy");
+					EventHandler.$emit("reset-ensemble-gradients");
 				}
 				else if (this.selectedMode == "SG") {
 					EventHandler.$emit("reset-single-histogram");
@@ -399,7 +400,7 @@ export default {
 			d3.selectAll(".callsite").remove();
 			d3.selectAll(".callsite-text").remove();
 			d3.selectAll(".path").remove();
-			d3.selectAll(".targetLines").remove();
+			this.clearTargetLines();
 			this.clearEncoding(this.encoding);
 			this.clearTargetPath();
 			this.$refs.ToolTip.clear();

@@ -26,8 +26,15 @@ class Histogram:
 
     HISTO_TYPES = ["rank", "name", "dataset"]
 
-    def __init__(self, dataframe, relative_to_df=None, bins=20,
-                 histo_types = [], node_type="", proxy_columns={}):
+    def __init__(
+        self,
+        dataframe,
+        relative_to_df=None,
+        bins=20,
+        histo_types=[],
+        node_type="",
+        proxy_columns={},
+    ):
         """
         Constructor for the histogram computation.
 
@@ -45,7 +52,7 @@ class Histogram:
         assert isinstance(proxy_columns, dict)
         assert isinstance(histo_types, list)
         assert bins > 0
-        assert node_type in ['callsite', 'module']
+        assert node_type in ["callsite", "module"]
 
         self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
         self.result = {_: {} for _ in TIME_COLUMNS}
@@ -56,7 +63,9 @@ class Histogram:
             self.histo_types = histo_types
 
         # for each type of histogram and each time column
-        for h,(tk,tv) in itertools.product(self.histo_types, zip(TIME_COLUMNS, self.time_columns)):
+        for h, (tk, tv) in itertools.product(
+            self.histo_types, zip(TIME_COLUMNS, self.time_columns)
+        ):
 
             # compute the range of the actual data
             df = self._get_data_by_histo_type(dataframe, h)[tv]
@@ -68,14 +77,14 @@ class Histogram:
                 rrng = drng
             else:
                 # Note: For ensemble super graph, we calculate relative to the
-                # ensemble_df. 
+                # ensemble_df.
                 rdf = self._get_data_by_histo_type(relative_to_df, h)[tv]
                 rrng = [rdf.min(), rdf.max()]
 
             rng = []
             if rrng[0] < drng[0]:
                 rng.append(rrng[0])
-            else: 
+            else:
                 rng.append(drng[0])
 
             if rrng[1] < drng[1]:
@@ -92,10 +101,10 @@ class Histogram:
                 rhist = [None, None]
 
             self.result[tk][h] = {
-                'abs': dhist[1],
-                'rel': rhist[1],
-                'rng': dhist[0],
-                'dig': dhist[2],
+                "abs": dhist[1],
+                "rel": rhist[1],
+                "rng": dhist[0],
+                "dig": dhist[2],
             }
 
             if node_type == "callsite":
@@ -109,9 +118,9 @@ class Histogram:
 
     def unpack(self):
         """
-        Unpack the data into JSON-supported format. 
+        Unpack the data into JSON-supported format.
 
-        :return: (JSON) 
+        :return: (JSON)
         """
         result = {}
         for metric in self.time_columns:
@@ -119,21 +128,30 @@ class Histogram:
             result[metric] = {}
             for histo_type in self.histo_types:
                 result[metric][histo_type] = {
-                    "x": data[histo_type]['rng'].tolist(),
-                    "y": data[histo_type]['abs'].tolist(),
-                    "x_min": float(data[histo_type]['rng'][0]),
-                    "x_max": float(data[histo_type]['rng'][-1]),
-                    "y_min": float(data[histo_type]['abs'].min()),
-                    "y_max": float(data[histo_type]['abs'].max()),
-                    "dig": Histogram._get_digs_as_dict_array(data[histo_type]['dig']),
+                    "x": data[histo_type]["rng"].tolist(),
+                    "y": data[histo_type]["abs"].tolist(),
+                    "x_min": float(data[histo_type]["rng"][0]),
+                    "x_max": float(data[histo_type]["rng"][-1]),
+                    "y_min": float(data[histo_type]["abs"].min()),
+                    "y_max": float(data[histo_type]["abs"].max()),
+                    "dig": Histogram._get_digs_as_dict_array(data[histo_type]["dig"]),
                 }
-                if 'rel' in data[histo_type].keys() and data[histo_type]["rel"] is not None:
-                    result[metric][histo_type]["rel_y"] = data[histo_type]['rel'].tolist()
-                    result[metric][histo_type]['rel_y_min'] = data[histo_type]['rel'].min()
-                    result[metric][histo_type]['rel_y_max'] = data[histo_type]['rel'].max()
-                    
+                if (
+                    "rel" in data[histo_type].keys()
+                    and data[histo_type]["rel"] is not None
+                ):
+                    result[metric][histo_type]["rel_y"] = data[histo_type][
+                        "rel"
+                    ].tolist()
+                    result[metric][histo_type]["rel_y_min"] = data[histo_type][
+                        "rel"
+                    ].min()
+                    result[metric][histo_type]["rel_y_max"] = data[histo_type][
+                        "rel"
+                    ].max()
+
                 result[metric]["d"] = data["d"].tolist()
-        
+
         return result
 
     def _get_digs_as_dict_array(arr):
@@ -142,7 +160,7 @@ class Histogram:
             bin_idx = int(x[0]) - 1
             if bin_idx not in ret:
                 ret[bin_idx] = []
-                
+
             ret[bin_idx].append(int(x[1]))
         return ret
 
@@ -158,16 +176,16 @@ class Histogram:
         assert isinstance(df, pd.DataFrame)
         if histo_type == "dataset":
             assert "dataset" in df.columns
-        ndatasets = df_count(df, 'dataset')
-        nranks = df_count(df, 'rank')
+        ndatasets = df_count(df, "dataset")
+        nranks = df_count(df, "rank")
 
         # across rank case
         if histo_type == "rank":
-            if ndatasets > 0:                    # ensemble case
+            if ndatasets > 0:  # ensemble case
                 return df
-            elif ndatasets == 0 and nranks == 0: # single case and single rank
+            elif ndatasets == 0 and nranks == 0:  # single case and single rank
                 return df
-            else:                            # single case and multiple ranks
+            else:  # single case and multiple ranks
                 _df = df.groupby(["rank"])
 
         # otherwise, group by the type
@@ -177,7 +195,6 @@ class Histogram:
         # confused about this
         return _df[self.time_columns].mean()
 
-    
     @staticmethod
     def _format_data(histo):
         """
@@ -191,5 +208,6 @@ class Histogram:
         })
         """
         return {"b": histo[0], "h": histo[1], "dig": histo[2]}
+
 
 # ------------------------------------------------------------------------------

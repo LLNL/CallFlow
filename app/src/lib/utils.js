@@ -83,7 +83,7 @@ export function formatRuntimeWithUnits(val) {
 	if (val == 0) {
 		return val;
 	}
-	let format = d3.format(".2");
+	let format = d3.format(".3");
 	return format(val);
 }
 
@@ -95,7 +95,7 @@ export function formatRunCounts(val) {
 }
 
 export function formatRuntimeWithoutUnits(val) {
-	let format = d3.format(".2");
+	let format = d3.format(".3");
 	return format(val);
 }
 
@@ -116,12 +116,15 @@ export function formatRuntimeWithExponent(val, min_exponent = 0) {
 		multiplier = parseInt(exponent) - min_exponent;
 		mantessa = parseFloat(split_ret_by_e[0]);
 	}
-	return [mantessa.toFixed(2), exponent, min_exponent];
+	else {
+		return [ret, 0, 0];
+	}
+	return [mantessa.toFixed(3), exponent, min_exponent];
 }
 
 // Returns only the exponenet of the value. 
 export function formatExponent(val) {
-	let format = d3.format(".2");
+	let format = d3.format(".3");
 	let ret = format(val);
 	let exponent = ret;
 	if (ret.indexOf("e") != -1) {
@@ -371,4 +374,21 @@ export function leastSquares(xSeries, ySeries) {
 	const rSquare = Math.pow(ssXY, 2) / (ssXX * ssYY);
 
 	return [slope, intercept, rSquare];
+}
+
+export function getMinMax(data) {
+	const colorMin = parseFloat(Math.min(...data));
+	const colorMax = parseFloat(Math.max(...data));
+
+	return [colorMin, colorMax];
+}
+
+export function getArrayMinMax(arrayOfData) {
+	let colorMin = 0;
+	let colorMax = 0;
+	for (let d of arrayOfData) {
+		colorMin = parseFloat(Math.min(colorMin, Math.min(...d)));
+		colorMax = parseFloat(Math.max(colorMax, Math.max(...d)));
+	}
+	return [colorMin, colorMax];
 }

@@ -52,7 +52,7 @@ class DiffView:
     @staticmethod
     def _mean_difference(df1, df2, module):
         """
-        Calculate the mean_difference between two dataframes. 
+        Calculate the mean_difference between two dataframes.
 
         :param df1: (pd.DataFrame) dataframe 1
         :param df2: (pd.DataFrame) dataframe 2

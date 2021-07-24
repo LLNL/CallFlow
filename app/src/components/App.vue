@@ -17,7 +17,7 @@
 			<v-btn class="mr-md-4">
 				<router-link to="/super_graph" replace>Super Graph</router-link>
 			</v-btn>
-			<v-btn class="mr-md-4">
+			<v-btn class="mr-md-4" v-if="profiles.length > 1">
 				<router-link to="/ensemble_super_graph" replace>Ensemble Super Graph</router-link>
 			</v-btn>
 		</v-app-bar>
@@ -29,6 +29,7 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 
 // Local components
 import Footer from "./general/footer";
@@ -39,7 +40,6 @@ export default {
 		Footer,
 	},
 	data: () => ({
-		run_counts: 0,
 		footerText: "Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis",
 		year: "2021",
 		isDataReady: false,
@@ -47,8 +47,13 @@ export default {
 
 	mounted() {
 		document.title = "CallFlow";
-
 		this.setViewDimensions(); // Set the view dimensions.
+	},
+
+	computed: {
+		...mapGetters({
+			profiles: "getProfiles"
+		})
 	},
 
 	methods: {

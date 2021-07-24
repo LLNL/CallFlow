@@ -10,17 +10,17 @@ import networkx as nx
 
 # CallFlow imports
 import callflow
-from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.df import df_as_dict
 
 LOGGER = callflow.get_logger(__name__)
+
 
 class HierarchyLayout:
     """
     Hierarchy Layout computation
     """
 
-    def __init__(self, esg, node, nbins):
+    def __init__(self, esg, dataset, node, nbins):
         """
         Hierarchy Layout computation
 
@@ -29,10 +29,10 @@ class HierarchyLayout:
         """
         assert isinstance(esg, callflow.SuperGraph)
         assert "module" in esg.dataframe.columns
-        assert node in list(esg.modules_list)
 
         self.node = node
         module_idx = esg.get_idx(node, "module")
+
         self.esg = esg
         module_df = esg.dataframe.loc[esg.dataframe["module"] == module_idx]
 
@@ -40,11 +40,9 @@ class HierarchyLayout:
         self.time_inc = self.esg.df_get_proxy("time (inc)")
 
         self.nxg = self.create_nxg_tree_from_paths(
-            df=module_df,
-            path="component_path",
-            nbins=nbins
+            df=module_df, path="component_path", nbins=nbins
         )
-        
+
         # TODO: Need to verify it is always a Tree.
         cycles = HierarchyLayout._check_cycles(self.nxg)
         while len(cycles) != 0:
@@ -62,7 +60,7 @@ class HierarchyLayout:
         """
 
         nxg = nx.DiGraph()
-        cp_dict = df_as_dict(df, 'name', 'component_path')
+        cp_dict = df_as_dict(df, "name", "component_path")
 
         for c_name, path in cp_dict.items():
             path_list = list(map(lambda p: self.esg.get_name(p, "callsite"), path))
@@ -82,16 +80,22 @@ class HierarchyLayout:
                         ntype = "callsite"
                     nid = self.esg.get_idx(source, ntype)
 
-                    nxg.add_node(source, attr_dict=self.esg_node_construct(nid, ntype, source, nbins))
+                    nxg.add_node(
+                        source,
+                        attr_dict=self.esg_node_construct(nid, ntype, source, nbins),
+                    )
 
                 # TODO: This could lead to issues. We cannot assume all nodes
-                # that are below a module, a callsite. 
+                # that are below a module, a callsite.
                 # We need to make it type independent. We need a better way to
-                # judge what type a particular callsite is. 
+                # judge what type a particular callsite is.
                 if not nxg.has_node(target):
                     ntype = "callsite"
                     nid = self.esg.get_idx(target, ntype)
-                    nxg.add_node(target, attr_dict=self.esg_node_construct(nid, ntype, target, nbins))
+                    nxg.add_node(
+                        target,
+                        attr_dict=self.esg_node_construct(nid, ntype, target, nbins),
+                    )
 
                 if not nxg.has_edge(source, target):
                     nxg.add_edge(source, target)
@@ -99,19 +103,21 @@ class HierarchyLayout:
 
     def esg_node_construct(self, nid, ntype, name, nbins):
         if ntype == "callsite":
-            time_inc = self.esg.get_runtime(name, ntype, self.time_inc)
-            time_exc = self.esg.get_runtime(name, ntype, self.time_exc)
+            time_inc = self.esg.get_runtime(nid, ntype, self.time_inc)
+            time_exc = self.esg.get_runtime(nid, ntype, self.time_exc)
+            grads = self.esg.get_gradients(nid, ntype, nbins)
         elif ntype == "module":
             time_inc = self.esg.get_runtime(nid, ntype, self.time_inc)
             time_exc = self.esg.get_runtime(nid, ntype, self.time_exc)
+            grads = self.esg.get_gradients(nid, ntype, nbins)
 
         return {
             "id": nid,
             "type": ntype,
             "name": name,
-            "grad": self.esg.get_gradients(nid, ntype, nbins),
+            "grad": grads,
             self.time_inc: time_inc,
-            self.time_exc: time_exc
+            self.time_exc: time_exc,
         }
 
     @staticmethod

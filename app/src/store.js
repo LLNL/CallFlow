@@ -56,7 +56,6 @@ export default new Vuex.Store({
 			ensemble: "#d9d9d9",
 			text: "#888888",
 		},
-		selectedColorPoint: 9,
 		runtimeColorMap: "OrRd",
 		distributionColorMap: "Reds",
 		targetColor: "Green",
@@ -103,6 +102,8 @@ export default new Vuex.Store({
 
 		encoding: "MEAN",
 		IQRFactor: 1.5,
+
+		gradients: {}
 	},
 
 	mutations: {
@@ -196,7 +197,7 @@ export default new Vuex.Store({
 		},
 
 		setSelectedColorPoint(state, payload) {
-			state.selectedColorPoint = payload;
+			state.colorPoint = payload;
 		}, 
 
 		setHierarchy(state, payload) {
@@ -228,6 +229,18 @@ export default new Vuex.Store({
 		setTargetColor(state, payload) {
 			state.targetColor = payload;
 		},
+
+		setGradients(state, payload) {
+			state.gradients = payload;
+		},
+
+		setRuntimeColorMap(state, payload) {
+			state.runtimeColorMap = payload;
+		},
+
+		setDistributionColorMap(state, payload) {
+			state.distributionColorMap = payload;
+		}
 	},
 	
 	actions: {
@@ -322,7 +335,7 @@ export default new Vuex.Store({
 		async fetchGradients({ commit }, payload) {
 			const grad = await APIService.POSTRequest("gradients", payload);
 			console.log("[Data] ESG Gradients: ", grad);
-			commit("setParameterProjection", grad);
+			commit("setGradients", grad);
 		},
 
 		async fetchHierarchy({ commit }, payload) {
@@ -357,7 +370,7 @@ export default new Vuex.Store({
 		},
 
 		updateSelectedColorPoint({ state, dispatch }, payload) {
-			state.selectedColorPoint = payload;
+			state.colorPoint = payload;
 			dispatch("reset");
 		},
 
@@ -466,12 +479,13 @@ export default new Vuex.Store({
 
 		getGeneralColors: state => state.generalColors,
 		getEncoding: state => state.encoding,
-		getSelectedColorPoint: state => state.selectedColorPoint,	
+		getColorPoint: state => state.colorPoint,	
 		getRuntimeSortBy: state => state.runtimeSortBy,
 		getIQRFactor: state => state.IQRFactor,
 		getHierarchy: state => state.hierarchy,
 		getProp: state => state.prop,
-
-		getCompareData: state => state.compareData
+		
+		getCompareData: state => state.compareData,
+		getGradients: state => state.gradients,
 	}
 });
