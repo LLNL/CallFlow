@@ -22,10 +22,11 @@
 
 		<v-col cols="4">
 			<v-select
+				:disabled="!(selectedMode === 'ESG')"
 				class="pt-8 pl-2"
 				dark
 				:label="compareLabel"
-				:items="datasets"
+				:items="datasetsWNoRun"
 				v-model="compareRun"
 				:menu-props="{maxHeight: '400'}"
 				@input="updateCompareRun"
@@ -52,13 +53,14 @@ export default {
 	data: () => ({
 		name: "RunSelection",
 		datasets: [],
+		datasetsWNoRun: [],
 		targetLabel: "",
 		compareLabel: "",
 	}),
 
 	mounted() {
 		this.datasets = Object.keys(this.metricTimeMap);
-		this.datasetsWNoRun = this.datasets.push(NaN);
+		this.datasetsWNoRun = [ ...this.datasets, NaN];
 		this.targetLabel = "Select Target run (Sorted by " + this.selectedMetric + ")";
 		this.compareLabel = "Select Compare run (Sorted by " + this.selectedMetric + ")";
 	},
@@ -98,10 +100,12 @@ export default {
 				this.$store.dispatch("reset");
 			}
 			else {
+				// TODO: Move this to the store.js
+				// TODO: reduce the number of dependents on commit operation. 
 				console.log("Enable comparison");
 				this.$store.commit("setComparisonMode", true);
 				this.$store.commit("setSelectedCompareRun", data);
-				this.$store.dispatch("reset");
+				this.$store.dispatch("updateNodeEncoding");
 			}
 		},
 	},

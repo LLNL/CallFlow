@@ -63,13 +63,13 @@ export default {
 					"stroke": "black",
 					"rx": "10px",
 					"fill-opacity": 1,
-					"width": measure.width + 20,
-					"height": measure.height / 1.5 + this.offset,
+					"width": measure.width + 30,
+					"height": measure.height / 1.5 + this.offset / 1.5,
 				})
 				.attrs({
 					"x": () => {
-						if (this.mousePosX + this.halfWidth > document.getElementById(this.parentID).clientWidth - 25) {
-							return (this.mousePosX) + "px";
+						if (this.mousePosX + this.halfWidth > document.getElementById(this.parentID).clientWidth) {
+							return (this.mousePosX) - this.halfWidth + "px";
 						}
 						return (this.mousePosX) + "px";
 
@@ -88,8 +88,8 @@ export default {
 				.attrs({
 					"class": "toolTipContent",
 					"x": () => {
-						if (this.mousePosX + this.halfWidth > document.getElementById(this.parentID).clientWidth - 25) {
-							return (this.mousePosX + this.offset) + "px";
+						if (this.mousePosX + this.halfWidth > document.getElementById(this.parentID).clientWidth) {
+							return (this.mousePosX + this.offset) - this.halfWidth+ "px";
 						}
 						return (this.mousePosX) + this.offset + "px";
 

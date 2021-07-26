@@ -9,33 +9,44 @@ import * as chroma from "chroma-js";
 import { CategoricalColors, UniformColorMaps, ColorBrewer } from "./COLORS";
 
 export default class Color {
-	constructor() {
-		this.colorscale = null;
-		this.grey = "#252525";
-		this.highlight = "#AF9B90";
-		this.ensemble = "#C0C0C0";
-		this.target =
-			this.catColors = ["#3366cc", "#dc3912", "#ff9900", "#109618", "#990099", "#0099c6", "#dd4477", "#66aa00", "#b82e2e", "#316395", "#994499", "#22aa99", "#aaaa11", "#6633cc", "#e67300", "#8b0707", "#651067", "#329262", "#5574a6", "#3b3eac"];
-		this.colorPadding = [];
+	constructor(metric = "time (inc)", colorMin = 0, colorMax = 0, colorMap = "OrRd", colorPoint = "9") {
+		this.catColors = ["#3366cc", "#dc3912", "#ff9900", "#109618", "#990099", "#0099c6", "#dd4477", "#66aa00", "#b82e2e", "#316395", "#994499", "#22aa99", "#aaaa11", "#6633cc", "#e67300", "#8b0707", "#651067", "#329262", "#5574a6", "#3b3eac"];
 		this.categoricalColors = CategoricalColors;
 		this.colorbrewer = ColorBrewer;
 		this.UniformColorMaps = UniformColorMaps;
+
+		this.metric = metric;
+		this.colorMin = colorMin;
+		this.colorMax = colorMax;
+		this.colors = this.colorbrewer[colorMap][colorPoint];
+		this.colorPadding = this.setColorPadding(colorPoint);
+		this.colorScale = this.setColorScale();
+
+		this.grey = "#252525";
+		this.highlight = "#AF9B90";
+
+		if (metric == "MeanGradients") {
+			this.target = "#4DAF4A";
+			this.ensemble = "#C0C0C0";
+			this.compare = "#043060";
+		}
 	}
 
-	getScale() {
-		return this.colorscale;
+	getDomain() {
+		return this.colorScale.domain();
 	}
 
 	getColor(dictionary, attribute) {
 		let value = dictionary[attribute];
+		// TODO: Remove the attr_dict. 
 		if(Object.keys(dictionary).includes("attr_dict")) {
 			value = dictionary["attr_dict"][attribute];
 		}
-		return this.colorscale(value);
+		return this.colorScale(value);
 	}	
 
 	getColorByValue(value) {
-		return this.rgbArrayToHex(this.colorscale(value));
+		return this.rgbArrayToHex(this.colorScale(value));
 	}
 
 	setColorPadding(colorPoint) {
@@ -48,54 +59,48 @@ export default class Color {
 		return ret;
 	}
 
-	setColorScale(type = "time (inc)", min = 0, max = 0, scaleType = "OrRd", colorPoint = "9") {
-		this.type = type;
-		this.colorMin = min;
-		this.colorMax = max;
-		let colors = this.colorbrewer[scaleType][colorPoint];
-		this.colorPadding = this.setColorPadding(colorPoint);
-
-		let colorscale = null;
-		switch (type) {
+	setColorScale() {
+		let colorScale = null;
+		switch (this.metric) {
 		case "Module":
-			colorscale = d3.scaleOrdinal(d3.schemeCategory10);
+			colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 			break;
 		case "time (inc)":
-			colorscale = chroma.scale(colors)
+			colorScale = chroma.scale(this.colors)
 				.padding([0.0, 0.0])
 				.gamma(0.5)
-				.domain([min, max]);
+				.domain([this.colorMin, this.colorMax]);
 			break;
 		case "time":
-			colorscale = chroma.scale(colors)
+			colorScale = chroma.scale(this.colors)
 				.padding([0.0, 0.0])
 				.gamma(0.5)
-				.domain([min, max]);
+				.domain([this.colorMin, this.colorMax]);
 			break;
 		case "Imbalance":
-			colorscale = chroma.scale(colors)
+			colorScale = chroma.scale(this.colors)
 				.domain([0, 1]);
 			break;
 		case "MeanDiff": {
-			let mmax = Math.max(Math.abs(min), Math.abs(max));
-			colorscale = chroma.scale("RdYlGn")
+			let mmax = Math.max(Math.abs(this.colorMin), Math.abs(this.colorMax));
+			colorScale = chroma.scale("RdYlGn")
 				.padding([0.0, 0.0])
 				.domain([mmax, -mmax]);
 			break;
 		}
 		case "RankDiff":
-			colorscale = chroma.scale(colors)
+			colorScale = chroma.scale(this.colors)
 				.gamma(0.5)
-				.domain([min, max]);
+				.domain([this.colorMin, this.colorMax]);
 			break;
 		case "MeanGradients":
-			colorscale = chroma.scale(colors)
+			colorScale = chroma.scale(this.colors)
 				.padding([0.0, 0.0])
 				.gamma(0.5)
-				.domain([min, max]);
+				.domain([this.colorMin, this.colorMax]);
 			break;
 		}
-		this.colorscale = colorscale;
+		return colorScale;
 	}
 
 	CYKToRGB(CMYK) {

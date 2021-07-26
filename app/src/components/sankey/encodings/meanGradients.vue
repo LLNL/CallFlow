@@ -11,7 +11,6 @@
 
 <script>
 import * as d3 from "d3";
-import * as utils from "lib/utils";
 import { mapGetters } from "vuex";
 
 export default {
@@ -29,6 +28,7 @@ export default {
 			distributionColorMap: "getDistributionColorMap",
 			selectedTargetRun: "getSelectedTargetRun",
 			targetColorMap: "getTargetColorMap",
+			generalColors: "getGeneralColors",
 		})
 	},
 
@@ -64,7 +64,7 @@ export default {
 
 		stroke_by_metric(d, metric) {
 			if (d.attr_dict.type == "intermediate") {
-				return this.$store.runtimeColor.intermediate;
+				return this.generalColors.intermediate;
 			} else if (d.attr_dict.type == "callsite") {
 				return d3.rgb(this.$store.runtimeColor.getColor(d, metric));
 			} else if (d.attr_dict.type == "module") {
@@ -79,7 +79,8 @@ export default {
 
 			let nid = d.attr_dict.nid;
 
-			const defs = d3.select("#" + this.id).append("defs");
+			const defs = d3.select("#" + this.id)
+				.append("defs");
 
 			const linearGradient = defs
 				.append("linearGradient")
@@ -92,13 +93,11 @@ export default {
 				.attr("x2", "0%")
 				.attr("y2", "100%");
 
-			
-
 			const grid = d.attr_dict["gradients"][metric]["hist"]["b"];
 			const val = d.attr_dict["gradients"][metric]["hist"]["h"];	
 
 			for (let i = 0; i < grid.length; i += 1) {
-				let x = (i + i + 1) / (2 * grid.length);
+				let x = (i + 0.5) / grid.length;
 				linearGradient
 					.append("stop")
 					.attr("offset", 100 * x + "%")
@@ -107,6 +106,10 @@ export default {
 
 			return "url(#mean-gradient" + nid + ")";
 		},
+
+		clear() {
+			d3.selectAll(".mean-gradient").remove();
+		}
 	},
 };
 </script>

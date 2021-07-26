@@ -7,7 +7,42 @@
 
 <template>
   <v-layout row wrap :id="id">
-    <InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
+    <InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info"
+    />
+	<v-layout row wrap class="pl-8 pb-3">
+      <v-btn
+        class="reveal-button"
+        small
+        tile
+        outlined
+		:class="isEntryFunctionSelected"
+        @click="revealCallsite"
+      >
+        Reveal
+      </v-btn>
+
+      <v-btn
+        class="reveal-button"
+        small
+        tile
+        outlined
+        :class="isEntryFunctionSelected"
+        @click="showEntryFunctions"
+      >
+        Split caller
+      </v-btn>
+      <v-btn
+        class="reveal-button"
+        small
+        tile
+        outlined
+        :class="isCalleeSelected"
+        @click="showExitFunctions"
+      >
+        Split callee
+      </v-btn>
+    </v-layout>
+
     
     <v-container
       class="ml-4 ci-node"
@@ -15,28 +50,27 @@
       :key="getID(callsite.nid)"
     >
       <v-row>
-         <v-col cols="1">
-          <!-- <v-card class="ma-2 ml-4" tile outlined>
+         <v-col cols="2">
+          <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
               <template v-slot:activator="{on}">
-                <v-row
-                  class="pl-2"
+                <v-row align="center" justify="center"
                   :id="callsite.name"
                   v-on="on"
                   :class="selectClassName[callsite.name]"
                   @click="changeSelectedClassName"
                 >
-                  {{ formatNumberOfHops(callsite.component_path) }}
+                  {{ formatNumberOfHops(cpath[callsite.name]) }}
                 </v-row>
               </template>
               <span>
-                Callsite depth:{{ formatNumberOfHops(callsite.component_path) }}
+                Callsite path: {{ formatPath(cpath[callsite.name][0]) }}
               </span>
             </v-tooltip>
-          </v-card> -->
+          </v-card>
         </v-col>
 
-        <v-col cols="5">
+        <v-col cols="10">
           <v-tooltip bottom>
             <template v-slot:activator="{on}">
               <v-row class="mt-0 pl-2 subtitle-2 font-weight-black" v-on="on">
@@ -46,10 +80,6 @@
             <span>{{ callsite.name }}</span>
           </v-tooltip>
         </v-col>
-
-		<!-- <v-col cols="5">
-			{{ callsite.module }}
-		</v-col> -->
       </v-row>
 
 		<Statistics ref="ci-Statistics" :tData="stats[callsite.name]" />
@@ -81,7 +111,7 @@ export default {
 		Statistics,
 	},
 	data: () => ({
-		id: "cc-overview",
+		id: "ci-overview",
 		title: "Call site Information",
 		infoSummary: "Call site Information view provides an insight into the runtime distribution among its MPI ranks. Boxplots are calculated to represent the range of the distribution and outliers (dots) correspond to the ranks which are beyond the 1.5*IQR. Additionally, several statistical measures are also provided.",
 		info: "",
@@ -93,7 +123,6 @@ export default {
 		boxplotHeight: 340,
 		boxplotWidth: 0,
 		duration: 300,
-		iqrFactor: 0.15,
 		outlierRadius: 4,
 		outlierList: {},
 		callsiteIDMap: {},
@@ -104,7 +133,7 @@ export default {
 		informationHeight: 50,
 		revealCallsites: [],
 		isModuleSelected: false,
-		isCallsiteSelected: false,
+		isCallsiteSelected: true,
 		isEntryFunctionSelected: "unselect-callsite",
 		isCalleeSelected: "unselect-callsite",
 		showSplitButton: "false",
@@ -113,6 +142,7 @@ export default {
 		selectedOutlierDatasets: {},
 		boxplot: {},
 		stats: {},
+		cpath: {},
 	}),
 
 	computed: {
@@ -122,7 +152,8 @@ export default {
 			selectedMetric: "getSelectedMetric",
 			data: "getSingleBoxplots",
 			summary: "getSummary",
-			runtimeSortBy: "getRuntimeSortBy"
+			runtimeSortBy: "getRuntimeSortBy",
+			iqrFactor: "getIQRFactor",
 		})
 	},
 
@@ -137,6 +168,7 @@ export default {
 		let self = this;
 
 		EventHandler.$on("reset-single-boxplots", () =>  {
+			self.clear();
 			self.init();
 			self.visualize();
 		});
@@ -179,6 +211,7 @@ export default {
 				metric: this.selectedMetric,
 				callsites: callsites,
 				ntype: "callsite",
+				iqr: this.iqrFactor,
 			});
 
 			this.width = document.getElementById(this.id).clientWidth;
@@ -221,6 +254,8 @@ export default {
 				
 				// Set the data for the boxplot.
 				this.boxplot[callsite_name] = {"q": callsite["q"], "outliers": callsite["outliers"], "nid": callsite["nid"]};
+				
+				this.cpath[callsite_name] = callsite["cpath"];
 
 				// Set the selection for a callsite. 
 				this.selectClassName[callsite_name] = "unselect-callsite";
@@ -351,7 +386,7 @@ export default {
      * @param {*} path
      */
 		formatNumberOfHops(path) {
-			return path.length - 1;
+			return path[0].length;
 		},
 
 		/**
@@ -361,6 +396,15 @@ export default {
 		formatRuntime(val) {
 			let format = d3.format(".2");
 			let ret = format(val) + " \u03BCs";
+			return ret;
+		},
+
+		formatPath(val) {
+			const cMap = this.summary[this.selectedTargetRun]["callsites"];
+			let ret = [];
+			for (let c of val) {	
+				ret.push(cMap[c]);
+			}
 			return ret;
 		},
 
@@ -528,7 +572,7 @@ export default {
 </script>
 
 <style>
-#callsite-information-overview {
+#ci-overview {
   overflow: auto;
 }
 
@@ -551,7 +595,7 @@ export default {
 .reveal-button {
   float: right;
   margin: 1px;
-  color: #009688 !important;
+  /* color: #009688 !important; */
   font-size: 75%;
   padding: 2px;
 }

@@ -34,6 +34,8 @@ class DiffView:
         assert isinstance(dataset1, str) and isinstance(dataset2, str)
         assert isinstance(col, str)
 
+        self.sg = esg
+
         self.df1 = esg.df_lookup_with_column("dataset", dataset1)
         self.df2 = esg.df_lookup_with_column("dataset", dataset2)
         self.dataset1 = dataset1
@@ -50,7 +52,7 @@ class DiffView:
     @staticmethod
     def _mean_difference(df1, df2, module):
         """
-        Calculate the mean_difference between two dataframes. 
+        Calculate the mean_difference between two dataframes.
 
         :param df1: (pd.DataFrame) dataframe 1
         :param df2: (pd.DataFrame) dataframe 2
@@ -58,16 +60,18 @@ class DiffView:
         :return:
         """
 
-        def _mean(_df, _selected_col, _node, _col):
+        def _mean(_df, _selected_col, _name, _col):
             """
+            Find mean of the dataframes.
+            TODO: Move this into SuperGraph.
 
-            :param _df:
-            :param _selected_col:
-            :param _node:
-            :param _col:
-            :return:
+            :param _df: Dataframe
+            :param _selected_col: Lookup by the column (e.g., module, name).
+            :param _name: name to look up by
+            :param _col: Metric column (e.g., time, or time (inc))
+            :return: Mean of the selected metric column by the selected column.
             """
-            _data = df_lookup_by_column(_df, _selected_col, _node)[_col].to_numpy()
+            _data = df_lookup_by_column(_df, _selected_col, _name)[_col].to_numpy()
             return _data.mean() if len(_data) > 0 else 0
 
         callsites_in_mod1 = df_lookup_and_list(df1, "module", module, "name")
@@ -118,7 +122,7 @@ class DiffView:
         mean1 = np.mean(data1) if len(data1) > 0 else 0
         mean2 = np.mean(data2) if len(data2) > 0 else 0
 
-        mean_diff = DiffView._mean_difference(module)
+        mean_diff = DiffView._mean_difference(self.df1, self.df2, module)
         LOGGER.debug(f"Mean differences {mean_diff}")
 
         # now, need to compute the histogram
@@ -126,7 +130,7 @@ class DiffView:
         hist_grid = histogram(diff, bins=num_of_bins)
 
         result = {
-            "name": module,
+            "name": self.sg.get_name(module, "module"),
             "mean1": mean1,
             "mean2": mean2,
             "dataset": list(set(dataset)),

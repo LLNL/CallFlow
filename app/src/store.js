@@ -37,10 +37,14 @@ export default new Vuex.Store({
 
 		// Color
 		targetColorMap: {
-			Green: "#4EAF4A",
-			Blue: "#4681B4",
+			Green: "#4DAF4A",
+			Blue: "#3366CC",
 			Brown: "#AF9B90",
 			Red: "#A90400",
+			Vermillion: "#dc3912",
+			Yellow: "#ff9900",
+			Majenta: "#990099",
+			Pink: "#dd4477"
 		},
 		generalColors: {
 			silver: "#c0c0c0",
@@ -52,9 +56,8 @@ export default new Vuex.Store({
 			ensemble: "#d9d9d9",
 			text: "#888888",
 		},
-		selectedColorPoint: 9,
 		runtimeColorMap: "OrRd",
-		distributionColorMap: "YlGnBu",
+		distributionColorMap: "Reds",
 		targetColor: "Green",
 		colorPoint: 9,
 
@@ -78,9 +81,6 @@ export default new Vuex.Store({
 		showTarget: true, // show target in the view
 		ensembleGradients: {}, // stores the gradient data
 
-		// Comparison
-		comparisonMode: false,
-
 		// Timeline state
 		timeline: {},
 
@@ -95,7 +95,15 @@ export default new Vuex.Store({
 		hierarchy: {},
 		prop: "rank",
 
+		// Compare mode
+		comparisonMode: false,
 		selectedCompareRun: "",
+		compareData: {},
+
+		encoding: "MEAN",
+		IQRFactor: 1.5,
+
+		gradients: {}
 	},
 
 	mutations: {
@@ -189,7 +197,7 @@ export default new Vuex.Store({
 		},
 
 		setSelectedColorPoint(state, payload) {
-			state.selectedColorPoint = payload;
+			state.colorPoint = payload;
 		}, 
 
 		setHierarchy(state, payload) {
@@ -208,6 +216,30 @@ export default new Vuex.Store({
 		setSelectedCompareRun(state, payload) {
 			console.log("Setting comparison run to :", payload);
 			state.selectedCompareRun = payload;
+		},
+		
+		setCompareData(state, payload) {
+			state.compareData = payload;
+		},
+
+		setIQRFactor(state, payload) {
+			state.IQRFactor = payload;
+		},
+
+		setTargetColor(state, payload) {
+			state.targetColor = payload;
+		},
+
+		setGradients(state, payload) {
+			state.gradients = payload;
+		},
+
+		setRuntimeColorMap(state, payload) {
+			state.runtimeColorMap = payload;
+		},
+
+		setDistributionColorMap(state, payload) {
+			state.distributionColorMap = payload;
 		}
 	},
 	
@@ -240,86 +272,86 @@ export default new Vuex.Store({
 			commit("setTimeline", timeline);
 		},
 
-		async fetchSingleHistogram({ commit, state }, payload) {
+		async fetchSingleHistogram({ commit }, payload) {
 			const hist = await APIService.POSTRequest("single_histogram", payload);
 			console.log("[Data] Single Histogram: ", hist);
 			commit("setSingleHistogram", hist);
 		},
 		
-		async fetchSingleScatterplot({ commit, state }, payload) {
+		async fetchSingleScatterplot({ commit }, payload) {
 			const scat = await APIService.POSTRequest("single_scatterplot", payload);
 			console.log("[Data] Single Scatterplot: ", scat);
 			commit("setSingleScatterplot", scat["tgt"]);
 		},
 
-		async fetchSingleBoxplots({ commit, state }, payload) {
+		async fetchSingleBoxplots({ commit }, payload) {
 			const bps = await APIService.POSTRequest("single_boxplots", payload);
 			console.log("[Data] Single boxplots: ", bps);
 			commit("setSingleBoxplots", bps);
 		},
 
-		async fetchCCT({ commit, state }, payload) {
+		async fetchCCT({ commit }, payload) {
 			const cct = await APIService.POSTRequest("cct", payload);
 			console.log("[Data] CCT for", payload.dataset, "is :", cct);
 			commit("setCCT", cct);
 		},
 
-		async fetchSG({ commit, state }, payload) {
+		async fetchSG({ commit }, payload) {
 			const sg = await APIService.POSTRequest("single_supergraph", payload);
 			console.log("[Data] SG: ", sg);
 			commit("setSG", sg);
 		},
 
-		async fetchESG({ commit, state }, payload) {
+		async fetchESG({ commit }, payload) {
 			const esg = await APIService.POSTRequest("ensemble_supergraph", payload);
 			console.log("[Data] ESG: ", esg);
 			commit("setESG", esg);
 		},
 
-		async fetchEnsembleHistogram({ commit, state }, payload) {
+		async fetchEnsembleHistogram({ commit }, payload) {
 			const esh = await APIService.POSTRequest("ensemble_histogram", payload);
 			console.log("[Data] ESG Histogram: ", esh);
 			commit("setEnsembleHistogram", esh);
 		},
 		
-		async fetchEnsembleScatterplot({ commit, state }, payload) {
+		async fetchEnsembleScatterplot({ commit }, payload) {
 			const ess = await APIService.POSTRequest("ensemble_scatterplot", payload);
 			console.log("[Data] ESG Scatterplot: ", ess);
 			commit("setEnsembleScatterplot", ess);
 		},
 
-		async fetchEnsembleBoxplots({ commit, state }, payload) {
+		async fetchEnsembleBoxplots({ commit }, payload) {
 			const esb = await APIService.POSTRequest("ensemble_boxplots", payload);
 			console.log("[Data] ESG Boxplots: ", esb);
 			commit("setEnsembleBoxplots", esb);
 		},
 
-		async fetchParameterProjection({ commit, state }, payload) {
+		async fetchParameterProjection({ commit }, payload) {
 			const pp = await APIService.POSTRequest("projection", payload);
 			console.log("[Data] ESG Projection: ", JSON.parse(pp));
 			commit("setParameterProjection", JSON.parse(pp));
 		},
 
-		async fetchGradients({ commit, state }, payload) {
+		async fetchGradients({ commit }, payload) {
 			const grad = await APIService.POSTRequest("gradients", payload);
 			console.log("[Data] ESG Gradients: ", grad);
-			commit("setParameterProjection", grad);
+			commit("setGradients", grad);
 		},
 
-		async fetchHierarchy({ commit, state }, payload) {
+		async fetchHierarchy({ commit }, payload) {
 			const hierarchy = await APIService.POSTRequest("module_hierarchy", payload);
 			console.log("[Data] ESG Hierarchy: ", hierarchy);
 			commit("setHierarchy", hierarchy);
 		},
 
-		async fetchComparison({ commit, state }, payload) {
+		async fetchCompare({ commit, state }, payload) {
 			const comp = await APIService.POSTRequest("compare", {
-				targetDataset: state.selectedTargetRun,
-				compareDataset: state.selectedCompareRun,
+				targetRun: state.selectedTargetRun,
+				compareRun: state.selectedCompareRun,
 				selectedMetric: state.selectedMetric,
 			});
 			console.log("[Data] ESG Comparison: ", comp);
-			commit("setDSG", comp);
+			commit("setCompareData", comp);
 		},
 
 		updateSelectedMetric({ state, dispatch }, payload) {
@@ -332,24 +364,24 @@ export default new Vuex.Store({
 			dispatch("reset");
 		},
 
-		updateDistributionColorMap({ state, dispatch }, payload) {
+		updateDistributionColorMap({ state }, payload) {
 			state.distributionColorMap = payload;
-			dispatch("reset");
+			EventHandler.$emit("update-node-encoding");
 		},
 
 		updateSelectedColorPoint({ state, dispatch }, payload) {
-			state.selectedColorPoint = payload;
+			state.colorPoint = payload;
 			dispatch("reset");
 		},
 
-		updateRankBinCount({ state, dispatch }, payload) {
+		updateRankBinCount({ state }, payload) {
 			state.rankBinCount = payload;
 			EventHandler.$emit("reset-single-histogram");
 		},
 
 		updateRunBinCount({ state, dispatch }, payload) {
 			state.runBinCount = payload;
-			EventHandler.$emit("reset-ensemble-histogram");
+			dispatch("reset");
 		},
 
 		updateRuntimeSortBy({ state, dispatch }, payload) {
@@ -361,9 +393,31 @@ export default new Vuex.Store({
 			}
 		},
 
-		updateCompareRun({ state, dispatch}, payload) {
-			state.commit("setCompareRun", payload);
-			state.commit("setIsComparisonMode", payload);
+		updateCompareRun({ commit }, payload) {
+			commit("setCompareRun", payload);
+			commit("setComparisonMode", payload);
+			EventHandler.$emit("update-ensemble-colors");
+		},
+
+		updateNodeEncoding() {
+			EventHandler.$emit("update-node-encoding");
+		},
+
+		updateIQRFactor({state, commit}, payload) {
+			commit("setIQRFactor", payload);
+			console.log("[Interaction] Updating IQR Factor: ", payload);
+			if (state.selectedMode == "SG") {
+				EventHandler.$emit("reset-single-boxplots");
+			}
+			else if(state.selectedMode == "ESG") {
+				EventHandler.$emit("reset-ensemble-boxplots");
+			}
+		},
+
+		updateTargetColor({commit, dispatch}, payload) {
+			console.log("[Interaction] Updating Target color: ", payload);
+			commit("setTargetColor", payload);
+			dispatch("reset");
 		},
 
 		reset({state}) {
@@ -425,10 +479,13 @@ export default new Vuex.Store({
 
 		getGeneralColors: state => state.generalColors,
 		getEncoding: state => state.encoding,
-		getSelectedColorPoint: state => state.selectedColorPoint,	
+		getColorPoint: state => state.colorPoint,	
 		getRuntimeSortBy: state => state.runtimeSortBy,
 		getIQRFactor: state => state.IQRFactor,
 		getHierarchy: state => state.hierarchy,
 		getProp: state => state.prop,
+		
+		getCompareData: state => state.compareData,
+		getGradients: state => state.gradients,
 	}
 });

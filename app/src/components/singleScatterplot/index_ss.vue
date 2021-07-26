@@ -319,17 +319,21 @@ export default {
 				.style("stroke", "#202020")
 				.style("stroke-width", 0.5)
 				.on("mouseover", function (d, i) {
-					d3.select(this).style("fill", "orange");
 					d3.selectAll(".dot")
 						.style("fill", self.generalColors.intermediate)
-						.style("fill-opacity", 0.5);	
-					const text = "rank " + d.rank;
+						.style("stroke", self.generalColors.intermediate)
+						.style("fill-opacity", 0.1);	
+					d3.select(this)
+						.style("fill", "orange")
+						.style("stroke", "#202020")
+						.style("fill-opacity", 1);
+					const text = "MPI rank: " + d.rank;
 					self.$refs.ToolTip.render(text, d);
 				})
 				.on("mouseout", function (d, i) {
-					d3.select(this).attr("fill", self.generalColors.intermediate);
 					d3.selectAll(".dot")
 						.style("fill", self.generalColors.intermediate)
+						.style("stroke", "#202020")
 						.style("fill-opacity", 1);
 					self.$refs.ToolTip.clear();
 				});

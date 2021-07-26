@@ -10,9 +10,7 @@ import networkx as nx
 
 # CallFlow imports
 import callflow
-from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.df import df_as_dict
-
 
 LOGGER = callflow.get_logger(__name__)
 
@@ -22,29 +20,27 @@ class HierarchyLayout:
     Hierarchy Layout computation
     """
 
-    def __init__(self, sg, node, filter_by="time (inc)", filter_perc=0.0):
+    def __init__(self, esg, dataset, node, nbins):
         """
         Hierarchy Layout computation
 
-        # TODO: Avoid filtering over here.
         :param supergraph: SuperGraph
         :param node: node name
-        :param filter_by: filter by the metric
-        :param filter_perc:  filter percentage
         """
-        assert isinstance(sg, callflow.SuperGraph)
-        assert "module" in sg.dataframe.columns
-        assert node in list(sg.modules_list)
+        assert isinstance(esg, callflow.SuperGraph)
+        assert "module" in esg.dataframe.columns
 
         self.node = node
-        module_idx = sg.get_idx(node, "module")
-        self.sg = sg
-        module_df = sg.dataframe.loc[sg.dataframe["module"] == module_idx]
+        module_idx = esg.get_idx(node, "module")
+
+        self.esg = esg
+        module_df = esg.dataframe.loc[esg.dataframe["module"] == module_idx]
+
+        self.time_exc = self.esg.df_get_proxy("time")
+        self.time_inc = self.esg.df_get_proxy("time (inc)")
+
         self.nxg = self.create_nxg_tree_from_paths(
-            df=module_df,
-            path="component_path",
-            filter_by=filter_by,
-            filter_perc=filter_perc,
+            df=module_df, path="component_path", nbins=nbins
         )
 
         # TODO: Need to verify it is always a Tree.
@@ -54,52 +50,75 @@ class HierarchyLayout:
             cycles = HierarchyLayout._check_cycles(self.nxg)
             LOGGER.debug(f"cycles: {cycles}")
 
-    def create_nxg_tree_from_paths(self, df, path, filter_by, filter_perc):
+    def create_nxg_tree_from_paths(self, df, path, nbins):
         """
-        Create a networkx graph for the module hierarchy. Filter if filter percentage is greater than 0.
+        Create a networkx graph for the module hierarchy.
 
         :param module_df: dataframe for the module
         :param path: path column to consider, e.g., path, group_path, component_path
-        :param filter_by: filter by attribute
-        :param filter_perc: filter percentage
         :return: NetworkX graph
         """
 
         nxg = nx.DiGraph()
-        cp_dict = df_as_dict(df, 'name', 'component_path')
+        cp_dict = df_as_dict(df, "name", "component_path")
 
         for c_name, path in cp_dict.items():
-            path_list = list(map(lambda p: self.sg.get_name(p, "callsite"), path))
+            path_list = list(map(lambda p: self.esg.get_name(p, "callsite"), path))
             path_list = [self.node] + path_list
-            source_targets = HierarchyLayout._create_source_targets(path_list)
 
-            for edge in source_targets:
-                source = edge["source"]
-                target = edge["target"]
+            for idx in range(len(path_list)):
+                if idx == len(path_list) - 1:
+                    break
+
+                source = path_list[idx]
+                target = path_list[idx + 1]
+
+                if not nxg.has_node(source):
+                    if idx == 0:
+                        ntype = "module"
+                    else:
+                        ntype = "callsite"
+                    nid = self.esg.get_idx(source, ntype)
+
+                    nxg.add_node(
+                        source,
+                        attr_dict=self.esg_node_construct(nid, ntype, source, nbins),
+                    )
+
+                # TODO: This could lead to issues. We cannot assume all nodes
+                # that are below a module, a callsite.
+                # We need to make it type independent. We need a better way to
+                # judge what type a particular callsite is.
+                if not nxg.has_node(target):
+                    ntype = "callsite"
+                    nid = self.esg.get_idx(target, ntype)
+                    nxg.add_node(
+                        target,
+                        attr_dict=self.esg_node_construct(nid, ntype, target, nbins),
+                    )
+
                 if not nxg.has_edge(source, target):
                     nxg.add_edge(source, target)
         return nxg
 
-    @staticmethod
-    def _create_source_targets(path_list):
-        """
-        Create edges from path list.
+    def esg_node_construct(self, nid, ntype, name, nbins):
+        if ntype == "callsite":
+            time_inc = self.esg.get_runtime(nid, ntype, self.time_inc)
+            time_exc = self.esg.get_runtime(nid, ntype, self.time_exc)
+            grads = self.esg.get_gradients(nid, ntype, nbins)
+        elif ntype == "module":
+            time_inc = self.esg.get_runtime(nid, ntype, self.time_inc)
+            time_exc = self.esg.get_runtime(nid, ntype, self.time_exc)
+            grads = self.esg.get_gradients(nid, ntype, nbins)
 
-        :param path_list: paths expressed as a list.
-        :return: edges (array)  edges expressed as source-target pairs.
-        """
-
-        edges = []
-
-        for idx in range(len(path_list)):
-            if idx == len(path_list) - 1:
-                break
-
-            source = path_list[idx]
-            target = path_list[idx + 1]
-
-            edges.append({"source": source, "target": target})
-        return edges
+        return {
+            "id": nid,
+            "type": ntype,
+            "name": name,
+            "grad": grads,
+            self.time_inc: time_inc,
+            self.time_exc: time_exc,
+        }
 
     @staticmethod
     def as_spanning_trees(G):

@@ -26,7 +26,7 @@ export default {
 		width: 230,
 		containerWidth: 660,
 		height: 20,
-		containerHeight: 50,
+		containerHeight: 100,
 		colorMin: 0,
 		colorMax: 0,
 		offset: 30,
@@ -42,15 +42,15 @@ export default {
 			showTarget: "getShowTarget",
 			comparisonMode: "getComparisonMode",
 			generalColors: "getGeneralColors",
-			selectedColorPoint: "getSelectedColorPoint"
+			selectedColorPoint: "getColorPoint"
 		})
 	},
 
 	methods: {
 		init(color) {
 			this.color = color;
-			this.colorMin = this.color.getScale().domain()[0];
-			this.colorMax = this.color.getScale().domain()[1];
+			this.colorMin = this.color.getDomain()[0];
+			this.colorMax = this.color.getDomain()[1];
 
 			this.svg = d3.select("#" + this.id)
 				.append("g")
@@ -67,7 +67,7 @@ export default {
 
 		_legends() {
 			this.clearLegends();
-			if (this.selectedMode == "Ensemble") {
+			if (this.selectedMode == "ESG") {
 				if (this.showTarget && !this.comparisonMode) {
 					this.drawLegend("Target run", this.padding.right, 4 * this.padding.bottom, this.generalColors.target);
 				}
@@ -80,26 +80,26 @@ export default {
 			let text = "";
 			let yOffsetCount = 1;
 
-			if (this.color.type == "time") {
-				text = this.color.type;
+			if (this.color.metric == "time") {
+				text = this.color.metric;
 			}
-			else if (this.color.type == "time (inc)") {
-				text = this.color.type;
+			else if (this.color.metric == "time (inc)") {
+				text = this.color.metric;
 			}
-			else if (this.color.type == "MeanGradients") {
+			else if (this.color.metric == "MeanGradients") {
 				text = "Distribution colormap";
 				yOffsetCount = 2;
 			}
-			else if (this.color.type == "MeanDiff") {
+			else if (this.color.metric == "MeanDiff") {
 				text = "Mean Difference colormap";
 				yOffsetCount = 2;
 			}
-			else if (this.color.type == "RankDiff") {
+			else if (this.color.metric == "RankDiff") {
 				text = "Rank Difference colormap";
 				yOffsetCount = 2;
 			}
 
-			if (this.color.type !== "MeanGradients") {
+			if (this.color.metric !== "MeanGradients") {
 				this.colorMinText = utils.formatRuntimeWithUnits(this.colorMin);
 				this.colorMaxText = utils.formatRuntimeWithUnits(this.colorMax);
 			}

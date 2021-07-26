@@ -30,7 +30,7 @@
           </v-row>
         </v-col>
       </v-card>
-      <Settings ref="Settings" />
+	<Settings ref="Settings"/>
     </v-navigation-drawer>
 
     <v-row class="pa-0 ma-0">
@@ -87,7 +87,7 @@ export default {
 		// Single supergraph components.
 		SingleScatterplot,
 		SingleHistogram,
-		// CallsiteInformation,
+		CallsiteInformation,
 		Settings,
 	},
 
@@ -132,7 +132,6 @@ export default {
 	methods: {
 		init() {
 			this.$store.commit("setSelectedMode", "SG");
-			this.$store.commit("setEncoding", "MEAN");
 
 			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
 			this.initComponents(this.currentComponents);

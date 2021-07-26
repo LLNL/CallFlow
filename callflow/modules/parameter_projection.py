@@ -16,6 +16,7 @@ from sklearn.cluster import KMeans
 from callflow.algorithms import KMedoids
 from callflow.datastructures.metrics import TIME_COLUMNS
 
+
 class ParameterProjection:
     """
     Calculate Parameter projections using common projection techniques like MDS, t-SNE.
@@ -23,11 +24,15 @@ class ParameterProjection:
 
     def __init__(self, sg, selected_runs=None, n_cluster=3):
         """
+        Constructor for the
 
         :param sg:
         :param selected_runs:
         :param n_cluster:
         """
+        assert len(selected_runs) > 0
+        assert isinstance(n_cluster, int)
+
         self.projection = "MDS"
         self.clustering = "k_means"
         self.n_cluster = int(n_cluster)
@@ -60,8 +65,12 @@ class ParameterProjection:
 
     def compute(self, sg, selected_runs):
         """
-        Main compute method.
-        :return:
+        Compute the 2D projection of the the provided data after processing.
+
+        :return: (Dict) {
+            "dataset:
+            "
+        }
         """
         rows = []
         for dataset in selected_runs:

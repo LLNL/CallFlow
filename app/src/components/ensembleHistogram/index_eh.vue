@@ -73,7 +73,8 @@ export default {
 			showTarget: "getShowTarget",
 			generalColors: "getGeneralColors",
 			selectedProp: "getProp",
-			selectedRunBinCount: "getRunBinCount"
+			selectedRunBinCount: "getRunBinCount",
+			targetColor: "getTargetColor"
 		})
 	},
 
@@ -102,7 +103,7 @@ export default {
 
 			// Assign the height and width of container
 			this.width = window.innerWidth * 0.25;
-			this.height = this.$store.viewHeight * 0.33;
+			this.height = this.$store.viewHeight * 0.30;
 
 			// Assign width and height for histogram and rankLine SVG.
 			this.boxWidth = this.width - 1 * (this.padding.right + this.padding.left);
@@ -132,7 +133,7 @@ export default {
 			if (this.showTarget) {
 				this.targetBars();
 			}
-			// this.$refs.ToolTip.init(this.svgID);
+			this.$refs.ToolTip.init(this.svgID);
 		},
 
 		setupScale() {
@@ -204,7 +205,7 @@ export default {
 					y: (d, i) => this.yScale(d),
 					width: this.xScale.bandwidth(),
 					height: (d) => Math.abs(this.yAxisHeight - this.yScale(d)),
-					fill: this.generalColors.target,
+					fill: this.targetColor,
 					opacity: 1,
 					"stroke-width": "0.2px",
 					stroke: "#202020",

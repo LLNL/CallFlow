@@ -24,7 +24,6 @@ import { mapGetters } from "vuex";
 // Local library imports
 import * as utils from "lib/utils";
 import EventHandler from "lib/routing/EventHandler";
-import APIService from "lib/routing/APIService";
 
 // local imports
 import MeanGradients from "./encodings/meanGradients";
@@ -59,6 +58,7 @@ export default {
 		intermediateColor: "#d9d9d9",
 		drawGuidesMap: {},
 		fontSize: 14,
+		prevEncoding: "",
 	}),
 
 	computed: {
@@ -70,7 +70,20 @@ export default {
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMetric: "getSelectedMetric",
 			selectedNode: "getSelectedNode",
+			compareData: "getCompareData",
+			isComparisonMode: "getComparisonMode",
 		})
+	},
+
+	mounted() {
+		let self = this;
+		EventHandler.$on("update-node-encoding", function (data) {
+			self.clearEncoding();
+			self.clearTargetLines();
+			// TODO: Move the emitter to the store.js possibly. 
+			EventHandler.$emit("update-ensemble-colors");
+			self.visualize();
+		});
 	},
 
 	methods: {
@@ -112,19 +125,17 @@ export default {
 			this.rectangle();
 			this.postVis();
 
-			this.setEncoding(this.encoding);
+			this.setEncoding();
 
 			this.ensemblePath();
 			this.text();
 
-			if (this.showTarget && this.selectedMode === "ESG") {
-				this.$refs.TargetLine.init(this.graph.nodes);
-				this.$refs.Guides.init(this.graph.nodes);
-			}
-
-			if (this.selectedMode == "DSG") {
+			if (this.showTarget && this.selectedMode === "ESG" && !this.isComparisonMode) {
+				this.$refs.TargetLine.init(this.graph.nodes, this.containerG);
+				this.$refs.Guides.init(this.graph.nodes, this.containerG);
 				this.targetPath();
 			}
+		
 
 			this.$refs.ToolTip.init(this.$parent.id);
 		},
@@ -132,7 +143,7 @@ export default {
 		// Attach the svg into the node object. 
 		postVis() {
 			for (let node of this.graph.nodes) {
-				node.svg = this.containerG.select("#callsite-" + node.id);
+				node.svg = this.containerG.select("#callsite-" + node.attr_dict.nid);
 			}
 		},
 
@@ -140,18 +151,31 @@ export default {
 			d3.selectAll(".callsite").remove();
 		},
 
-		setEncoding(encoding, data) {
-			if (encoding == "MEAN") {
+		setEncoding() {
+			if (this.selectedMode == "SG") {
+				this.$store.commit("setEncoding", "MEAN");
+			} else if (this.selectedMode == "ESG") {
+				if (this.isComparisonMode) {
+					this.$store.commit("setEncoding", "MEAN_DIFF");
+				}
+				else {
+					this.$store.commit("setEncoding", "MEAN_GRADIENTS");
+				}
+			}
+
+			this.prevEncoding = this.encoding;
+
+			if (this.encoding == "MEAN") {
 				this.$refs.Mean.init(this.graph.nodes, this.containerG);
 			}
-			else if (encoding == "MEAN_GRADIENTS") {
+			else if (this.encoding == "MEAN_GRADIENTS") {
 				this.$refs.MeanGradients.init(this.graph.nodes, this.containerG);
 			}
-			else if (encoding == "MEAN_DIFF") {
-				this.$refs.MeanDiff.init(this.graph.nodes, this.containerG, data);
+			else if (this.encoding == "MEAN_DIFF") {
+				this.$refs.MeanDiff.init(this.graph.nodes, this.containerG);
 			}
-			else if (encoding == "RANK_DIFF") {
-				this.$refs.RankDiff.init(this.graph.nodes, this.containerG, data);
+			else if (this.encoding == "RANK_DIFF") {
+				this.$refs.RankDiff.init(this.graph.nodes, this.containerG);
 			}
 		},
 
@@ -169,7 +193,7 @@ export default {
 
 			this.nodesSVG.append("rect")
 				.attrs({
-					"id": (d) => { return d.attr_dict.nid + " callsite-rect" + d.attr_dict.nid; },
+					"id": (d) => { return "callsite-rect" + d.attr_dict.nid; },
 					"class": "callsite-rect",
 					"height": (d) => d.height,
 					"width": this.nodeWidth,
@@ -199,16 +223,17 @@ export default {
 				const nodeSVG = this.containerG.select("#callsite-" + node.id);
 
 				// Make appropriate event requests (Single and Ensemble).
-				if (this.selectedMode == "ESG") {
+				if (this.selectedMode == "ESG" && !this.isComparisonMode) {
 					if (!this.drawGuidesMap[node.id]) {
 						this.$refs.Guides.visualize(node, "permanent", nodeSVG);
 						this.drawGuidesMap[node.id] = true;
 					}
 					
-					// EventHandler.$emit("reset-ensemble-histogram");
-					// EventHandler.$emit("reset-ensemble-scatterplot");
-					// EventHandler.$emit("reset-ensemble-boxplots");
+					EventHandler.$emit("reset-ensemble-histogram");
+					EventHandler.$emit("reset-ensemble-scatterplot");
+					EventHandler.$emit("reset-ensemble-boxplots");
 					EventHandler.$emit("reset-module-hierarchy");
+					EventHandler.$emit("reset-ensemble-gradients");
 				}
 				else if (this.selectedMode == "SG") {
 					EventHandler.$emit("reset-single-histogram");
@@ -220,14 +245,14 @@ export default {
 
 		mouseover(node) {
 			this.$refs.ToolTip.visualize(self.graph, node);
-			if (this.selectedMode === "ESG") {
+			if (this.selectedMode === "ESG" && !this.isComparisonMode) {
 				this.$refs.Guides.visualize(node, "temporary");
 			}
 		},
 
 		mouseout(node) {
 			this.$refs.ToolTip.clear();
-			if (this.$store.selectedMode == "Ensemble") {
+			if (this.selectedMode == "ESG") {
 				this.$refs.Guides.clear(node, "temporary");
 				if (this.permanentGuides == false) {
 					d3.selectAll(".ensemble-edge")
@@ -355,23 +380,27 @@ export default {
 			d3.selectAll(".target-path").remove();
 		},
 
-		clearEncoding(encoding) {
-			if (encoding == "MEAN_GRADIENTS") {
+		clearEncoding() {
+			if (this.prevEncoding == "MEAN_GRADIENTS") {
 				this.$refs.MeanGradients.clear(this.graph.nodes, this.containerG);
 			}
-			else if (encoding == "MEAN_DIFF") {
+			else if (this.prevEncoding == "MEAN_DIFF") {
 				this.$refs.MeanDiff.clear(this.graph.nodes, this.containerG);
 			}
-			else if (encoding == "RANK_DIFF") {
+			else if (this.prevEncoding == "RANK_DIFF") {
 				this.$refs.RankDiff.clear(this.graph.nodes, this.containerG);
 			}
+		},
+
+		clearTargetLines() {
+			d3.selectAll(".targetLines").remove();
 		},
 
 		clear() {
 			d3.selectAll(".callsite").remove();
 			d3.selectAll(".callsite-text").remove();
 			d3.selectAll(".path").remove();
-			d3.selectAll(".targetLines").remove();
+			this.clearTargetLines();
 			this.clearEncoding(this.encoding);
 			this.clearTargetPath();
 			this.$refs.ToolTip.clear();

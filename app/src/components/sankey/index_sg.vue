@@ -80,6 +80,7 @@ export default {
 		sankeyHeight: 0,
 		existingIntermediateNodes: {},
 		title: "Super Graph View",
+		firstRender: true,
 		message: "",
 		info: "",
 		infoSummary: "Super Graphs provides an overview of the application's control during execution using a Sankey Diagram. The Sankey diagram incorporates a flow-based metaphor to the call graph by show the resource flow from left to right. Each node's performance is mapped based on the runtime colormap. The mini-histograms (on top of the node) provides an overview of each node's runtime distribution across processes",
@@ -94,12 +95,13 @@ export default {
 			selectedMode: "getSelectedMode",
 			comparisonMode: "getComparisonMode",
 			runBinCount: "getRunBinCount",
-			selectedColorPoint: "getSelectedColorPoint",
+			selectedColorPoint: "getColorPoint",
 			summary: "getSummary",
 			targetColor: "getTargetColor",
 			runtimeColorMap: "getRuntimeColorMap",
 			distributionColorMap: "getDistributionColorMap",
 			targetColorMap: "getTargetColorMap",
+			isComparisonMode: "getComparisonMode",
 		})
 	},
 
@@ -108,6 +110,7 @@ export default {
 			this.data = val;
 			this.singleColors();
 			this.visualize();
+			this.firstRender = false;
 		},
 
 		esg_data: function (val) {
@@ -115,7 +118,32 @@ export default {
 			this.singleColors();
 			this.ensembleColors();
 			this.visualize();
-		}
+			this.firstRender = false;
+		},
+
+		compare_data: function (val) {
+			// console.log("[Comparison] Data:", data);
+			// this.clearEncoding("MEAN_GRADIENTS");
+			// // this.clearZeroLine()
+			// d3.selectAll(".target-path").remove();
+			// // Clear target lines. 
+			// if (this.$store.showTarget) {
+			// 	this.$refs.TargetLine.clear();
+			// }
+			// d3.selectAll(".histogram-bar-target").remove();
+			// d3.selectAll("#ensemble-edge-target").remove();
+			// // remove target legend
+			// d3.selectAll(".legend").remove();
+			// d3.selectAll(".legend-text").remove();
+			// // // remove ensemble legend
+			// // d3.selectAll(".ensemble-circle-legend").remove();
+			// // d3.selectAll(".ensemble-circle-legend-text").remove();
+			// // remove colormap container
+			// d3.selectAll(".colormap").remove();
+			// this.setEncoding(this.$store.encoding, data);
+
+			// this.compareData = val;
+		},
 	},
 
 	mounted() {
@@ -132,6 +160,18 @@ export default {
 		EventHandler.$on("show_target_auxiliary", (data) => {
 			self.$refs.Nodes.$refs.TargetLine.clear();
 			self.$refs.MiniHistograms.clear();
+		});
+
+		EventHandler.$on("update-ensemble-colors", () => {
+			self.$refs.ColorMap.clear();
+			if (self.isComparisonMode) {
+				// TODO: Need to call the diffColor setup here. 
+			}
+			else {
+				self.singleColors();
+				self.ensembleColors();
+			}
+			this.initColorMaps();
 		});
 	},
 
@@ -172,59 +212,28 @@ export default {
 		},
 
 		singleColors() {
-			this.$store.runtimeColor = new Color();
-			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
+			const data = this.summary[this.selectedTargetRun][this.selectedMetric];
+			const [ colorMin, colorMax ]  = utils.getMinMax(data);
 
-			const _d = this.summary[this.selectedTargetRun][this.selectedMetric];
-			const colorMin = parseFloat(_d[0]);
-			const colorMax = parseFloat(_d[1]);
-
-			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMin)
-			);
-			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMax)
-			);
-
-			this.$store.runtimeColor.setColorScale(
-				this.selectedMetric,
-				colorMin,
-				colorMax,
-				this.runtimeColorMap,
-				this.selectedColorPoint
-			);
+			if (this.firstRender) {
+				let runtimeColorMap = "";
+				if (this.selectedMode === "SG") {
+					runtimeColorMap = "OrRd";
+				}
+				else if (this.selectedMode === "ESG") {
+					runtimeColorMap = "Blues";
+				}
+				this.$store.commit("setRuntimeColorMap", runtimeColorMap);
+			}
+			this.$store.runtimeColor = new Color(this.selectedMetric, colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);
 		},
 
 		ensembleColors() {
-			this.$store.distributionColor = new Color();
-			this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
-			
-			let hist_min = 0;
-			let hist_max = 0;
-			for (let node of this.data.nodes) {
-				const vals = node.attr_dict["gradients"][this.selectedMetric]["hist"]["h"];
-				hist_min = Math.min(
-					hist_min,
-					Math.min(...vals)
-				);
-				hist_max = Math.max(
-					hist_max,
-					Math.max(...vals)
-				);
-			}
-			this.$store.distributionColor.setColorScale(
-				"MeanGradients",
-				hist_min,
-				hist_max,
-				this.distributionColorMap,
-				this.selectedColorPoint
-			);
+			const arrayOfData = this.data.nodes.map((d) => d.attr_dict.gradients[this.selectedMetric]["hist"]["h"]);
+			const [ colorMin, colorMax ]  = utils.getArrayMinMax(arrayOfData);
+			this.$store.commit("setDistributionColorMap", "Reds");
+			this.$store.distributionColor = new Color("MeanGradients", colorMin, colorMax, this.distributionColorMap, this.selectedColorPoint);			
 
-			this.$store.distributionColor.target = this.targetColorMap[
-				this.targetColor
-			];
-			this.$store.distributionColor.ensemble = "#C0C0C0";
-			this.$store.distributionColor.compare = "#043060";
 		},
 
 		clear() {
@@ -250,12 +259,21 @@ export default {
 			this.$refs.Edges.init(this.data);
 			this.$refs.MiniHistograms.init(this.data);
 
+			this.initColorMaps();
+		},
+
+		initColorMaps() {
 			if (this.selectedMode == "SG") {
 				this.$refs.ColorMap.init(this.$store.runtimeColor);
 			}
 			else if(this.selectedMode == "ESG") {
-				this.$refs.ColorMap.init(this.$store.runtimeColor);
-				this.$refs.ColorMap.init(this.$store.distributionColor);
+				if (this.isComparisonMode) {
+					this.$refs.ColorMap.init(this.$store.diffColor);
+				}
+				else {
+					this.$refs.ColorMap.init(this.$store.runtimeColor);
+					this.$refs.ColorMap.init(this.$store.distributionColor);
+				}
 			}
 		},
 
@@ -340,7 +358,7 @@ export default {
 
 							},
 							level: j,
-							id: "intermediate_" + target_node.id,
+							id: "i" + target_node.id,
 							value: temp_edges[i].attr_dict.weight,
 							targetValue: temp_edges[i].attr_dict.targetWeight,
 							height: temp_edges[i].height,
