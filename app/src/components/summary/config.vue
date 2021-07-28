@@ -25,9 +25,9 @@
 			<v-divider></v-divider>
 			<v-row class="ma-0 pa-0 pb-0 mb-0"> 
 				<v-col cols="5"><b>Number of nodes: </b></v-col> 
-				<v-col cols="7">{{ Object.keys(data.module_callsite_map).length
-				+ " modules, " +  (Object.keys(data.callsite_module_map).length
-				- 1) +
+				<v-col cols="7">{{ (Object.keys(data.module_callsite_map).length
+				- 1)
+				+ " modules, " +  Object.keys(data.callsite_module_map).length +
 				" callsites"}} </v-col> 	
 			</v-row>
 			<v-divider></v-divider>
