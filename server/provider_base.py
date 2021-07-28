@@ -333,7 +333,6 @@ class BaseProvider:
 
             time_columns = sg.time_columns
 
-            _clean_dict = lambda d: {k: v for k, v in d.items() if k is not None and v is not None}
 
             return {
                 **self.config,
@@ -341,8 +340,8 @@ class BaseProvider:
                 "profile_format_summary": list(
                     set(map(lambda d: d["profile_format"], self.datasets))
                 ),
-                "module_callsite_map": _clean_dict(sg.module2callsite),
-                "callsite_module_map": _clean_dict(sg.callsite2module)
+                "module_callsite_map": sg.module2callsite,
+                "callsite_module_map": sg.callsite2module
             }
 
         elif operation_name == "summary":
