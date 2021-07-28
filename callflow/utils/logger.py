@@ -98,6 +98,7 @@ def init_logger(**kwargs):
         logging.Logger.error = _log_error_with_memory
         logging.Logger.critical = _log_critical_with_memory
 
+    return 
     # --------------------------------------------------------------------------
     # Print the level of logging.
     logger.debug("Enabled")
