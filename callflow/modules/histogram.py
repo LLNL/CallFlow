@@ -123,7 +123,7 @@ class Histogram:
         :return: (JSON)
         """
         result = {}
-        for metric in self.time_columns:
+        for metric in TIME_COLUMNS:
             data = self.result[metric]
             result[metric] = {}
             for histo_type in self.histo_types:

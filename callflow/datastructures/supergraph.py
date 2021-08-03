@@ -137,6 +137,8 @@ class SuperGraph(ht.GraphFrame):
         :return (str): module for a call site
         """
         assert isinstance(callsite_idx, int)
+        if callsite_idx not in self.callsite2module:
+            return "Unknown"
         return self.callsite2module[callsite_idx]
 
     def get_runtime(self, node_idx, ntype, metric, apply_func=None):
@@ -429,6 +431,7 @@ class SuperGraph(ht.GraphFrame):
         
         # ----------------------------------------------------------------------
         self.add_time_proxies()
+        self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
         # ----------------------------------------------------------------------
         LOGGER.debug(f"[{self.name}] Calculating callsite and module auxiliary dictionaries")
@@ -479,6 +482,9 @@ class SuperGraph(ht.GraphFrame):
 
         # get the mapping from the dataframe
         callsite2module_dict = self.dataframe.groupby('name')['module'].apply(lambda x: x.unique().tolist()).to_dict()
+
+        print(callsite2module_dict)
+
 
         # Make sure each callsite maps to a single module and create
         # callsite2module mapping, if not raise an exception.
@@ -545,11 +551,11 @@ class SuperGraph(ht.GraphFrame):
                         callsite_module_map[c] = mname
 
             missing_callsites = [
-                self.get_name_by_nid(c)
+                c
                 for c in unique_callsites
                 if callsite_module_map[c] == -1
             ]
-            assert len(missing_callsites) == 0, f"[{self.name}] Missing callistes: {missing_callsites}"
+            assert len(missing_callsites) == 0, f"[{self.name}] Missing callistes [{len(missing_callsites)}]: {missing_callsites}"
 
             # Update the "module" column with the provided callsite_module_map.
             self.df_add_column("module", apply_dict=callsite_module_map,
@@ -721,8 +727,9 @@ class SuperGraph(ht.GraphFrame):
             "timecolumns": TIME_COLUMNS,
         }
 
-        for p in TIME_COLUMNS:
-            result[p] = self.df_minmax(p)
+        for column in ["time", "time (inc)"]:
+            col = self.df_get_proxy(column)
+            result[column] = self.df_minmax(col)
 
         return result
 
@@ -932,6 +939,9 @@ class SuperGraph(ht.GraphFrame):
         """
         assert isinstance(count, int) and isinstance(sort_attr, str)
         assert count > 0
+
+        column = self.df_get_proxy(column)
+        sort_attr = self.df_get_proxy(sort_attr)
 
         df = self.dataframe.groupby([column]).mean()
         df = df.sort_values(by=[sort_attr], ascending=False)
