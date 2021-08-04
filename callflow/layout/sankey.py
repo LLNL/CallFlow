@@ -84,6 +84,8 @@ class SankeyLayout:
         if len(self.split_callee_module) > 0:
             SankeyLayout.add_exit_callees_paths(self.split_callee_module)
 
+        self.nxg = self.dfs_remove_back_edges(self.nxg)
+
     @staticmethod
     def create_source_targets(component_path):
         """
@@ -340,9 +342,9 @@ class SankeyLayout:
         """
         nxg = nx.DiGraph()
 
-        for c_name, path in self.gp_dict.items():
-            if isinstance(path, str):
-                continue
+        for callsite in self.sg.nxg.nodes():
+            cs_idx = self.sg.get_idx(callsite, "callsite")
+            path = self.gp_dict[cs_idx]
 
             if len(path) > 2:
                 path = SankeyLayout._break_cycles_in_paths(path)
@@ -350,15 +352,15 @@ class SankeyLayout:
                     src = path[depth]
                     tgt = path[depth + 1]
 
-                    src_name = self.sg.get_name(src.get("id"), src.get("type"))
-                    tgt_name = self.sg.get_name(tgt.get("id"), tgt.get("type"))
+                    src_name = self.sg.get_name(src.get("id"), "module")
+                    tgt_name = self.sg.get_name(tgt.get("id"), "module")
 
                     if not nxg.has_node(src_name):
-                        src_dict = self.sg_node_construct(c_name, src)
+                        src_dict = self.sg_node_construct(callsite, src)
                         nxg.add_node(src_name, attr_dict=src_dict)
 
                     if not nxg.has_node(tgt):
-                        tgt_dict = self.sg_node_construct(c_name, tgt)
+                        tgt_dict = self.sg_node_construct(callsite, tgt)
                         nxg.add_node(tgt_name, attr_dict=tgt_dict)
 
                     has_callback_edge = nxg.has_edge(src_name, tgt_name)
@@ -368,7 +370,7 @@ class SankeyLayout:
                     else:
                         edge_type = "caller"
 
-                    weight = self.sg.get_runtime(tgt.get("id"), "module", "time (inc)")
+                    weight = self.sg.get_runtime(tgt.get("id"), "module", self.time_inc)
 
                     edge_dict = {
                         "edge_type": edge_type,
@@ -382,16 +384,17 @@ class SankeyLayout:
 
     def sg_node_construct(self, callsite_name, node):
         name = self.sg.get_name(node.get("id"), node.get("type"))
+        cs_idx = self.sg.get_idx(callsite_name, "callsite")
 
         ret = {
             "name": name,
             "type": node.get("type"),
             "level": node.get("level"),
-            "cp_path": self.cp_dict[callsite_name],
-            self.time_inc: self.sg.get_runtime(
+            "cp_path": self.cp_dict[cs_idx],
+            "time (inc)": self.sg.get_runtime(
                 node.get("id"), node.get("type"), self.time_inc
             ),
-            self.time_exc: self.sg.get_runtime(
+            "time": self.sg.get_runtime(
                 node.get("id"), node.get("type"), self.time_exc
             ),
             "hists": self.sg.get_histograms(node, nbins=20),
@@ -513,3 +516,47 @@ class SankeyLayout:
                 exit_functions[edge_tuple] = []
             exit_functions[edge_tuple].append(edge_dict["source_callsite"])
         return exit_functions
+
+    
+    def dfs_visit_recursively(self, g, node, nodes_color, edges_to_be_removed):
+
+        nodes_color[node] = 1
+        nodes_order = list(g.successors(node))
+        nodes_order = np.random.permutation(nodes_order)
+        for child in nodes_order:
+            if nodes_color[child] == 0:
+                    self.dfs_visit_recursively(g, child, nodes_color, edges_to_be_removed)
+            elif nodes_color[child] == 1:
+                edges_to_be_removed.append((node,child))
+
+        nodes_color[node] = 2
+
+    def dfs_remove_back_edges(self, g, nodetype = int):
+        '''
+        0: white, not visited 
+        1: grey, being visited
+        2: black, already visited
+        '''
+
+        nodes_color = {}
+        edges_to_be_removed = []
+        for node in g.nodes():
+            nodes_color[node] = 0
+
+        nodes_order = list(g.nodes())
+        nodes_order = np.random.permutation(nodes_order)
+        num_dfs = 0
+        for node in nodes_order:
+
+            if nodes_color[node] == 0:
+                num_dfs += 1
+                self.dfs_visit_recursively(g, node, nodes_color, edges_to_be_removed)
+
+        print("number of nodes to start dfs: %d" % num_dfs)
+        print(f"number of back edges: {edges_to_be_removed}")
+
+        for edge in edges_to_be_removed:
+            g.remove_edge(edge[0], edge[1])
+        
+        return g
+
