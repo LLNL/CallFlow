@@ -27,6 +27,7 @@ from callflow.utils.df import (
 from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
 from callflow.modules import Histogram
 from callflow.utils.utils import get_file_size
+from callflow.operations import RegexModuleMatcher
 
 LOGGER = get_logger(__name__)
 
@@ -279,7 +280,8 @@ class SuperGraph(ht.GraphFrame):
         self,
         path,
         profile_format,
-        module_callsite_map: dict = {},
+        m2c: dict = {},
+        m2m: dict = {}
     ) -> None:
         """
         Create SuperGraph from basic information. It does the following:
@@ -314,6 +316,12 @@ class SuperGraph(ht.GraphFrame):
         super().__init__(
             gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics
         )  # Initialize here so that we don't drop index levels.
+
+        reMatcher = RegexModuleMatcher(m2c=m2c, m2m=m2m)
+        module_callsite_map = reMatcher.match(gf=gf)
+
+        reMatcher.update_df(gf.dataframe, module_callsite_map, "module")
+        reMatcher.print_summary()
 
         # Add callsite2idx, module2idx, callsite2module and corresponding
         # mappings.
@@ -545,7 +553,7 @@ class SuperGraph(ht.GraphFrame):
                         callsite_module_map[c] = mname
 
             missing_callsites = [
-                self.get_name_by_nid(c)
+                c
                 for c in unique_callsites
                 if callsite_module_map[c] == -1
             ]

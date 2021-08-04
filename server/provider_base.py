@@ -189,9 +189,12 @@ class BaseProvider:
         if len(process_datasets) == 0:
             return
 
+        print(self.config)
+
         append_path = self.config.get("append_path", "")
         load_path = self.config["data_path"]
-        module_callsite_map = self.config.get("module_callsite_map", {})
+        m2c = self.config.get("m2c", {})
+        m2m = self.config.get("m2m", {})
         group_by = self.config["group_by"]
         filter_by = self.config.get("filter_by", "")
         filter_perc = self.config.get("filter_perc", 0)
@@ -228,7 +231,8 @@ class BaseProvider:
             sg.create(
                 path=data_path,
                 profile_format=_prop[1],
-                module_callsite_map=module_callsite_map
+                m2c=m2c,
+                m2m=m2m
             )
             LOGGER.info(f"Created supergraph ({name})")
 
