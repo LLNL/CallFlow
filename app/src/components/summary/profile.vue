@@ -15,7 +15,7 @@
 				:loading="isLoading"
 				:footer-props="footerProps"
 				loading-text="Loading... Please wait"
-				:options.sync="pagination"
+				:items-per-page.sync="itemsPerPage"
 				:sort-by.sync="sortBy"
 				:sort-desc.sync="sortDesc"
 			>
@@ -49,10 +49,7 @@ export default {
 		sortBy: "meantime",
 		sortDesc: true,
 		footerProps: {"items-per-page-options": [5, 10, 20, 50, -1]},
-		pagination: {
-			rowsPerPage: 7,
-			page: 1
-		}
+		itemsPerPage: 7
 	}),
 	computed: {
 		...mapGetters({ data: "getProfiles"})

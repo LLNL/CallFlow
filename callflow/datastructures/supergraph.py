@@ -740,13 +740,13 @@ class SuperGraph(ht.GraphFrame):
 
     def timeline(self, nodes, ntype, metric):
         grp_df = self.df_group_by(ntype)
+        supernodes = list(grp_df.groups.keys())
+
         LOGGER.debug(f"[{self.name}] Nodes: {nodes}; ntype: {ntype}; metric: {metric}")
 
         data = {
-            str(node): df_column_mean(
-                grp_df.get_group(self.get_idx(node, ntype)), metric, self.proxy_columns
-            )
-            for node in nodes
+            self.get_name(node_idx, ntype): df_column_mean(grp_df.get_group(node_idx), metric, self.proxy_columns)
+            for node_idx in supernodes
         }
         data["root_time_inc"] = self.df_root_max_mean_runtime(self.roots, "time (inc)")
         data["name"] = self.name

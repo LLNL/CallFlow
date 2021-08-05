@@ -175,11 +175,11 @@ export default {
 			const settingsHeight = document.getElementById("settings").clientHeight;
 			const topHalfSummaryHeight = document.getElementById("top-half").clientHeight;
 			const retailHeight = this.$store.viewHeight - settingsHeight - topHalfSummaryHeight;
-			if (retailHeight < 0.5 * this.$store.viewHeight) {
-				this.height = 400;
-			} else {
-				this.height = retailHeight;
-			}
+			// if (retailHeight < 0.5 * this.$store.viewHeight) {
+			// 	this.height = 400;
+			// } else {
+			this.height = retailHeight;
+			// }
 
 			this.svg = d3.select("#" + this.id);
 
