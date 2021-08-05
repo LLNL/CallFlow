@@ -8,6 +8,7 @@ CallFlow's data structure to construct Super Graphs.
 """
 import os
 import json
+import arrow
 import hatchet as ht
 import networkx as nx
 import numpy as np
@@ -67,7 +68,12 @@ class SuperGraph(ht.GraphFrame):
         self.nxg = None
         self.graph = None
 
-        self.name = name  # dataset name
+        self.name = name
+        if name != "ensemble":
+            self.timestamp = arrow.get(name.split(".")[-1], "YYYY-MM-DD_HH-mm-ss")   # dataset name
+        else: 
+            self.timestamp = arrow.now()
+
         self.profile_format = ""
 
         self.parameters = {}
@@ -713,6 +719,7 @@ class SuperGraph(ht.GraphFrame):
         cols = list(self.dataframe.columns)
         result = {
             "name": self.name,
+            "timestamp": self.timestamp.timestamp(),
             "meantime": self.df_root_max_mean_runtime(self.roots, "time (inc)"),
             "roots": self.roots,
             "ncallsites": self.df_count("name"),
