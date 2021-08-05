@@ -342,18 +342,30 @@ class SankeyLayout:
         """
         nxg = nx.DiGraph()
 
+        unique_paths = {}
+
         for callsite in self.sg.nxg.nodes():
             cs_idx = self.sg.get_idx(callsite, "callsite")
+
+            if cs_idx not in self.gp_dict:
+                continue
+
             path = self.gp_dict[cs_idx]
 
+            if tuple(path) not in unique_paths.keys():
+                unique_paths[tuple(path)] = 1
+        
+        for path in unique_paths.keys():
             if len(path) > 2:
-                path = SankeyLayout._break_cycles_in_paths(path)
+                path = self._break_cycles_in_paths(cs_idx, path)
+                print(f"After breaking cycles: {path}")
+            
                 for depth in range(0, len(path) - 1):
-                    src = path[depth]
+                    src = path[depth] # Node structure.
                     tgt = path[depth + 1]
 
-                    src_name = self.sg.get_name(src.get("id"), "module")
-                    tgt_name = self.sg.get_name(tgt.get("id"), "module")
+                    src_name = self.sg.get_name(src.get("idx"), src.get("type"))
+                    tgt_name = self.sg.get_name(tgt.get("idx"), tgt.get("type"))
 
                     if not nxg.has_node(src_name):
                         src_dict = self.sg_node_construct(callsite, src)
@@ -370,7 +382,7 @@ class SankeyLayout:
                     else:
                         edge_type = "caller"
 
-                    weight = self.sg.get_runtime(tgt.get("id"), "module", self.time_inc)
+                    weight = self.sg.get_runtime(tgt.get("idx"), "module", self.time_inc)
 
                     edge_dict = {
                         "edge_type": edge_type,
@@ -383,7 +395,7 @@ class SankeyLayout:
         return nxg
 
     def sg_node_construct(self, callsite_name, node):
-        name = self.sg.get_name(node.get("id"), node.get("type"))
+        name = self.sg.get_name(node.get("idx"), node.get("type"))
         cs_idx = self.sg.get_idx(callsite_name, "callsite")
 
         ret = {
@@ -392,23 +404,22 @@ class SankeyLayout:
             "level": node.get("level"),
             "cp_path": self.cp_dict[cs_idx],
             "time (inc)": self.sg.get_runtime(
-                node.get("id"), node.get("type"), self.time_inc
+                node.get("idx"), node.get("type"), self.time_inc
             ),
             "time": self.sg.get_runtime(
-                node.get("id"), node.get("type"), self.time_exc
+                node.get("idx"), node.get("type"), self.time_exc
             ),
             "hists": self.sg.get_histograms(node, nbins=20),
             "entry_functions": self.sg.get_entry_functions(node),
-            "nid": node.get("id"),
+            "idx": node.get("idx"),
         }
         
         if self.sg.name == "ensemble":
-            ret["gradients"] = self.sg.get_gradients(node.get("id"), node.get("type"), self.nbins)
+            ret["gradients"] = self.sg.get_gradients(node.get("idx"), node.get("type"), self.nbins)
         
         return ret
 
-    @staticmethod
-    def _break_cycles_in_paths(path):
+    def _break_cycles_in_paths(self, cs_idx, path):
         """
         Breaks cycles in the call graph, if present.
 
@@ -426,7 +437,7 @@ class SankeyLayout:
                 module_mapper[elem] = idx
                 data_mapper[elem] = [
                     {
-                        "id": elem.item(),
+                        "idx": elem.item(), # will be a module_idx
                         "level": idx,
                         "type": "module",
                     }
@@ -437,7 +448,7 @@ class SankeyLayout:
                     module_mapper[elem] += 1
                     data_mapper[elem].append(
                         {
-                            "id": elem.item(),
+                            "idx": cs_idx,
                             "level": idx,
                             "type": "callsite",
                         }
@@ -445,7 +456,7 @@ class SankeyLayout:
                 else:
                     data_mapper[elem].append(
                         {
-                            "id": elem.item(),
+                            "idx": cs_idx,
                             "level": idx,
                             "type": "callsite",
                         }
