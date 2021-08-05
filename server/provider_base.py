@@ -189,8 +189,6 @@ class BaseProvider:
         if len(process_datasets) == 0:
             return
 
-        print(self.config)
-
         append_path = self.config.get("append_path", "")
         load_path = self.config["data_path"]
         m2c = self.config.get("m2c", {})
@@ -375,7 +373,7 @@ class BaseProvider:
             # Construct the per-supergraph timeline data.
             data = {}
             data["d"] = {
-                sg: self.supergraphs[sg].timeline(
+                sg : self.supergraphs[sg].timeline(
                     top_nodes, operation["ntype"], operation["metric"]
                 )
                 for sg in self.supergraphs
@@ -645,7 +643,7 @@ class BaseProvider:
             for callsite in callsites:
                 bp = BoxPlot(
                     sg=sg,
-                    relative_sg=e_sg,
+                    rel_sg=e_sg,
                     name=callsite,
                     ntype=ntype,
                     iqr_scale=iqr,

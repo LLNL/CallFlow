@@ -12,9 +12,8 @@
 				<v-card-title class="pa-2 pt-0"> Timeline View
 				</v-card-title>
 			</v-col>
-			<v-col cols="2"></v-col>
 			<v-col cols="2">
-				<v-select
+				<!-- <v-select
 					dense
 					label="Chart Type"
 					:items="chartTypes"
@@ -22,18 +21,18 @@
 					:menu-props="{maxHeight: '200'}"
 					persistent-hint
 				>
-				</v-select>
+				</v-select> -->
 			</v-col>
 			<v-col cols="2">
-				<v-select
+				<v-text-field
 					dense
-					label="Y axis bandwidth"
-					:items="seriesTypes"
-					v-model="selectedSeriesType"
+					label="Top N super nodes"
+					type="number"
+					v-model="selectedTopCallsiteCount"
 					:menu-props="{maxHeight: '200'}"
 					persistent-hint
 				>
-				</v-select>
+				</v-text-field>
 			</v-col>
 			<v-col cols="2">
 				<v-select
@@ -47,15 +46,26 @@
 				</v-select>
 			</v-col>
 			<v-col cols="2">
-				<v-text-field
+				<v-select
 					dense
-					label="Top N-callsites"
-					type="number"
-					v-model="selectedTopCallsiteCount"
+					label="X-axis domain"
+					:items="chartXAttr"
+					v-model="selectedChartXAttr"
 					:menu-props="{maxHeight: '200'}"
 					persistent-hint
 				>
-				</v-text-field>
+				</v-select>
+			</v-col>
+			<v-col cols="2">
+				<v-select
+					dense
+					label="Y-axis bandwidth"
+					:items="seriesTypes"
+					v-model="selectedSeriesType"
+					:menu-props="{maxHeight: '200'}"
+					persistent-hint
+				>
+				</v-select>
 			</v-col>
 		</v-row>
 		<v-row class="ml-3">
@@ -67,6 +77,7 @@
 
 <script>
 import { mapGetters } from "vuex";
+import moment from "moment";
 
 import * as d3 from "d3";
 import * as utils from "lib/utils";
@@ -96,13 +107,13 @@ export default {
 		},
 		chartTypes: ["bar", "area", "line"],
 		selectedChartType: "bar",
-		chartXAttr: "datasets",
+		chartXAttr: [],
+		selectedChartXAttr: "name",
 		seriesTypes: ["stacked", "normalized"],
-		selectedSeriesType: "normalized",
+		selectedSeriesType: "stacked",
 		metrics: ["time", "time (inc)"],
-		selectedMetric: "time (inc)",
+		selectedMetric: "time",
 		selectedTopCallsiteCount: 5,
-		selectedXDomain: "normal",
 		selectedntype: "module",
 		ntypes: ["module", "callsite"],
 	}),
@@ -118,6 +129,10 @@ export default {
 			console.log("[Timeline] data:", val);
 			this.nodes = val.nodes;
 			this.data = Object.values(val.d).map((d) => d);
+
+			for (let key of Object.keys(this.data[0])) {
+				this.chartXAttr.push(key);
+			}
 			this.visualize();
 		},
 
@@ -155,6 +170,15 @@ export default {
 				"ncount": this.selectedTopCallsiteCount,
 				"metric": this.selectedMetric,
 			});
+		},
+
+		selectedChartXAttr() {
+			this.clear();
+			this.$store.dispatch("fetchTimeline", {
+				"ntype": this.selectedntype,
+				"ncount": this.selectedTopCallsiteCount,
+				"metric": this.selectedMetric,
+			});
 		}
 	},
 
@@ -175,11 +199,7 @@ export default {
 			const settingsHeight = document.getElementById("settings").clientHeight;
 			const topHalfSummaryHeight = document.getElementById("top-half").clientHeight;
 			const retailHeight = this.$store.viewHeight - settingsHeight - topHalfSummaryHeight;
-			// if (retailHeight < 0.5 * this.$store.viewHeight) {
-			// 	this.height = 400;
-			// } else {
 			this.height = retailHeight;
-			// }
 
 			this.svg = d3.select("#" + this.id);
 
@@ -199,17 +219,24 @@ export default {
 		plot() {
 			let series = null;
 			let yDomain = [];
+			
+			let order_nodes = this.nodes;
+			if (this.nodes.includes(this.selectedChartXAttr)) {
+				order_nodes.splice(order_nodes.indexOf(this.selectedChartXAttr), 1);
+				order_nodes.unshift(this.selectedChartXAttr);
+			}
+
 			if(this.selectedSeriesType == "stacked") {
 				series = d3
 					.stack()
-					.keys(this.nodes)(this.data)
+					.keys(order_nodes)(this.data)
 					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
-				yDomain = [d3.min(series, (d) => d3.min(d, (d) => d[1])), d3.max(series, (d) => d3.max(d, (d) => d[1]))];
+				yDomain = [0, d3.max(series, (d) => d3.max(d, (d) => d[1]))];
 			}
 			else if (this.selectedSeriesType == "normalized") {
 				series = d3
 					.stack()
-					.keys(this.nodes)
+					.keys(order_nodes)
 					.offset(d3.stackOffsetExpand)(this.data)
 					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
 				yDomain = [0, 1];
@@ -222,17 +249,21 @@ export default {
 				.range(d3.schemeSpectral[series.length])
 				.unknown("#ccc");
 
-			if (this.selectedXDomain == "normal") {
-				this.x = d3
-					.scaleBand()
-					.domain(this.data.map((d) => d.name))
-					.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
-			} else if (this.selectedXDomain == "time") {
-				this.x = d3
-					.scaleUtc()
-					.domain(d3.extent(this.data, d => d[this.chartXAttr]))
-					.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
+			let xDomain = [];
+			if (this.selectedChartXAttr == "runs") {
+				xDomain = this.data.map((d) => d.name);
+			} else if (this.selectedChartXAttr == "timestamp") {
+				xDomain = this.data.map((d) => moment(d.timestamp).valueOf()).sort((a, b) => a - b);
+			} else if (this.selectedChartXAttr == "root_inclusive") {
+				xDomain = this.data.map((d) => d.root_time_inc).sort((a, b) => a - b);
+			} else {
+				xDomain = this.data.map((d) => d[this.selectedChartXAttr]).sort((a, b) => a - b);
 			}
+
+			this.x = d3
+				.scaleBand()
+				.domain(xDomain)
+				.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
 
 			this.y = d3
 				.scaleLinear()
@@ -250,6 +281,7 @@ export default {
 		},
 
 		barChart(series) {
+			console.log(series);
 			this.mainSvg
 				.append("g")
 				.selectAll("g")
@@ -259,7 +291,16 @@ export default {
 				.selectAll("rect")
 				.data((d) => d)
 				.join("rect")
-				.attr("x", (d) => this.x(d.data.name))
+				.attr("x", (d) => {
+					let val;
+					if(this.selectedChartXAttr == "timestamp") {
+						val = moment(d.data.timestamp).valueOf();
+					}
+					else {
+						val = d.data[this.selectedChartXAttr];
+					}
+					return this.x(val);
+				})
 				.attr("y", (d) => this.y(d[1]))
 				.attr("height", (d) => this.y(d[0]) - this.y(d[1]))
 				.attr("width", this.x.bandwidth())
@@ -314,11 +355,18 @@ export default {
 
 		// Axis for timeline view
 		axis() {
+			let format = d3.format(".2f");
 			this.xAxis = d3
 				.axisBottom(this.x)
 				.tickPadding(10)
 				.tickFormat((d, i) => {
-					return `${d}`;
+					if(this.selectedChartXAttr == "timestamp") {
+						return `${moment(d).format("MM-DD/HH:mm")}`;
+					} else if (this.selectedChartXAttr == "name"){
+						return d.split(".")[2] + "/" +  d.split(".")[3].split("_")[1];
+					} else {
+						return format(d);
+					}
 				});
 
 			this.yAxis = d3
@@ -356,12 +404,12 @@ export default {
 				.append("text")
 				.attrs({
 					class: "axis-labels",
-					transform: `translate(${this.width - 2 * this.padding.left}, ${
+					transform: `translate(${this.width - 3 * this.padding.left}, ${
 						this.height - this.padding.top
 					})`,
 				})
 				.style("text-anchor", "middle")
-				.text(this.chartXAttr);
+				.text(this.selectedChartXAttr);
 
 			this.svg
 				.append("text")

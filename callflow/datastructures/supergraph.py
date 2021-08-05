@@ -8,7 +8,7 @@ CallFlow's data structure to construct Super Graphs.
 """
 import os
 import json
-import arrow
+import datetime
 import hatchet as ht
 import networkx as nx
 import numpy as np
@@ -23,7 +23,7 @@ from callflow.utils.df import (
     df_lookup_by_column,
     df_as_dict,
     df_bi_level_group,
-    df_column_mean,
+    callsites_column_mean,
 )
 from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
 from callflow.modules import Histogram
@@ -70,9 +70,9 @@ class SuperGraph(ht.GraphFrame):
 
         self.name = name
         if name != "ensemble":
-            self.timestamp = arrow.get(name.split(".")[-1], "YYYY-MM-DD_HH-mm-ss")   # dataset name
+            self.timestamp = Sanitizer.fmt_time(name.split(".")[-1])
         else: 
-            self.timestamp = arrow.now()
+            self.timestamp = Sanitizer.datetime_to_fmt(datetime.datetime.now())
 
         self.profile_format = ""
 
@@ -719,7 +719,7 @@ class SuperGraph(ht.GraphFrame):
         cols = list(self.dataframe.columns)
         result = {
             "name": self.name,
-            "timestamp": self.timestamp.timestamp(),
+            "timestamp": self.timestamp,
             "meantime": self.df_root_max_mean_runtime(self.roots, "time (inc)"),
             "roots": self.roots,
             "ncallsites": self.df_count("name"),
@@ -752,11 +752,12 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.debug(f"[{self.name}] Nodes: {nodes}; ntype: {ntype}; metric: {metric}")
 
         data = {
-            self.get_name(node_idx, ntype): df_column_mean(grp_df.get_group(node_idx), metric, self.proxy_columns)
+            self.get_name(node_idx, ntype): callsites_column_mean(grp_df.get_group(node_idx), metric, self.proxy_columns)
             for node_idx in supernodes
         }
         data["root_time_inc"] = self.df_root_max_mean_runtime(self.roots, "time (inc)")
         data["name"] = self.name
+        data["timestamp"] = self.timestamp
         return data
 
     # --------------------------------------------------------------------------
