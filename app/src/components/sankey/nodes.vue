@@ -220,7 +220,7 @@ export default {
 					type: node.type
 				});
 
-				const nodeSVG = this.containerG.select("#callsite-" + node.id);
+				const nodeSVG = this.containerG.select("#callsite-" + node.attr_dict.nid);
 
 				// Make appropriate event requests (Single and Ensemble).
 				if (this.selectedMode == "ESG" && !this.isComparisonMode) {

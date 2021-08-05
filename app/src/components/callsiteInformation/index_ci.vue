@@ -257,7 +257,6 @@ export default {
 				
 				// Set the data for the boxplot.
 				this.boxplot[callsite_name] = {"q": callsite["q"], "outliers": callsite["outliers"], "nid": callsite["nid"]};
-				console.log(this.boxplot);
 				this.cpath[callsite_name] = callsite["cpath"];
 
 				// Set the selection for a callsite. 
@@ -314,7 +313,6 @@ export default {
 				return map;
 			}, {});
 
-			console.log(callsites);
 			return callsites;
 		},
 
@@ -408,11 +406,11 @@ export default {
 			return ret;
 		},
 
-		formatPath(val) {
+		formatPath(path) {
 			const cMap = this.summary[this.selectedTargetRun]["callsites"];
 			let ret = [];
-			for (let c of val) {	
-				ret.push(cMap[c]);
+			for (let callsite of path) {	
+				ret.push(cMap[callsite]);
 			}
 			return ret;
 		},
