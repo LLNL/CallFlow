@@ -737,7 +737,7 @@ class SuperGraph(ht.GraphFrame):
 
         for column in ["time", "time (inc)"]:
             col = self.df_get_proxy(column)
-            result[column] = self.df_minmax(col)
+            result[column] = self.callsites_minmax("name", col)
 
         return result
 
@@ -871,6 +871,11 @@ class SuperGraph(ht.GraphFrame):
         """
         column = self.df_get_proxy(column)
         return self.dataframe[column].min(), self.dataframe[column].max()
+
+    def callsites_minmax(self, groupby, column):
+        column = self.df_get_proxy(column)
+        gdf = self.dataframe.groupby(groupby)
+        return gdf.mean()[column].min(), gdf.mean()[column].max()
 
     def df_filter_by_value(self, column, value):
         """
