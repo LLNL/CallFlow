@@ -239,6 +239,9 @@ export default {
 			this.info = this.numberOfcallsites + " call sites";
 
 			for (let callsite_name in this.callsites) {
+				if(!this.callsites[callsite_name]){
+					continue;
+				}
 				let callsite = this.callsites[callsite_name];
 
 				// Set the dictionaries for metadata information. 
@@ -254,7 +257,7 @@ export default {
 				
 				// Set the data for the boxplot.
 				this.boxplot[callsite_name] = {"q": callsite["q"], "outliers": callsite["outliers"], "nid": callsite["nid"]};
-				
+				console.log(this.boxplot);
 				this.cpath[callsite_name] = callsite["cpath"];
 
 				// Set the selection for a callsite. 
@@ -298,14 +301,20 @@ export default {
 			});
 
 			items = items.sort( (first, second) => {
+				if (first[1][metric] == undefined || second[1][metric] == undefined) {
+					return -1;
+				}
 				return second[1][metric][attribute] - first[1][metric][attribute];
 			});
 
 			callsites = items.reduce(function (map, obj) {
-				map[obj[0]] = obj[1][metric];
+				if (obj[1][metric]){
+					map[obj[0]] = obj[1][metric];
+				}
 				return map;
 			}, {});
 
+			console.log(callsites);
 			return callsites;
 		},
 
@@ -412,6 +421,7 @@ export default {
      *
      */
 		clear() {
+			this.callsites = {};
 			EventHandler.$emit("clear-boxplot");
 		},
 
