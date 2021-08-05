@@ -212,7 +212,7 @@ class SuperGraph(ht.GraphFrame):
         Getter to obtain the rank histograms of a node.
         Used by the mini-histograms on top of the node.
         """
-        nid = node.get("id")
+        nid = node.get("idx")
         ntype = node.get("type")
 
         if ntype == "callsite":
@@ -449,14 +449,14 @@ class SuperGraph(ht.GraphFrame):
         self.callsite_aux_dict = df_bi_level_group(
             self.dataframe,
             group_attrs=["name"],
-            cols=self.time_columns + ["nid"],
+            cols=self.time_columns,
             group_by=["rank"],
             apply_func=lambda _: _.mean(),
         )
         self.module_aux_dict = df_bi_level_group(
             self.dataframe,
             group_attrs = ["module","name"],
-            cols=self.time_columns + ["nid"],
+            cols=self.time_columns,
             group_by=["rank"],
             apply_func=lambda _: _.mean(),
         )
@@ -490,9 +490,6 @@ class SuperGraph(ht.GraphFrame):
 
         # get the mapping from the dataframe
         callsite2module_dict = self.dataframe.groupby('name')['module'].apply(lambda x: x.unique().tolist()).to_dict()
-
-        print(callsite2module_dict)
-
 
         # Make sure each callsite maps to a single module and create
         # callsite2module mapping, if not raise an exception.

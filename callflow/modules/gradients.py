@@ -30,13 +30,13 @@ class Gradients:
     """
 
     def __init__(
-        self, df, nid: int, ntype: str = "callsite", bins: int = 20, proxy_columns={}
+        self, df, idx: int, ntype: str = "callsite", bins: int = 20, proxy_columns={}
     ):
         """
         Constructor function for the class
 
         :param df: Dictinary of dataframes keyed by the dataset_name. For e.g., { "dataset_name": df }.
-        :param node_id: Node id from the supergraph
+        :param idx: Node id from the supergraph
         :param node_type: Node type from the supergraph
         :param bins: Number of bins to distribute the runtime information.
         :param proxy_columns: Proxy columns
@@ -53,7 +53,8 @@ class Gradients:
         assert len(self.datasets) >= 1
 
         self.bins = bins
-        self.nid = nid
+        self.idx = idx
+
         self.df = df
 
         self.proxy_columns = proxy_columns
@@ -125,8 +126,14 @@ class Gradients:
         dists = {tk: {} for tk, tv in zip(TIME_COLUMNS, self.time_columns)}
 
         # Get the runtimes for all the runs.
+        levels = self.df.index.unique().tolist()
         for idx, dataset in enumerate(self.datasets):
-            node_df = self.df.xs((dataset, self.nid))
+            # If the level doesn't exist, it means this callsite is not present
+            # in the dataset.
+            if (dataset, self.idx) not in levels:
+                continue
+
+            node_df = self.df.xs((dataset, self.idx))
             for tk, tv in zip(TIME_COLUMNS, self.time_columns):
                 if node_df.empty:
                     dists[tk][dataset] = dict(
