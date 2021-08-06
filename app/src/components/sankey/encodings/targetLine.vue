@@ -47,7 +47,7 @@ export default {
 				.append("line")
 				.attrs({
 					"class": "targetLines",
-					"id": (d) => "line-2-" + this.selectedTargetRun + "-" + d.attr_dict.nid,
+					"id": (d) => "line-2-" + this.selectedTargetRun + "-" + d.attr_dict.idx,
 					"x1": 0,
 					"y1": (d) => this.getTargetPos(d),
 					"x2": this.$parent.nodeWidth,
