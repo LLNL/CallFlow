@@ -143,7 +143,7 @@ export default {
 		// Attach the svg into the node object. 
 		postVis() {
 			for (let node of this.graph.nodes) {
-				node.svg = this.containerG.select("#callsite-" + node.attr_dict.nid);
+				node.svg = this.containerG.select("#callsite-" + node.attr_dict.idx);
 			}
 		},
 
@@ -186,14 +186,14 @@ export default {
 				.append("g")
 				.attrs({
 					"class": "callsite",
-					"id": (d) => "callsite-" + d.attr_dict.nid,
+					"id": (d) => "callsite-" + d.attr_dict.idx,
 					"transform": (d) => `translate(${d.x},${d.y + this.$parent.ySpacing})`,
 					"opacity": 1,
 				});
 
 			this.nodesSVG.append("rect")
 				.attrs({
-					"id": (d) => { return "callsite-rect" + d.attr_dict.nid; },
+					"id": (d) => { return "callsite-rect" + d.attr_dict.idx; },
 					"class": "callsite-rect",
 					"height": (d) => d.height,
 					"width": this.nodeWidth,
@@ -212,15 +212,17 @@ export default {
 
 		click(node) {
 			event.stopPropagation();
-			if (node.id !== this.selectedNode.name || node.type !== this.selectedNode.type) {
+			if (node.id !== this.selectedNode.id || node.type !== this.selectedNode.type) {
 				
 				// Set the data.
 				this.$store.commit("setSelectedNode", {
-					name: node.id,
+					id: node.id,
 					type: node.type
 				});
 
-				const nodeSVG = this.containerG.select("#callsite-" + node.attr_dict.nid);
+				console.log(node.attr_dict);
+
+				const nodeSVG = this.containerG.select("#callsite-" + node.attr_dict.idx);
 
 				// Make appropriate event requests (Single and Ensemble).
 				if (this.selectedMode == "ESG" && !this.isComparisonMode) {

@@ -79,7 +79,7 @@ export default {
 					.append("line")
 					.attrs({
 						"class": "gradientGuides-" + guideType,
-						"id": "line-2-" + node.client_idx,
+						"id": "line-2-" + node.attr_dict.idx,
 						"x1": 0,
 						"y1": y,
 						"x2": this.$parent.nodeWidth,
@@ -116,7 +116,7 @@ export default {
 									.append("text")
 									.attrs({
 										"class": "gradientGuidesText-" + guideType,
-										"id": "line-2-" + node["client_idx"],
+										"id": "line-2-" + node.attr_dict.idx,
 										"x": -60,
 										"y": y + fontSize / 2 + binWidth / 2 + fontSize * i,
 										"fill": "black"
@@ -135,7 +135,7 @@ export default {
 								.append("text")
 								.attrs({
 									"class": "gradientGuidesText-" + guideType,
-									"id": "line-2-" + node["client_idx"],
+									"id": "line-2-" + node.attr_dict.idx,
 									"x": -60,
 									"y": y + fontSize / 2 + binWidth / 2 + fontSize * idx,
 									"fill": "black"
@@ -152,7 +152,7 @@ export default {
 							.append("text")
 							.attrs({
 								"class": "gradientGuidesText-" + guideType,
-								"id": "line-2-" + node["client_idx"],
+								"id": "line-2-" + node.attr_dict.idx,
 								"x": -60,
 								"y": y + fontSize / 2 + binWidth / 2, //+ fontSize * i,
 								"fill": "black"
@@ -169,7 +169,7 @@ export default {
 							.append("text")
 							.attrs({
 								"class": "gradientGuidesText-" + guideType,
-								"id": "line-2-" + node["client_idx"],
+								"id": "line-2-" + node.attr_dict.idx,
 								"x": this.$parent.nodeWidth + 10,
 								"y": y + fontSize / 2 + binWidth / 2,
 								"fill": "black"
@@ -185,7 +185,7 @@ export default {
 						.append("text")
 						.attrs({
 							"class": "gradientGuidesText-" + guideType,
-							"id": "line-2-" + node.client_idx,
+							"id": "line-2-" + node.attr_dict.idx,
 							"x": this.$parent.nodeWidth + 10,
 							"y": y,
 							"fill": "black"
@@ -199,7 +199,7 @@ export default {
 						.append("text")
 						.attrs({
 							"class": "gradientGuidesText-" + guideType,
-							"id": "line-2-" + node.client_idx,
+							"id": "line-2-" + node.attr_dict.idx,
 							"x": this.$parent.nodeWidth + 10,
 							"y": y + binWidth,
 							"fill": "black"
