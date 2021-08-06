@@ -363,6 +363,12 @@ class BaseProvider:
             # Get the top-n nodes from the "ensemble" based on the ntype.
             top_nodes_idx = supergraph.df_get_top_by_attr(
                 operation["ntype"], operation["ncount"], operation["metric"]
+            
+            )
+
+            all_nodes_idx = supergraph.df_get_top_by_attr(
+                operation["ntype"], -1, operation["metric"]
+            
             )
 
             # Convert the indexs to the modules.
@@ -370,6 +376,12 @@ class BaseProvider:
                 supergraph.get_name(node_idx, operation["ntype"])
                 for node_idx in top_nodes_idx
             ]
+            all_nodes = [                
+                supergraph.get_name(node_idx, operation["ntype"])
+                for node_idx in all_nodes_idx
+
+            ]
+
             # Construct the per-supergraph timeline data.
             data = {}
             data["d"] = {
@@ -381,7 +393,8 @@ class BaseProvider:
             }
 
             # Attach the keys as the top_nodes
-            data["nodes"] = top_nodes
+            data["top_nodes"] = top_nodes
+            data["all_nodes"] = all_nodes
 
             return data
 

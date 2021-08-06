@@ -15,6 +15,17 @@
 			<v-col cols="2">
 				<!-- <v-select
 					dense
+					label="Y-axis bandwidth"
+					:items="seriesTypes"
+					v-model="selectedSeriesType"
+					:menu-props="{maxHeight: '200'}"
+					persistent-hint
+				>
+				</v-select> -->
+			</v-col>
+			<v-col cols="2">
+				<!-- <v-select
+					dense
 					label="Chart Type"
 					:items="chartTypes"
 					v-model="selectedChartType"
@@ -37,7 +48,7 @@
 			<v-col cols="2">
 				<v-select
 					dense
-					label="Metric"
+					label="Runtime Metric"
 					:items="metrics"
 					v-model="selectedMetric"
 					:menu-props="{maxHeight: '200'}"
@@ -48,7 +59,7 @@
 			<v-col cols="2">
 				<v-select
 					dense
-					label="X-axis domain"
+					label="X-axis"
 					:items="chartXAttr"
 					v-model="selectedChartXAttr"
 					:menu-props="{maxHeight: '200'}"
@@ -56,17 +67,7 @@
 				>
 				</v-select>
 			</v-col>
-			<v-col cols="2">
-				<v-select
-					dense
-					label="Y-axis bandwidth"
-					:items="seriesTypes"
-					v-model="selectedSeriesType"
-					:menu-props="{maxHeight: '200'}"
-					persistent-hint
-				>
-				</v-select>
-			</v-col>
+			
 		</v-row>
 		<v-row class="ml-3">
 			<svg :id="id" :width="width" :height="height" pointer-events="all" ></svg>
@@ -87,7 +88,8 @@ export default {
 	data: () => ({
 		id: "timeline-overview",
 		data: [],
-		nodes: [],
+		top_nodes: [],
+		all_nodes: [],
 		height: 0,
 		width: 0,
 		yMin: 0,
@@ -107,7 +109,7 @@ export default {
 		},
 		chartTypes: ["bar", "area", "line"],
 		selectedChartType: "bar",
-		chartXAttr: [],
+		chartXAttr: ["name", "timestamp", "root_time_inc"],
 		selectedChartXAttr: "name",
 		seriesTypes: ["stacked", "normalized"],
 		selectedSeriesType: "stacked",
@@ -127,58 +129,34 @@ export default {
 	watch: {
 		timeline: function (val) {
 			console.log("[Timeline] data:", val);
-			this.nodes = val.nodes;
+			this.all_nodes = val.all_nodes;
+			this.top_nodes = val.top_nodes;
 			this.data = Object.values(val.d).map((d) => d);
 
-			for (let key of Object.keys(this.data[0])) {
+			for (let key of this.all_nodes) {
 				this.chartXAttr.push(key);
 			}
 			this.visualize();
 		},
 
 		selectedTopCallsiteCount() {
-			this.clear();
-			this.$store.dispatch("fetchTimeline", {
-				"ntype": this.selectedntype,
-				"ncount": this.selectedTopCallsiteCount,
-				"metric": this.selectedMetric,
-			});
+			this.reset();
 		},
 
 		selectedMetric() {
-			this.clear();
-			this.$store.dispatch("fetchTimeline", {
-				"ntype": this.selectedntype,
-				"ncount": this.selectedTopCallsiteCount,
-				"metric": this.selectedMetric,
-			});
+			this.reset();
 		},
 
 		selectedSeriesType() {
-			this.clear();
-			this.$store.dispatch("fetchTimeline", {
-				"ntype": this.selectedntype,
-				"ncount": this.selectedTopCallsiteCount,
-				"metric": this.selectedMetric,
-			});
+			this.reset();
 		},
 
 		selectedChartType() {
-			this.clear();
-			this.$store.dispatch("fetchTimeline", {
-				"ntype": this.selectedntype,
-				"ncount": this.selectedTopCallsiteCount,
-				"metric": this.selectedMetric,
-			});
+			this.reset();
 		},
 
 		selectedChartXAttr() {
-			this.clear();
-			this.$store.dispatch("fetchTimeline", {
-				"ntype": this.selectedntype,
-				"ncount": this.selectedTopCallsiteCount,
-				"metric": this.selectedMetric,
-			});
+			this.reset();
 		}
 	},
 
@@ -190,7 +168,16 @@ export default {
 		});	
 	},
 
-	methods: {		
+	methods: {	
+		reset() {
+			this.clear();
+			this.$store.dispatch("fetchTimeline", {
+				"ntype": this.selectedntype,
+				"ncount": this.selectedTopCallsiteCount,
+				"metric": this.selectedMetric,
+			});
+		},
+
 		visualize() {
 			this.width = this.$store.viewWidth - this.padding.left - this.padding.right;
 			
@@ -220,20 +207,20 @@ export default {
 			let series = null;
 			let yDomain = [];
 			
-			let order_nodes = this.nodes;
-			if (this.nodes.includes(this.selectedChartXAttr)) {
+			let order_nodes = this.top_nodes;
+			if (this.top_nodes.includes(this.selectedChartXAttr)) {
 				order_nodes.splice(order_nodes.indexOf(this.selectedChartXAttr), 1);
 				order_nodes.unshift(this.selectedChartXAttr);
 			}
 
-			if(this.selectedSeriesType == "stacked") {
+			if(this.selectedMetric == "time") {
 				series = d3
 					.stack()
 					.keys(order_nodes)(this.data)
 					.map((d) => (d.forEach((v) => (v.key = d.key)), d));
 				yDomain = [0, d3.max(series, (d) => d3.max(d, (d) => d[1]))];
 			}
-			else if (this.selectedSeriesType == "normalized") {
+			else if (this.selectedMetric == "time (inc)") {
 				series = d3
 					.stack()
 					.keys(order_nodes)
@@ -360,12 +347,14 @@ export default {
 				.axisBottom(this.x)
 				.tickPadding(10)
 				.tickFormat((d, i) => {
-					if(this.selectedChartXAttr == "timestamp") {
-						return `${moment(d).format("MM-DD/HH:mm")}`;
-					} else if (this.selectedChartXAttr == "name"){
-						return d.split(".")[2] + "/" +  d.split(".")[3].split("_")[1];
-					} else {
-						return format(d);
+					if(i % 4 == 0 || this.x.domain().length < 15) {
+						if(this.selectedChartXAttr == "timestamp") {
+							return `${moment(d).format("MM-DD/HH:mm")}`;
+						} else if (this.selectedChartXAttr == "name"){
+							return d.split(".")[2] + "/" +  d.split(".")[3].split("_")[1];
+						} else {
+							return format(d);
+						}
 					}
 				});
 
@@ -423,7 +412,7 @@ export default {
 
 		colorMap() {
 			let width = this.width;
-			let n_colors = this.nodes.length;
+			let n_colors = this.top_nodes.length;
 			let x_offset = 20;
 			let y_offset = this.height;
 			let radius = 10;
@@ -444,12 +433,12 @@ export default {
 
 			svg
 				.selectAll("circle")
-				.data(this.nodes)
+				.data(this.top_nodes)
 				.enter()
 				.append("circle")
 				.style("stroke", "gray")
 				.style("fill", (d, i) => {
-					return this.color(this.nodes[i]);
+					return this.color(this.top_nodes[i]);
 				})
 				.attrs({
 					r: radius,
@@ -461,11 +450,11 @@ export default {
 
 			svg
 				.selectAll("text")
-				.data(this.nodes)
+				.data(this.top_nodes)
 				.enter()
 				.append("text")
 				.text((d, i) => {
-					return this.nodes[i];
+					return this.top_nodes[i];
 				})
 				.attrs({
 					x: (d, i) => {

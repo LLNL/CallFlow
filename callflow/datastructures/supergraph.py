@@ -956,14 +956,15 @@ class SuperGraph(ht.GraphFrame):
         :return: (list) top-n values
         """
         assert isinstance(count, int) and isinstance(sort_attr, str)
-        assert count > 0
+        assert count > 0 or count == -1
 
         column = self.df_get_proxy(column)
         sort_attr = self.df_get_proxy(sort_attr)
 
         df = self.dataframe.groupby([column]).mean()
         df = df.sort_values(by=[sort_attr], ascending=False)
-        df = df.nlargest(count, sort_attr)
+        if count != -1:
+            df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
 
     def df_factorize_column(self, column, update_df=False):
