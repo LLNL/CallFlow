@@ -53,10 +53,14 @@ class Sanitizer:
         fmt_from = "%Y-%m-%d_%H-%M-%S"
         fmt_to = "%Y-%m-%d %H:%M:%S"
 
-        # tstamp = string.split("_")
-        # dataname, tstamp = toks[0], "_".join(toks[1:])  # noqa
-        dt = datetime.datetime.strptime(tstamp, fmt_from)
-        return datetime.datetime.strftime(dt, fmt_to)
+        try:
+            dt = datetime.datetime.strptime(tstamp, fmt_from)
+            return datetime.datetime.strftime(dt, fmt_to)
+        except ValueError as e:
+            LOGGER.warn("Not a valid timestamp.")
+            LOGGER.warn(e)
+            return tstamp
+
 
     def datetime_to_fmt(datetime):
         fmt_to = "%Y-%m-%d %H:%M:%S"

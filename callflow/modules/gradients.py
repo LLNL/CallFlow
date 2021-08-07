@@ -96,6 +96,7 @@ class Gradients:
         """
         # TODO: previously, this logic applied to bin edges
         # but, now, we are working on bin_centers
+        print(bins[1], bins[0])
         binw = bins[1] - bins[0]
         bin_edges = np.append(bins - 0.5 * binw, bins[-1] + 0.5 * binw)
 

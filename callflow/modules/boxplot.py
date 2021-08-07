@@ -69,9 +69,8 @@ class BoxPlot:
 
         self.rel_c_path = None
         if rel_sg is not None:
-            rel_df = BoxPlot.get_aux_dict(rel_sg, ntype, self.idx)
-            if "dataset" in rel_df.columns:
-                self.ndataset = df_count(rel_df, "dataset")
+            self.rel_idx = rel_sg.get_idx(name, ntype)
+            rel_df = BoxPlot.get_aux_dict(rel_sg, ntype, self.rel_idx)
             self.result["bkg"] = self.compute(rel_sg, rel_df)
             self.box_types = ["tgt", "bkg"]
 
@@ -97,6 +96,9 @@ class BoxPlot:
 
         if df is None:
             return
+        
+        if "dataset" in df.columns:
+            self.ndataset = df_count(df, "dataset")
 
         ret = {_: {} for _ in TIME_COLUMNS}
         for tk, tv in zip(TIME_COLUMNS, self.time_columns):

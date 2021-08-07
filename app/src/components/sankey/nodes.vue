@@ -212,15 +212,13 @@ export default {
 
 		click(node) {
 			event.stopPropagation();
-			if (node.id !== this.selectedNode.id || node.type !== this.selectedNode.type) {
+			if (node.id !== this.selectedNode.name || node.type !== this.selectedNode.type) {
 				
 				// Set the data.
 				this.$store.commit("setSelectedNode", {
-					id: node.id,
+					name: node.id,
 					type: node.type
 				});
-
-				console.log(node.attr_dict);
 
 				const nodeSVG = this.containerG.select("#callsite-" + node.attr_dict.idx);
 

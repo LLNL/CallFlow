@@ -351,7 +351,12 @@ export default {
 						if(this.selectedChartXAttr == "timestamp") {
 							return `${moment(d).format("MM-DD/HH:mm")}`;
 						} else if (this.selectedChartXAttr == "name"){
-							return d.split(".")[2] + "/" +  d.split(".")[3].split("_")[1];
+							if(d.includes(".")) {
+								return d.split(".")[2] + "/" +  d.split(".")[3].split("_")[1];
+							}
+							else {
+								return d;
+							}
 						} else {
 							return format(d);
 						}
