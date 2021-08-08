@@ -148,32 +148,35 @@ class SuperGraph(ht.GraphFrame):
             return "Unknown"
         return self.callsite2module[callsite_idx]
 
-    def get_runtime(self, node_idx, ntype, metric, apply_func=None):
-        """
-        Getter to obtain the runtime as per the node type.
+    def _get_supernode_runtime(self, node, metric):
+        assert node.get("type") == "module"
 
-        :param node_idx (int): node index
-        :param ntype (str): node type (e.g., 'callsite' or 'module')
-        :param metric (str): metric (e.g., 'time' or 'time (inc)')
-        :param apply_func (func): apply function (e.g., mean, min, max)
-        :return (float): runtime of a node
-        """
-        if ntype == "callsite":
-            lk_column = "name"
-        elif ntype == "module":
-            lk_column = "module"
+        callsites = self.get_entry_functions(node)
+        runtimes = [self.get_runtime(cs, metric) for cs in callsites]
+        return max(runtimes)
 
-        _df = self.df_lookup_with_column(lk_column, node_idx)
+    def _get_node_runtime(self, node, metric):
+        assert node.get("type") == "callsite"
+
+        _df = self.df_lookup_with_column("name", node.get("id"))
         if _df.empty:
             return 0.0
 
-        if lk_column == "module":
-            callsites = df_unique(_df, "name")
-            runtimes = [self.get_runtime(cs, "callsite", metric) for cs in callsites]
-            return max(runtimes)
-
         assert metric in _df.columns
         return _df[metric].mean()
+
+    def get_runtime(self, node, metric):
+        """
+        Getter to obtain the runtime as per the node type.
+
+        :param node (int): node
+        :param metric (str): metric (e.g., 'time' or 'time (inc)')
+        :return (float): runtime of a node
+        """
+        if node.get("type") == "callsite":
+            return self._get_node_runtime(node, metric)
+        elif node.get("type") == "module":
+            return self._get_supernode_runtime(node, metric)
 
     def get_name_by_nid(self, nid):
         """
@@ -218,7 +221,7 @@ class SuperGraph(ht.GraphFrame):
         Getter to obtain the rank histograms of a node.
         Used by the mini-histograms on top of the node.
         """
-        nid = node.get("idx")
+        nid = node.get("id")
         ntype = node.get("type")
 
         if ntype == "callsite":
@@ -239,6 +242,7 @@ class SuperGraph(ht.GraphFrame):
         ).unpack()
 
     def get_entry_functions(self, node):
+        # If the node type is callsite, we return an empty list.
         if node.get("type") == "callsite":
             return []
 
@@ -247,14 +251,13 @@ class SuperGraph(ht.GraphFrame):
         unique_cp = self.get_component_path(node)
         entry_funcs = [list(_)[0] for _ in unique_cp if len(_) == 1]
 
-        for nid in entry_funcs:
-            name = self.get_name(nid, "callsite")
+        for cf_id in entry_funcs:
+            name = self.get_name(cf_id, "callsite")
             ret.append(
                 {
-                    "nid": nid,
+                    "id": cf_id,
                     "name": name,
-                    "time": self.get_runtime(name, "callsite", "time"),
-                    "time (inc)": self.get_runtime(name, "callsite", "time (inc)"),
+                    "type": "callsite"
                 }
             )
         return ret

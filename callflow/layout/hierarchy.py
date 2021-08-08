@@ -102,22 +102,17 @@ class HierarchyLayout:
         return nxg
 
     def esg_node_construct(self, nid, ntype, name, nbins):
-        if ntype == "callsite":
-            time_inc = self.esg.get_runtime(nid, ntype, self.time_inc)
-            time_exc = self.esg.get_runtime(nid, ntype, self.time_exc)
-            grads = self.esg.get_gradients(nid, ntype, nbins)
-        elif ntype == "module":
-            time_inc = self.esg.get_runtime(nid, ntype, self.time_inc)
-            time_exc = self.esg.get_runtime(nid, ntype, self.time_exc)
-            grads = self.esg.get_gradients(nid, ntype, nbins)
-
+        node = {
+            "id": nid,
+            "type": ntype,
+        }
         return {
             "id": nid,
             "type": ntype,
             "name": name,
-            "grad": grads,
-            self.time_inc: time_inc,
-            self.time_exc: time_exc,
+            "grad": self.esg.get_gradients(nid, ntype, nbins),
+            self.time_inc: self.esg.get_runtime(node, self.time_inc),
+            self.time_exc: self.esg.get_runtime(node, self.time_exc),
         }
 
     @staticmethod

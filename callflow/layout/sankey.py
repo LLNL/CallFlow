@@ -171,7 +171,6 @@ class SankeyLayout:
                     # source_weight = source_df[self.time_inc].max()
                     # target_weight = target_df[self.time_inc].mean()
 
-                    print(f"Adding edge: {source_callsite}, {target_callsite}")
                     self.nxg.add_node(source, attr_dict={"type": source_node_type})
                     self.nxg.add_node(target, attr_dict={"type": target_node_type})
                     self.nxg.add_edge(
@@ -351,28 +350,34 @@ class SankeyLayout:
                 continue
 
             path = self.gp_dict[cs_idx]
+            cp_path = self.cp_dict[cs_idx]
 
             if tuple(path) not in unique_paths.keys():
-                unique_paths[tuple(path)] = 1
-        
+                unique_paths[tuple(path)] = []
+
+            # TODO: need to generalize this here.
+            if len(cp_path) == 1:
+                unique_paths[tuple(path)].append(cp_path[0])
+
+        flow_mapping = {}
+        # TODO: Convert the unique paths to a graph. (by breaking the cycles)
         for path in unique_paths.keys():
             if len(path) > 2:
                 path = self._break_cycles_in_paths(cs_idx, path)
-                print(f"After breaking cycles: {path}")
             
                 for depth in range(0, len(path) - 1):
-                    src = path[depth] # Node structure.
+                    src = path[depth]
                     tgt = path[depth + 1]
 
-                    src_name = self.sg.get_name(src.get("idx"), src.get("type"))
-                    tgt_name = self.sg.get_name(tgt.get("idx"), tgt.get("type"))
+                    src_name = self.sg.get_name(src.get("id"), src.get("type"))
+                    tgt_name = self.sg.get_name(tgt.get("id"), tgt.get("type"))
 
                     if not nxg.has_node(src_name):
-                        src_dict = self.sg_node_construct(callsite, src)
+                        src_dict = self.sg_node_construct(src)
                         nxg.add_node(src_name, attr_dict=src_dict)
 
                     if not nxg.has_node(tgt):
-                        tgt_dict = self.sg_node_construct(callsite, tgt)
+                        tgt_dict = self.sg_node_construct(tgt)
                         nxg.add_node(tgt_name, attr_dict=tgt_dict)
 
                     has_callback_edge = nxg.has_edge(src_name, tgt_name)
@@ -382,40 +387,38 @@ class SankeyLayout:
                     else:
                         edge_type = "caller"
 
-                    weight = self.sg.get_runtime(tgt.get("idx"), "module", self.time_inc)
+                    super_edge = (src_name, tgt_name)
+                                        
+                    if super_edge not in flow_mapping:
+                        flow_mapping[super_edge] = {
+                            "edge_type": edge_type,
+                            "weight": 0,
+                        }
+                    
+                    flow_mapping[super_edge]["weight"] += self.sg.get_runtime(tgt, self.time_inc)
 
-                    edge_dict = {
-                        "edge_type": edge_type,
-                        "weight": weight,
-                    }
-
-                    if not nxg.has_edge(src_name, tgt_name) and edge_dict["weight"] > 0:
-                        nxg.add_edge(src_name, tgt_name, attr_dict=edge_dict)
+                    if not nxg.has_edge(src_name, tgt_name) and flow_mapping[super_edge]["weight"] > 0:
+                        nxg.add_edge(src_name, tgt_name, attr_dict=flow_mapping[super_edge])
 
         return nxg
 
-    def sg_node_construct(self, callsite_name, node):
-        name = self.sg.get_name(node.get("idx"), node.get("type"))
-        cs_idx = self.sg.get_idx(callsite_name, "callsite")
+    def sg_node_construct(self, node):
+        name = self.sg.get_name(node.get("id"), node.get("type"))
 
         ret = {
             "name": name,
             "type": node.get("type"),
             "level": node.get("level"),
-            "cp_path": self.cp_dict[cs_idx],
-            "time (inc)": self.sg.get_runtime(
-                node.get("idx"), node.get("type"), self.time_inc
-            ),
-            "time": self.sg.get_runtime(
-                node.get("idx"), node.get("type"), self.time_exc
-            ),
+            # "cp_path": self.cp_dict[self.sg.get_id(node)],
+            "time (inc)": self.sg.get_runtime(node, self.time_inc),
+            "time": self.sg.get_runtime(node, self.time_exc),
             "hists": self.sg.get_histograms(node, nbins=20),
             "entry_functions": self.sg.get_entry_functions(node),
-            "idx": node.get("idx"),
+            "idx": node.get("id"),
         }
         
         if self.sg.name == "ensemble":
-            ret["gradients"] = self.sg.get_gradients(node.get("idx"), node.get("type"), self.nbins)
+            ret["gradients"] = self.sg.get_gradients(node.get("id"), node.get("type"), self.nbins)
         
         return ret
 
@@ -437,7 +440,7 @@ class SankeyLayout:
                 module_mapper[elem] = idx
                 data_mapper[elem] = [
                     {
-                        "idx": elem.item(), # will be a module_idx
+                        "id": elem.item(), # will be a module_idx
                         "level": idx,
                         "type": "module",
                     }
@@ -448,7 +451,7 @@ class SankeyLayout:
                     module_mapper[elem] += 1
                     data_mapper[elem].append(
                         {
-                            "idx": cs_idx,
+                            "id": cs_idx,
                             "level": idx,
                             "type": "callsite",
                         }
@@ -456,7 +459,7 @@ class SankeyLayout:
                 else:
                     data_mapper[elem].append(
                         {
-                            "idx": cs_idx,
+                            "id": cs_idx,
                             "level": idx,
                             "type": "callsite",
                         }
