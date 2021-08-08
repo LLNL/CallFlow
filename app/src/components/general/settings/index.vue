@@ -176,7 +176,7 @@ export default {
 
 	data: () => ({
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
-		metrics: ["time", "time (inc)"],
+		metrics: ["time", "time (inc)", "module"],
 		runtimeColorMap: new Color().getAllColors(),
 		distributionColorMap: new Color().getAllColors(),
 		sortByModes: ["min", "mean", "max", "imb", "var", "kert", "skew"],
