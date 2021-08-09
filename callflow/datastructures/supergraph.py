@@ -273,7 +273,8 @@ class SuperGraph(ht.GraphFrame):
         elif ntype == "module":
             aux_dict = self.module_aux_dict
         
-        assert _idx in aux_dict
+        if _idx not in aux_dict:
+            return None
         return aux_dict[_idx]
 
     # TODO: get_component_path would return list for node.type == "callsite" and

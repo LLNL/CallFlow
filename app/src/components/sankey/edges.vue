@@ -29,10 +29,12 @@ export default {
 
 	computed: {
 		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
 			selectedMode: "getSelectedMode",
 			showTarget: "getShowTarget",
 			comparisonMode: "getComparisonMode",
 			generalColors: "getGeneralColors",
+			targetColor: "getTargetColor"
 		})
 	},
 
@@ -67,11 +69,18 @@ export default {
 				.enter().append("path")
 				.attrs({
 					"class": "edge",
-					"id": "edge-" + dataset
-				})
-				.style("fill", (d) => {
-					if (dataset == "ensemble") { return this.generalColors.ensemble; }
-					return this.generalColors.intermediate;
+					"id": "edge-" + dataset,
+					"fill": (d) => {
+						if (dataset === "ensemble") {
+							return self.generalColors.ensemble;
+						}
+						else if (dataset === "target") {
+							return self.generalColors.target;
+						}
+						else if (dataset === "single") {
+							return self.generalColors.intermediate;
+						}
+					},
 				})
 				.style("opacity", 0.5)
 				.on("mouseover", function (d) {
@@ -83,7 +92,6 @@ export default {
 					return b.dy - a.dy;
 				});
 		},
-
 
 		drawPath(d, linkHeight, edge_source_offset = 0, edge_target_offset = 0) {
 			const Tx0 = (d.source_data.x + d.source_data.dx + edge_source_offset).toFixed(this.precision);
@@ -165,26 +173,15 @@ export default {
 							link_height = d.height;
 						}
 						else if (dataset == "target") {
-							link_height = d.targetHeight;
+							let ratio = d.target_data.attr_dict.gradients["time (inc)"].dataset.mean[this.selectedTargetRun]/d.target_data.attr_dict["time (inc)"];
+							if (ratio > 1) {
+								link_height = d.height;
+							} 
+							else {
+								link_height = d.height * ratio;
+							}
 						}
-						// if (this.$store.selectedEdgeAlignment == "Top") {
 						return this.drawPath(d, link_height, 0, 0, dataset);
-						// }
-						// else if (this.$store.selectedEdgeAlignment == "Middle") {
-						// return this.drawMiddlePath(d, link_height, 0, 0, dataset);
-						// }
-
-					},
-					"fill": (d) => {
-						if (dataset == "ensemble") {
-							return this.generalColors.ensemble;
-						}
-						else if (dataset == "target") {
-							return this.generalColors.target;
-						}
-						else if (dataset == "single") {
-							return this.generalColors.intermediate;
-						}
 					},
 					"stroke": this.generalColors.darkGrey,
 				})
