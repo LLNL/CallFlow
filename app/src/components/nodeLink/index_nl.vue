@@ -44,7 +44,7 @@ export default {
 		InfoChip,
 		Loader,
 		ColorMap, 
-		ToolTip,
+		ToolTip
 	},
 
 	data: () => ({

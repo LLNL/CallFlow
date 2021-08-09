@@ -133,9 +133,7 @@ export default {
 			if(this.selectedMetric !== "module") {
 				const data = this.summary[this.selectedTargetRun][this.selectedMetric];
 				const [ colorMin, colorMax ]  = utils.getMinMax(data);
-				const runtimeColorMap = "OrRd";
-				this.$store.commit("setRuntimeColorMap", runtimeColorMap);
-				this.$store.runtimeColor = new Color(this.metric, colorMin, colorMax, runtimeColorMap, this.selectedColorPoint);
+				this.$store.runtimeColor = new Color(this.metric, colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);
 			}
 			else {
 				this.$store.moduleColor = new Color("Module", Number.MIN_VALUE, Number.MAX_VALUE, "OrRd", this.selectedColorPoint);
