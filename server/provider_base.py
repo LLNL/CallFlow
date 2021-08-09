@@ -427,17 +427,6 @@ class BaseProvider:
         if "ntype" in operation:
             ntype = operation["ntype"]
 
-            if operation_name in ["histogram", "scatterplot", "boxplots"]:
-                if ntype == "callsite":
-                    aux_dict = sg.callsite_aux_dict
-                elif ntype == "module":
-                    aux_dict = {
-                        sg.get_name(module_idx, "module"): sg.module_aux_dict[
-                            module_idx
-                        ]
-                        for module_idx in sg.module_aux_dict.keys()
-                    }
-
         if operation_name == "supergraph":
             ssg = SankeyLayout(
                 grp_column="group_path",
@@ -474,12 +463,12 @@ class BaseProvider:
             nbins = int(operation.get("nbins", 20))
 
             hist = Histogram(
-                dataframe=aux_dict[node],
-                relative_to_df=None,
+                sg=sg,
+                rel_sg=None,
+                name=node,
+                ntype=ntype,
                 histo_types=["rank"],
-                node_type=ntype,
                 bins=nbins,
-                proxy_columns=sg.proxy_columns,
             )
 
             return hist.unpack()
@@ -489,11 +478,11 @@ class BaseProvider:
             orientation = operation["orientation"]
 
             scatterplot = Scatterplot(
-                df=aux_dict[node],
-                relative_to_df=None,
-                node_type=ntype,
+                sg=sg,
+                rel_sg=None,
+                name=node,
+                ntype=ntype,
                 orientation=orientation,
-                proxy_columns=sg.proxy_columns,
             )
 
             return scatterplot.unpack()
@@ -541,41 +530,12 @@ class BaseProvider:
 
         operation_name = operation["name"]
         e_sg = self.supergraphs["ensemble"]
+        
+        if 'ntype' in operation:
+            ntype = operation["ntype"]
 
         if "dataset" in operation:
             sg = self.supergraphs[operation["dataset"]]
-
-        e_aux_dict = {}
-
-        if "ntype" in operation:
-            ntype = operation["ntype"]
-
-            if operation_name in ["histogram", "scatterplot", "boxplots"]:
-                if ntype == "callsite":
-                    e_aux_dict = e_sg.callsite_aux_dict
-                elif ntype == "module":
-                    e_aux_dict = {
-                        e_sg.get_name(module_idx, "module"): e_sg.module_aux_dict[
-                            module_idx
-                        ]
-                        for module_idx in e_sg.module_aux_dict.keys()
-                    }
-
-        if "dataset" in operation:
-            t_aux_dict = {}
-            tgt_dataset = operation["dataset"]
-            t_sg = self.supergraphs[tgt_dataset]
-
-            if operation_name in ["histogram", "scatterplot", "boxplots"]:
-                if ntype == "callsite":
-                    t_aux_dict = t_sg.callsite_aux_dict
-                elif ntype == "module":
-                    t_aux_dict = {
-                        t_sg.get_name(module_idx, "module"): t_sg.module_aux_dict[
-                            module_idx
-                        ]
-                        for module_idx in t_sg.module_aux_dict.keys()
-                    }
 
         if operation_name == "supergraph":
             ssg = SankeyLayout(
@@ -624,12 +584,12 @@ class BaseProvider:
             nbins = int(operation.get("nbins", 20))
 
             hist = Histogram(
-                dataframe=t_aux_dict[node],
-                relative_to_df=e_aux_dict[node],
+                sg=sg,
+                rel_sg=e_sg,
+                name=node,
+                ntype=ntype,
                 histo_types=["rank"],
-                node_type=ntype,
                 bins=nbins,
-                proxy_columns=t_sg.proxy_columns,
             )
 
             return hist.unpack()
@@ -639,11 +599,11 @@ class BaseProvider:
             orientation = operation["orientation"]
 
             scatterplot = Scatterplot(
-                df=t_aux_dict[node],
-                relative_to_df=e_aux_dict[node],
-                node_type=ntype,
+                sg=sg,
+                rel_sg=e_sg,
+                name=node,
+                ntype=ntype,
                 orientation=orientation,
-                proxy_columns=t_sg.proxy_columns,
             )
 
             return scatterplot.unpack()
@@ -660,7 +620,6 @@ class BaseProvider:
                     name=callsite,
                     ntype=ntype,
                     iqr_scale=iqr,
-                    proxy_columns=t_sg.proxy_columns,
                 )
                 result[callsite] = bp.unpack()
 
@@ -673,6 +632,9 @@ class BaseProvider:
 
             # Gradients are computed only for the ensemble mode.
             esg = self.supergraphs["ensemble"]
-            esg_nid = esg.get_idx(name, ntype)
+            node = {
+                "id": esg.get_idx(name, ntype),
+                "type": ntype
+            }
 
-            return esg.get_gradients(esg_nid, ntype, nbins)
+            return esg.get_gradients(node, nbins)

@@ -233,12 +233,12 @@ class SuperGraph(ht.GraphFrame):
             return {}
 
         return Histogram(
-            dataframe=aux_dict[nid],
-            relative_to_df=None,
+            sg=self,
+            rel_sg=None,
+            name=self.get_name(nid, node.get("type")),
+            ntype=node.get("type"),
             histo_types=["rank"],
-            node_type=node.get("type"),
             bins=nbins,
-            proxy_columns=self.proxy_columns,
         ).unpack()
 
     def get_entry_functions(self, node):
@@ -265,6 +265,16 @@ class SuperGraph(ht.GraphFrame):
     # TODO: Generalize on what a node is in context of CallFlow.
     def get_node(self, node):
         return {}
+
+    def get_aux_df(self, name, ntype):
+        _idx = self.get_idx(name, ntype)
+        if ntype == "callsite":
+            aux_dict = self.callsite_aux_dict
+        elif ntype == "module":
+            aux_dict = self.module_aux_dict
+        
+        assert _idx in aux_dict
+        return aux_dict[_idx]
 
     # TODO: get_component_path would return list for node.type == "callsite" and
     # returns a list of lists for node.type == "module". Avoid this confusion or

@@ -27,7 +27,7 @@ class BoxPlot:
     """
 
     def __init__(
-        self, sg, rel_sg=None, name="", ntype="", iqr_scale=1.5, proxy_columns={}
+        self, sg, rel_sg=None, name="", ntype="", iqr_scale=1.5
     ):
         """
         Boxplot for callsite or module
@@ -41,10 +41,9 @@ class BoxPlot:
         assert isinstance(sg, callflow.SuperGraph)
         assert isinstance(name, str)
         assert ntype in ["callsite", "module"]
-        assert isinstance(proxy_columns, dict)
         assert isinstance(iqr_scale, float)
 
-        self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
+        self.time_columns = [sg.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
         self.idx = sg.get_idx(name, ntype)
 
         self.result = {
