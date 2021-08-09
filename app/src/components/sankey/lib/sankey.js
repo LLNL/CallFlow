@@ -611,7 +611,7 @@ export default function Sankey() {
 
 			// Push links having less weight to the bottom.
 			node.sourceLinks.sort(descendingEdgeValue);
-			node.targetLinks.sort(ascendingEdgeValue);
+			node.targetLinks.sort(descendingEdgeValue);
 
 		});
 
