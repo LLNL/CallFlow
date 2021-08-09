@@ -71,22 +71,14 @@ class EnsembleGraph(SuperGraph):
 
         return runs
 
-    def get_gradients(self, idx, ntype, nbins):
+    def get_gradients(self, node, nbins):
         """
         Getter to obtain the gradients of a node by the runtime metrics.
         """
-        if self.module_df is None:
-            self.module_df = self.dataframe.set_index(["dataset", "module"])
-        if self.callsite_df is None:
-            self.callsite_df = self.dataframe.set_index(["dataset", "name"])
-
-        if ntype == "callsite":
-            df = self.callsite_df
-        elif ntype == "module":
-            df = self.module_df
+        assert self.name == "ensemble"
 
         return Gradients(
-            df, bins=nbins, idx=idx, ntype=ntype, proxy_columns=self.proxy_columns
+            self, node=node, bins=nbins, proxy_columns=self.proxy_columns
         ).result
 
 

@@ -110,7 +110,7 @@ class HierarchyLayout:
             "id": nid,
             "type": ntype,
             "name": name,
-            "grad": self.esg.get_gradients(nid, ntype, nbins),
+            "grad": self.esg.get_gradients(node, nbins),
             self.time_inc: self.esg.get_runtime(node, self.time_inc),
             self.time_exc: self.esg.get_runtime(node, self.time_exc),
         }

@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 <template>
-	<g :id="id"></g>
+  <g :id="id"></g>
 </template>
 
 <script>
@@ -23,7 +23,8 @@ export default {
 		nodes: [],
 		svg: undefined,
 		gradients: {},
-		positionDatasetMap: {}
+		positionDatasetMap: {},
+		fontSize: 12,
 	}),
 
 	computed: {
@@ -43,16 +44,8 @@ export default {
 					return;
 				}
 				this.gradients[node.id] = node.attr_dict.gradients[this.selectedMetric];
-				let datasetPositionMap = node.attr_dict.gradients[this.selectedMetric]["dataset"]["position"];
-
-				this.positionDatasetMap[node] = {};
-				for (let dataset in datasetPositionMap) {
-					let datasetPosition = datasetPositionMap[dataset];
-					if (this.positionDatasetMap[node][datasetPosition] == undefined) {
-						this.positionDatasetMap[node][datasetPosition] = [];
-					}
-					this.positionDatasetMap[node][datasetPosition].push(dataset);
-				}
+				this.datasetPositionMap = node.attr_dict.gradients[this.selectedMetric]["dataset"]["d2p"];
+				this.positionDatasetMap = node.attr_dict.gradients[this.selectedMetric]["dataset"]["p2d"];
 			}
 		},
 
@@ -91,122 +84,88 @@ export default {
 			}
 		},
 
+		_text(node, _id, _class, data, x, y) {
+			node.svg
+				.append("text")
+				.attrs({
+					"class": _class,
+					"id": _id,
+					"x": x,
+					"y": y,
+					"fill": "black"
+				})
+				.style("z-index", 100)
+				.style("font-size", this.fontSize + "px")
+				.text(data);
+		},
+
+		detailedGuides(node, data, x, y, binWidth, count) {
+			y += this.fontSize/2 + binWidth/2;
+
+			for (let i = 0; i < count; i += 1) {
+				let subtext = data[i];
+
+				let _id = "line-2-" + node.attr_dict.idx;
+				let _class = "gradientGuidesText-detailed";
+
+				if (i < count) {
+					this._text(node, _id, _class, subtext, x, y + i * this.fontSize);
+				}
+				else {
+					let leftover_count = data.length - count;
+					subtext = data[i] + "+ " + leftover_count + " runs";
+					this._text(node, _id, _class, subtext, x, y);
+					break;
+				}
+			}
+		},
+
+		summaryGuides(node, data, x, y, binWidth) {
+			y += this.fontSize/2 + binWidth/2;
+
+			let _id = "line-2-" + node.attr_dict.idx;
+			let _class = "gradientGuidesText-summary";
+
+			let text = utils.formatRunCounts(data);
+			this._text(_id, _class, text, x, y);
+		},
+
 		// TODO: Clean up the different modes. 
 		drawText(node, guideType) {
 			let xAxis = this.gradients[node.id]["hist"].b;
 			let yAxis = this.gradients[node.id]["hist"].h;
+			let p2d = this.gradients[node.id]["dataset"].p2d;
 
 			let binWidth = node.height / (xAxis.length);
 
 			for (let idx = 0; idx < xAxis.length; idx += 1) {
-				let y = binWidth * (idx);
+				let y = (binWidth) * idx;
 
-				let fontSize = 12;
 				if (yAxis[idx] != 0) {
-					// For placing the run count values.
-					// for (let i = 0; i < positionDatasetMap[idx].length; i += 1) {
-					let textGuideType = "summary";
-					let leftSideText = "";
-					if (textGuideType == "detailed") {
-						let text = this.positionDatasetMap[idx][0];
-						if (this.positionDatasetMap[idx].length < 3) {
-							for (let i = 0; i < 3; i += 1) {
-								leftSideText = this.positionDatasetMap[idx][i];
-								node.svg
-									.append("text")
-									.attrs({
-										"class": "gradientGuidesText-" + guideType,
-										"id": "line-2-" + node.attr_dict.idx,
-										"x": -60,
-										"y": y + fontSize / 2 + binWidth / 2 + fontSize * i,
-										"fill": "black"
-									})
-									.style("z-index", 100)
-									.style("font-size", fontSize + "px")
-									.text(leftSideText);
-
-							}
-						}
-						else {
-							let count = this.positionDatasetMap[idx].length - 3;
-							text = text + "+" + count;
-
-							node.svg
-								.append("text")
-								.attrs({
-									"class": "gradientGuidesText-" + guideType,
-									"id": "line-2-" + node.attr_dict.idx,
-									"x": -60,
-									"y": y + fontSize / 2 + binWidth / 2 + fontSize * idx,
-									"fill": "black"
-								})
-								.style("z-index", 100)
-								.style("font-size", fontSize + "px")
-								.text(leftSideText);
-						}
-
+					let left_x = -(this.$parent.nodeWidth + 10);
+					// Left guides => dataset information.
+					if (guideType == "detailed") {
+						this.detailedGuides(node, p2d[idx], left_x, y, binWidth, 3);
 					}
-					else if (textGuideType == "summary") {
-						leftSideText = utils.formatRunCounts(yAxis[idx]);
-						node.svg
-							.append("text")
-							.attrs({
-								"class": "gradientGuidesText-" + guideType,
-								"id": "line-2-" + node.attr_dict.idx,
-								"x": -60,
-								"y": y + fontSize / 2 + binWidth / 2, //+ fontSize * i,
-								"fill": "black"
-							})
-							.style("z-index", 100)
-							.style("font-size", fontSize + "px")
-							.text(leftSideText);
+					else if (guideType == "summary") {
+						this.summaryGuides(node, yAxis[idx], left_x, y, binWidth);
 					}
 
-					// For placing the runtime values.
-					if (idx != 0 && idx != xAxis.length - 1) {
-						let text = utils.formatRuntimeWithUnits(xAxis[idx]);
-						node.svg
-							.append("text")
-							.attrs({
-								"class": "gradientGuidesText-" + guideType,
-								"id": "line-2-" + node.attr_dict.idx,
-								"x": this.$parent.nodeWidth + 10,
-								"y": y + fontSize / 2 + binWidth / 2,
-								"fill": "black"
-							})
-							.style("z-index", 100)
-							.style("font-size", fontSize + "px")
-							.text(text);
+					// Right guides => runtime information.
+					let right_x = this.$parent.nodeWidth + 10;
+					let _class = "gradientGuidesText-runtime";
+					let _id = "line-2-" + node.attr_dict.idx;
+					let text = "";
+					if (idx == 0) {
+						text = "Min. = " + utils.formatRuntimeWithUnits(xAxis[idx]);
+					} else if(idx == xAxis.length - 1) {
+						text = "Max. = " + utils.formatRuntimeWithUnits(xAxis[idx]);
+						y += binWidth;
+					} else {
+						text = utils.formatRuntimeWithUnits(xAxis[idx]);
+						y += this.fontSize / 2 + binWidth / 2;
 					}
-				}
-
-				if (idx == 0) {
-					node.svg
-						.append("text")
-						.attrs({
-							"class": "gradientGuidesText-" + guideType,
-							"id": "line-2-" + node.attr_dict.idx,
-							"x": this.$parent.nodeWidth + 10,
-							"y": y,
-							"fill": "black"
-						})
-						.style("z-index", 100)
-						.style("font-size", fontSize + "px")
-						.text("Min. = " + utils.formatRuntimeWithUnits(xAxis[idx]));
-				}
-				else if (idx == xAxis.length - 1) {
-					node.svg
-						.append("text")
-						.attrs({
-							"class": "gradientGuidesText-" + guideType,
-							"id": "line-2-" + node.attr_dict.idx,
-							"x": this.$parent.nodeWidth + 10,
-							"y": y + binWidth,
-							"fill": "black"
-						})
-						.style("z-index", 100)
-						.style("font-size", fontSize + "px")
-						.text("Max. = " + utils.formatRuntimeWithUnits(xAxis[idx]));
+					this._text(node, _class, _id, text, right_x, y);
 				}
 			}
 		},
@@ -224,6 +183,8 @@ export default {
 		clear(node, type) {
 			node.svg.selectAll(".gradientGuides-" + type).remove();
 			node.svg.selectAll(".gradientGuidesText-" + type).remove();
+			node.svg.selectAll(".gradientGuidesText-runtime").remove();
+
 		},
 	}
 };

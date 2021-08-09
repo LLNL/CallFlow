@@ -220,12 +220,12 @@ export default {
 					type: node.type
 				});
 
-				const nodeSVG = this.containerG.select("#callsite-" + node.attr_dict.idx);
+				// const nodeSVG = this.containerG.select("#callsite-" + node.attr_dict.idx);
 
 				// Make appropriate event requests (Single and Ensemble).
 				if (this.selectedMode == "ESG" && !this.isComparisonMode) {
 					if (!this.drawGuidesMap[node.id]) {
-						this.$refs.Guides.visualize(node, "permanent", nodeSVG);
+						this.$refs.Guides.visualize(node, "detailed");
 						this.drawGuidesMap[node.id] = true;
 					}
 					
@@ -245,20 +245,20 @@ export default {
 
 		mouseover(node) {
 			this.$refs.ToolTip.visualize(self.graph, node);
-			if (this.selectedMode === "ESG" && !this.isComparisonMode) {
-				this.$refs.Guides.visualize(node, "temporary");
-			}
+			// if (this.selectedMode === "ESG" && !this.isComparisonMode) {
+			// 	this.$refs.Guides.visualize(node, "detailed");
+			// }
 		},
 
 		mouseout(node) {
 			this.$refs.ToolTip.clear();
-			if (this.selectedMode == "ESG") {
-				this.$refs.Guides.clear(node, "temporary");
-				if (this.permanentGuides == false) {
-					d3.selectAll(".ensemble-edge")
-						.style("opacity", 1.0);
-				}
-			}
+			// if (this.selectedMode == "ESG") {
+			// 	this.$refs.Guides.clear(node, "detailed");
+			// 	if (this.permanentGuides == false) {
+			// 		d3.selectAll(".ensemble-edge")
+			// 			.style("opacity", 1.0);
+			// 	}
+			// }
 		},
 
 		targetPath() {

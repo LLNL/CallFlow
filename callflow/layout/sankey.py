@@ -418,7 +418,7 @@ class SankeyLayout:
         }
         
         if self.sg.name == "ensemble":
-            ret["gradients"] = self.sg.get_gradients(node.get("id"), node.get("type"), self.nbins)
+            ret["gradients"] = self.sg.get_gradients(node, self.nbins)
         
         return ret
 
