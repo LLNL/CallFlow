@@ -14,6 +14,7 @@
 <script>
 import * as d3 from "d3";
 import { mapGetters } from "vuex";
+import EventHandler from "lib/routing/EventHandler";
 
 export default {
 	name: "Edges",
@@ -34,12 +35,18 @@ export default {
 			showTarget: "getShowTarget",
 			comparisonMode: "getComparisonMode",
 			generalColors: "getGeneralColors",
-			targetColor: "getTargetColor"
+			targetColor: "getTargetColor",
+			summary: "getSummary",
 		})
 	},
 
 	mounted() {
 		this.id = "edges";
+
+		let self = this;
+		EventHandler.$on("update-node-encoding", function (data) {
+			self.clearTarget();
+		});
 	},
 
 	methods: {
@@ -64,12 +71,11 @@ export default {
 
 		initEdges(dataset) {
 			let self = this;
-			this.edges.selectAll("#edge-" + dataset)
+			this.edges.selectAll(".edge-" + dataset)
 				.data(this.graph.links)
 				.enter().append("path")
 				.attrs({
-					"class": "edge",
-					"id": "edge-" + dataset,
+					"class": "edge-" + dataset,
 					"fill": (d) => {
 						if (dataset === "ensemble") {
 							return self.generalColors.ensemble;
@@ -85,8 +91,6 @@ export default {
 				.style("opacity", 0.5)
 				.on("mouseover", function (d) {
 					d3.select(this).style("stroke-opacity", "1.0");
-					// self.clearEdgeLabels()
-					// self.drawEdgeLabels(d)
 				})
 				.sort(function (a, b) {
 					return b.dy - a.dy;
@@ -164,7 +168,7 @@ export default {
 
 		drawEdges(dataset) {
 			let self = this;
-			this.edges.selectAll("#edge-" + dataset)
+			this.edges.selectAll(".edge-" + dataset)
 				.data(this.graph.links)
 				.attrs({
 					"d": (d) => {
@@ -173,7 +177,7 @@ export default {
 							link_height = d.height;
 						}
 						else if (dataset == "target") {
-							let ratio = d.target_data.attr_dict.gradients["time (inc)"].dataset.mean[this.selectedTargetRun]/d.target_data.attr_dict["time (inc)"];
+							let ratio = d.source_data.attr_dict.gradients["time (inc)"].dataset.mean[this.selectedTargetRun]/d.source_data.attr_dict["time (inc)"];
 							if (ratio > 1) {
 								link_height = d.height;
 							} 
@@ -205,9 +209,23 @@ export default {
 		},
 
 		clear() {
-			this.edges.selectAll(".edge").remove();
-			this.edges.selectAll(".edgelabel").remove();
-			this.edges.selectAll(".edgelabelText").remove();
+			this.clearEnsemble();
+			if(this.showTarget) {
+				this.clearTarget();
+			}
+		},
+
+		comparisonMode(data) {
+			console.log("here");
+			this.clearTarget();
+		},
+
+		clearEnsemble() {
+			this.edges.selectAll(".edge-ensemble").remove();
+		},
+
+		clearTarget() {
+			this.edges.selectAll(".edge-target").remove();
 		}
 	}
 };
