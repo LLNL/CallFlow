@@ -529,7 +529,10 @@ class BaseProvider:
         LOGGER.info(f"[Ensemble Mode] {operation}")
 
         operation_name = operation["name"]
-        e_sg = self.supergraphs["ensemble"]
+        if ("background" not in operation):
+            e_sg = self.supergraphs["ensemble"]
+        else:
+            e_sg = self.supergraphs[operation["background"]]
         
         if 'ntype' in operation:
             ntype = operation["ntype"]

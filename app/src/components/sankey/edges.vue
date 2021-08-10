@@ -33,7 +33,6 @@ export default {
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMode: "getSelectedMode",
 			showTarget: "getShowTarget",
-			comparisonMode: "getComparisonMode",
 			generalColors: "getGeneralColors",
 			targetColor: "getTargetColor",
 			summary: "getSummary",
@@ -213,11 +212,6 @@ export default {
 			if(this.showTarget) {
 				this.clearTarget();
 			}
-		},
-
-		comparisonMode(data) {
-			console.log("here");
-			this.clearTarget();
 		},
 
 		clearEnsemble() {
