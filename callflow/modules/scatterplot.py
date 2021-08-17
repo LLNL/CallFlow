@@ -23,37 +23,38 @@ class Scatterplot:
     """
 
     def __init__(
-        self, df, relative_to_df=None, node_type="", orientation=[], proxy_columns={}
+        self, sg, rel_sg=None, name="", ntype="", orientation=[]
     ):
         """
         Calculate Scatterplot for the callsite/module dataframe.
 
-        :param df: (Pandas.DataFrame)
-        :param relative_to_df: (Pandas.DataFrame)
-        :param node_type: (str) Node's type (e.g., module or callsite)
+        :param sg: (CallFlow.SuperGraph)
+        :param rel_sg: (CallFlow.SuperGraph)
+        :param name: (str) Node's name
+        :param ntype: (str) Node's type (e.g., module or callsite)
         :param orientation: (list(str, str)) Orientation of data (e.g., time vs time (inc))
         """
-        assert isinstance(df, pd.DataFrame)
-        assert node_type in ["callsite", "module"]
-        if relative_to_df is not None:
-            assert isinstance(relative_to_df, pd.DataFrame)
-        assert isinstance(proxy_columns, dict)
+        assert isinstance(sg, callflow.SuperGraph)
+        assert ntype in ["callsite", "module"]
+        if rel_sg is not None:
+            assert isinstance(rel_sg, callflow.SuperGraph)
         assert isinstance(orientation, list)
         assert all([o in TIME_COLUMNS for o in orientation])
 
-        self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
+        self.time_columns = [sg.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
         SCAT_TYPES = ["tgt"]
-        if relative_to_df is not None:
+        if rel_sg is not None:
             SCAT_TYPES = ["tgt", "bkg"]
         self.result = {_: {} for _ in SCAT_TYPES}
-        self.orientation = [proxy_columns.get(_, _) for _ in orientation]
-        self.node_type = node_type
+        self.orientation = [sg.proxy_columns.get(_, _) for _ in orientation]
+        self.node_type = ntype
 
-        # now, append the data
+        df = sg.get_aux_df(name, ntype)
         self.result["tgt"] = self.compute(df)
 
-        if relative_to_df is not None:
-            self.result["bkg"] = self.compute(relative_to_df)
+        if rel_sg is not None:
+            rel_df = rel_sg.get_aux_df(name, ntype)
+            self.result["bkg"] = self.compute(rel_df)
 
     def compute(self, df):
         assert isinstance(df, pd.DataFrame)

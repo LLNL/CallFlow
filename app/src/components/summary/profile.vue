@@ -15,13 +15,14 @@
 				:loading="isLoading"
 				:footer-props="footerProps"
 				loading-text="Loading... Please wait"
-				:options.sync="pagination"
+				:items-per-page.sync="itemsPerPage"
 				:sort-by.sync="sortBy"
 				:sort-desc.sync="sortDesc"
 			>
 				<template slot="items" slot-scope="props">
 					<tr>
 						<td nowrap="true">{{ props.run }}</td>
+						<td nowrap="true">{{ props.timestamp }}</td>
 						<td nowrap="true">{{ props.meantime }}</td>
 						<td nowrap="true">{{ props.nranks }}</td>
 						<td nowrap="true">{{ props.ncallsites }}</td>
@@ -35,11 +36,14 @@
 
 <script>
 import { mapGetters } from "vuex";
+import moment from "moment";
+
 export default {
 	name: "Summary",
 	data: () => ({
 		headers: [
 			{ text: "Run", value: "run" },
+			{ text: "Timestamp", value: "timestamp"},
 			{ text: "Mean runtime", value: "meantime"},
 			{ text: "Number of ranks", value: "nranks"},
 			{ text: "Number of call sites", value: "ncallsites"},
@@ -49,14 +53,17 @@ export default {
 		sortBy: "meantime",
 		sortDesc: true,
 		footerProps: {"items-per-page-options": [5, 10, 20, 50, -1]},
-		pagination: {
-			rowsPerPage: 7,
-			page: 1
-		}
+		itemsPerPage: 7
 	}),
 	computed: {
 		...mapGetters({ data: "getProfiles"})
-	}
+	},
+	methods: {
+		formatTimestamp(timestamp) {
+			
+			return moment(timestamp).format("YYYY/MM/DD HH::mm::ss");
+		}
+	},
 };
 </script>
 

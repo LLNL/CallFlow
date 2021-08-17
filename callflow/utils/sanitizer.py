@@ -44,7 +44,7 @@ class Sanitizer:
             return "Loop@" + Sanitizer.sanitize(_file) + ":" + _line
 
     @staticmethod
-    def fmt_time(string):
+    def fmt_time(tstamp):
         """
         Format according to daniel's data format.
 
@@ -53,10 +53,18 @@ class Sanitizer:
         fmt_from = "%Y-%m-%d_%H-%M-%S"
         fmt_to = "%Y-%m-%d %H:%M:%S"
 
-        toks = string.split("_")
-        dataname, tstamp = toks[0], "_".join(toks[1:])  # noqa
-        dt = datetime.datetime.strptime(tstamp, fmt_from)
-        return datetime.datetime.strftime(dt, fmt_to)
+        try:
+            dt = datetime.datetime.strptime(tstamp, fmt_from)
+            return datetime.datetime.strftime(dt, fmt_to)
+        except ValueError as e:
+            LOGGER.warn("Not a valid timestamp.")
+            LOGGER.warn(e)
+            return tstamp
+
+
+    def datetime_to_fmt(datetime):
+        fmt_to = "%Y-%m-%d %H:%M:%S"
+        return datetime.strftime(fmt_to)
 
     @staticmethod
     def fmt_timestr_to_datetime(string):

@@ -75,7 +75,9 @@ export default {
 			summary: "getSummary",
 			showTarget: "getShowTarget",
 			generalColors: "getGeneralColors",
-			targetColor: "getTargetColor"
+			targetColor: "getTargetColor",
+			isComparisonMode: "getComparisonMode",
+			selectedCompareRun: "getSelectedCompareRun"
 		})
 	},
 
@@ -91,17 +93,33 @@ export default {
 			self.clear();
 			self.init();
 		});
+
+		EventHandler.$on("update-node-encoding", function() {
+			self.clear();
+			self.init();
+		});
 	},
 
 	methods: {
 		init() {
 			this.orientation = ["time", "time (inc)"];
-			this.$store.dispatch("fetchEnsembleScatterplot", {
-				dataset: this.selectedTargetRun,
-				node: this.selectedNode["name"],
-				ntype: this.selectedNode["type"],
-				orientation: ["time", "time (inc)"],
-			});
+			if (this.isComparisonMode) {
+				this.$store.dispatch("fetchEnsembleScatterplot", {
+					dataset: this.selectedTargetRun,
+					background: this.selectedCompareRun,
+					node: this.selectedNode["name"],
+					ntype: this.selectedNode["type"],
+					orientation: ["time", "time (inc)"],
+				});
+			} 
+			else {
+				this.$store.dispatch("fetchEnsembleScatterplot", {
+					dataset: this.selectedTargetRun,
+					node: this.selectedNode["name"],
+					ntype: this.selectedNode["type"],
+					orientation: ["time", "time (inc)"],
+				});
+			}
 
 			this.width = window.innerWidth * 0.25;
 			this.height = (this.$store.viewHeight) * 0.30;

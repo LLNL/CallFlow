@@ -67,6 +67,7 @@ export default {
 		info: "",
 		selectedHierarchyMode: "Uniform",
 		firstRender: true,
+		meanDiff: {},
 	}),
 
 	computed: {
@@ -84,6 +85,8 @@ export default {
 			targetColorMap: "getTargetColorMap",
 			summary: "getSummary",
 			selectedMode: "getSelectedMode",
+			compareData: "getCompareData",
+			isComparisonMode: "getComparisonMode",
 		})
 	},
 
@@ -392,12 +395,17 @@ export default {
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition);
 
+			if (this.isComparisonMode) {
+				for (let i = 0; i < this.compareData.length; i += 1) {
+					this.meanDiff[this.compareData[i]["name"]] = this.compareData[i]["mean_diff"];
+				}
+			}
 			this.singleColors();
 			this.ensembleColors();			
 			this.addNodes();
 			this.addText();
-			if (this.showTarget) {
-				// this.drawTargetLine();
+			if (this.showTarget && !this.isComparisonMode) {
+				this.drawTargetLine();
 			}
 
 			// Add the mouseleave handler to the bounding rect.
@@ -465,57 +473,30 @@ export default {
 			return "url(#hierarchy-gradient" + nid + ")";
 		},
 
+		clearTargetLine() {
+			d3.selectAll(".hierarchy-targetLines").remove();
+		},
+
 		drawTargetLine() {
-			let dataset = this.$store.selectedTargetDataset;
+			let dataset = this.selectedTargetRun;
 
 			for (let i = 0; i < this.nodes.length; i++) {
-				let node_data = this.nodes[i].data;
+				let _d = this.nodes[i].data;
 
-				let mean = 0;
-				let gradients = [];
-				let targetPos = undefined;
-				if (
-					this.nodes[i].depth == 0 &&
-          this.$store.data_mod["ensemble"][node_data.id] != undefined
-				) {
-					let data = this.$store.data_mod["ensemble"][node_data.id][
-						this.$store.selectedMetric
-					]["gradients"];
-					mean = data["dataset"]["mean"][dataset];
-					gradients = data["hist"];
-					targetPos = data["dataset"]["position"][dataset] + 1;
-				} else {
-					if (this.$store.data_cs["ensemble"][node_data.id] != undefined) {
-						let data = this.$store.data_cs["ensemble"][node_data.id][
-							this.$store.selectedMetric
-						]["gradients"];
-						mean = data["dataset"]["mean"][dataset];
-						gradients = data["hist"];
-						targetPos = data["dataset"]["position"][dataset] + 1;
-					}
-				}
+				const data = _d.attr_dict.grad[this.selectedMetric];
+				const targetPos = data["dataset"]["d2p"][dataset];
 
-				let grid = gradients.x;
-				let vals = gradients.y;
-
-				let binWidth =
-          (this.nodes[i].x1 - this.nodes[i].x0) /
-          this.$store.selectedRunBinCount;
-
+				let binWidth = (this.nodes[i].x1 - this.nodes[i].x0) / this.runBinCount;
 				let x = this.nodes[i].x0 + binWidth * targetPos - binWidth / 2;
 
 				this.hierarchySVG.append("line").attrs({
 					class: "hierarchy-targetLines",
 					x1: x,
-					y1:
-            (this.nodes[i].y1 - this.nodes[i].y0) * this.nodes[i].depth +
-            this.offset,
+					y1: (this.nodes[i].y1 - this.nodes[i].y0) * this.nodes[i].depth + this.offset,
 					x2: x,
-					y2:
-            (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth + 1) -
-            this.offset,
+					y2: (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth + 1) - this.offset,
 					"stroke-width": 5,
-					stroke: this.$store.distributionColor.target,
+					stroke: this.generalColors.target,
 				});
 			}
 		},
@@ -680,7 +661,12 @@ export default {
 					}
 					return d.y1 - d.y0 - this.offset - this.stroke_width;
 				})
-				.style("fill", (d, i) => this.fill_with_gradients(d.data, this.selectedMetric, this.distributionColor))
+				.style("fill", (d, i) => {
+					if (this.isComparisonMode) {
+						return d3.rgb(this.$store.diffColor.getColorByValue((this.meanDiff[d.data.id])));
+					}
+					return this.fill_with_gradients(d.data, this.selectedMetric, this.distributionColor);
+				})
 				.style("stroke", (d) => {
 					let runtime = d.data.attr_dict[this.selectedMetric];
 					return d3.rgb(this.runtimeColor.getColorByValue(runtime));

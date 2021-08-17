@@ -93,7 +93,6 @@ export default {
 			esg_data: "getESG",
 			selectedTargetRun: "getSelectedTargetRun",
 			selectedMode: "getSelectedMode",
-			comparisonMode: "getComparisonMode",
 			runBinCount: "getRunBinCount",
 			selectedColorPoint: "getColorPoint",
 			summary: "getSummary",
@@ -120,30 +119,6 @@ export default {
 			this.visualize();
 			this.firstRender = false;
 		},
-
-		compare_data: function (val) {
-			// console.log("[Comparison] Data:", data);
-			// this.clearEncoding("MEAN_GRADIENTS");
-			// // this.clearZeroLine()
-			// d3.selectAll(".target-path").remove();
-			// // Clear target lines. 
-			// if (this.$store.showTarget) {
-			// 	this.$refs.TargetLine.clear();
-			// }
-			// d3.selectAll(".histogram-bar-target").remove();
-			// d3.selectAll("#ensemble-edge-target").remove();
-			// // remove target legend
-			// d3.selectAll(".legend").remove();
-			// d3.selectAll(".legend-text").remove();
-			// // // remove ensemble legend
-			// // d3.selectAll(".ensemble-circle-legend").remove();
-			// // d3.selectAll(".ensemble-circle-legend-text").remove();
-			// // remove colormap container
-			// d3.selectAll(".colormap").remove();
-			// this.setEncoding(this.$store.encoding, data);
-
-			// this.compareData = val;
-		},
 	},
 
 	mounted() {
@@ -162,7 +137,7 @@ export default {
 			self.$refs.MiniHistograms.clear();
 		});
 
-		EventHandler.$on("update-ensemble-colors", () => {
+		EventHandler.$on("remove-ensemble-colors", () => {
 			self.$refs.ColorMap.clear();
 			if (self.isComparisonMode) {
 				// TODO: Need to call the diffColor setup here. 
@@ -324,9 +299,9 @@ export default {
 				const source = temp_edges[i].source;
 				const target = temp_edges[i].target;
 
-				// console.debug("[SuperGraph] Source Name", source);
-				// console.debug("[SuperGraph] Target Name", target);
-				// console.debug("[SuperGraph] This edge: ", temp_edges[i]);
+				console.debug("[SuperGraph] Source Name", source);
+				console.debug("[SuperGraph] Target Name", target);
+				console.debug("[SuperGraph] This edge: ", temp_edges[i]);
 
 				let source_node = temp_edges[i].source_data;
 				let target_node = temp_edges[i].target_data;
@@ -357,12 +332,12 @@ export default {
 								level: j,
 
 							},
-							level: j,
+							level: j + 1,
 							id: "i" + target_node.id,
-							value: temp_edges[i].attr_dict.weight,
-							targetValue: temp_edges[i].attr_dict.targetWeight,
-							height: temp_edges[i].height,
-							targetHeight: temp_edges[i].targetHeight,
+							value: target_node.value,
+							targetValue: target_node.targetValue,
+							// height: temp_edges[i].height,
+							// targetHeight: temp_edges[i].targetHeight,
 							type: "intermediate",
 							count: 1,
 						};
@@ -390,13 +365,13 @@ export default {
 						type: "source_intermediate",
 						source: source_node.id,
 						target: tempNode.id,
-						weight: temp_edges[i].attr_dict.weight,
+						weight: target_node.weight,
 						targetWeight: temp_edges[i].attr_dict.targetWeight,
 						max_flow: max_flow,
 					};
 					edges.push(sourceTempEdge);
 
-					// console.debug(`[SuperGraph] Adding intermediate source edge: ${sourceTempEdge}`);
+					console.debug("[SuperGraph] Adding intermediate source edge:", sourceTempEdge);
 
 					if (j == shift_level) {
 						edges[i].original_target = target;
@@ -410,13 +385,13 @@ export default {
 						type: "target_intermediate",
 						source: tempNode.id,
 						target: target_node.id,
-						weight: temp_edges[i].attr_dict.weight,
+						weight: target_node.value,
 						targetWeight: temp_edges[i].attr_dict.targetWeight,
 						max_flow: max_flow,
 					};
 					edges.push(targetTempEdge);
 
-					// console.log(`[SuperGraph] Adding intermediate target edge: ${targetTempEdge}`);
+					console.log("[SuperGraph] Adding intermediate target edge:", targetTempEdge);
 
 					if (j == shift_level) {
 						edges[i].original_target = target;
@@ -451,6 +426,7 @@ export default {
 
 		activateCompareMode(data) {
 			this.$refs.Nodes.comparisonMode(data);
+			this.$refs.Edges.comparisonMode(data);
 		},
 	},
 };

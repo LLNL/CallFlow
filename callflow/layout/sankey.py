@@ -84,6 +84,8 @@ class SankeyLayout:
         if len(self.split_callee_module) > 0:
             SankeyLayout.add_exit_callees_paths(self.split_callee_module)
 
+        self.nxg = self.dfs_remove_back_edges(self.nxg)
+
     @staticmethod
     def create_source_targets(component_path):
         """
@@ -169,7 +171,6 @@ class SankeyLayout:
                     # source_weight = source_df[self.time_inc].max()
                     # target_weight = target_df[self.time_inc].mean()
 
-                    print(f"Adding edge: {source_callsite}, {target_callsite}")
                     self.nxg.add_node(source, attr_dict={"type": source_node_type})
                     self.nxg.add_node(target, attr_dict={"type": target_node_type})
                     self.nxg.add_edge(
@@ -340,12 +341,30 @@ class SankeyLayout:
         """
         nxg = nx.DiGraph()
 
-        for c_name, path in self.gp_dict.items():
-            if isinstance(path, str):
+        unique_paths = {}
+
+        for callsite in self.sg.nxg.nodes():
+            cs_idx = self.sg.get_idx(callsite, "callsite")
+
+            if cs_idx not in self.gp_dict:
                 continue
 
+            path = self.gp_dict[cs_idx]
+            cp_path = self.cp_dict[cs_idx]
+
+            if tuple(path) not in unique_paths.keys():
+                unique_paths[tuple(path)] = []
+
+            # TODO: need to generalize this here.
+            if len(cp_path) == 1:
+                unique_paths[tuple(path)].append(cp_path[0])
+
+        flow_mapping = {}
+        # TODO: Convert the unique paths to a graph. (by breaking the cycles)
+        for path in unique_paths.keys():
             if len(path) > 2:
-                path = SankeyLayout._break_cycles_in_paths(path)
+                path = self._break_cycles_in_paths(cs_idx, path)
+            
                 for depth in range(0, len(path) - 1):
                     src = path[depth]
                     tgt = path[depth + 1]
@@ -354,11 +373,11 @@ class SankeyLayout:
                     tgt_name = self.sg.get_name(tgt.get("id"), tgt.get("type"))
 
                     if not nxg.has_node(src_name):
-                        src_dict = self.sg_node_construct(c_name, src)
+                        src_dict = self.sg_node_construct(src)
                         nxg.add_node(src_name, attr_dict=src_dict)
 
                     if not nxg.has_node(tgt):
-                        tgt_dict = self.sg_node_construct(c_name, tgt)
+                        tgt_dict = self.sg_node_construct(tgt)
                         nxg.add_node(tgt_name, attr_dict=tgt_dict)
 
                     has_callback_edge = nxg.has_edge(src_name, tgt_name)
@@ -368,44 +387,42 @@ class SankeyLayout:
                     else:
                         edge_type = "caller"
 
-                    weight = self.sg.get_runtime(tgt.get("id"), "module", "time (inc)")
+                    super_edge = (src_name, tgt_name)
+                                        
+                    if super_edge not in flow_mapping:
+                        flow_mapping[super_edge] = {
+                            "edge_type": edge_type,
+                            "weight": 0,
+                        }
+                    
+                    flow_mapping[super_edge]["weight"] += self.sg.get_runtime(tgt, self.time_inc)
 
-                    edge_dict = {
-                        "edge_type": edge_type,
-                        "weight": weight,
-                    }
-
-                    if not nxg.has_edge(src_name, tgt_name) and edge_dict["weight"] > 0:
-                        nxg.add_edge(src_name, tgt_name, attr_dict=edge_dict)
+                    if not nxg.has_edge(src_name, tgt_name) and flow_mapping[super_edge]["weight"] > 0:
+                        nxg.add_edge(src_name, tgt_name, attr_dict=flow_mapping[super_edge])
 
         return nxg
 
-    def sg_node_construct(self, callsite_name, node):
+    def sg_node_construct(self, node):
         name = self.sg.get_name(node.get("id"), node.get("type"))
 
         ret = {
             "name": name,
             "type": node.get("type"),
             "level": node.get("level"),
-            "cp_path": self.cp_dict[callsite_name],
-            self.time_inc: self.sg.get_runtime(
-                node.get("id"), node.get("type"), self.time_inc
-            ),
-            self.time_exc: self.sg.get_runtime(
-                node.get("id"), node.get("type"), self.time_exc
-            ),
+            # "cp_path": self.cp_dict[self.sg.get_id(node)],
+            "time (inc)": self.sg.get_runtime(node, self.time_inc),
+            "time": self.sg.get_runtime(node, self.time_exc),
             "hists": self.sg.get_histograms(node, nbins=20),
             "entry_functions": self.sg.get_entry_functions(node),
-            "nid": node.get("id"),
+            "idx": node.get("id"),
         }
         
         if self.sg.name == "ensemble":
-            ret["gradients"] = self.sg.get_gradients(node.get("id"), node.get("type"), self.nbins)
+            ret["gradients"] = self.sg.get_gradients(node, self.nbins)
         
         return ret
 
-    @staticmethod
-    def _break_cycles_in_paths(path):
+    def _break_cycles_in_paths(self, cs_idx, path):
         """
         Breaks cycles in the call graph, if present.
 
@@ -423,7 +440,7 @@ class SankeyLayout:
                 module_mapper[elem] = idx
                 data_mapper[elem] = [
                     {
-                        "id": elem.item(),
+                        "id": elem.item(), # will be a module_idx
                         "level": idx,
                         "type": "module",
                     }
@@ -434,7 +451,7 @@ class SankeyLayout:
                     module_mapper[elem] += 1
                     data_mapper[elem].append(
                         {
-                            "id": elem.item(),
+                            "id": cs_idx,
                             "level": idx,
                             "type": "callsite",
                         }
@@ -442,7 +459,7 @@ class SankeyLayout:
                 else:
                     data_mapper[elem].append(
                         {
-                            "id": elem.item(),
+                            "id": cs_idx,
                             "level": idx,
                             "type": "callsite",
                         }
@@ -513,3 +530,47 @@ class SankeyLayout:
                 exit_functions[edge_tuple] = []
             exit_functions[edge_tuple].append(edge_dict["source_callsite"])
         return exit_functions
+
+    
+    def dfs_visit_recursively(self, g, node, nodes_color, edges_to_be_removed):
+
+        nodes_color[node] = 1
+        nodes_order = list(g.successors(node))
+        nodes_order = np.random.permutation(nodes_order)
+        for child in nodes_order:
+            if nodes_color[child] == 0:
+                    self.dfs_visit_recursively(g, child, nodes_color, edges_to_be_removed)
+            elif nodes_color[child] == 1:
+                edges_to_be_removed.append((node,child))
+
+        nodes_color[node] = 2
+
+    def dfs_remove_back_edges(self, g, nodetype = int):
+        '''
+        0: white, not visited 
+        1: grey, being visited
+        2: black, already visited
+        '''
+
+        nodes_color = {}
+        edges_to_be_removed = []
+        for node in g.nodes():
+            nodes_color[node] = 0
+
+        nodes_order = list(g.nodes())
+        nodes_order = np.random.permutation(nodes_order)
+        num_dfs = 0
+        for node in nodes_order:
+
+            if nodes_color[node] == 0:
+                num_dfs += 1
+                self.dfs_visit_recursively(g, node, nodes_color, edges_to_be_removed)
+
+        print("number of nodes to start dfs: %d" % num_dfs)
+        print(f"number of back edges: {edges_to_be_removed}")
+
+        for edge in edges_to_be_removed:
+            g.remove_edge(edge[0], edge[1])
+        
+        return g
+

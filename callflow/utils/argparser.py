@@ -371,6 +371,12 @@ class ArgParser:
                 json["module_callsite_map"]
             )
 
+        if "m2c" in json:
+            scheme["m2c"] = json["m2c"]
+
+        if "m2m" in json:
+            scheme["m2m"] = json["m2m"]
+
         return scheme
 
     # --------------------------------------------------------------------------

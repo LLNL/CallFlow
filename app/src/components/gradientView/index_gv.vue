@@ -40,7 +40,7 @@ export default {
 		id: "gradient-view",
 		info: "",
 		infoSummary: "Gradient view visualizes the ",
-		title: "Encoding",
+		title: "Ensemble Gradients",
 		padding: {
 			top: 10,
 			right: 10,

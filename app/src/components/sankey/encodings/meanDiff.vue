@@ -14,6 +14,7 @@ import * as d3 from "d3";
 import { mapGetters } from "vuex";
 
 import Color from "lib/color/";
+import EventHandler from "lib/routing/EventHandler";
 
 export default {
 	name: "MeanDiff",
@@ -42,6 +43,12 @@ export default {
 		})
 	},
 
+	mounted() {
+		EventHandler.$on("init-diff-color", function (data) {
+			self.process();
+		});
+	},
+
 	watch: {
 		data: function() {
 			this.process();
@@ -68,10 +75,12 @@ export default {
 			}
 
 			this.$store.diffColor = new Color("MeanDiff", 
+				this.mean_diff_max,
 				this.mean_diff_min, 
-				this.mean_diff_max, 
 				this.distributionColorMap, 
-				this.selectedColorPoint);		
+				this.selectedColorPoint);	
+
+			EventHandler.$emit("remove-ensemble-colors");
 		},
 
 		visualize() {

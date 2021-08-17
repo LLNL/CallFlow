@@ -42,7 +42,8 @@ export default {
 			showTarget: "getShowTarget",
 			comparisonMode: "getComparisonMode",
 			generalColors: "getGeneralColors",
-			selectedColorPoint: "getColorPoint"
+			selectedColorPoint: "getColorPoint",
+			selectedMetric: "getSelectedMetric"
 		})
 	},
 
@@ -80,13 +81,14 @@ export default {
 			let text = "";
 			let yOffsetCount = 1;
 
-			if (this.color.metric == "time") {
-				text = this.color.metric;
+			if (this.selectedMetric == "time") {
+				text = "Exclusive runtime";
 			}
-			else if (this.color.metric == "time (inc)") {
-				text = this.color.metric;
+			else if (this.selectedMetric == "time (inc)") {
+				text = "Inclusive runtime";
 			}
-			else if (this.color.metric == "MeanGradients") {
+			
+			if (this.color.metric == "MeanGradients") {
 				text = "Distribution colormap";
 				yOffsetCount = 2;
 			}
