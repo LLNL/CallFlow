@@ -484,8 +484,6 @@ export default {
 				let _d = this.nodes[i].data;
 
 				const data = _d.attr_dict.grad[this.selectedMetric];
-				const mean = data["dataset"]["mean"][dataset];
-				const gradients = data["hist"];
 				const targetPos = data["dataset"]["d2p"][dataset];
 
 				let binWidth = (this.nodes[i].x1 - this.nodes[i].x0) / this.runBinCount;

@@ -3,6 +3,10 @@ import re
 import math
 import hatchet as ht 
 
+import callflow
+LOGGER = callflow.get_logger(__name__)
+
+
 FRAME_KEYS = ["file", "name"]
 
 class RegexModuleMatcher:
@@ -117,7 +121,9 @@ class RegexModuleMatcher:
                         
             self.counter += 1
             
-        print(f"No module mapping for {notfound} nodes")
+        LOGGER.info(f"Successfully assigned a module for {self.counter} nodes.")
+        LOGGER.debug(f"Failed to assign a module for {notfound} nodes.")
+
         
         return self.m2c
 
@@ -151,9 +157,12 @@ class RegexModuleMatcher:
         return
 
     def print_summary(self):
+        print("======= Regex Matcher Summary =========")
         for k, v in self.m2c.items():
-            print(k, len(v))
+            print(f"Module: {k}, callsites: {len(v)}")
+        print("=======================================")
     
+    # TODO: Remove this and use the supergraph.df_add_column.
     @staticmethod
     def df_add_column(
         df,
@@ -189,17 +198,17 @@ class RegexModuleMatcher:
 
         if has_value:
             assert isinstance(apply_value, (int, float, str))
-            print(f'{action} column "{column_name}" = "{apply_value}"')
+            LOGGER.debug(f'{action} column "{column_name}" = "{apply_value}"')
             df[column_name] = apply_value
 
         if has_func:
             assert callable(apply_func) and isinstance(apply_on, str)
-            print(f'{action} column "{column_name}" = {apply_func}')
+            LOGGER.debug(f'{action} column "{column_name}" = {apply_func}')
             df[column_name] = df[apply_on].apply(apply_func)
 
         if has_dict:
             assert isinstance(apply_dict, dict) and isinstance(apply_on, str)
-            print(f'{action} column "{column_name}" = (dict); default=({dict_default})')
+            LOGGER.debug(f'{action} column "{column_name}" = (dict); default=({dict_default})')
             df[column_name] = df[apply_on].apply(
                 lambda _: apply_dict.get(_, dict_default)
             )

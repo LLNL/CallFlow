@@ -1,11 +1,7 @@
 import * as d3 from "d3";
 
 export default function d3InputBox() {
-	const padding = 10,
-		radius = 3,
-		stdDeviation = 5,
-		offsetX = 2,
-		offsetY = 4;
+	const radius = 3;
 
 	function render(selection) {
 		selection.each(function (d, i) {
@@ -13,19 +9,19 @@ export default function d3InputBox() {
 				.attr("id", "d3-inputbox" + i)
 				.attr("transform", "translate(" + d.x + "," + d.y + ")");
 
-			const text = g.append("text")
+			g.append("text")
 				.attr("dx", 12)
 				.attr("dy", d.height / 2 + 4)
 				.text(d.label);
 
-			const value = g.append("text")
+			g.append("text")
 				.attr("id", "value")
 				.attr("dx", d.width - 12)
 				.attr("dy", d.height / 2 + 4)
 				.text(d.supernode)
 				.classed("value", true);
 
-			const rect = g.insert("rect", "text", "value")
+			g.insert("rect", "text", "value")
 				.attr("x", 0)
 				.attr("y", 0)
 				.attr("width", d.width)

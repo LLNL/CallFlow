@@ -188,7 +188,7 @@ export default {
 								link_height = d.height * ratio;
 							}
 						}
-						return this.drawPath(d, link_height, 0, 0, dataset);
+						return this.drawPath(d, link_height, 0, 0);
 					},
 					"stroke": this.generalColors.darkGrey,
 				})

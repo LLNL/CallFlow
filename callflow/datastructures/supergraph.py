@@ -153,7 +153,7 @@ class SuperGraph(ht.GraphFrame):
 
         callsites = self.get_entry_functions(node)
         runtimes = [self.get_runtime(cs, metric) for cs in callsites]
-        return max(runtimes)
+        return max(runtimes) if len(runtimes) > 0 else 0.0
 
     def _get_node_runtime(self, node, metric):
         assert node.get("type") == "callsite"
@@ -339,11 +339,16 @@ class SuperGraph(ht.GraphFrame):
             gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics
         )  # Initialize here so that we don't drop index levels.
 
-        reMatcher = RegexModuleMatcher(m2c=m2c, m2m=m2m)
-        module_callsite_map = reMatcher.match(gf=gf)
+        
+        if bool(m2c) or bool(m2m):
+            reMatcher = RegexModuleMatcher(m2c=m2c, m2m=m2m)
+            module_callsite_map = reMatcher.match(gf=gf)
 
-        reMatcher.update_df(gf.dataframe, module_callsite_map, "module")
-        reMatcher.print_summary()
+            reMatcher.update_df(gf.dataframe, module_callsite_map, "module")
+            reMatcher.print_summary()
+        else:
+            callsites = gf.dataframe['name'].unique()
+            module_callsite_map = {cs:[cs] for cs in callsites}
 
         # Add callsite2idx, module2idx, callsite2module and corresponding
         # mappings.

@@ -493,7 +493,7 @@ class BaseProvider:
             result = {}
             for callsite in callsites:
                 bp = BoxPlot(
-                    sg=sg, name=callsite, ntype=ntype, proxy_columns=sg.proxy_columns
+                    sg=sg, name=callsite, ntype=ntype
                 )
                 result[callsite] = bp.unpack()
 
