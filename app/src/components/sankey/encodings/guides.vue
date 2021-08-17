@@ -103,7 +103,11 @@ export default {
 			y += this.fontSize/2 + binWidth/2;
 
 			for (let i = 0; i < count; i += 1) {
-				let subtext = data[i];
+				let subtext = "";
+
+				if (data[i] !== undefined && data[i].includes("_")){
+					subtext = data[i].split("_")[data[i].split("_").length - 1];
+				}
 
 				let _id = "line-2-" + node.attr_dict.idx;
 				let _class = "gradientGuidesText-detailed";
@@ -127,7 +131,7 @@ export default {
 			let _class = "gradientGuidesText-summary";
 
 			let text = utils.formatRunCounts(data);
-			this._text(_id, _class, text, x, y);
+			this._text(node, _id, _class, text, x, y);
 		},
 
 		// TODO: Clean up the different modes. 

@@ -80,8 +80,6 @@ export default {
 		EventHandler.$on("update-node-encoding", function (data) {
 			self.clearEncoding();
 			self.clearTargetLines();
-			// TODO: Move the emitter to the store.js possibly. 
-			EventHandler.$emit("update-ensemble-colors");
 			self.visualize();
 		});
 	},
@@ -136,7 +134,6 @@ export default {
 				this.targetPath();
 			}
 		
-
 			this.$refs.ToolTip.init(this.$parent.id);
 		},
 

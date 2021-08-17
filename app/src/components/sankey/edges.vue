@@ -176,7 +176,11 @@ export default {
 							link_height = d.height;
 						}
 						else if (dataset == "target") {
-							let ratio = d.source_data.attr_dict.gradients["time (inc)"].dataset.mean[this.selectedTargetRun]/d.source_data.attr_dict["time (inc)"];
+							let max_time_inc = 0;
+							for(let dataset in d.source_data.attr_dict.gradients["time (inc)"].dataset.mean) {
+								max_time_inc = Math.max(max_time_inc, d.source_data.attr_dict.gradients["time (inc)"].dataset.mean[dataset]);
+							}
+							let ratio = d.source_data.attr_dict.gradients["time (inc)"].dataset.mean[this.selectedTargetRun]/max_time_inc;
 							if (ratio > 1) {
 								link_height = d.height;
 							} 
