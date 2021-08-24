@@ -11,6 +11,7 @@
 <script>
 import * as d3 from "d3";
 import * as utils from "lib/utils";
+import { mapGetters } from "vuex";
 
 export default {
 	template: "",
@@ -30,6 +31,12 @@ export default {
 		prevMousePosX: undefined,
 		prevMousePosY: undefined
 	}),
+
+	computed: {
+		...mapGetters({
+			selectedMetric: "getSelectedMetric",
+		})
+	},
 
 	methods: {
 		init(id) {
@@ -98,7 +105,7 @@ export default {
 
 			const svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
 
-			const height = 3 * 33.3 + node["entry_function"].length * 33.3;
+			const height = 3 * 33.3 + node.attr_dict["entry_functions"].length * 33.3;
 			this.toolTipG.attr("height", svgScale(10) + "px");
 			this.toolTipRect = this.toolTipG
 				.append("rect")
@@ -149,8 +156,8 @@ export default {
 		 */
 		runtimeInformation(node) {
 			this.addText("Name: " + utils.truncNames(node.id, 40));
-			this.addText("Inclusive Time: " + utils.formatRuntimeWithUnits(node["time (inc)"]));
-			this.addText("Exclusive Time: " + utils.formatRuntimeWithUnits(node["time"]));
+			this.addText("Inclusive Time: " + utils.formatRuntimeWithUnits(node.attr_dict["time (inc)"]));
+			this.addText("Exclusive Time: " + utils.formatRuntimeWithUnits(node.attr_dict["time"]));
 		},
 
 		/**
@@ -158,28 +165,11 @@ export default {
 		 * @param {*} node 
 		 */
 		pathInformation(node) {
-			let module_data = {};
-			if (this.$store.selectedMode == "Single") {
-				module_data = this.$store.data_mod[this.$store.selectedTargetDataset];
-			}
-			else if (this.$store.selectedMode == "Ensemble") {
-				module_data = this.$store.data_mod["ensemble"];
-			}
-
-			let callsite_data = {};
-			if (this.$store.selectedMode == "Single") {
-				callsite_data = this.$store.data_cs[this.$store.selectedTargetDataset];
-			}
-			else if (this.$store.selectedMode == "Ensemble") {
-				callsite_data = this.$store.data_cs["ensemble"];
-			}
-
-
-			// TODO : Improve the logic here to not process the string input multiple times. 
-			let entry_function_runtimes = node["entry_function"].map((_c) => callsite_data[_c][this.$store.selectedMetric]["mean"]);
+			let entry_function_runtimes = node.attr_dict.entry_functions;
 			// Create items array
-			let items = Object.keys(entry_function_runtimes).map(function (key) {
-				return [key, entry_function_runtimes[key]];
+			let self = this;
+			let items = entry_function_runtimes.map(function (key) {
+				return [key.name, key[self.selectedMetric]];
 			});
 
 			// Sort the array based on the second element

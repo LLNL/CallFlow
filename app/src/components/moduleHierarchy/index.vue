@@ -7,25 +7,28 @@
 
 <template>
   <v-layout row wrap :id="id">
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info"/>
-    <span class="component-info">
-      Module = {{ formatModule(selectedModule) }}
-    </span>
+	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info"/>
     <ToolTip ref="ToolTip" />
   </v-layout>
 </template>
 
 <script>
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
+
 import ToolTip from "./tooltip";
+import InfoChip from "../general/infoChip";
+import EventHandler from "lib/routing/EventHandler";
+
 import * as utils from "lib/utils";
-import Queue from "lib/datastructures/queue";
-import APIService from "lib/routing/APIService";
+import Queue from "./lib/queue";
+import Color from "lib/color/";
 
 export default {
 	name: "ModuleHierarchy",
 	components: {
 		ToolTip,
+		InfoChip,
 	},
 	props: [],
 	data: () => ({
@@ -50,24 +53,9 @@ export default {
 			s: 3,
 			t: 10,
 		},
-		selectedSplitOption: {
-			name: "split-caller",
-		},
-		splitOptions: [
-			{
-				name: "split-caller",
-			},
-			{
-				name: "split-callee",
-			},
-			{
-				name: "split-level",
-			},
-		],
-		placeholder: "Split options",
 		maxLevel: 0,
 		path_hierarchy: [],
-		id: "",
+		id: "module-hierarchy-overview",
 		padding: 0,
 		offset: 4,
 		stroke_width: 4,
@@ -75,9 +63,32 @@ export default {
 		selectedModule: "",
 		svgID: "module-hierarchy-svg",
 		title: "Super node Hierarchy",
-		summary: "",
+		infoSummary: "",
 		info: "",
+		selectedHierarchyMode: "Uniform",
+		firstRender: true,
+		meanDiff: {},
 	}),
+
+	computed: {
+		...mapGetters({
+			selectedNode: "getSelectedNode",
+			data: "getHierarchy",
+			runs: "getRuns",
+			showTarget: "getShowTarget",
+			generalColors: "getGeneralColors",
+			selectedTargetRun: "getSelectedTargetRun",
+			runBinCount: "getRunBinCount",
+			selectedMetric: "getSelectedMetric",
+			runtimeColorMap: "getRuntimeColorMap",
+			distributionColorMap: "getDistributionColorMap",
+			targetColorMap: "getTargetColorMap",
+			summary: "getSummary",
+			selectedMode: "getSelectedMode",
+			compareData: "getCompareData",
+			isComparisonMode: "getComparisonMode",
+		})
+	},
 
 	watch: {
 		level: {
@@ -86,35 +97,38 @@ export default {
 			},
 			deep: true,
 		},
+
+		data: function () {
+			this.visualize();
+		}
 	},
-	
+
 	mounted() {
-		this.id = "module-hierarchy-overview";
+		let self = this;
+		EventHandler.$on("reset-module-hierarchy", function() {
+			self.clear();
+			self.init();
+		});
+
+		EventHandler.$on("update-node-encoding", function() {
+			self.clear();
+			self.init();
+		});
+
+		this.infoSummary = "Module: " + this.selectedNode["name"];
 	},
 
 	methods: {
-		async init() {
-			if (this.$store.selectedMetric == "Inclusive") {
-				this.metric = "max_time (inc)";
-			} else if (this.$store.selectedMetric == "Exclusive") {
-				this.metric = "max_time";
+		init() {
+			if(this.selectedNode.type == "module") {
+				this.$store.dispatch("fetchHierarchy", {
+					node: this.selectedNode["name"],
+					ntype: this.selectedNode["type"],
+					dataset: this.selectedTargetRun,
+					nbins: this.runBinCount,
+				});
 			}
-			this.selectedNode = this.$store.selectedNode;
-			const data = await APIService.POSTRequest("module_hierarchy", {
-				module: this.$store.selectedNode,
-				datasets: this.$store.selectedDatasets,
-			});
-		},
 
-		// Formatting for the html view
-		formatModule(module) {
-			if (module.length < 10) {
-				return module;
-			}
-			return this.trunc(module, 10);
-		},
-
-		setupSVG() {
 			this.width = document.getElementById(this.id).clientWidth;
 			this.height = this.$store.viewHeight * 0.3;
 			this.icicleWidth = this.width - this.margin.right - this.margin.left;
@@ -130,6 +144,20 @@ export default {
 				});
 
 			this.$refs.ToolTip.init(this.svgID);
+		},
+
+		visualize() {
+			const hierarchy = this.bfs(this.data);
+			this.drawIcicles(hierarchy);
+			this.firstRender = false;
+		},
+
+		// Formatting for the html view
+		formatModule(module) {
+			if (module.length < 10) {
+				return module;
+			}
+			return this.trunc(module, 10);
 		},
 
 		update_maxlevels(data) {
@@ -175,34 +203,15 @@ export default {
 
 			// Do initial queue setup.
 			let startVertex = graph;
-
-			let thismodule = startVertex.id;
-			let moduleData = this.$store.data_mod["ensemble"][thismodule];
-
-			startVertex.data = moduleData;
+			let previousVertex = null;
 
 			vertexQueue.enqueue(startVertex);
-
-			let startVertexData = true;
-
-			let previousVertex = null;
 
 			// Traverse all vertices from the queue.
 			while (!vertexQueue.isEmpty()) {
 				const currentVertex = vertexQueue.dequeue();
 
-				let callsiteData = {};
-				if (!startVertexData) {
-					let callsite = currentVertex.id;
-					callsiteData = this.$store.data_cs["ensemble"][callsite];
-				} else {
-					let module = currentVertex.id;
-					callsiteData = this.$store.data_mod["ensemble"][module];
-					startVertexData = false;
-				}
-
-				currentVertex.data = callsiteData;
-				currentVertex.data.count = vertexQueue.length;
+				currentVertex.count = vertexQueue.length;
 
 				if (currentVertex.hasOwnProperty("children")) {
 					// Add all neighbors to the queue for future traversals.
@@ -217,22 +226,17 @@ export default {
 			return graph;
 		},
 
-		update_from_graph(json) {
-			let hierarchy = this.bfs(json);
-			this.drawIcicles(hierarchy);
-		},
-
 		trunc(str, n) {
 			str = str.replace(/<unknown procedure>/g, "proc ");
 			return str.length > n ? str.substr(0, n - 1) + "..." : str;
 		},
 
 		clear() {
-			d3.selectAll(".icicleNode").remove();
-			d3.selectAll(".icicleText").remove();
-			d3.selectAll(".hierarchy-targetLines").remove();
-			d3.selectAll(".linear-gradient").remove();
-			// this.$refs.ToolTipModuleHierarchy.clear()
+			d3.select("#module-hierarchy-svg").remove();
+		},
+
+		clearEncoding() {
+			d3.select(".hierarchy-gradient").remove();
 		},
 
 		descendents(root) {
@@ -274,7 +278,7 @@ export default {
 			let self = this;
 			return function (node) {
 				if (node.children) {
-					if (self.$store.selectedHierarchyMode == "Exclusive") {
+					if (self.selectedHierarchyMode == "Exclusive") {
 						self.diceByValue(
 							node,
 							node.x0,
@@ -282,7 +286,7 @@ export default {
 							node.x1,
 							(dy * (node.depth + 2)) / n
 						);
-					} else if (self.$store.selectedHierarchyMode == "Uniform") {
+					} else if (self.selectedHierarchyMode == "Uniform") {
 						self.dice(
 							node,
 							node.x0,
@@ -356,15 +360,11 @@ export default {
 			}
 		},
 
-		drawIcicles(json) {
-			if (this.hierarchy != undefined) {
-				this.clear();
-			} else {
-				this.setupSVG();
-				this.hierarchy = this.hierarchySVG.attrs({
-					id: this.svgID,
-				});
-			}
+		drawIcicles(json) {		
+			this.hierarchy = this.hierarchySVG.attrs({
+				id: this.svgID,
+			});
+	
 			// Setup the view components
 			// this.initializeBreadcrumbTrail();
 			//  drawLegend();
@@ -395,11 +395,16 @@ export default {
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition);
 
-			this.setupModuleMeanGradients();
-			this.setupCallsiteMeanGradients();
+			if (this.isComparisonMode) {
+				for (let i = 0; i < this.compareData.length; i += 1) {
+					this.meanDiff[this.compareData[i]["name"]] = this.compareData[i]["mean_diff"];
+				}
+			}
+			this.singleColors();
+			this.ensembleColors();			
 			this.addNodes();
 			this.addText();
-			if (this.$store.showTarget) {
+			if (this.showTarget && !this.isComparisonMode) {
 				this.drawTargetLine();
 			}
 
@@ -410,188 +415,88 @@ export default {
 			this.totalSize = root.value;
 		},
 
-		setupCallsiteMeanGradients() {
-			let module = this.$store.selectedModule;
-			let callsites = Object.keys(this.$store.data_cs["ensemble"]);
-
-			let method = "";
-			let mode = "Horizontal";
-
-			this.hist_min = 0;
-			this.hist_max = 0;
-			let callsiteStore = this.$store.data_cs["ensemble"];
-			for (let idx = 0; idx < callsites.length; idx += 1) {
-				let callsite = callsites[idx];
-				let data = callsiteStore[callsite];
-				this.hist_min = Math.min(
-					this.hist_min,
-					data[this.$store.selectedMetric]["gradients"]["hist"]["y_min"]
-				);
-				this.hist_max = Math.max(
-					this.hist_max,
-					data[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]
-				);
-			}
-
-			// this.$store.color.setColorScale("MeanGradients", this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
-
-			for (let idx = 0; idx < callsites.length; idx += 1) {
-				let callsite = callsites[idx];
-				let data = callsiteStore[callsite];
-				let id = data.id;
-				var defs = d3.select("#module-hierarchy-svg").append("defs");
-
-				this.linearGradient = defs
-					.append("linearGradient")
-					.attr("id", "mean-callsite-gradient-" + data.id)
-					.attr("class", "linear-gradient");
-
-				if (mode == "Horizontal") {
-					this.linearGradient
-						.attr("x1", "0%")
-						.attr("y1", "0%")
-						.attr("x2", "100%")
-						.attr("y2", "0%");
-				} else {
-					this.linearGradient
-						.attr("x1", "0%")
-						.attr("y1", "0%")
-						.attr("x2", "0%")
-						.attr("y2", "100%");
+		singleColors() {
+			const data = this.summary[this.selectedTargetRun][this.selectedMetric];
+			const [ colorMin, colorMax ]  = utils.getMinMax(data);
+			let runtimeColorMap = this.runtimeColorMap;
+			if (this.firstRender) {
+				if (this.selectedMode === "SG") {
+					runtimeColorMap = "OrRd";
 				}
-
-				let grid = data[this.$store.selectedMetric]["gradients"]["hist"]["x"];
-				let val = data[this.$store.selectedMetric]["gradients"]["hist"]["y"];
-
-				for (let i = 0; i < grid.length; i += 1) {
-					let x = (i + i + 1) / (2 * grid.length);
-					let current_value = val[i];
-					this.linearGradient
-						.append("stop")
-						.attr("offset", 100 * x + "%")
-						.attr(
-							"stop-color",
-							this.$store.distributionColor.getColorByValue(current_value)
-						);
+				else if (this.selectedMode === "ESG") {
+					runtimeColorMap = "Blues";
 				}
+				this.$store.commit("setRuntimeColorMap", runtimeColorMap);
 			}
+			this.runtimeColor = new Color(this.selectedMetric, colorMin, colorMax, runtimeColorMap, this.selectedColorPoint);
 		},
 
-		setupModuleMeanGradients() {
-			let modules = Object.keys(this.$store.data_mod["ensemble"]);
+		ensembleColors() {
+			const arrayOfData = this.nodes.map((node) => node.data.attr_dict.grad[this.selectedMetric]["hist"]["h"]);
+			const [ colorMin, colorMax ]  = utils.getArrayMinMax(arrayOfData);
+			this.$store.commit("setDistributionColorMap", "Reds");
+			this.distributionColor = new Color("MeanGradients", colorMin, colorMax, this.distributionColorMap, this.selectedColorPoint);			
+		},
 
-			let method = "";
-			let mode = "Horizontal";
-
-			this.hist_min = 0;
-			this.hist_max = 0;
-			let moduleStore = this.$store.data_mod["ensemble"];
-			for (let idx = 0; idx < modules.length; idx += 1) {
-				let thismodule = modules[idx];
-				let data = moduleStore[thismodule];
-				this.hist_min = Math.min(
-					this.hist_min,
-					data[this.$store.selectedMetric]["gradients"]["hist"]["y_min"]
-				);
-				this.hist_max = Math.max(
-					this.hist_max,
-					data[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]
-				);
+		fill_with_gradients(d, metric, color) {
+			if(d.attr_dict.grad == undefined) {
+				return "#000";
 			}
 
-			for (let idx = 0; idx < modules.length; idx += 1) {
-				let thismodule = modules[idx];
-				let data = moduleStore[thismodule];
-				let id = data.id;
-				var defs = d3.select("#module-hierarchy-svg").append("defs");
+			let nid = d.attr_dict.id;
+			
+			const defs = d3.select("#module-hierarchy-svg").append("defs");
 
-				this.linearGradient = defs
-					.append("linearGradient")
-					.attr("id", "mean-module-gradient-" + data.id)
-					.attr("class", "linear-gradient");
+			const linearGradient = defs
+				.append("linearGradient")
+				.attr("id", "hierarchy-gradient" + nid)
+				.attr("class", "hierarchy-gradient");
 
-				if (mode == "Horizontal") {
-					this.linearGradient
-						.attr("x1", "0%")
-						.attr("y1", "0%")
-						.attr("x2", "100%")
-						.attr("y2", "0%");
-				} else {
-					this.linearGradient
-						.attr("x1", "0%")
-						.attr("y1", "0%")
-						.attr("x2", "0%")
-						.attr("y2", "100%");
-				}
+			linearGradient
+				.attr("x1", "0%")
+				.attr("y1", "0%")
+				.attr("x2", "100%")
+				.attr("y2", "0%");
 
-				let grid = data[this.$store.selectedMetric]["gradients"]["hist"]["x"];
-				let val = data[this.$store.selectedMetric]["gradients"]["hist"]["y"];
 
-				for (let i = 0; i < grid.length; i += 1) {
-					let x = (i + i + 1) / (2 * grid.length);
-					let current_value = val[i];
-					this.linearGradient
-						.append("stop")
-						.attr("offset", 100 * x + "%")
-						.attr(
-							"stop-color",
-							this.$store.distributionColor.getColorByValue(current_value)
-						);
-				}
+			const grid = d.attr_dict.grad[metric]["hist"]["b"];
+			const val = d.attr_dict.grad[metric]["hist"]["h"];	
+
+			for (let i = 0; i < grid.length; i += 1) {
+				let x = (i + i + 1) / (2 * grid.length);
+				linearGradient
+					.append("stop")
+					.attr("offset", 100 * x + "%")
+					.attr("stop-color", color.getColorByValue(val[i]));
 			}
+
+			return "url(#hierarchy-gradient" + nid + ")";
+		},
+
+		clearTargetLine() {
+			d3.selectAll(".hierarchy-targetLines").remove();
 		},
 
 		drawTargetLine() {
-			let dataset = this.$store.selectedTargetDataset;
+			let dataset = this.selectedTargetRun;
 
 			for (let i = 0; i < this.nodes.length; i++) {
-				let node_data = this.nodes[i].data;
+				let _d = this.nodes[i].data;
 
-				let mean = 0;
-				let gradients = [];
-				let targetPos = undefined;
-				if (
-					this.nodes[i].depth == 0 &&
-          this.$store.data_mod["ensemble"][node_data.id] != undefined
-				) {
-					let data = this.$store.data_mod["ensemble"][node_data.id][
-						this.$store.selectedMetric
-					]["gradients"];
-					mean = data["dataset"]["mean"][dataset];
-					gradients = data["hist"];
-					targetPos = data["dataset"]["position"][dataset] + 1;
-				} else {
-					if (this.$store.data_cs["ensemble"][node_data.id] != undefined) {
-						let data = this.$store.data_cs["ensemble"][node_data.id][
-							this.$store.selectedMetric
-						]["gradients"];
-						mean = data["dataset"]["mean"][dataset];
-						gradients = data["hist"];
-						targetPos = data["dataset"]["position"][dataset] + 1;
-					}
-				}
+				const data = _d.attr_dict.grad[this.selectedMetric];
+				const targetPos = data["dataset"]["d2p"][dataset];
 
-				let grid = gradients.x;
-				let vals = gradients.y;
-
-				let binWidth =
-          (this.nodes[i].x1 - this.nodes[i].x0) /
-          this.$store.selectedRunBinCount;
-
+				let binWidth = (this.nodes[i].x1 - this.nodes[i].x0) / this.runBinCount;
 				let x = this.nodes[i].x0 + binWidth * targetPos - binWidth / 2;
 
 				this.hierarchySVG.append("line").attrs({
 					class: "hierarchy-targetLines",
 					x1: x,
-					y1:
-            (this.nodes[i].y1 - this.nodes[i].y0) * this.nodes[i].depth +
-            this.offset,
+					y1: (this.nodes[i].y1 - this.nodes[i].y0) * this.nodes[i].depth + this.offset,
 					x2: x,
-					y2:
-            (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth + 1) -
-            this.offset,
+					y2: (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth + 1) - this.offset,
 					"stroke-width": 5,
-					stroke: this.$store.distributionColor.target,
+					stroke: this.generalColors.target,
 				});
 			}
 		},
@@ -714,8 +619,6 @@ export default {
 		},
 
 		addNodes() {
-			let self = this;
-
 			this.hierarchy
 				.selectAll(".icicleNode")
 				.data(this.nodes)
@@ -723,7 +626,7 @@ export default {
 				.append("rect")
 				.attr("class", "icicleNode")
 				.attr("id", (d) => {
-					return d.data.data.id;
+					return d.data.attr_dict.id;
 				})
 				.attr("x", (d) => {
 					if (this.selectedDirection == "LR") {
@@ -759,21 +662,14 @@ export default {
 					return d.y1 - d.y0 - this.offset - this.stroke_width;
 				})
 				.style("fill", (d, i) => {
-					let gradients = undefined;
-					if (d.depth == 0 && this.$store.data_mod[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
-						gradients = "url(#mean-module-gradient-" + d.data.data.id + ")";
-					} else {
-						if (this.$store.data_cs[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
-							gradients = "url(#mean-callsite-gradient-" + d.data.data.id + ")";
-						} else {
-							gradients = this.$store.distributionColor.ensemble;
-						}
+					if (this.isComparisonMode) {
+						return d3.rgb(this.$store.diffColor.getColorByValue((this.meanDiff[d.data.id])));
 					}
-					return gradients;
+					return this.fill_with_gradients(d.data, this.selectedMetric, this.distributionColor);
 				})
 				.style("stroke", (d) => {
-					let runtime = d.data.data[this.$store.selectedMetric]["max_time"];
-					return d3.rgb(this.$store.runtimeColor.getColorByValue(runtime));
+					let runtime = d.data.attr_dict[this.selectedMetric];
+					return d3.rgb(this.runtimeColor.getColorByValue(runtime));
 				})
 				.style("stroke-width", this.stroke_width)
 				.style("opacity", (d) => {
@@ -851,8 +747,8 @@ export default {
 					return this.width;
 				})
 				.style("fill", (d) => {
-					let color = this.$store.runtimeColor.setContrast(
-						this.$store.runtimeColor.getColor(d)
+					let color = this.runtimeColor.setContrast(
+						this.runtimeColor.getColor(d)
 					);
 					return color;
 				})

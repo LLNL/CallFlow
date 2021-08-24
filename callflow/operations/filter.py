@@ -7,11 +7,13 @@
 """
 CallFlow's operation to filter a super graph using runtime threshold's.
 """
+from ast import literal_eval as make_list
 import numpy as np
 import networkx as nx
-from ast import literal_eval as make_list
 
 import callflow
+from callflow.utils.df import df_info
+from callflow.utils.nxg import nxg_info
 
 LOGGER = callflow.get_logger(__name__)
 
@@ -42,10 +44,38 @@ class Filter:
         LOGGER.info(
             f'Filtering ({self.sg}) by "{self.filter_by}" = {self.filter_perc}%'
         )
+
+        # TODO: Since we factorize the name and module column after creating
+        # the CallFlow.dataframe, we need to filter by the callsite indexes. 
+        self.callsites = self.sg.callsites_idx
+
+        # if 0:
+        self.mean_root_inctime = self.sg.df_root_max_mean_runtime(
+            self.sg.roots, "time (inc)"
+        )
+
+        # Formulate the hatchet query.
+        query = [
+            (
+                "*",
+                {
+                    f"{self.sg.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"
+                },
+            )
+        ]
+
+        LOGGER.info(f"Filtering GraphFrame by Hatchet Query :{query}")
+        LOGGER.debug(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
+
+        self.callsites = self.sg.hatchet_filter_callsites_by_query(query)
+
+        LOGGER.debug(f"Number of callsites after QueryMatcher: {len(self.callsites)}")
+        LOGGER.info(
+            f"Removed {len(self.sg.callsites_idx) - len(self.callsites)} callsites."
+        )
+
         self.compute()
-        
-        # TODO: Find a better way to do this.
-        self.sg.dataframe = self.dataframe
+        LOGGER.info(f'Filtered graph: "{nxg_info(self.nxg)}"')
         self.sg.nxg = self.nxg
 
     # --------------------------------------------------------------------------
@@ -62,13 +92,8 @@ class Filter:
             max_vals[mode] = np.array([_mx])
             LOGGER.debug(f"{mode}:  min = {_mn}, max = {_mx}")
 
-        if self.filter_by == "time (inc)":
-            value = self.filter_perc * 0.01 * np.max(max_vals["time (inc)"])
-            self._filter_sg(self.filter_by, value)
-
-        elif self.filter_by == "time":
-            value = self.filter_perc
-            self._filter_sg(self.filter_by, value)
+        value = self.filter_perc * 0.01 * np.max(max_vals[self.filter_by])
+        self._filter_sg(self.filter_by, value)
 
     # --------------------------------------------------------------------------
     def _filter_sg(self, filter_by, filter_val):
@@ -80,22 +105,27 @@ class Filter:
         :return nxg (networkx.graph):
         """
         LOGGER.debug(f'Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
-        self.dataframe = self.sg.df_filter_by_value(filter_by, filter_val)
-        LOGGER.info(f'Filtered dataframe comprises of: "{self.dataframe.shape}"')
 
-        callsites = self.sg.f_callsites
+        if len(self.callsites) > 0:
+            self.sg.dataframe = self.sg.dataframe[
+                self.sg.dataframe["name"].isin(self.callsites)
+            ]
+        LOGGER.info(f'Filtered dataframe: "{df_info(self.sg.dataframe)}"')
+
         nxg = nx.DiGraph()
 
         if filter_by == "time (inc)":
             for edge in self.sg.nxg.edges():
+                edge0_idx = self.sg.get_idx(edge[0], 'callsite')
+                edge1_idx = self.sg.get_idx(edge[1], 'callsite')
                 # If source is present in the callsites list
-                if edge[0] in callsites and edge[1] in callsites:
+                if (edge0_idx in self.callsites) and (edge1_idx in self.callsites):
                     nxg.add_edge(edge[0], edge[1])
-                else:
-                    LOGGER.debug(f"Removing the edge: {edge}")
+                # else:
+                #    LOGGER.debug(f"Removing the edge: {edge}")
 
         elif filter_by == "time":
-            for callsite in callsites:
+            for callsite in self.callsites:
                 path = self.sg.df_lookup_with_column("name", callsite)["path"].tolist()[
                     0
                 ]
@@ -103,5 +133,6 @@ class Filter:
                 nxg.add_path(path)
 
         self.nxg = nxg
+
 
 # ------------------------------------------------------------------------------

@@ -11,21 +11,23 @@ import subprocess
 import numpy as np
 import pandas as pd
 from scipy import stats
-import statsmodels.nonparametric.api as smnp
+
+# import statsmodels.nonparametric.api as smnp
 import hatchet
 import networkx as nx
 
 import psutil
 
+
 # ------------------------------------------------------------------------------
-
-
-def get_memory_usage(process = None):
+def get_memory_usage(process=None):
     if process is None:
         process = psutil.Process(os.getpid())
 
     bytes = float(process.memory_info().rss)
+    return format_bytes(bytes)
 
+def format_bytes(bytes):
     if bytes < 1024.:
         return f'{bytes} bytes'
 
@@ -34,6 +36,10 @@ def get_memory_usage(process = None):
         return f'{kb} KB'
 
     return f'{kb / 1024.} MB'
+
+def get_file_size(filepath):
+    stats = os.stat(filepath)
+    return format_bytes(stats.st_size)
 
 
 # ------------------------------------------------------------------------------
@@ -50,35 +56,36 @@ def create_reindex_map(lista, listb):
 # ------------------------------------------------------------------------------
 def print_dict_recursive(d, indent=0):
 
-    _space = '   '
-    _indent = ''
+    _space = "   "
+    _indent = ""
     for _ in range(indent):
         _indent += _space
 
     for k, v in d.items():
-        _s = f'{_indent} l{indent} ({k} = {type(v)}):'
+        _s = f"{_indent} l{indent} ({k} = {type(v)}):"
 
         if isinstance(v, (int, float, str, tuple, int, float, np.int64, np.float64)):
-            print(f'{_s} {v}')
+            print(f"{_s} {v}")
 
         elif isinstance(v, list):
             if len(v) > 5:
-                print(f'{_s} {len(v)} {v[:5]}...')
+                print(f"{_s} {len(v)} {v[:5]}...")
             else:
-                print(f'{_s} {len(v)} {v}')
+                print(f"{_s} {len(v)} {v}")
 
         elif isinstance(v, np.ndarray):
             if len(v) > 5:
-                print(f'{_s} {v.shape} {list(v[:5])}...')
+                print(f"{_s} {v.shape} {list(v[:5])}...")
             else:
-                print(f'{_s} {v.shape} {list(v)}')
+                print(f"{_s} {v.shape} {list(v)}")
 
         elif isinstance(v, dict):
-            print(f'{_s} {len(v)}')
-            print_dict_recursive(v, indent+1)
+            print(f"{_s} {len(v)}")
+            print_dict_recursive(v, indent + 1)
 
         else:
-            print(f'{_s} {type(v)}')
+            print(f"{_s} {type(v)}")
+
 
 # ------------------------------------------------------------------------------
 # statistics utils
@@ -95,7 +102,9 @@ def histogram(data, data_range=None, bins=20):
         assert isinstance(data_range, (list, np.ndarray))
         assert len(data_range) == 2
     h, b = np.histogram(data, range=data_range, bins=bins)
-    return 0.5 * (b[1:] + b[:-1]), h
+    dig = np.digitize(data, b)
+
+    return 0.5 * (b[1:] + b[:-1]), h, dig
 
 
 def freedman_diaconis_bins(arr):
@@ -146,24 +155,24 @@ def outliers(data, scale=1.5, side="both"):
         return np.logical_or(upper_outlier, lower_outlier)
 
 
-def kde(
-    data, gridsize=10, fft=True, kernel="gau", bw="scott", cut=3, clip=(-np.inf, np.inf)
-):
-    assert isinstance(data, (pd.Series, np.ndarray))
+# def kde(
+#     data, gridsize=10, fft=True, kernel="gau", bw="scott", cut=3, clip=(-np.inf, np.inf)
+# ):
+#     assert isinstance(data, (pd.Series, np.ndarray))
 
-    if bw == "scott":
-        bw = stats.gaussian_kde(data).scotts_factor() * data.std(ddof=1)
+#     if bw == "scott":
+#         bw = stats.gaussian_kde(data).scotts_factor() * data.std(ddof=1)
 
-    kde = smnp.KDEUnivariate(data)
+#     kde = smnp.KDEUnivariate(data)
 
-    # create the grid to fit the estimation.
-    support_min = min(max(data.min() - bw * cut, clip[0]), 0)
-    support_max = min(data.max() + bw * cut, clip[1])
-    x = np.linspace(support_min, support_max, gridsize)
+#     # create the grid to fit the estimation.
+#     support_min = min(max(data.min() - bw * cut, clip[0]), 0)
+#     support_max = min(data.max() + bw * cut, clip[1])
+#     x = np.linspace(support_min, support_max, gridsize)
 
-    kde.fit("gau", bw, fft, gridsize=gridsize, cut=cut, clip=clip)
-    y = kde.density
-    return x, y
+#     kde.fit("gau", bw, fft, gridsize=gridsize, cut=cut, clip=clip)
+#     y = kde.density
+#     return x, y
 
 
 # ------------------------------------------------------------------------------

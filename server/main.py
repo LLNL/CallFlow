@@ -36,20 +36,21 @@ def main():
     nargs = len(sys.argv)
     log_file = ""
     for i in range(1, nargs):
-        if sys.argv[i] != '--log':
+        if sys.argv[i] != "--log":
             continue
-        if i == nargs-1:
-            raise ValueError('Please provide a filename to go with --log option')
-        log_file = sys.argv[i+1]
-        if log_file.startswith('--'):
-            raise ValueError('Please provide a valid filename to go with --log option')
+        if i == nargs - 1:
+            raise ValueError("Please provide a filename to go with --log option")
+        log_file = sys.argv[i + 1]
+        if log_file.startswith("--"):
+            raise ValueError("Please provide a valid filename to go with --log option")
         break
+
     log_level = 1 if "--verbose" in sys.argv else 2
-    callflow.init_logger(level=log_level, file=log_file)
+    mem_usage = "--verbose" in sys.argv     # show mem usage in verbose mode
+    callflow.init_logger(level=log_level, file=log_file, mem_usage=mem_usage)
 
     # --------------------------------------------------------------------------
-    LOGGER.info(f" ------------ Initializing CallFlow {callflow.__version__} ------------")
-    LOGGER.profile(f'Initialized CallFlow')
+    LOGGER.info(f" ------- Initializing CallFlow {callflow.__version__} --------")
 
     # --------------------------------------------------------------------------
     args = ArgParser(sys.argv)
@@ -68,9 +69,7 @@ def main():
     if process:
         assert endpoint_env == "TERMINAL"
         cf = BaseProvider(config=args.config)
-        LOGGER.profile(f'-----> Created BaseProvider')
         cf.process(reset)
-        LOGGER.profile(f'-----> Processed BaseProvider')
 
     # --------------------------------------------------------------------------
     # start a server based on endpoint_access = "REST" | "SOCKET"

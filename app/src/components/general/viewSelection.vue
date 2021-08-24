@@ -3,17 +3,17 @@
 		<v-select
 			dense
 			color="white"
-			:items="viewFormats"
-			:v-model="selectedFormat"
+			:items="modes"
+			:v-model="selectedMode"
 			:menu-props="{maxHeight: '400'}"
 		>
 			<template slot="selection" slot-scope="{item}">
-				<router-link :to="formatRouteMapping[item]" replace>
+				<router-link :to="modeRouteMapping[item]" replace>
 					<div style="color: teal;">{{item}}</div>
 				</router-link>
 			</template>
 			<template slot="item" slot-scope="{item}">
-				<router-link :to="formatRouteMapping[item]" replace>
+				<router-link :to="modeRouteMapping[item]" replace>
 					<div style="color: teal;"> {{item}} </div>
 				</router-link>
 			</template>
@@ -25,18 +25,15 @@
 export default {
 	data: () => ({
 		name: "ViewSelection",
-		viewFormats: ["CCT", "SuperGraph", "EnsembleSuperGraph"],
-		formatRouteMapping: {
+		modes: ["CCT", "SG", "ESG"],
+		modeRouteMapping: {
 			"CCT": "/cct",
-			"SuperGraph": "/super_graph",
-			"EnsembleSuperGraph": "/ensemble_super_graph"
+			"SG": "/super_graph",
+			"ESG": "/ensemble_super_graph"
 		},
-		selectedFormat: "",
 	}),
 
 	mounted() {
-		this.selectedFormat = this.$route.name;
-		this.$store.selectedFormat = this.$route.name;
 	},
 
 	methods: {

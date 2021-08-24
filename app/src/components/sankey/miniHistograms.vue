@@ -12,8 +12,7 @@
 <script>
 import * as d3 from "d3";
 import "d3-selection-multi";
-
-import EventHandler from "lib/routing/EventHandler";
+import { mapGetters } from "vuex";
 
 export default {
 	name: "MiniHistograms",
@@ -24,42 +23,40 @@ export default {
 			top: 0, left: 0, right: 0, bottom: 10
 		},
 		nodeScale: 0.99,
-		id: "",
+		id: "minihistogram-overview",
 		offset: 7,
 		bandWidth: 0,
+		selectedScale: "Linear"
 	}),
 
-	mounted() {
-		this.id = "minihistogram-overview";
-
-		// TODO: CAL-88: This code must return back once we fix the 
-		// auxiliary processing.
-		// let self = this;
-		// EventHandler.$on("update-rank-bin-size", function(data) {
-		// 	self.clear();
-		// 	EventHandler.$emit("single-histogram", {
-
-		// 	});			
-		// });
+	computed: {
+		...mapGetters({
+			selectedMetric: "getSelectedMetric",
+			generalColors: "getGeneralColors",
+			selectedMode: "getSelectedMode",
+			showTarget: "getShowTarget",
+			comparisonMode: "getComparisonMode",
+			targetColor: "getTargetColor"
+		})
 	},
 
 	methods: {
-		init(graph) {
-			const t_module_data = this.$store.data_mod[this.$store.selectedTargetDataset];
-			const t_callsite_data = this.$store.data_cs[this.$store.selectedTargetDataset];
-			
+		init(graph) {			
 			for (const node of graph.nodes) {
-				const module_idx = node.module_idx;
-				const callsite = node.name;
+				if (node.type !== "intermediate") {
+					let data = node.attr_dict.hists[this.selectedMetric]["rank"];
 
-				let data = {};
-				if (node.type == "super-node") {
-					data = t_module_data[module_idx][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
+					if (this.selectedMode == "ESG") {
+						this.histogram(data, node, "ensemble");
+						if (this.showTarget && this.comparisonMode == false) {
+							this.histogram(data, node, "target");
+						}
+					} else if (this.selectedMode == "SG") {
+						this.histogram(data, node, "ensemble");
+					}
+
+					
 				}
-				else if (node.type == "component-node" && t_callsite_data[callsite] != undefined) {
-					data = t_callsite_data[callsite][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
-				}
-				this.render(data, graph, node);
 			}
 		},
 
@@ -78,25 +75,25 @@ export default {
 			let color = "";
 			let xVals = [], freq = [];
 			if (type == "ensemble") {
-				color = this.$store.distributionColor.ensemble;
+				color = this.generalColors.ensemble;
 				xVals = data.x;
 				freq = data.y;
 			}
 			else if (type == "target" || type == "single") {
 				if (type == "target")
-					color = this.$store.distributionColor.target;
+					color = this.targetColor;
 				else if (type == "single")
-					color = this.$store.runtimeColor.intermediate;
+					color = this.generalColors.intermediate;
 				xVals = data.x;
 				freq = data.y;
 			}
 
-			if (this.$store.selectedScale == "Linear") {
+			if (this.selectedScale == "Linear") {
 				this.minimapYScale = d3.scaleLinear()
 					.domain([0, d3.max(freq)])
 					.range([this.$parent.ySpacing - 10, 0]);
 			}
-			else if (this.$store.selectedScale == "Log") {
+			else if (this.selectedScale == "Log") {
 				this.minimapYScale = d3.scaleLog()
 					.domain([0.1, d3.max(freq)])
 					.range([this.$parent.ySpacing, 0]);

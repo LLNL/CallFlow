@@ -108,6 +108,7 @@ deps = [
     "ipython",
     "flask_socketio",
     "flask_cors",
+    "pyinstrument",
     "psutil",
 ]
 

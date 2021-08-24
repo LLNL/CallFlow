@@ -7,7 +7,7 @@
 
 <template>
   <v-layout row wrap :id="id">
-    <InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
+    <InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
   </v-layout>
@@ -16,15 +16,16 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library imports
-import EventHandler from "lib/routing/EventHandler";
 import * as utils from "lib/utils";
+import EventHandler from "lib/routing/EventHandler";
 
 import InfoChip from "../general/infoChip";
 
 // Local components
-import ToolTip from "./tooltip";
+import ToolTip from "../singleHistogram/tooltip";
 
 export default {
 	name: "SingleScatterplot",
@@ -58,21 +59,45 @@ export default {
 		xAxisHeight: 0,
 		yAxisHeight: 0,
 		title: "MPI Runtime Scatterplot",
-		summary: "MPI Runtime Scatterplot view correlates between the inclusive and exclusive runtime metrics. Each dot or point in the view represents a process.",
+		infoSummary: "MPI Runtime Scatterplot view correlates between the inclusive and exclusive runtime metrics. Each dot or point in the view represents a process.",
 		info: ""
 	}),
 
+	computed: {
+		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedNode: "getSelectedNode",
+			data: "getSingleScatterplot",
+			summary: "getSummary",
+			generalColors: "getGeneralColors",
+		})
+	},
+
+	watch: {
+		data: function () {
+			this.visualize();
+		}
+	},
+
 	mounted() {
 		let self = this;
-		EventHandler.$on("single-scatterplot", function (data) {
-			self.visualize(data);
+		EventHandler.$on("reset-single-scatterplot", function() {
+			self.clear();
+			self.init();
 		});
 	},
 
 	methods: {
 		init() {
+			this.$store.dispatch("fetchSingleScatterplot", {
+				dataset: this.selectedTargetRun,
+				node: this.selectedNode["name"],
+				ntype: this.selectedNode["type"],
+				orientation: ["time", "time (inc)"],
+			});
+
 			this.width = this.$store.viewWidth * 0.25;
-			this.height = this.$store.viewHeight * 0.45;
+			this.height = this.$store.viewHeight * 0.5;
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
@@ -87,145 +112,35 @@ export default {
 				);
 
 			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
-			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
+			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;		
 		},
 
-		visualize(data) {
-			if (!this.firstRender) {
-				this.clear();
-			}
-			else {
-				this.init();
-			}
-			this.firstRender = false;
-
-			let temp = this.process(data);
-			this.xMin = temp[0];
-			this.yMin = temp[1];
-			this.xMax = temp[2];
-			this.yMax = temp[3];
-			this.xArray = temp[4];
-			this.yArray = temp[5];
+		visualize() {
+			this.xMin = this.data.xMin;
+			this.yMin = this.data.yMin;
+			this.xMax = this.data.xMax;
+			this.yMax = this.data.yMax;
+			this.xArray = this.data.x;
+			this.yArray = this.data.y;
+			this.ranks = this.data.ranks;
 
 			this.xScale = d3
 				.scaleLinear()
 				.domain([this.xMin, this.xMax])
+				.nice(5)
 				.range([0, this.xAxisHeight]);
 
 			this.yScale = d3
 				.scaleLinear()
 				.domain([this.yMin, this.yMax])
+				.nice(5)
 				.range([this.yAxisHeight, this.padding.top]);
-
-			this.regression = this.leastSquares(this.xArray, this.yArray);
-			const corr_coef = Math.round(this.regression["corr_coef"] * 100) / 100;
-			this.info = "Correlation : " + corr_coef;
-
 
 			this.xAxis();
 			this.yAxis();
 			this.dots();
-			// this.trendline()
-		},
-
-		process(data) {
-			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
-			let mean_time_inc = store["time (inc)"]["d"];
-			let mean_time = store["time"]["d"];
-
-			let xArray = [];
-			let yArray = [];
-			let yMin = 0;
-			let xMin = 0;
-			let xMax = 0;
-			let yMax = 0;
-
-			for (const [idx, d] of Object.entries(mean_time)) {
-				xMin = Math.min(xMin, d);
-				xMax = Math.max(xMax, d);
-				xArray.push(d);
-			}
-
-			for (const [idx, d] of Object.entries(mean_time_inc)) {
-				yMin = Math.min(yMin, d);
-				yMax = Math.max(yMax, d);
-				yArray.push(d);
-			}
-
-			return [xMin, yMin, xMax, yMax, xArray, yArray];
-		},
-
-		// returns slope, intercept and r-square of the line
-		leastSquares(xSeries, ySeries) {
-			var n = xSeries.length;
-			var x_mean = 0;
-			var y_mean = 0;
-			var term1 = 0;
-			var term2 = 0;
-
-			for (var i = 0; i < n; i++) {
-				x_mean += xSeries[i];
-				y_mean += ySeries[i];
-			}
-
-			// calculate mean x and y
-			x_mean /= n;
-			y_mean /= n;
-
-			// calculate coefficients
-			var xr = 0;
-			var yr = 0;
-			for (i = 0; i < xSeries.length; i++) {
-				xr = xSeries[i] - x_mean;
-				yr = ySeries[i] - y_mean;
-				term1 += xr * yr;
-				term2 += xr * xr;
-			}
-
-			var b1 = term1 / term2;
-			var b0 = y_mean - b1 * x_mean;
-			// perform regression
-
-			let yhat = [];
-			// fit line using coeffs
-			for (i = 0; i < xSeries.length; i++) {
-				yhat.push(b0 + xSeries[i] * b1);
-			}
-
-			//compute correlation coef
-			var xy = [];
-			var x2 = [];
-			var y2 = [];
-
-			for (let i = 0; i < n; i++) {
-				xy.push(xSeries[i] * ySeries[i]);
-				x2.push(xSeries[i] * xSeries[i]);
-				y2.push(ySeries[i] * ySeries[i]);
-			}
-
-			var sum_x = 0;
-			var sum_y = 0;
-			var sum_xy = 0;
-			var sum_x2 = 0;
-			var sum_y2 = 0;
-
-			for (let i = 0; i < n; i++) {
-				sum_x += xSeries[i];
-				sum_y += ySeries[i];
-				sum_xy += xy[i];
-				sum_x2 += x2[i];
-				sum_y2 += y2[i];
-			}
-			var step1 = n * sum_xy - sum_x * sum_y;
-			var step2 = n * sum_x2 - sum_x * sum_x;
-			var step3 = n * sum_y2 - sum_y * sum_y;
-			var step4 = Math.sqrt(step2 * step3);
-
-			let corr_coef = step1 / step4;
-			return {
-				y_res: yhat,
-				corr_coef: corr_coef,
-			};
+			this.trendline();
+			this.$refs.ToolTip.init(this.svgID);
 		},
 
 		addxAxisLabel() {
@@ -251,10 +166,10 @@ export default {
 			this.addxAxisLabel();
 			const xAxis = d3
 				.axisBottom(this.xScale)
-				.ticks(10)
+				.ticks(5)
 				.tickFormat((d, i) => {
 					let runtime = utils.formatRuntimeWithExponent(d, self.x_max_exponent);
-					return `${runtime[0]}`;
+					return `${Math.round(runtime[0] * 100) / 100}`;
 				});
 
 			let xAxisLine = this.svg
@@ -311,14 +226,14 @@ export default {
 
 		yAxis() {
 			let self = this;
-			let tickCount = 10;
+			let tickCount = 5;
 			this.addyAxisLabel();
 			let yAxis = d3
 				.axisLeft(this.yScale)
 				.ticks(tickCount)
 				.tickFormat((d, i) => {
 					let runtime = utils.formatRuntimeWithExponent(d, self.y_max_exponent);
-					return `${runtime[0]}`;
+					return runtime[0];
 				});
 
 			const yAxisLine = this.svg
@@ -352,57 +267,84 @@ export default {
 		},
 
 		trendline() {
-			let self = this;
-			let line = d3
-				.line()
-				.x(function (d, i) {
-					return self.xScale(self.xArray[i]);
-				})
-				.y(function (d, i) {
-					return self.yScale(self.yArray[i]);
-				});
+			const leastSquaresCoeff = utils.leastSquares(this.xArray, this.yArray);
+			this.info = "Correlation : " + Math.round(leastSquaresCoeff[2]*1000)/1000;
 
-			this.svg
-				.append("g")
-				.attr("class", "trend-line")
-				.append("path")
-				.datum(this.regression["y_res"])
-				.attr("d", line)
-				.style("stroke", this.$store.color.intermediate)
-				.style("stroke-width", "1px")
-				.style("opacity", 0.5)
+			// apply the reults of the least squares regression
+			var x1 = this.xMin;
+			var y1 = leastSquaresCoeff[0] * this.xMin + leastSquaresCoeff[1];
+			var x2 = this.xMax;
+			var y2 = leastSquaresCoeff[0] * this.xMax + leastSquaresCoeff[1];
+			var trendData = [[x1,y1,x2,y2]];
+			
+			var trendline = this.svg.selectAll(".trendline")
+				.data(trendData);
+			
+			trendline.enter()
+				.append("line")
+				.attr("class", "trendline")
+				.attr("x1", (d) => this.xScale(d[0]))
+				.attr("y1", (d) => this.yScale(d[1]))
+				.attr("x2", (d) => this.xScale(d[2]))
+				.attr("y2", (d) => this.yScale(d[3]))
+				.attr("stroke", "red")
+				.attr("stroke-width", 1)
 				.attr(
 					"transform",
-					"translate(" + this.paddingFactor * this.padding.left + ", 0)"
+					"translate(" + 3 * this.padding.left + "," + this.padding.top + ")"
 				);
 		},
 
 		dots() {
+			let d = [];
+			for(let i=0; i < this.yArray.length; i += 1) {
+				d.push({
+					"x": this.xArray[i],
+					"y": this.yArray[i],
+					"rank": this.ranks[i],
+				});
+			}
+
 			let self = this;
 			this.svg
 				.selectAll(".dot")
-				.data(this.yArray)
+				.data(d)
 				.enter()
 				.append("circle")
 				.attr("class", "dot")
 				.attr("r", 5)
-				.attr("cx", function (d, i) {
-					return self.xScale(self.xArray[i]) + 3 * self.padding.left;
-				})
-				.attr("cy", function (d, i) {
-					return self.yScale(self.yArray[i]);
-				})
-				.style("fill", this.$store.runtimeColor.intermediate)
+				.attr("cx", (d, i) => this.xScale(this.xArray[i]) + 3 * this.padding.left)
+				.attr("cy", (d, i) => this.yScale(this.yArray[i]))
+				.style("fill", this.generalColors.intermediate)
 				.style("stroke", "#202020")
-				.style("stroke-width", 0.5);
+				.style("stroke-width", 0.5)
+				.on("mouseover", function (d, i) {
+					d3.selectAll(".dot")
+						.style("fill", self.generalColors.intermediate)
+						.style("stroke", self.generalColors.intermediate)
+						.style("fill-opacity", 0.1);	
+					d3.select(this)
+						.style("fill", "orange")
+						.style("stroke", "#202020")
+						.style("fill-opacity", 1);
+					const text = "MPI rank: " + d.rank;
+					self.$refs.ToolTip.render(text, d);
+				})
+				.on("mouseout", function (d, i) {
+					d3.selectAll(".dot")
+						.style("fill", self.generalColors.intermediate)
+						.style("stroke", "#202020")
+						.style("fill-opacity", 1);
+					self.$refs.ToolTip.clear();
+				});
 		},
 
 		clear() {
 			d3.selectAll(".dot").remove();
 			d3.selectAll(".axis").remove();
-			d3.selectAll(".trend-line").remove();
-			// d3.selectAll('.axis-label"').remove();
+			d3.selectAll(".trendline").remove();
 			d3.selectAll(".ss-axis-label").remove();
+			this.$refs.ToolTip.clear();
 		},
 	},
 };

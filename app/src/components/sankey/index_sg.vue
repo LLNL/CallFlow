@@ -7,14 +7,20 @@
 
 <template>
   <div>
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
-    <v-layout>
+	<v-row>
+		<v-col cols="4">
+			<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
+		</v-col>
+		<v-col cols="8">
+			<ColorMap ref="ColorMap" />
+		</v-col>
+	</v-row>
+	<v-layout>
       <svg :id="id">
         <g id="container">
           <Edges ref="Edges" />
           <Nodes ref="Nodes" />
           <MiniHistograms ref="MiniHistograms" />
-          <ColorMap ref="ColorMap" />
         </g>
       </svg>
     </v-layout>
@@ -24,20 +30,21 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library imports
 import EventHandler from "lib/routing/EventHandler.js";
-import Sankey from "lib/algorithms/sankey";
-import * as utils from "lib/utils";
-import Graph from "lib/datastructures/graph";
-import GraphVertex from "lib/datastructures/node";
-import GraphEdge from "lib/datastructures/edge";
-import detectDirectedCycle from "lib/algorithms/detectcycle";
-import APIService from "lib/routing/APIService.js";
+import Sankey from "./lib/sankey.js";
+// import Graph from "./lib/graph";
+// import GraphVertex from "./lib/node";
+// import GraphEdge from "./lib/edge";
+// import detectDirectedCycle from "./algorithms/detectcycle";
 
 // General component imports
 import ColorMap from "../general/colormap";
 import InfoChip from "../general/infoChip";
+import Color from "lib/color/";
+import * as utils from "lib/utils";
 
 // Local component imports
 import Nodes from "./nodes";
@@ -69,19 +76,52 @@ export default {
 		width: null,
 		height: null,
 		treeHeight: null,
-		data: null,
 		sankeyWidth: 0,
 		sankeyHeight: 0,
-		selectedMetric: "",
 		existingIntermediateNodes: {},
 		title: "Super Graph View",
+		firstRender: true,
 		message: "",
 		info: "",
-		summary: "Super Graphs provides an overview of the application's control during execution using a Sankey Diagram. The Sankey diagram incorporates a flow-based metaphor to the call graph by show the resource flow from left to right. Each node's performance is mapped based on the runtime colormap. The mini-histograms (on top of the node) provides an overview of each node's runtime distribution across processes",
+		infoSummary: "Super Graphs provides an overview of the application's control during execution using a Sankey Diagram. The Sankey diagram incorporates a flow-based metaphor to the call graph by show the resource flow from left to right. Each node's performance is mapped based on the runtime colormap. The mini-histograms (on top of the node) provides an overview of each node's runtime distribution across processes",
 	}),
 
+	computed: {
+		...mapGetters({ 
+			selectedMetric: "getSelectedMetric", 
+			sg_data: "getSG",
+			esg_data: "getESG",
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedMode: "getSelectedMode",
+			runBinCount: "getRunBinCount",
+			selectedColorPoint: "getColorPoint",
+			summary: "getSummary",
+			targetColor: "getTargetColor",
+			runtimeColorMap: "getRuntimeColorMap",
+			distributionColorMap: "getDistributionColorMap",
+			targetColorMap: "getTargetColorMap",
+			isComparisonMode: "getComparisonMode",
+		})
+	},
+
+	watch: {
+		sg_data: function (val) {
+			this.data = val;
+			this.singleColors();
+			this.visualize();
+			this.firstRender = false;
+		},
+
+		esg_data: function (val) {
+			this.data = val;
+			this.singleColors();
+			this.ensembleColors();
+			this.visualize();
+			this.firstRender = false;
+		},
+	},
+
 	mounted() {
-		this.id = "ensemble-supergraph-overview";
 		let self = this;
 		EventHandler.$on("clear_summary_view", function () {
 			console.log("Clearing Summary view");
@@ -97,67 +137,36 @@ export default {
 			self.$refs.MiniHistograms.clear();
 		});
 
-		EventHandler.$on("fetch-super-graph", () => {
-			self.clear();
-			self.init();
+		EventHandler.$on("remove-ensemble-colors", () => {
+			self.$refs.ColorMap.clear();
+			if (self.isComparisonMode) {
+				// TODO: Need to call the diffColor setup here. 
+			}
+			else {
+				self.singleColors();
+				self.ensembleColors();
+			}
+			this.initColorMaps();
 		});
-
-		EventHandler.$on("fetch-ensemble-super-graph", () => {
-			self.clear();
-			self.init();
-		});
-
-		this.selectedMetric = this.$store.selectedMetric;		
 	},
 
 	methods: {
-		async fetchData() {
-			let data = {};
-			const payload = {
-				selected_runs: [this.$store.selectedTargetDataset],
-				groupBy: "module",
-			};
-			console.log(payload);
-			if (this.$store.selectedMode == "Single") {
-				payload["dataset"] = this.$store.selectedTargetDataset;
-				data = await APIService.POSTRequest("single_supergraph", payload);
-				console.debug("[/single_supergraph]", data);
-			} else if (this.$store.selectedMode == "Ensemble") {
-				payload["selected_runs"] = this.$store.selectedDatasets;
-				data = await APIService.POSTRequest("ensemble_supergraph", payload);
-				console.debug("[/ensemble_supergraph]", data);
+		init() {
+			if (this.selectedMode == "SG") {
+				this.$store.dispatch("fetchSG", {
+					dataset: this.selectedTargetRun,
+				});
+			} else if (this.selectedMode == "ESG") {
+				this.$store.dispatch("fetchESG", {
+					dataset: this.selectedTargetRun,
+					nbins: this.runBinCount,
+				});
 			}
-
-			data = this._add_node_map(data);
-			data.graph = this._construct_super_graph(data);
-
-			// check cycle.
-			// let detectcycle = detectDirectedCycle(data.graph);
-
-			// for (let i = 0; i <data.links.length; i += 1) {
-			// 	let link = data.links[i];
-			// 	let source_callsite = link["source"];
-			// 	let target_callsite = link["target"];
-			// 	let weight = link["weight"];
-
-			// 	console.debug("=============================================");
-			// 	console.debug("[Ensemble SuperGraph] Source Name :", source_callsite);
-			// 	console.debug("[Ensemble SuperGraph] Target Name :", target_callsite);
-			// 	console.debug("[Ensemble SuperGraph] Weight: ", weight);
-			// }
-			return data;
 		},
 
-		async init() {
-			// set the component info.
-			this.info = { 
-				"Metric": this.$store.selectedMetric + " runtime",
-				"Callsite": this.$store.selectedNode
-			};
-			
-			this.data = await this.fetchData();
+		visualize() {
 			this.width = this.$store.viewWidth;
-			this.height = this.$store.viewHeight - this.margin.top - this.margin.bottom;
+			this.height = this.$store.viewHeight - 2 * this.margin.top - this.margin.bottom;
 
 			this.sankeySVG = d3.select("#" + this.id).attrs({
 				width: this.width,
@@ -177,19 +186,29 @@ export default {
 			this.render();
 		},
 
-		_debug_data(data) {
-			console.debug("Data :", data);
-			for (let i = 0; i < data.nodes.length; i += 1) {
-				console.debug("Node name: ", data.nodes[i].id);
-				console.debug("Time (inc): ", data.nodes[i]["time (inc)"]);
-				console.debug("Time: ", data.nodes[i]["time"]);
-			}
+		singleColors() {
+			const data = this.summary[this.selectedTargetRun][this.selectedMetric];
+			const [ colorMin, colorMax ]  = utils.getMinMax(data);
 
-			for (let i = 0; i < data.links.length; i += 1) {
-				console.debug("Source: ", data.links[i].source);
-				console.debug("Target: ", data.links[i].target);
-				console.debug("Weight: ", data.links[i].weight);
+			if (this.firstRender) {
+				let runtimeColorMap = "";
+				if (this.selectedMode === "SG") {
+					runtimeColorMap = "OrRd";
+				}
+				else if (this.selectedMode === "ESG") {
+					runtimeColorMap = "Blues";
+				}
+				this.$store.commit("setRuntimeColorMap", runtimeColorMap);
 			}
+			this.$store.runtimeColor = new Color(this.selectedMetric, colorMin, colorMax, this.runtimeColorMap, this.selectedColorPoint);
+		},
+
+		ensembleColors() {
+			const arrayOfData = this.data.nodes.map((d) => d.attr_dict.gradients[this.selectedMetric]["hist"]["h"]);
+			const [ colorMin, colorMax ]  = utils.getArrayMinMax(arrayOfData);
+			this.$store.commit("setDistributionColorMap", "Reds");
+			this.$store.distributionColor = new Color("MeanGradients", colorMin, colorMax, this.distributionColorMap, this.selectedColorPoint);			
+
 		},
 
 		clear() {
@@ -201,7 +220,7 @@ export default {
 
 		render() {
 			this.sankeyWidth = 0.7 * this.$store.viewWidth;
-			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
+			this.sankeyHeight = 0.8 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
 			this._init_sankey(this.data);
 
@@ -211,67 +230,43 @@ export default {
 			
 			this._init_sankey();
 
-			this.$store.graph = this.data;
+			this.$refs.Nodes.init(this.data);
+			this.$refs.Edges.init(this.data);
+			this.$refs.MiniHistograms.init(this.data);
 
-			this.$refs.Nodes.init(this.$store.graph, this.view);
-			this.$refs.Edges.init(this.$store.graph, this.view);
-			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
+			this.initColorMaps();
+		},
 
-			const node_id = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "SuperGraph");
-			this.$store.selectedNode = this.$store.graph["nodes"][node_id];
-
-
-			const mode_lower = this.$store.selectedMode.toLowerCase();
-			EventHandler.$emit(mode_lower + "-histogram", {
-				node: this.$store.selectedNode,
-				dataset: this.$store.selectedTargetDataset,
-			});
-
-			EventHandler.$emit(mode_lower + "-scatterplot", {
-				node: this.$store.selectedNode,
-				dataset: this.$store.selectedTargetDataset,
-			});
-
-			if (this.$store.selectedMode == "Single") {
+		initColorMaps() {
+			if (this.selectedMode == "SG") {
 				this.$refs.ColorMap.init(this.$store.runtimeColor);
 			}
-			else if(this.$store.selectedMode == "Ensemble") {
-				this.$refs.ColorMap.init(this.$store.runtimeColor);
-				this.$refs.ColorMap.init(this.$store.distributionColor);
+			else if(this.selectedMode == "ESG") {
+				if (this.isComparisonMode) {
+					this.$refs.ColorMap.init(this.$store.diffColor);
+				}
+				else {
+					this.$refs.ColorMap.init(this.$store.runtimeColor);
+					this.$refs.ColorMap.init(this.$store.distributionColor);
+				}
 			}
 		},
 
-		/**
-		 * Add node map to maintain the index of the Sankey nodes.
-		 */
-		_add_node_map(graph) {
-			let nodeMap = {};
-			let idx = 0;
-			for (const node of graph.nodes) {
-				nodeMap[node.id] = idx;
+		// /**
+		//  * Internal function that construct the super graph structure.
+		//  */
+		// _construct_super_graph(data) {
+		// 	let graph = new Graph(true);
 
-				// console.debug(`[Supergraph] Assigning ${node.id} with index ${idx}`);
-				idx += 1;
-			}
-			graph.nodeMap = nodeMap;
-			return graph;
-		},
-
-		/**
-		 * Internal function that construct the super graph structure.
-		 */
-		_construct_super_graph(data) {
-			let graph = new Graph(true);
-
-			for (let i = 0; i < data.links.length; i += 1) {
-				let source = new GraphVertex(data.links[i].source);
-				let target = new GraphVertex(data.links[i].target);
-				let weight = data.links[i].weight;
-				let edge = new GraphEdge(source, target, weight);
-				graph.addEdge(edge);
-			}
-			return graph;
-		},
+		// 	for (let i = 0; i < data.links.length; i += 1) {
+		// 		let source = new GraphVertex(data.links[i].source);
+		// 		let target = new GraphVertex(data.links[i].target);
+		// 		let weight = data.links[i].weight;
+		// 		let edge = new GraphEdge(source, target, weight);
+		// 		graph.addEdge(edge);
+		// 	}
+		// 	return graph;
+		// },
 
 		/**
 		 * Initialize the Sankey layout computation.
@@ -282,10 +277,7 @@ export default {
 				.nodePadding(this.ySpacing)
 				.size([this.sankeyWidth, this.sankeyHeight])
 				.levelSpacing(this.levelSpacing)
-				.maxLevel(this.data.maxLevel)
-				.setMinNodeScale(this.nodeScale)
-				.targetDataset(this.$store.selectedTargetDataset)
-				.store(this.$store);
+				.setMinNodeScale(this.nodeScale);
 
 			this.sankey.link();
 
@@ -296,6 +288,7 @@ export default {
 		 * Adds the intermediate nodes and edges to the SuperGraph.
 		 */
 		_add_intermediate(nodes, edges) {
+			this.existingIntermediateNodes = {};
 			const temp_nodes = nodes.slice();
 			const temp_edges = edges.slice();
 
@@ -306,9 +299,9 @@ export default {
 				const source = temp_edges[i].source;
 				const target = temp_edges[i].target;
 
-				// console.debug("[SuperGraph] Source Name", source);
-				// console.debug("[SuperGraph] Target Name", target);
-				// console.debug("[SuperGraph] This edge: ", temp_edges[i]);
+				console.debug("[SuperGraph] Source Name", source);
+				console.debug("[SuperGraph] Target Name", target);
+				console.debug("[SuperGraph] This edge: ", temp_edges[i]);
 
 				let source_node = temp_edges[i].source_data;
 				let target_node = temp_edges[i].target_data;
@@ -316,36 +309,39 @@ export default {
 				// console.debug(`[SuperGraph] Source Node: ${source_node}, Level: ${source_node.level}`);
 				// console.debug(`[Ensemble SuperGraph] Target Node: ${target_node} Level: ${target_node.level}`);
 
-				const source_level = source_node.level;
-				const target_level = target_node.level;
+				const source_level = source_node.attr_dict.level;
+				const target_level = target_node.attr_dict.level;
 				const shift_level = target_level - source_level;
 
 				// console.debug(source_level, target_level);
 				// console.debug(`[SuperGraph] Number of levels to shift: ${shift_level}`);
 
-				let targetDataset = this.$store.selectedTargetDataset;
 				// Put in intermediate nodes.
 				let firstNode = true;
 				for (let j = shift_level; j > 1; j--) {
 					const intermediate_idx = nodes.length;
 
 					let tempNode = {};
-					let actual_time = source_node["actual_time"];
 					let max_flow = source_node["max_flow"];
 					if (this.existingIntermediateNodes[target_node.id] == undefined) {
 						// Add the intermediate node to the array
 						tempNode = {
-							id: "intermediate_" + target_node.id,
-							level: j - 1,
-							value: temp_edges[i].weight,
-							targetValue: temp_edges[i].targetWeight,
-							height: temp_edges[i].height,
-							targetHeight: temp_edges[i].targetHeight,
-							module: target_node.module,
+							attr_dict: {
+								...target_node.attr_dict,
+								nid: -1,
+								level: j,
+
+							},
+							level: j + 1,
+							id: "i" + target_node.id,
+							value: target_node.value,
+							targetValue: target_node.targetValue,
+							// height: temp_edges[i].height,
+							// targetHeight: temp_edges[i].targetHeight,
 							type: "intermediate",
 							count: 1,
 						};
-						tempNode[targetDataset] = target_node[targetDataset];
+						// tempNode[targetDataset] = target_node[this.selectedTargetRun];
 
 						if (firstNode) {
 							nodes.push(tempNode);
@@ -365,37 +361,37 @@ export default {
 
 					// Add the source edge.
 					const sourceTempEdge = {
+						attr_dict: temp_edges[i].attr_dict,
 						type: "source_intermediate",
 						source: source_node.id,
 						target: tempNode.id,
-						weight: temp_edges[i].weight,
-						targetWeight: temp_edges[i].targetWeight,
-						actual_time: actual_time,
+						weight: target_node.weight,
+						targetWeight: temp_edges[i].attr_dict.targetWeight,
 						max_flow: max_flow,
 					};
 					edges.push(sourceTempEdge);
 
-					// console.debug(`[SuperGraph] Adding intermediate source edge: ${sourceTempEdge}`);
+					console.debug("[SuperGraph] Adding intermediate source edge:", sourceTempEdge);
 
 					if (j == shift_level) {
 						edges[i].original_target = target;
 					}
-					edges[i].target_data = nodes[intermediate_idx];
+					// edges[i].target_data = nodes[intermediate_idx];
 					
 					// console.debug(`[SuperGraph] Updating this edge: ${edges[i]}`);
 					
 					const targetTempEdge = {
+						attr_dict: temp_edges[i].attr_dict,
 						type: "target_intermediate",
 						source: tempNode.id,
 						target: target_node.id,
-						actual_time: actual_time,
-						weight: temp_edges[i].weight,
-						targetWeight: temp_edges[i].targetWeight,
+						weight: target_node.value,
+						targetWeight: temp_edges[i].attr_dict.targetWeight,
 						max_flow: max_flow,
 					};
 					edges.push(targetTempEdge);
 
-					// console.log(`[SuperGraph] Adding intermediate target edge: ${targetTempEdge}`);
+					console.log("[SuperGraph] Adding intermediate target edge:", targetTempEdge);
 
 					if (j == shift_level) {
 						edges[i].original_target = target;
@@ -430,6 +426,7 @@ export default {
 
 		activateCompareMode(data) {
 			this.$refs.Nodes.comparisonMode(data);
+			this.$refs.Edges.comparisonMode(data);
 		},
 	},
 };

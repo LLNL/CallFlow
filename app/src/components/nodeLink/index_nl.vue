@@ -8,11 +8,16 @@
 <template>
 	<v-col>
 		<v-row>
-			<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
+			<v-col cols="4">
+				<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info" />
+			</v-col>
+			<v-col cols="8">
+				<ColorMap ref="ColorMap" />
+			</v-col>
 			<Loader :isDataReady="isDataReady" />
-			<svg :id="id">
-			<g id="container"></g>
-			<ColorMap ref="ColorMap" />
+			<svg :id="id" :width="width" :height="height" :left="margin.left" :top="margin.top">
+				<g id="container"></g>
+				<ToolTip ref="ToolTip" />
 			</svg>
 		</v-row>
 	</v-col>
@@ -21,13 +26,15 @@
 <script>
 import * as d3 from "d3";
 import dagreD3 from "dagre-d3/dist/dagre-d3";
+import { mapGetters } from "vuex";
 
-import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
 
 import InfoChip from "../general/infoChip";
 import Loader from "../general/loader";
 import ColorMap from "../general/colormap";
+import ToolTip from "./tooltip";
+import d3InputBox from "./d3-inputbox";
 
 import * as utils from "lib/utils";
 
@@ -36,7 +43,8 @@ export default {
 	components: {
 		InfoChip,
 		Loader,
-		ColorMap
+		ColorMap, 
+		ToolTip
 	},
 
 	data: () => ({
@@ -47,13 +55,13 @@ export default {
 			bottom: 20,
 			left: 20,
 		},
-		width: null,
-		height: null,
+		width: 0,
+		height: 0,
 		zoom: null,
 		HAS_DATA_COLUMNS: ["module"], // Array of keys in incoming data to check for.
 		has_data_map: {}, // stores if the required data points are present in the incoming data.
 		title: "CCT view",
-		summary:
+		infoSummary:
       "CCT view visualizes the unique call paths of a sampled profile. Each call site is colored based on the selected metric (use settings to change the metric). On click, each node's callers (green) and callees (purple) are highlighted using the links.",
 		info: "",
 		b_node_height: 50,
@@ -64,41 +72,44 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("fetch-cct", () => {
+		EventHandler.$on("reset-cct", () => {
+			console.log("[CCT] Resetting dataset to :", this.selectedTargetRun);
 			self.clear();
-			self.init();
+			self.isDataReady = false;
+			self.$store.dispatch("fetchCCT", {
+				dataset: this.selectedTargetRun
+			});
 		});
 	},
 
+	computed: {
+		...mapGetters({ 
+			selectedMetric: "getSelectedMetric", 
+			data: "getCCT",
+		})
+	},
+
+	watch: {
+		data: function () {
+			this.visualize();
+		}
+	},
+
 	methods: {
-		/**
-		 * Send the request to /init endpoint
-		 * Parameters: {datasetPath: "path/to/dataset"}
-		 */
-		async fetchData() {
-			this.info = "Selected metric : " + this.$store.selectedMetric;
-			return await APIService.POSTRequest("cct", {
-				dataset: this.$store.selectedTargetDataset,
+		init(run) {
+			this.$store.dispatch("fetchCCT", {
+				dataset: run
 			});
 		},
 
-		/**
-		 * Calls the socket to fetch data.
-		 */
-		async init() {
-			this.data = await this.fetchData();
+		visualize() {
 			this.isDataReady = true;
-			console.log("CCT data: ", this.data);
+			this.width = this.$store.viewWidth - this.margin.right;
+			this.height = this.$store.viewHeight - this.margin.bottom;
 
-			this.width = this.$store.viewWidth;
-			this.height = this.$store.viewHeight;
+			this.svg = d3.select("#" + this.id);
 
-			this.svg = d3.select("#" + this.id).attrs({
-				width: this.width - this.margin.right,
-				height: this.height - this.margin.bottom,
-				left: this.margin.left,
-				top: this.margin.top,
-			});
+			this.info = "Selected metric : " + this.selectedMetric;
 
 			this.g = this.createGraph();
 			this.setHasDataMap();
@@ -121,20 +132,37 @@ export default {
 			dagreRender(inner, this.g);
 
 			// TODO: Zoom translate is not working well.
-			// this.zoomTranslate();
+			this.zoomTranslate();
 
 			let self = this;
-			this.svg.selectAll("g.node").on("click", function (id) {
-				self.node_click_action(id);
+			this.svg.selectAll("g.node").on("click", function (v) {
+				self.node_click_action(v);
 				dagreRender(inner, self.g);
+				// self.zoomTranslate();
+			});
+
+			if(this.selectedMetric !== "module") {
+				this.$refs.ColorMap.init(this.$store.runtimeColor);
+			}
+
+			this.$refs.ToolTip.init(this.id);
+			this.svg.selectAll(".cct-node").on("mouseover", function (v, d) {
+				self.$refs.ToolTip.visualize(self.data.nodes[d]);
+			});
+
+			this.svg.selectAll("g.node").on("click", function (v) {
+				// var inputbox = d3InputBox();
+				// var inputboxes = self.svg.selectAll(".inputbox")
+				// 	.data([{label: "module: ", x: 20, width: 200, height: 36.5, supernode: "aaa" }])
+				// 	.enter()
+				// 	.append("g")
+				// 	.attr("class", "inputbox")
+				// 	.call(inputbox);	
 			});
 
 			// Add tooltip
-			// inner.selectAll("g.node")
-			// 	.attr("title", function (v) { return this.tooltip(v, g.node(v).description) })
-			// 	.each(function (v) { $(this).tipsy({ gravity: "w", opacity: 1, html: true }); });
-
-			this.$refs.ColorMap.init(this.$store.runtimeColor);
+			inner.selectAll("g.node")
+				.attr("title", function (v) { return v; });
 		},
 
 		/**
@@ -180,17 +208,23 @@ export default {
 		 * @return {JSON<{'node': Color, 'text': Color}>} 'node': fill color, 'text': text color
 		 */
 		setCallsiteColor(callsite) {
-			// Set node fill color.
-			const color = this.$store.runtimeColor.getColor(
-				callsite,
-				this.$store.selectedMetric,
-			);
+			const colorBy = this.selectedMetric;
 
-			// Set node color.
-			const fillColor = this.$store.runtimeColor.rgbArrayToHex(color);
+			let colorMap;
+			if(colorBy == "module") {
+				colorMap = this.$store.moduleColor;
+			}
+			else {
+				colorMap = this.$store.runtimeColor;
+			}
 
+			let fillColor = colorMap.getColor(callsite, colorBy);
+			if(typeof(fillColor) !== "string") {
+				fillColor = colorMap.rgbArrayToHex(fillColor);			
+			}
+			
 			// Set text color (contrast to the fill color).
-			const textColor = this.$store.runtimeColor.setContrast(fillColor);
+			const textColor = colorMap.setContrast(fillColor);
 
 			return {
 				node: fillColor,
@@ -207,17 +241,15 @@ export default {
 		 */
 		setCallsiteHTML(callsite, callsite_color) {
 			let name = callsite.name;
+			name = utils.formatName(name.replace("<", "").replace(">", ""));
+
 			const class_name =
         callsite_color["text"] === "#fff" ? "white-text" : "black-text";
 
 			let html = `<div><span class=${class_name} > ${name} </span> </div>`;
 			if (this.has_data_map["module"] && callsite.id != callsite.name) {
 				let thismodule = utils.getModuleName(this.$store, callsite.module);
-				html =
-          html +
-          `<br/><span class= ${class_name}><b>Module :</b>` +
-          thismodule +
-          "</span> </div>";
+				html += `<br/><span class= ${class_name}><b>Module :</b>` + thismodule + "</span> </div>";
 			}
 			return html;
 		},
@@ -237,7 +269,7 @@ export default {
 					...node,
 					class: "cct-node",
 					labelType: "html",
-					label: label,
+					label,
 					fillColor: callsite_color["node"],
 				};
 
@@ -252,7 +284,7 @@ export default {
 					node.style = `fill: ${node.fillColor}; color: "#f00";`;
 					node.rx = node.ry = 8;
 					node.id = node.name;
-					node.height = self.b_node_height;
+					// node.height = self.b_node_height;
 				}
 			});
 		},
@@ -282,7 +314,7 @@ export default {
 				const edge = self.g.edge(e);
 				edge.class = "cct-edge";
 				self.g.edge(e).style =
-          "fill: rgba(255,255,255, 0); stroke: #3c3c3c; stroke-width: 2.5px;";
+          "fill: rgba(255,255,255, 0); stroke: #686868; stroke-width: 2.5px;";
 			});
 		},
 
@@ -329,7 +361,7 @@ export default {
 					nodeClass = node.class;
 					if (nodeClass !== "cct-node")
 						node.class = nodeClass.replace("highLight", " ").trim();
-					node.height = self.b_node_height;
+					// node.height = self.b_node_height;
 				});
 
 				this.g.edges().forEach(function (e, v, w) {
@@ -352,6 +384,8 @@ export default {
 				});
 				this.g.node(id).class += " highLight";
 			}
+
+			// this.zoomTranslate();
 		},
 
 		/**
@@ -417,11 +451,13 @@ export default {
 .white-text {
   color: white !important;
   text-align: center;
+  font-size: 12px;
 }
 
 .black-text {
   color: black !important;
   text-align: center;
+  font-size: 12px;
 }
 
 .description {
@@ -436,15 +472,43 @@ export default {
 
 .white-text > .description {
   color: rgb(200, 195, 195);
-  font-size: 10pt;
+  font-size: 10px;
 }
 
 .black-text > .description {
   color: rgb(26, 26, 49);
-  font-size: 10pt;
+  font-size: 10px;
 }
 
 .cct-edge {
   fill: gray;
 }
+
+.inputbox rect {
+  fill: #FFFFFF;
+  stroke: #348B6D; 
+  stroke-width: 2px;
+}
+
+.inputbox rect.active {
+  fill: #D9F0E3;
+}
+
+.inputbox text {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 12px;
+  letter-spacing: 3px;
+  fill: #494949;
+  pointer-events: none;
+  text-anchor: start;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+    
+}
+
+.inputbox text.value {  
+  text-anchor: end;
+}
+
 </style>

@@ -6,7 +6,6 @@
 
 import os
 import warnings
-import numpy as np
 
 from flask import Flask, request, json, jsonify
 from flask_cors import CORS, cross_origin
@@ -92,7 +91,7 @@ class APIProvider(BaseProvider):
             warnings.warn(f"[API: {endpoint}] emits no data.")
             return jsonify(isError=True, message="Error", statusCode=500)
 
-    def handle_routes(self) -> None:
+    def handle_routes(self) -> None:  # noqa: C901
         """
         API endpoints
         """
@@ -108,17 +107,29 @@ class APIProvider(BaseProvider):
             result = self.request_general({"name": "init"})
             return APIProvider.emit_json("config", result)
 
-        @app.route("/aux_data", methods=["POST"])
+        @app.route("/summary", methods=["POST"])
         @cross_origin()
-        def supergraph_data():
+        def summary():
             data = request.json
             result = self.request_general(
                 {
-                    "name": "aux_data",
+                    "name": "summary",
                     **data,
                 }
             )
-            return APIProvider.emit_json("aux_data", result)
+            return APIProvider.emit_json("summary", result)
+
+        @app.route("/timeline", methods=["POST"])
+        @cross_origin()
+        def time_series():
+            data = request.json
+            result = self.request_general(
+                {
+                    "name": "timeline",
+                    **data,
+                }
+            )
+            return APIProvider.emit_json("timeline", result)
 
         @app.route("/single_supergraph", methods=["POST"])
         @cross_origin()
@@ -132,17 +143,17 @@ class APIProvider(BaseProvider):
         @cross_origin()
         def single_cct():
             data = request.json
-            nxg = self.request_single({"name": "cct", **data})
+            nxg = self.request_general({"name": "cct", **data})
             result = json_graph.node_link_data(nxg)
-            return APIProvider.emit_json("single_cct", result)
+            return APIProvider.emit_json("cct", result)
 
-        @app.route("/split_mpi_distribution", methods=["POST"])
+        @app.route("/split_ranks", methods=["POST"])
         @cross_origin()
         def split_mpi_distribution():
             data = request.json
             result = self.request_single(
                 {
-                    "name": "split_mpi_distribution",
+                    "name": "split_ranks",
                     **data,
                 }
             )
@@ -168,7 +179,7 @@ class APIProvider(BaseProvider):
         def module_hierarchy():
             data = request.json
             nxg = self.request_ensemble({"name": "module_hierarchy", **data})
-            result = json_graph.tree_data(nxg, root=data["module"])
+            result = json_graph.tree_data(nxg, root=data.get("node"))
             return APIProvider.emit_json("module_hierarchy", result)
 
         @app.route("/projection", methods=["POST"])
@@ -184,6 +195,55 @@ class APIProvider(BaseProvider):
             data = request.json
             result = self.request_ensemble({"name": "compare", **data})
             return APIProvider.emit_json("compare", result)
+
+        @app.route("/single_histogram", methods=["POST"])
+        @cross_origin()
+        def single_histogram():
+            data = request.json
+            result = self.request_single({"name": "histogram", **data})
+            return APIProvider.emit_json("single_histogram", result)
+
+        @app.route("/single_scatterplot", methods=["POST"])
+        @cross_origin()
+        def single_scatterplot():
+            data = request.json
+            result = self.request_single({"name": "scatterplot", **data})
+            return APIProvider.emit_json("single_scatterplot", result)
+
+        @app.route("/single_boxplots", methods=["POST"])
+        @cross_origin()
+        def single_boxplot():
+            data = request.json
+            result = self.request_single({"name": "boxplots", **data})
+            return APIProvider.emit_json("single_boxplots", result)
+
+        @app.route("/ensemble_histogram", methods=["POST"])
+        @cross_origin()
+        def ensemble_histogram():
+            data = request.json
+            result = self.request_ensemble({"name": "histogram", **data})
+            return APIProvider.emit_json("ensemble_histogram", result)
+
+        @app.route("/ensemble_scatterplot", methods=["POST"])
+        @cross_origin()
+        def ensemble_scatterplot():
+            data = request.json
+            result = self.request_ensemble({"name": "scatterplot", **data})
+            return APIProvider.emit_json("ensemble_scatterplot", result)
+
+        @app.route("/ensemble_boxplots", methods=["POST"])
+        @cross_origin()
+        def ensemble_boxplot():
+            data = request.json
+            result = self.request_ensemble({"name": "boxplots", **data})
+            return APIProvider.emit_json("ensemble_boxplots", result)
+
+        @app.route("/gradients", methods=["POST"])
+        @cross_origin()
+        def gradients():
+            data = request.json
+            result = self.request_ensemble({"name": "gradients", **data})
+            return APIProvider.emit_json("gradients", result)
 
 
 # ------------------------------------------------------------------------------

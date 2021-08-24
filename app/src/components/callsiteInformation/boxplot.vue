@@ -7,9 +7,12 @@
 
 <template>
 	<svg :id="id" :width="containerWidth" :height="containerHeight" class='boxplot'>
-		<Box ref="Box" />
-		<Markers ref="Markers" />
-		<Outliers ref="Outliers" />
+		<Box ref="Box" :nid="nid" :tq="q" :xScale="xScale" v-if="dataReady"
+		:tColor="color" :idPrefix="idPrefix" />
+		<Markers ref="Markers" :nid="nid" :tq="q" :xScale="xScale"
+		v-if="dataReady" :tColor="color" :idPrefix="idPrefix"/>
+		<Outliers ref="Outliers" :nid="nid" :tOutliers="outliers"
+		:xScale="xScale" v-if="dataReady" :tColor="color" :idPrefix="idPrefix"/>
 		<ToolTip ref="ToolTip" />
 	</svg>
 </template>
@@ -17,26 +20,25 @@
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library imports
 import EventHandler from "lib/routing/EventHandler";
 
 // Local component imports
-import Box from "./box";
-import Markers from "./markers";
-import Outliers from "./outlier";
-import ToolTip from "./tooltip";
+import Box from "../boxplot/box";
+import Markers from "../boxplot/markers";
+import Outliers from "../boxplot/outlier";
+import ToolTip from "../boxplot/tooltip";
 
 export default {
 	name: "BoxPlot",
 	props: [
-		"callsite",
-		"width",
-		"height",
+		"data",
 		"showTarget"
 	],
 	data: () => ({
-		id: "",
+		id: "ci-boxplot",
 		boxContainerID: "",
 		markerContainerID: "",
 		outlierContainerID: "",
@@ -59,8 +61,11 @@ export default {
 		rectHeight: 0,
 		centerLinePosition: 0,
 		boxHeight: 0,
-		boxWidth: 0
+		boxWidth: 0,
+		dataReady: false,
+		idPrefix: "boxplot-",
 	}),
+
 	components: {
 		Box,
 		Outliers,
@@ -71,15 +76,30 @@ export default {
 	mounted() {
 		this.init();
 		let self = this;
-
-		EventHandler.$on("single-refresh-boxplot", (data) => {
+		EventHandler.$emit("clear-boxplot", function () {
 			self.clear();
-			self.init();
 		});
 	},
 
-	created() {
-		this.id = "boxplot-" + this.callsite.id;
+	watch: {
+		data: {
+			immediate: true,
+			deep: true,
+			handler(newValue, oldValue) {
+				if (this.dataReady) {
+					this.clear();
+				}
+				else {
+					this.init();
+				}
+			}
+		}
+	},
+
+	computed: {
+		...mapGetters({
+			generalColors: "getGeneralColors",
+		})
 	},
 
 	methods: {
@@ -96,9 +116,13 @@ export default {
 			this.centerLinePosition = (this.boxHeight - this.informationHeight / 4) / 2;
 			this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4;
 
-			this.process(this.callsite);
+			this.q = this.qFormat(this.data["q"]);
+			this.outliers = this.data["outliers"];
+			this.nid = this.data["nid"];
+			this.id = this.idPrefix + this.nid; // Set the id for the boxplot view.
+			this.color = this.generalColors.intermediate;
 
-			this.svg = d3.select("#boxplot-" + this.callsite.id)
+			this.svg = d3.select(this.id)
 				.attrs({
 					"class": "boxplot",
 					"width": this.containerWidth,
@@ -106,43 +130,20 @@ export default {
 				});
 
 			this.xScale = d3.scaleLinear()
-				.domain([this.targetq.min, this.targetq.max])
+				.domain([this.q.min, this.q.max])
 				.range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
 
-			this.visualize(this.callsite);
-		},
-
-		/**
-		 * Visualize the boxplot for the callsites.
-		 * @param {*} callsite 
-		 */
-		visualize(callsite) {
-			this.$refs.Box.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Markers.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget);
+			this.dataReady = true;
 		},
 
 		/**
 		 * Clear the components.
 		 */
 		clear() {
-			this.$refs.Box.clear();
-			this.$refs.Markers.clear();
-			this.$refs.Outliers.clear();
-		},
-
-		/**
-		 * 
-		 * @param {*} callsite 
-		 */
-		process(callsite) {
-			if (this.$store.data_cs[this.$store.selectedTargetDataset][callsite.name] != undefined) {
-				this.target_data = callsite[this.$store.selectedMetric]["boxplots"]["q"];
-			}
-			else {
-				this.target_data = [0, 0, 0, 0, 0];
-			}
-			this.targetq = this.qFormat(this.target_data);
+			this.dataReady = false;
+			// this.$refs.Box.clear();
+			// this.$refs.Markers.clear();
+			// this.$refs.Outliers.clear();
 		},
 
 		/**

@@ -10,13 +10,17 @@ CallFlow's operation to calculate ensemble gradients per-callsite or per-module.
 import numpy as np
 import pandas as pd
 
+# TODO: Avoid the performance error in the future pass.
+import warnings
+
 import callflow
 from callflow.utils.utils import histogram
-from callflow.utils.df import df_count, df_unique, df_lookup_by_column
+from callflow.utils.df import df_unique
 from callflow.datastructures.metrics import TIME_COLUMNS
-from .histogram import Histogram
+from callflow.modules.histogram import Histogram
 
 LOGGER = callflow.get_logger(__name__)
+warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
 
 # ------------------------------------------------------------------------------
@@ -25,54 +29,66 @@ class Gradients:
     Computes the ensemble gradients for the a given dictionary of dataframes.
     """
 
-    def __init__(self, df, callsiteOrModule: str, grp_type: str="name", bins: int = 20, proxy_columns={}):
+    def __init__(
+        self, sg, node, bins: int = 20, proxy_columns={}
+    ):
         """
-        Constructor function
-        :param df: Dictinary of dataframes keyed by the dataset_name. For e.g., { "dataset_name": df }.
-        :param callsiteOrModule: callsiteOrModule (can be a moddule) of a given call graph
+        Constructor function for the class
+
+        :param sg: Dictinary of dataframes keyed by the dataset_name. For e.g., { "dataset_name": df }.
+        :param node: Super node or node
         :param bins: Number of bins to distribute the runtime information.
+        :param proxy_columns: Proxy columns
         """
-        assert isinstance(df, pd.DataFrame)
-        assert isinstance(callsiteOrModule, str) or isinstance(callsiteOrModule, int)
+        assert isinstance(sg, callflow.SuperGraph)
+        assert node.get("type") in ["callsite", "module"]
         assert isinstance(bins, int)
         assert isinstance(proxy_columns, dict)
         assert bins > 0
 
+        self.node = node
+        self.name = sg.get_name(node.get("id"), node.get("type"))
+
+        indexers = ["dataset"]
+        if node.get("type") == "callsite":
+            indexers.append("name")
+        elif node.get("type") == "module":
+            indexers.append("module")
+
+        # TODO: Could be slow for large datasets!!..
+        self.df = sg.dataframe.set_index(indexers)
+    
         # # gradient should be computed only for ensemble dataframe
         # # i.e., multiple values in dataframe column
-        datasets = df_unique(df, "dataset")
-        assert len(datasets) > 1
+        self.datasets = list(self.df.index.levels[0])
+        assert len(self.datasets) >= 1
 
         self.bins = bins
-        self.callsiteOrModule = callsiteOrModule
 
         self.proxy_columns = proxy_columns
         self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
-        # TODO: this looks like a lot of wasted copy
-        self.df_dict = {_d: df_lookup_by_column(df, "dataset", _d)
-                        for _d in datasets}
-
-        self.rank_dict = {_d: df_count(_df, "rank")
-                          for _d, _df in self.df_dict.items()}
-        self.max_ranks = max(self.rank_dict.values())
-
-        self.result = self.compute(grp_type)
+        self.max_ranks = max(df_unique(self.df, "rank"))
+        self.result = self.compute()
 
     @staticmethod
     def convert_dictmean_to_list(dictionary):
         """
+        Convert a dictionary by taking its mean and converting to a list.
 
-        :return:
+        :param dictionary: (dict) Input dictionary
+        :return: (list) mean of all values in the dictionary
         """
         return [np.mean(np.array(list(dictionary[_].values()))) for _ in dictionary]
 
     @staticmethod
     def convert_dictmean_to_dict(dictionary):
         """
+        Convert a dictionary by taking its mean and converting to a list.
 
-        :param dictionary:
-        :return:
+        :param dictionary: (dict) Input dictionary
+        :return: (dict) Dictionary of mean values indexed by the keys in the
+        input dictionary.
         """
         return {_: np.mean(np.array(list(dictionary[_].values()))) for _ in dictionary}
 
@@ -80,13 +96,14 @@ class Gradients:
     @staticmethod
     def map_datasets_to_bins(bins, dataset_dict={}):
         """
+        Map dataset information to the corresponding bins.
 
-        :param bins:
-        :param dataset_dict:
-        :return:
+        :param bins: (int) Bin size
+        :param dataset_dict: Dataset dictionary
+        :return: Mapping of the datases to the corresponding bins.
         """
         # TODO: previously, this logic applied to bin edges
-        # but, now, we aer working on bin_centers
+        # but, now, we are working on bin_centers
         binw = bins[1] - bins[0]
         bin_edges = np.append(bins - 0.5 * binw, bins[-1] + 0.5 * binw)
 
@@ -96,7 +113,11 @@ class Gradients:
             mean = dataset_dict[dataset]
             for idx, x in np.ndenumerate(bin_edges):
                 if x > float(mean):
-                    dataset_position_dict[dataset] = idx[0]
+                    if idx[0] != 0:
+                        pos = idx[0] - 1
+                    else:
+                        pos = idx[0]
+                    dataset_position_dict[dataset] = pos
                     break
                 if idx[0] == len(bin_edges) - 1:
                     dataset_position_dict[dataset] = len(bin_edges) - 2
@@ -104,22 +125,28 @@ class Gradients:
         return dataset_position_dict
 
     # --------------------------------------------------------------------------
-    def compute(self, columnName="name"):
+    def compute(self):
         """
+        Compute the required results.
 
-        :param columnName:
-        :return:
+        :return: (JSON) data
         """
-        dists = {tk: {} for tk,tv in zip(TIME_COLUMNS, self.time_columns)}
+        dists = {tk: {} for tk, tv in zip(TIME_COLUMNS, self.time_columns)}
 
         # Get the runtimes for all the runs.
-        for idx, dataset in enumerate(self.df_dict):
-            node_df = df_lookup_by_column(self.df_dict[dataset], columnName,
-                                          self.callsiteOrModule)
+        levels = self.df.index.unique().tolist()
+        for idx, dataset in enumerate(self.datasets):
+            # If the level doesn't exist, it means this callsite is not present
+            # in the dataset.
+            if (dataset, self.node.get("id")) not in levels:
+                continue
 
+            node_df = self.df.xs((dataset, self.node.get("id")))
             for tk, tv in zip(TIME_COLUMNS, self.time_columns):
                 if node_df.empty:
-                    dists[tk][dataset] = dict((rank, 0) for rank in range(0, self.max_ranks))
+                    dists[tk][dataset] = dict(
+                        (rank, 0) for rank in range(0, self.max_ranks)
+                    )
                 else:
                     dists[tk][dataset] = dict(zip(node_df["rank"], node_df[tv]))
 
@@ -132,20 +159,27 @@ class Gradients:
         for tk, tv in zip(TIME_COLUMNS, self.time_columns):
 
             dists_list = np.array(Gradients.convert_dictmean_to_list(dists[tk]))
-            datasets_list = Gradients.convert_dictmean_to_dict(dists[tk])
-
+            datasets_dict = Gradients.convert_dictmean_to_dict(dists[tk])
+            dists_dict = Gradients.convert_dictmean_to_dict(dists[tk])
             hist_grid = histogram(dists_list, bins=num_of_bins)
             # kde_grid = kde(dists_list, gridsize=num_of_bins)
 
-            dataset_pos = Gradients.map_datasets_to_bins(hist_grid[0], datasets_list)
+            dataset_pos = Gradients.map_datasets_to_bins(hist_grid[0], datasets_dict)
+            pos_dataset = {bin: [] for bin in range(0, self.bins)}
+
+            for dataset in dataset_pos:
+                position = dataset_pos[dataset]
+                if dataset not in pos_dataset[position]:
+                   pos_dataset[position].append(dataset)
 
             results[tk] = {
                 "bins": num_of_bins,
-                "dataset": {"mean": dists_list, "position": dataset_pos},
+                "dataset": {"mean": dists_dict, "d2p": dataset_pos, "p2d": pos_dataset},
                 # "kde": Histogram._format_data(kde_grid),
                 "hist": Histogram._format_data(hist_grid),
             }
 
         return results
+
 
 # ------------------------------------------------------------------------------

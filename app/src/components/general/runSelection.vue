@@ -4,11 +4,11 @@
 			<v-select
 				class="pt-8 pl-2"
 				dark
-				label="Select Target run (Sorted by inclusive runtime)"
+				:label="targetLabel"
 				:items="datasets"
-				v-model="selectedTargetDataset"
+				v-model="targetRun"
 				:menu-props="{maxHeight: '400'}"
-				v-on:change="updateTargetDataset()"
+				@input="updateTargetRun"
 			>
 				<template slot="selection" slot-scope="{item}">
 					{{ datasets.indexOf(item) + 1 }}. {{ item }}
@@ -22,20 +22,20 @@
 
 		<v-col cols="4">
 			<v-select
+				:disabled="!(selectedMode === 'ESG')"
 				class="pt-8 pl-2"
-				label="Select Compare run"
-				:items="datasets"
-				v-model="selectedCompareDataset"
+				dark
+				:label="compareLabel"
+				:items="datasetsWNoRun"
+				v-model="compareRun"
 				:menu-props="{maxHeight: '400'}"
-				v-show="isComparisonMode"
-				v-on:change="updateCompareDataset()"
+				@input="updateCompareRun"
 			>
 				<template slot="selection" slot-scope="{item}">
 					{{ datasets.indexOf(item) + 1 }}. {{ item }} -
 					{{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
 				</template>
 				<template slot="item" slot-scope="{item}">
-					<!-- HTML that describe how select should render items when the select is open -->
 					{{ datasets.indexOf(item) + 1 }}. {{ item }} -
 					{{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
 				</template>
@@ -46,59 +46,66 @@
 
 <script>
 import * as d3 from "d3";
-
-// local library imports
-import EventHandler from "lib/routing/EventHandler";
+import { mapGetters } from "vuex";
 
 export default {
 	data: () => ({
 		name: "RunSelection",
-		metricTimeMap: {},
 		datasets: [],
-		selectedTargetDataset: "",
-		selectedCompareDataset: "",
-		isComparisonMode: false,
-		selectedMode: "",	
-		emitMapper: {
-			"CCT": "fetch-cct",
-			"SuperGraph": "fetch-super-graph",
-			"EnsembleSuperGraph": "fetch-ensemble-super-graph",
-		}
+		datasetsWNoRun: [],
+		targetLabel: "",
+		compareLabel: "",
 	}),
 
 	mounted() {
-		// Set the metricTimeMap, used by the dropdown to select the dataset.
-		this.metricTimeMap = this.$store.metricTimeMap;
-		this.datasets = this.$store.selectedDatasets;
-		this.selectedTargetDataset = this.$store.selectedTargetDataset;
-		this.isComparisonMode = this.$store.isComparisonMode;
+		this.datasets = Object.keys(this.metricTimeMap);
+		this.datasetsWNoRun = [ ...this.datasets, NaN];
+		this.targetLabel = "Select Target run (Sorted by " + this.selectedMetric + ")";
+		this.compareLabel = "Select Compare run (Sorted by " + this.selectedMetric + ")";
+	},
 
-		if (this.isComparisonMode) {
-			this.selectedCompareDataset = this.$store.selectedCompareDataset;
-		}
-
-		this.selectedMode = this.$store.selectedMode;	
+	computed: {
+		...mapGetters({
+			runs: "getRuns",
+			metricTimeMap: "getMetricTimeMap",
+			targetRun: "getSelectedTargetRun",
+			compareRun: "getSelectedCompareRun",
+			selectedMetric: "getSelectedMetric",
+			selectedMode: "getSelectedMode",
+			isComparisonMode: "getComparisonMode",
+		})
 	},
 
 	methods: {
 		formatRuntimeWithoutUnits(val) {
+			if (val == undefined) {
+				return "";
+			}
 			let format = d3.format(".2");
 			let ret = format(val);
 			return ret;
 		},
 
-		updateTargetDataset() {
-			this.$store.selectedTargetDataset = this.selectedTargetDataset;
-			this.$store.selectedFormat = this.$route.name;
-			EventHandler.$emit("setup-colors");
-			EventHandler.$emit(this.emitMapper[this.$store.selectedFormat]);
+		updateTargetRun(data) {
+			this.$store.commit("setSelectedTargetRun", data);
+			this.$store.dispatch("reset");
 		},
 
-		updateCompareDataset() {
-			this.$store.isComparisonMode = true;
-			this.$store.selectedCompareDataset = this.selectedCompareDataset;
-			EventHandler.$emit("setup-colors");
-			EventHandler.$emit("reset");
+		updateCompareRun(data) {
+			if (data.length == 0) {
+				console.log("Disable comparison");
+				this.$store.commit("setComparisonMode", false);
+				this.$store.commit("setSelectedCompareRun", "");
+				this.$store.dispatch("reset");
+			}
+			else {
+				// TODO: Move this to the store.js
+				// TODO: reduce the number of dependents on commit operation. 
+				console.log("Enable comparison");
+				this.$store.commit("setComparisonMode", true);
+				this.$store.commit("setSelectedCompareRun", data);
+				this.$store.dispatch("updateNodeEncoding");
+			}
 		},
 	},
 };

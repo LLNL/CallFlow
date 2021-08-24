@@ -10,8 +10,8 @@
 </template>
 
 <script>
-import * as utils from "lib/utils";
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 export default {
 	name: "TargetLine",
@@ -21,40 +21,50 @@ export default {
 		id: "target-line"
 	}),
 
+	computed: {
+		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
+			generalColors: "getGeneralColors",
+			selectedMetric: "getSelectedMetric",
+			selectedRunBinCount: "getRunBinCount",
+			targetColor: "getTargetColor",
+		})
+	},
+
 	methods: {
-		init(nodes) {
-			this.nodes = nodes;
-
-			this.ensemble_module_data = this.$store.data_mod["ensemble"];
-			this.ensemble_callsite_data = this.$store.data_cs["ensemble"];
-
-			for (let node of nodes) {
-				this.visualize(node);
-			}
+		init(nodes, containerG) {
+			this.nodes = nodes.filter((node) => !(node.type === "intermediate"));
+			this.containerG = containerG;
+			this.visualize();
 		},
 
-		visualize(node) {
-			const gradients = utils.getGradients(this.$store, node);
+		visualize() {
+			const callsites = this.containerG
+				.selectAll(".callsite")
+				.data(this.nodes);
 
-			if (Object.keys(gradients).length != 0) {
-				let targetPos = gradients["dataset"]["position"][this.$store.selectedTargetDataset];
-				let binWidth = node.height / (this.$store.selectedRunBinCount);
-				let y = binWidth * targetPos;
+			callsites
+				.append("line")
+				.attrs({
+					"class": "targetLines",
+					"id": (d) => "line-2-" + this.selectedTargetRun + "-" + d.attr_dict.idx,
+					"x1": 0,
+					"y1": (d) => this.getTargetPos(d),
+					"x2": this.$parent.nodeWidth,
+					"y2": (d) => this.getTargetPos(d),
+					"stroke-width": 5,
+					"stroke": this.targetColor
+				});
+		},
 
-				node.svg
-					.append("line")
-					.attrs({
-						"class": "targetLines",
-						"id": "line-2-" + this.$store.selectedTargetDataset + "-" + node.client_idx,
-						"x1": 0,
-						"y1": y,
-						"x2": this.$parent.nodeWidth,
-						"y2": y,
-						"stroke-width": 5,
-						"stroke": this.$store.distributionColor.target
-					});
-
+		getTargetPos(node) {
+			if(node.type == "intermediate") {
+				return;
 			}
+			const gradients = node.attr_dict.gradients[this.selectedMetric];
+			const targetPos = gradients["dataset"]["d2p"][this.selectedTargetRun];
+			const binWidth = node.height / this.selectedRunBinCount;
+			return (targetPos + 0.5) * binWidth;
 		},
 
 		clear() {

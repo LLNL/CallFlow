@@ -7,7 +7,7 @@
 
 <template>
   <v-layout row wrap :id="id">
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" />
+	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" :info="info"/>
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
   </v-layout>
@@ -16,10 +16,12 @@
 <script>
 // Library imports
 import * as d3 from "d3";
-import "d3-selection-multi"; 
+import "d3-selection-multi";
+import { mapGetters } from "vuex";
 
 // Local library imports
 import * as utils from "lib/utils";
+import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
 
 import InfoChip from "../general/infoChip";
@@ -33,9 +35,7 @@ export default {
 		ToolTip,
 		InfoChip
 	},
-	props: [],
 	data: () => ({
-		data: [],
 		width: null,
 		height: null,
 		histogramHeight: null,
@@ -61,28 +61,49 @@ export default {
 		x_max_exponent: 0,
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
 		title: "MPI Runtime Distribution",
-		summary: "MPI runtime distribution view shows the sampled distribution of the process-based metrics for a selected node. To connect the processes (e.g., MPI ranks) to the physical domain, we use shadow lines to visualize the rank-to-bin mapping. Shadow lines map the bins in the histogram to the process/rank id laid out on an ordered line at the bottom of the histogram.",
+		infoSummary: "MPI runtime distribution view shows the sampled distribution of the process-based metrics for a selected node. To connect the processes (e.g., MPI ranks) to the physical domain, we use shadow lines to visualize the rank-to-bin mapping. Shadow lines map the bins in the histogram to the process/rank id laid out on an ordered line at the bottom of the histogram.",
+		info: "",
+		selectedProp: "rank",
+		selectedScale: "Linear"
 	}),
+
+	computed: {
+		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedMetric: "getSelectedMetric",
+			selectedNode: "getSelectedNode",
+			rankBinCount: "getRankBinCount",
+			data: "getSingleHistogram",
+			generalColors: "getGeneralColors",
+			selectedRankBinCount: "getRankBinCount",
+		})
+	},
+
+	watch: {
+		data: function (val) {
+			this.visualize(val);
+		}
+	},
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("single-histogram", function (data) {
-			self.visualize(data);
+		EventHandler.$on("reset-single-histogram", function() {
+			self.clear();
+			self.init();
 		});
-
-		// TODO: CAL-88: This code must return back once we fix the 
-		// // auxiliary processing.
-		// EventHandler.$on("update-rank-bin-size", function(data) {
-		// 	self.clear();
-		// 	EventHandler.$emit("single-histogram", data);		
-		// });
-
 	},
 
 	methods: {
 		init() {
+			this.$store.dispatch("fetchSingleHistogram", {
+				dataset: this.selectedTargetRun,
+				node: this.selectedNode["name"],
+				ntype: this.selectedNode["type"],
+				nbins: this.selectedRankBinCount,
+			});
+
 			this.width = window.innerWidth * 0.25;
-			this.height = this.$store.viewHeight * 0.45;
+			this.height = this.$store.viewHeight * 0.5;
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
@@ -101,13 +122,24 @@ export default {
 				width: this.boxWidth,
 				height: this.boxHeight,
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
-			});
+			}).append("g");
 		},
 
-		setupScale(data) {
-			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
-			const _data = store[this.$store.selectedMetric]["hists"][this.$store.selectedProp];
-			const _mpiData = store[this.$store.selectedMetric]["d"];
+		visualize() {
+			this.info = this.selectedNode["name"] + " (" + this.selectedNode["type"][0].toUpperCase() + ")";
+
+			this.setupScale();
+			this.bars();
+			this.xAxis();
+			this.yAxis();
+			this.rankLineScale();
+			this.brushes();
+			this.$refs.ToolTip.init(this.svgID); 
+		},
+
+		setupScale() {
+			const _data = this.data[this.selectedMetric][this.selectedProp];
+			const _mpiData = this.data[this.selectedMetric]["d"];
 
 			let temp = this.dataProcess(_data, _mpiData);
 			this.xVals = temp[0];
@@ -121,13 +153,13 @@ export default {
 				.domain(this.xVals)
 				.range([this.paddingFactor * this.padding.left, this.xAxisHeight]);
 
-			if (this.$store.selectedScale == "Linear") {
+			if (this.selectedScale == "Linear") {
 				this.yScale = d3
 					.scaleLinear()
 					.domain([0, d3.max(this.freq)])
 					.range([this.yAxisHeight, this.padding.top]);
 				this.logScaleBool = false;
-			} else if (this.$store.selectedScale == "Log") {
+			} else if (this.selectedScale == "Log") {
 				this.yScale = d3
 					.scaleLog()
 					.domain([1, d3.max(this.freq)])
@@ -137,6 +169,7 @@ export default {
 		},
 
 		clear() {
+			d3.select("#" + this.svgID).select("g").remove();
 			d3.selectAll(".single-histogram-bar").remove();
 			d3.select(".x-axis").remove();
 			d3.select(".y-axis").remove();
@@ -144,26 +177,8 @@ export default {
 			d3.selectAll(".binRank").remove();
 			d3.selectAll(".lineRank").remove();
 			d3.selectAll(".brush").remove();
-			d3.selectAll(".tick").remove();
 			d3.selectAll(".histogram-rank-axis").remove();
-			// this.$refs.ToolTip.clear();
-		},
-
-		visualize(callsite) {
-			if(!this.firstRender) {
-				this.clear();
-			}
-			else {
-				this.init();
-			}
-			this.firstRender = false;
-			this.setupScale(callsite);
-			this.bars();
-			this.xAxis();
-			this.yAxis();
-			this.rankLineScale(callsite);
-			this.brushes();
-			// this.$refs.ToolTip.init(this.svgID); // TODO: CAL-87
+			this.$refs.ToolTip.clear();
 		},
 
 		array_unique(arr) {
@@ -172,32 +187,17 @@ export default {
 			});
 		},
 
-		dataProcess(data, mpiData) {
+		dataProcess(data) {
 			let axis_x = [];
-			let binContainsProcID = {};
 			let dataMin = data["x_min"];
 			let dataMax = data["x_max"];
 
-			const dataWidth = (dataMax - dataMin) / (data["x"].length);
+			const dataWidth = (dataMax - dataMin) / (data["x"].length - 1);
 			for (let i = 0; i < data["x"].length; i++) {
 				axis_x.push(dataMin + i * dataWidth);
 			}
 
-			// TODO: Expensive !!!
-			mpiData.forEach((val, idx) => {
-				let pos = Math.floor((val - dataMin) / dataWidth);
-				if (pos >= this.$store.selectedMPIBinCount) {
-					pos = this.$store.selectedMPIBinCount;
-				}
-				if (pos < 0){
-					pos = 0;
-				}
-				if (binContainsProcID[pos] == null) {
-					binContainsProcID[pos] = [];
-				}
-				binContainsProcID[pos].push(idx);
-			});
-			return [data["x"], data["y"], axis_x, binContainsProcID];
+			return [data["x"], data["y"], axis_x, data["dig"]];
 		},
 
 		removeDuplicates(arr) {
@@ -277,45 +277,44 @@ export default {
 				.append("rect")
 				.attrs({
 					class: "single-histogram-bar",
-					x: (d, i) => {
-						return this.xScale(this.xVals[i]);
-					},
-					y: (d, i) => {
-						return this.yScale(d);
-					},
+					x: (d, i) => this.xScale(this.xVals[i]),
+					y: (d, i) => this.yScale(d),
 					width: this.xScale.bandwidth(),
 					height: (d) => {
 						return Math.abs(this.yAxisHeight - this.yScale(d));
 					},
-					fill: this.$store.runtimeColor.intermediate,
+					fill: this.generalColors.intermediate,
 					opacity: 1,
 					"stroke-width": "0.2px",
 					stroke: "#202020",
 				})
 				.style("z-index", 1)
 				.on("click", function (d, i) {
-					d3.select(this).attr("fill", self.$store.runtimeColor.highlight);
+					d3.select(this).attr("fill", "orange");
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
+
 					let groupProcStr = self.groupProcess(self.binContainsProcID[i])
 						.string;
-					groupProcStr = self.sanitizeGroupProc(groupProcStr);
+					groupProcStr =  "MPI ranks:" + self.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseover", function (d, i) {
-					d3.select(this).attr("fill", self.$store.runtimeColor.highlight);
+					d3.select(this).attr("fill", "orange");
+					d3.selectAll(".lineRank")
+						.style("fill-opacity", 0.1);
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
 					let groupProcStr = self.groupProcess(self.binContainsProcID[i])
 						.string;
-					groupProcStr = self.sanitizeGroupProc(groupProcStr);
+					groupProcStr = d + " MPI ranks:" + self.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseout", function (d, i) {
-					d3.select(this).attr("fill", self.$store.runtimeColor.intermediate);
-					d3.selectAll(`.lineRank_${i}`)
+					d3.select(this).attr("fill", self.generalColors.intermediate);
+					d3.selectAll(".lineRank")
 						.style("fill", "grey")
 						.style("fill-opacity", 0.4);
 					self.$refs.ToolTip.clear();
@@ -330,7 +329,7 @@ export default {
         "(e+" +
         this.x_max_exponent +
         ") " +
-        this.$store.selectedMetric +
+        this.selectedMetric +
         " Runtime (" +
         "\u03BCs)";
 			this.svg
@@ -438,9 +437,8 @@ export default {
 				.style("font-weight", "lighter");
 		},
 
-		rankLineScale(data) {
-			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
-			let rankCount = store[this.$store.selectedMetric].d.length;
+		rankLineScale() {
+			let rankCount = this.data[this.selectedMetric].d.length;
 
 			this.ranklinescale = d3
 				.scaleLinear()
@@ -475,16 +473,13 @@ export default {
 							end = group[1] + 1;
 						}
 
-						let topX1 = cumulativeBinSpace + binLocation + widthPerRank;
-						let topX2 =
-              cumulativeBinSpace +
-              (end - start + 1) * widthPerRank +
-              binLocation;
+						let topX1 = cumulativeBinSpace + binLocation + widthPerRank + binWidth  / 4;
+						let topX2 = cumulativeBinSpace + (end - start + 1) * widthPerRank + binLocation + binWidth / 4;
 
 						let botX3 = this.ranklinescale(start);
 						let botX4 = this.ranklinescale(end);
 
-						let topY = this.boxHeight - this.histogramOffset + 10;
+						let topY = this.boxHeight - this.histogramOffset + 15;
 						let botY = this.boxHeight;
 
 						cumulativeBinSpace += (end - start + 1) * widthPerRank;
@@ -612,7 +607,7 @@ export default {
 			}
 		},
 
-		brushend() {
+		async brushend() {
 			let self = this;
 			const processIDList = [];
 			for (let i = this.localBrushStart; i < this.localBrushEnd; i++) {
@@ -623,9 +618,11 @@ export default {
 					});
 				}
 			}
-			self.$socket.emit("split-mpi-rank", {
-				dataset: self.$store.selectedDataset,
+
+			const split_sgs = await APIService.POSTRequest("split_ranks", {
+				dataset: this.$store.selectedTargetDataset,
 				ranks: processIDList,
+				ntype: "callsite",
 			});
 		},
 	},

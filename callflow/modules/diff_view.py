@@ -7,6 +7,7 @@
 """
 CallFlow operation for the comparing two or more dataset members from an ensemble.
 """
+from os import stat
 import numpy as np
 
 import callflow
@@ -22,20 +23,22 @@ class DiffView:
     Calculate differences from sections of dataframe
     """
 
-    def __init__(self, ensemble_graph, dataset1, dataset2, col):
+    def __init__(self, esg, dataset1, dataset2, col):
         """
-        Constructor.
-        :param ensemble_graph:
-        :param dataset1:
-        :param dataset2:
-        :param col:
+        Constructor for the class.
+        :param esg: (callflow.EnsembleSuperGraph) Ensemble supergraph
+        :param dataset1: (str) 1st dataset name
+        :param dataset2: (str) 2nd dataset name
+        :param col: (str) column to compare. (e.g., time or time (inc))
         """
-        assert isinstance(ensemble_graph, callflow.EnsembleGraph)
+        assert isinstance(esg, callflow.EnsembleGraph)
         assert isinstance(dataset1, str) and isinstance(dataset2, str)
         assert isinstance(col, str)
 
-        self.df1 = ensemble_graph.df_lookup_with_column("dataset", dataset1)
-        self.df2 = ensemble_graph.df_lookup_with_column("dataset", dataset2)
+        self.sg = esg
+
+        self.df1 = esg.df_lookup_with_column("dataset", dataset1)
+        self.df2 = esg.df_lookup_with_column("dataset", dataset2)
         self.dataset1 = dataset1
         self.dataset2 = dataset2
         self.col = col
@@ -43,44 +46,51 @@ class DiffView:
         # Calculate the max_rank.
         self.max_rank = max(df_count(self.df1, "rank"), df_count(self.df2, "rank"))
 
-        modules = ensemble_graph.df_unique("module")
-        self.result = [self.compute(_) for _ in modules]
+        modules = esg.df_unique("module").tolist()
+        callsites = esg.df_unique("name").tolist()
+
+        self.result = [self.compute(_, "module") for _ in modules] + [self.compute(_, "callsite") for _ in callsites]
 
     # --------------------------------------------------------------------------
     @staticmethod
+    def _mean(_df, _selected_col, _name, _col):
+        """
+        Find mean of the dataframes.
+        TODO: Move this into SuperGraph.
+
+        :param _df: Dataframe
+        :param _selected_col: Lookup by the column (e.g., module, name).
+        :param _name: name to look up by
+        :param _col: Metric column (e.g., time, or time (inc))
+        :return: Mean of the selected metric column by the selected column.
+        """
+        _data = df_lookup_by_column(_df, _selected_col, _name)[_col].to_numpy()
+        return _data.mean() if len(_data) > 0 else 0
+
+    @staticmethod
     def _mean_difference(df1, df2, module):
         """
+        Calculate the mean_difference between two dataframes.
 
-        :param df1:
-        :param df2:
-        :param module:
+        :param df1: (pd.DataFrame) dataframe 1
+        :param df2: (pd.DataFrame) dataframe 2
+        :param module: (str) module name.
         :return:
         """
-
-        def _mean(_df, _selected_col, _node, _col):
-            """
-
-            :param _df:
-            :param _selected_col:
-            :param _node:
-            :param _col:
-            :return:
-            """
-            _data = df_lookup_by_column(_df, _selected_col, _node)[_col].to_numpy()
-            return _data.mean() if len(_data) > 0 else 0
 
         callsites_in_mod1 = df_lookup_and_list(df1, "module", module, "name")
         callsites_in_mod2 = df_lookup_and_list(df2, "module", module, "name")
-        mean1 = [_mean(df1, "name", _, "time") for _ in callsites_in_mod1]
-        mean2 = [_mean(df2, "name", _, "time") for _ in callsites_in_mod2]
+        mean1 = [DiffView._mean(df1, "name", _, "time") for _ in callsites_in_mod1]
+        mean2 = [DiffView._mean(df2, "name", _, "time") for _ in callsites_in_mod2]
         return sum(mean2) - sum(mean1)
 
     # --------------------------------------------------------------------------
-    def compute(self, module):
+    def compute(self, nid, ntype):
         """
+        Compute the required information for a particular module.
 
-        :param module:
-        :return:
+        :param module: (str) module name.
+        :return: (JSON) data
         """
 
         def _insertZeroRuntime(_arr, _rank_arr):
@@ -95,8 +105,13 @@ class DiffView:
                 ret[rank_idx] = _arr[idx]
             return ret
 
-        node_df1 = df_lookup_by_column(self.df1, "module", module)
-        node_df2 = df_lookup_by_column(self.df2, "module", module)
+        if ntype == "callsite":
+            lk_column = "name"
+        elif ntype == "module":
+            lk_column = "module"
+
+        node_df1 = df_lookup_by_column(self.df1, lk_column, nid)
+        node_df2 = df_lookup_by_column(self.df2, lk_column, nid)
 
         data1 = node_df1[self.col].to_numpy()
         rank1 = node_df1["rank"].to_numpy()
@@ -116,7 +131,10 @@ class DiffView:
         mean1 = np.mean(data1) if len(data1) > 0 else 0
         mean2 = np.mean(data2) if len(data2) > 0 else 0
 
-        mean_diff = DiffView._mean_difference(module)
+        if ntype == "module":
+            mean_diff = DiffView._mean_difference(self.df1, self.df2, nid)
+        elif ntype == "callsite":
+            mean_diff = DiffView._mean(self.df2, "name", nid, "time") - DiffView._mean(self.df1, "name", nid, "time")
         LOGGER.debug(f"Mean differences {mean_diff}")
 
         # now, need to compute the histogram
@@ -124,7 +142,7 @@ class DiffView:
         hist_grid = histogram(diff, bins=num_of_bins)
 
         result = {
-            "name": module,
+            "name": self.sg.get_name(nid, ntype),
             "mean1": mean1,
             "mean2": mean2,
             "dataset": list(set(dataset)),

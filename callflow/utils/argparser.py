@@ -17,17 +17,22 @@ SUPPORTED_PROFILE_FORMATS = ["hpctoolkit", "caliper_json", "caliper"]
 JSONSCHEMA_CONFIG = {
     "type": "object",
     "properties": {
+        "append_path": {"type": "string"},
         "data_path": {"type": "string"},
-        "experiment": {"type": "string"},
         "save_path": {"type": "string"},
         "read_parameter": {"type": "boolean"},
-        "runs": {"type": "array"},
         "filter_perc": {"type": "number"},
         "filter_by": {"type": "string"},
         "group_by": {"type": "string"},
-        "module_callsite_map": {"type": "object"}
+        "module_callsite_map": {"type": "object"},
+        "chunk_idx": {"type": "string"},
+        "chunk_size": {"type": "string"},
+        "ensemble_process": {"type": "boolean"},
+        "experiment": {"type": "string"},
     },
 }
+
+CONFIG_KEYS = list(JSONSCHEMA_CONFIG["properties"].keys())
 
 
 # ------------------------------------------------------------------------------
@@ -174,7 +179,48 @@ class ArgParser:
         parser.add_argument(
             "--reset",
             action="store_true",
-            help="Resets the .callflow directory to re-process entire ensemble"
+            help="Resets the .callflow directory to re-process entire ensemble",
+        )
+
+        parser.add_argument(
+            "--append_path",
+            type=str,
+            default="",
+            help="Appends the path to the directory passed as --data_path",
+        )
+
+        parser.add_argument(
+            "--start_date",
+            type=str,
+            default="",
+            help="Start date to look for in the dataset name. Use format: {dataset}_{YYYY-MM-DD}_{HH-MM-SS}",
+        )
+
+        parser.add_argument(
+            "--end_date",
+            type=str,
+            default="",
+            help="End date to look for in the dataset name. Use format: {dataset}_{YYYY-MM-DD}_{HH-MM-SS}",
+        )
+
+        parser.add_argument(
+            "--chunk_idx",
+            type=str,
+            default="0",
+            help="",
+        )
+
+        parser.add_argument(
+            "--chunk_size",
+            type=str,
+            default="0",
+            help="",
+        )
+
+        parser.add_argument(
+            "--ensemble_process",
+            action="store_true",
+            help="Enables ensemble SuperGraph construction",
         )
 
         # -------------
@@ -208,7 +254,6 @@ class ArgParser:
 
         if _has_config:
             read_mode = "config"
-            print(self.args["config"])
             if not os.path.isfile(self.args["config"]):
                 s = "Config file ({}) not found!".format(self.args["config"])
                 LOGGER.error(s)
@@ -249,15 +294,9 @@ class ArgParser:
         This function fills the config object with dataset information from the provided directory.
         """
         scheme = {}
-        for _ in [
-            "data_path",
-            "save_path",
-            "filter_perc",
-            "filter_by",
-            "group_by",
-            "read_parameter",
-        ]:
-            scheme[_] = self.args[_]
+        for _ in CONFIG_KEYS:
+            if _ in self.args:
+                scheme[_] = self.args[_]
 
         scheme["experiment"] = os.path.basename(scheme["data_path"])
         if len(scheme["save_path"]) == 0:
@@ -265,7 +304,8 @@ class ArgParser:
 
         # Set the datasets key, according to the format.
         scheme["runs"] = ArgParser._scheme_dataset_map(
-            self.args.get("profile_format", "default"), scheme["data_path"]
+            self.args.get("profile_format", "default"),
+            os.path.join(scheme["data_path"], scheme["append_path"]),
         )
 
         return scheme
@@ -285,18 +325,21 @@ class ArgParser:
         # ----------------------------------------------------------------------
         scheme = {}
 
-        # Set the data_path, which is data directory.
-        scheme["data_path"] = os.path.dirname(_configfile)
-        scheme["experiment"] = os.path.basename(scheme["data_path"])
+        for _ in CONFIG_KEYS:
+            if _ in json:
+                scheme[_] = json[_]
 
-        for _ in [
-            "save_path",
-            "filter_perc",
-            "filter_by",
-            "group_by",
-            "read_parameter",
-        ]:
-            scheme[_] = json[_]
+            elif _ in self.args:
+                scheme[_] = self.args[_]
+
+        # Set the data_path, which is data directory.
+        if len(scheme["experiment"]) == 0:
+            scheme["experiment"] = os.path.basename(json["data_path"])
+
+        if self.args.get("save_path") != "":
+            scheme["save_path"] = os.path.join(
+                os.path.abspath(self.args.get("save_path")), ".callflow"
+            )
 
         if len(scheme["save_path"]) == 0:
             scheme["save_path"] = os.path.join(scheme["data_path"], ".callflow")
@@ -328,6 +371,12 @@ class ArgParser:
                 json["module_callsite_map"]
             )
 
+        if "m2c" in json:
+            scheme["m2c"] = json["m2c"]
+
+        if "m2m" in json:
+            scheme["m2m"] = json["m2m"]
+
         return scheme
 
     # --------------------------------------------------------------------------
@@ -352,7 +401,7 @@ class ArgParser:
                     name = os.path.basename(os.path.dirname(data_path))
                 return [_mdict(name, "", pformat)]
 
-            return [_mdict(_, _, pformat) for _ in list_subdirs(data_path)]
+            return [_mdict(_, _, pformat) for _ in list_subdirs(data_path, exclude_subdirs=['.callflow'])]
 
         if pformat == "caliper":
             return [

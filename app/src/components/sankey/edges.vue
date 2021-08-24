@@ -13,6 +13,8 @@
 
 <script>
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
+import EventHandler from "lib/routing/EventHandler";
 
 export default {
 	name: "Edges",
@@ -25,11 +27,25 @@ export default {
 		offset: 4,
 		precision: 2, // Adjust the precision for debugging.
 	}),
-	watch: {
 
+	computed: {
+		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedMode: "getSelectedMode",
+			showTarget: "getShowTarget",
+			generalColors: "getGeneralColors",
+			targetColor: "getTargetColor",
+			summary: "getSummary",
+		})
 	},
+
 	mounted() {
 		this.id = "edges";
+
+		let self = this;
+		EventHandler.$on("update-node-encoding", function (data) {
+			self.clearTarget();
+		});
 	},
 
 	methods: {
@@ -37,15 +53,15 @@ export default {
 			this.graph = graph;
 			this.edges = d3.select("#" + this.id);
 
-			if (this.$store.selectedMode == "Ensemble") {
+			if (this.selectedMode == "ESG") {
 				this.initEdges("ensemble");
 				this.drawEdges("ensemble");
-				if (this.$store.showTarget && this.$store.comparisonMode == false) {
+				if (this.showTarget) {
 					this.initEdges("target");
 					this.drawEdges("target");
 				}
 			}
-			else if (this.$store.selectedMode == "Single") {
+			else if (this.selectedMode == "SG") {
 				this.initEdges("single");
 				this.drawEdges("single");
 			}
@@ -54,30 +70,33 @@ export default {
 
 		initEdges(dataset) {
 			let self = this;
-			this.edges.selectAll("#edge-" + dataset)
+			this.edges.selectAll(".edge-" + dataset)
 				.data(this.graph.links)
 				.enter().append("path")
 				.attrs({
-					"class": "edge",
-					"id": "edge-" + dataset
-				})
-				.style("fill", (d) => {
-					if (dataset == "ensemble") { return this.$store.distributionColor.ensemble; }
-					return this.$store.runtimeColor.intermediate;
+					"class": "edge-" + dataset,
+					"fill": (d) => {
+						if (dataset === "ensemble") {
+							return self.generalColors.ensemble;
+						}
+						else if (dataset === "target") {
+							return self.generalColors.target;
+						}
+						else if (dataset === "single") {
+							return self.generalColors.intermediate;
+						}
+					},
 				})
 				.style("opacity", 0.5)
 				.on("mouseover", function (d) {
 					d3.select(this).style("stroke-opacity", "1.0");
-					// self.clearEdgeLabels()
-					// self.drawEdgeLabels(d)
 				})
 				.sort(function (a, b) {
 					return b.dy - a.dy;
 				});
 		},
 
-
-		drawPath(d, linkHeight, edge_source_offset = 0, edge_target_offset = 0, dataset) {
+		drawPath(d, linkHeight, edge_source_offset = 0, edge_target_offset = 0) {
 			const Tx0 = (d.source_data.x + d.source_data.dx + edge_source_offset).toFixed(this.precision);
 			const Tx1 = (d.target_data.x - edge_target_offset).toFixed(this.precision);
 			const Txi = d3.interpolateNumber(Tx0, Tx1);
@@ -148,7 +167,7 @@ export default {
 
 		drawEdges(dataset) {
 			let self = this;
-			this.edges.selectAll("#edge-" + dataset)
+			this.edges.selectAll(".edge-" + dataset)
 				.data(this.graph.links)
 				.attrs({
 					"d": (d) => {
@@ -157,28 +176,21 @@ export default {
 							link_height = d.height;
 						}
 						else if (dataset == "target") {
-							link_height = d.targetHeight;
+							let max_time_inc = 0;
+							for(let dataset in d.source_data.attr_dict.gradients["time (inc)"].dataset.mean) {
+								max_time_inc = Math.max(max_time_inc, d.source_data.attr_dict.gradients["time (inc)"].dataset.mean[dataset]);
+							}
+							let ratio = d.source_data.attr_dict.gradients["time (inc)"].dataset.mean[this.selectedTargetRun]/max_time_inc;
+							if (ratio > 1) {
+								link_height = d.height;
+							} 
+							else {
+								link_height = d.height * ratio;
+							}
 						}
-						if (this.$store.selectedEdgeAlignment == "Top") {
-							return this.drawPath(d, link_height, 0, 0, dataset);
-						}
-						else if (this.$store.selectedEdgeAlignment == "Middle") {
-							return this.drawMiddlePath(d, link_height, 0, 0, dataset);
-						}
-
+						return this.drawPath(d, link_height, 0, 0);
 					},
-					"fill": (d) => {
-						if (dataset == "ensemble") {
-							return this.$store.distributionColor.ensemble;
-						}
-						else if (dataset == "target") {
-							return this.$store.distributionColor.target;
-						}
-						else if (dataset == "single") {
-							return this.$store.runtimeColor.intermediate;
-						}
-					},
-					"stroke": this.$store.runtimeColor.edgeStrokeColor,
+					"stroke": this.generalColors.darkGrey,
 				})
 				.on("mouseover", (d) => {
 					// self.$refs.ToolTip.render(self.graph, d)
@@ -200,9 +212,18 @@ export default {
 		},
 
 		clear() {
-			this.edges.selectAll(".edge").remove();
-			this.edges.selectAll(".edgelabel").remove();
-			this.edges.selectAll(".edgelabelText").remove();
+			this.clearEnsemble();
+			if(this.showTarget) {
+				this.clearTarget();
+			}
+		},
+
+		clearEnsemble() {
+			this.edges.selectAll(".edge-ensemble").remove();
+		},
+
+		clearTarget() {
+			this.edges.selectAll(".edge-target").remove();
 		}
 	}
 };

@@ -5,24 +5,24 @@
  * SPDX-License-Identifier: MIT
  */
 <template>
-	<v-layout row wrap :id="id">
-		<InfoChip ref="InfoChip" :title="title" :summary="summary" />
-		<svg :id="svgID"></svg>
-		<ToolTip ref="ToolTip" />
-	</v-layout>
+  <div :id="id">
+	<InfoChip ref="InfoChip" :title="title" :summary="infoSummary" />
+	<svg :id="svgID"></svg>
+	<ToolTip ref="ToolTip" />
+  </div>
 </template>
 
 
 <script>
 // Library imports
 import * as d3 from "d3";
+import { mapGetters } from "vuex";
 
 // Local library
 import * as utils from "lib/utils";
+import EventHandler from "lib/routing/EventHandler";
 
 import InfoChip from "../general/infoChip";
-
-import EventHandler from "lib/routing/EventHandler";
 
 // Local components
 import ToolTip from "./tooltip";
@@ -63,24 +63,66 @@ export default {
 		undesirability: {},
 		maxUndesirability: 0,
 		maxVarianceCallsite: "",
-		summary: "MPI Runtime Scatterplot view correlates between the inclusive and exclusive runtime metrics across the ensemble. Each dot or point in the view represents a process.",
+		infoSummary: "MPI Runtime Scatterplot view correlates between the inclusive and exclusive runtime metrics across the ensemble. Each dot or point in the view represents a process.",
 		svg: undefined,
 	}),
 
+	computed: {
+		...mapGetters({
+			selectedTargetRun: "getSelectedTargetRun",
+			selectedNode: "getSelectedNode",
+			data: "getEnsembleScatterplot",
+			summary: "getSummary",
+			showTarget: "getShowTarget",
+			generalColors: "getGeneralColors",
+			targetColor: "getTargetColor",
+			isComparisonMode: "getComparisonMode",
+			selectedCompareRun: "getSelectedCompareRun"
+		})
+	},
+
+	watch: {
+		data: function () {
+			this.visualize();
+		}
+	},
+
 	mounted() {
 		let self = this;
-		EventHandler.$on("ensemble-scatterplot", function (data) {
-			console.log("Ensemble Scatterplot: ", data["node"]);
-			self.visualize(data);
+		EventHandler.$on("reset-ensemble-scatterplot", function() {
+			self.clear();
+			self.init();
 		});
 
-		// this.init();
+		EventHandler.$on("update-node-encoding", function() {
+			self.clear();
+			self.init();
+		});
 	},
 
 	methods: {
 		init() {
+			this.orientation = ["time", "time (inc)"];
+			if (this.isComparisonMode) {
+				this.$store.dispatch("fetchEnsembleScatterplot", {
+					dataset: this.selectedTargetRun,
+					background: this.selectedCompareRun,
+					node: this.selectedNode["name"],
+					ntype: this.selectedNode["type"],
+					orientation: ["time", "time (inc)"],
+				});
+			} 
+			else {
+				this.$store.dispatch("fetchEnsembleScatterplot", {
+					dataset: this.selectedTargetRun,
+					node: this.selectedNode["name"],
+					ntype: this.selectedNode["type"],
+					orientation: ["time", "time (inc)"],
+				});
+			}
+
 			this.width = window.innerWidth * 0.25;
-			this.height = (this.$store.viewHeight) * 0.33;
+			this.height = (this.$store.viewHeight) * 0.30;
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
@@ -88,8 +130,6 @@ export default {
 				.attr("width", this.boxWidth)
 				.attr("height", this.boxHeight - this.padding.top)
 				.attr("transform", "translate(" + this.padding.left + "," + this.padding.top + ")");
-			
-			// this.visualize(this.$store.selectedNode);
 		},
 
 		preprocess(data, dataset_name) {
@@ -103,244 +143,69 @@ export default {
 			}
 		},
 
-		visualize(data) {
-			if (!this.firstRender) {
-				this.clear();
-			}
-			else {
-				this.init();
-			}
+		visualize() {
 			this.firstRender = false;
 			this.maxVarianceCallsite = "";
 			this.maxUndesirability = 0;
-			this.selectedModule = this.$store.selectedNode["id"];
 
-			const _e_store = utils.getDataByNodeType(this.$store, "ensemble", data["node"])[this.$store.selectedMetric];
-			this.ensembleProcess();
+			this.xMin = this.data["bkg"]["xMin"];
+			this.yMin = this.data["bkg"]["yMin"];
+			this.xMax = this.data["bkg"]["xMax"];
+			this.yMax = this.data["bkg"]["yMax"];
+			this.xArray = this.data["bkg"]["x"];
+			this.yArray = this.data["bkg"]["y"];
 
+			this.xtargetMin = this.data["tgt"]["xMin"];
+			this.ytargetMin = this.data["tgt"]["yMin"];
+			this.xtargetMax = this.data["tgt"]["xMax"];
+			this.ytargetMax = this.data["tgt"]["yMax"];
+			this.xtargetArray = this.data["tgt"]["x"];
+			this.ytargetArray = this.data["tgt"]["y"];
 
 			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
 			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
-			if (this.$store.data_mod[this.$store.selectedTargetDataset][this.selectedModule] != undefined) {
-				this.selectedTargetModuleData = utils.getDataByNodeType(this.$store, "ensemble", data["node"])[this.$store.selectedMetric];
-				this.targetProcess();
-
-				let xScaleMax = Math.max(this.xMax, this.xtargetMax);
-				let xScaleMin = Math.min(this.xMin, this.xtargetMin);
-				let yScaleMax = Math.max(this.yMax, this.ytargetMax);
-				let yScaleMin = Math.min(this.yMin, this.ytargetMin);
-
-				this.xScale = d3.scaleLinear().domain([xScaleMin, xScaleMax]).range([this.padding.left, this.xAxisHeight]);
-				this.yScale = d3.scaleLinear().domain([yScaleMin, yScaleMax]).range([this.yAxisHeight, this.padding.top]);
-			}
-			else{
-				this.xScale = d3.scaleLinear().domain([this.xMin, this.xMax]).range([this.padding.left, this.xAxisHeight]);
-				this.yScale = d3.scaleLinear().domain([this.yMin, this.yMax]).range([this.yAxisHeight, this.padding.top]);
-			}
 			
-		
-			this.drawXAxis(this.svg);
-			this.drawYAxis(this.svg);
+			let xScaleMax = Math.max(this.xMax, this.xtargetMax);
+			let xScaleMin = Math.min(this.xMin, this.xtargetMin);
+			let yScaleMax = Math.max(this.yMax, this.ytargetMax);
+			let yScaleMin = Math.min(this.yMin, this.ytargetMin);
+
+			this.xScale = d3.scaleLinear()
+				.domain([xScaleMin, xScaleMax])
+				.nice(5)
+				.range([this.padding.left, this.xAxisHeight]);
+
+			this.yScale = d3.scaleLinear()
+				.domain([yScaleMin, yScaleMax])
+				.nice(5)
+				.range([this.yAxisHeight, this.padding.top]);
+			
+			this.drawXAxis();
+			this.drawYAxis();
+
 			this.ensembleDots();
-			if (this.$store.showTarget && this.$store.data_mod[this.$store.selectedTargetDataset][this.selectedModule] != undefined) {
+			this.trendline(this.xArray, this.yArray, "red", "bkg");
+
+			if (this.showTarget) {
+				this.trendline(this.xtargetArray, this.ytargetArray, "blue", "tgt");
 				this.targetDots();
 			}
+
 			// this.correlationText()
 			this.setTitle();
-			// this.$refs.ToolTip.init(this.svgID);
+			this.$refs.ToolTip.init(this.svgID);
 		},
 
 		setTitle() {
 			this.moduleUnDesirability = this.maxUndesirability;
 		},
 
-		ensembleProcess() {
-			let mean_time = [];
-			let mean_time_inc = [];
-			// TODO: Expensivee!!!!
-			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
-				let callsites_in_module = this.$store.m2c["ensemble"][this.selectedModule];
-				for (let j = 0; j < callsites_in_module.length; j += 1) {
-					let _c = callsites_in_module[j];
-					let _d = this.$store.data_cs[this.$store.selectedDatasets[i]][_c];
-					mean_time.push({
-						"callsite": _c,
-						"val": _d["time"]["mean"],
-						"run": this.$store.selectedDatasets[i]
-					});
-					mean_time_inc.push({
-						"callsite": _c,
-						"val": _d["time (inc)"]["mean"],
-						"run": this.$store.selectedDatasets[i]
-					});
-				}
-			}
-
-			let all_data = this.$store.data_mod["ensemble"][this.selectedModule];
-			let temp;
-			if (this.$store.selectedScatterMode == "mean") {
-				temp = this.scatter(mean_time, mean_time_inc);
-			}
-			else if (this.$store.selectedScatterMode == "all") {
-				temp = this.scatter(all_data["time"], all_data["time (inc)"]);
-			}
-
-
-			this.xMin = temp[0];
-			this.yMin = temp[1];
-			this.xMax = temp[2];
-			this.yMax = temp[3];
-			this.xArray = temp[4];
-			this.yArray = temp[5];
-
-			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice());
-			this.regressionY = this.leastSquaresCoeff["y_res"];
-			this.corre_coef = this.leastSquaresCoeff["corre_coef"];
-		},
-
-		targetProcess() {
-			let mean_time = [];
-			let mean_time_inc = [];
-
-			let callsites_in_module = this.$store.m2c[this.$store.selectedTargetDataset][this.selectedModule];
-			for (let i = 0; i < callsites_in_module.length; i += 1) {
-				let thiscallsite = callsites_in_module[i];
-				let thisdata = this.$store.data_cs[this.$store.selectedTargetDataset][thiscallsite];
-				mean_time.push({
-					"callsite": thiscallsite,
-					"val": thisdata["time"]["mean"],
-					"run": this.$store.selectedTargetDataset
-				});
-				mean_time_inc.push({
-					"callsite": thiscallsite,
-					"val": thisdata["time (inc)"]["mean"],
-					"run": this.$store.selectedTargetDataset
-				});
-			}
-
-			let temp;
-			this.$store.selectedScatterMode = "mean";
-			if (this.$store.selectedScatterMode == "mean") {
-				temp = this.scatter(mean_time, mean_time_inc);
-			}
-			else if (this.$store.selectedScatterMode == "all") {
-				let data = this.$store.data_mod[this.$store.selectedTargetDataset][this.selectedModule];
-				temp = this.scatter(data["time"], data["time (inc)"]);
-			}
-
-			this.xtargetMin = temp[0];
-			this.ytargetMin = temp[1];
-			this.xtargetMax = temp[2];
-			this.ytargetMax = temp[3];
-			this.xtargetArray = temp[4];
-			this.ytargetArray = temp[5];
-		},
-
-		scatter(xData, yData) {
-			let xArray = [];
-			let yArray = [];
-			let yMin = 0;
-			let xMin = 0;
-			let xMax = 0;
-			let yMax = 0;
-
-			for (const [idx, d] of Object.entries(xData)) {
-				xMin = Math.min(xMin, d.val);
-				xMax = Math.max(xMax, d.val);
-				xArray.push(d);
-			}
-
-			for (const [idx, d] of Object.entries(yData)) {
-				yMin = Math.min(yMin, d.val);
-				yMax = Math.max(yMax, d.val);
-				yArray.push(d);
-			}
-
-			return [xMin, yMin, xMax, yMax, xArray, yArray];
-		},
-
-		// returns slope, intercept and r-square of the line
-		leastSquares(xSeries, ySeries) {
-			var n = xSeries.length;
-			var x_mean = 0;
-			var y_mean = 0;
-			var term1 = 0;
-			var term2 = 0;
-
-			for (var i = 0; i < n; i++) {
-				x_mean += xSeries[i];
-				y_mean += ySeries[i];
-			}
-
-			// calculate mean x and y
-			x_mean /= n;
-			y_mean /= n;
-
-			// calculate coefficients
-			var xr = 0;
-			var yr = 0;
-			for (i = 0; i < xSeries.length; i++) {
-				xr = xSeries[i] - x_mean;
-				yr = ySeries[i] - y_mean;
-				term1 += xr * yr;
-				term2 += xr * xr;
-
-			}
-
-			var b1 = term1 / term2;
-			var b0 = y_mean - (b1 * x_mean);
-			// perform regression
-
-			let yhat = [];
-			// fit line using coeffs
-			for (i = 0; i < xSeries.length; i++) {
-				yhat.push(b0 + (xSeries[i] * b1));
-			}
-
-			//compute correlation coef
-			var xy = [];
-			var x2 = [];
-			var y2 = [];
-
-			for (let i = 0; i < n; i++) {
-				xy.push(xSeries[i] * ySeries[i]);
-				x2.push(xSeries[i] * xSeries[i]);
-				y2.push(ySeries[i] * ySeries[i]);
-			}
-
-			var sum_x = 0;
-			var sum_y = 0;
-			var sum_xy = 0;
-			var sum_x2 = 0;
-			var sum_y2 = 0;
-
-			for (let i = 0; i < n; i++) {
-				sum_x += xSeries[i];
-				sum_y += ySeries[i];
-				sum_xy += xy[i];
-				sum_x2 += x2[i];
-				sum_y2 += y2[i];
-			}
-			var step1 = (n * sum_xy) - (sum_x * sum_y);
-			var step2 = (n * sum_x2) - (sum_x * sum_x);
-			var step3 = (n * sum_y2) - (sum_y * sum_y);
-			var step4 = Math.sqrt(step2 * step3);
-
-			var corre_coef = step1 / step4;
-
-			return {
-				"y_res": yhat,
-				"corre_coef": corre_coef
-			};
-
-		},
-
-		addxAxisLabel(svg) {
+		addxAxisLabel() {
 			let max_value = this.xScale.domain()[1];
 			this.x_max_exponent = utils.formatExponent(max_value);
 			let exponent_string = this.superscript[this.x_max_exponent];
 			let label = "(e+" + this.x_max_exponent + ") " + "Exclusive Runtime (" + "\u03BCs)";
-			svg.append("text")
+			this.svg.append("text")
 				.attr("class", "scatterplot-axis-label")
 				.attr("x", this.boxWidth - 1 * this.padding.right)
 				.attr("y", this.yAxisHeight + 3 * this.padding.top)
@@ -349,8 +214,8 @@ export default {
 				.text(label);
 		},
 
-		drawXAxis(svg) {
-			this.addxAxisLabel(svg);
+		drawXAxis() {
+			this.addxAxisLabel();
 			const xAxis = d3.axisBottom(this.xScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
@@ -360,7 +225,7 @@ export default {
 					}
 				});
 
-			var xAxisLine = svg.append("g")
+			var xAxisLine = this.svg.append("g")
 				.attr("class", "axis")
 				.attr("id", "xAxis")
 				.attr("transform", "translate(" + 3 * this.padding.left + "," + this.yAxisHeight + ")")
@@ -382,12 +247,12 @@ export default {
 				.style("font-weight", "lighter");
 		},
 
-		addyAxisLabel(svg) {
+		addyAxisLabel() {
 			let max_value = this.yScale.domain()[1];
 			this.y_max_exponent = utils.formatExponent(max_value);
 			let exponent_string = this.superscript[this.y_max_exponent];
 			let label = "(e+" + this.y_max_exponent + ") " + "Inclusive Runtime (" + "\u03BCs)";
-			svg.append("text")
+			this.svg.append("text")
 				.attr("class", "scatterplot-axis-label")
 				.attr("transform", "rotate(-90)")
 				.attr("x", -this.padding.top)
@@ -397,9 +262,9 @@ export default {
 				.text(label);
 		},
 
-		drawYAxis(svg) {
+		drawYAxis() {
 			let tickCount = 10;
-			this.addyAxisLabel(svg);
+			this.addyAxisLabel();
 			let yAxis = d3.axisLeft(this.yScale)
 				.ticks(tickCount)
 				.tickFormat((d, i) => {
@@ -409,7 +274,7 @@ export default {
 					}
 				});
 
-			var yAxisLine = svg.append("g")
+			var yAxisLine = this.svg.append("g")
 				.attr("id", "yAxis")
 				.attr("class", "axis")
 				.attr("transform", "translate(" + 4 * this.padding.left + ", 0)")
@@ -432,24 +297,34 @@ export default {
 				.style("font-weight", "lighter");
 		},
 
-		trendline() {
-			let self = this;
-			var line = d3.line()
-				.x(function (d, i) {
-					return self.xScale(self.xArray[i]) + 3 * self.padding.left;
-				})
-				.y(function (d, i) {
-					return self.yScale(self.yArray[i]);
-				});
+		trendline(xArray, yArray, lineColor, id) {
+			const leastSquaresCoeff = utils.leastSquares(xArray, yArray);
+			this.info = "Correlation : " + Math.round(leastSquaresCoeff[2] * 1000)/ 1000;
 
-			var trendline = this.svg.append("g")
-				.attr("class", "trend-line")
-				.append("path")
-				.datum(this.regressionY)
-				.attr("d", line)
-				.style("stroke", "black")
-				.style("stroke-width", "1px")
-				.style("opacity", 0.5);
+			// apply the reults of the least squares regression
+			var x1 = this.xMin;
+			var y1 = leastSquaresCoeff[0] * this.xMin + leastSquaresCoeff[1];
+			var x2 = this.xMax;
+			var y2 = leastSquaresCoeff[0] * this.xMax + leastSquaresCoeff[1];
+			var trendData = [[x1, y1, x2, y2]];
+			
+			var trendline = this.svg.selectAll("#trendline" + id)
+				.data(trendData);
+			
+			trendline.enter()
+				.append("line")
+				.attr("class", "trendline")
+				.attr("id", "trendline" + id)
+				.attr("x1", (d) => this.xScale(d[0]))
+				.attr("y1", (d) => this.yScale(d[1]))
+				.attr("x2", (d) => this.xScale(d[2]))
+				.attr("y2", (d) => this.yScale(d[3]))
+				.attr("stroke", lineColor)
+				.attr("stroke-width", 1)
+				.attr(
+					"transform",
+					"translate(" + 3 * this.padding.left + "," + this.padding.top + ")"
+				);
 		},
 
 		calculateQDC(callsite, run) {
@@ -482,24 +357,22 @@ export default {
 					.append("circle")
 					.attrs({
 						"class": "ensemble-dot",
-						"r": 7.5,
+						"r": 5,
 						"opacity": opacity,
-						"cx": () => {
-							return self.xScale(self.xArray[i].val) + 3 * self.padding.left;
-						},
-						"cy": () => {
-							return self.yScale(self.yArray[i].val);
-						}
+						"cx": () => this.xScale(self.xArray[i]) + 3 * self.padding.left,
+						"cy": () => this.yScale(self.yArray[i])
 					})
 					.style("stroke", "#202020")
 					.style("stroke-width", 0.5)
-					.style("fill", this.$store.distributionColor.ensemble)
+					.style("fill", this.generalColors.intermediate)
 					.on("mouseover", () => {
 						let data = {
 							"callsite": callsite,
 							"QCD": opacity,
-							"value": self.xArray[i].val,
-							"run": self.xArray[i].run
+							"x": self.xArray[i],
+							"y": self.yArray[i],
+							"run": self.xArray[i].run,
+							"orientation": self.orientation
 						};
 						self.$refs.ToolTip.render(data);
 					})
@@ -521,23 +394,22 @@ export default {
 					.append("circle")
 					.attrs({
 						"class": "target-dot",
-						"r": 7.5,
+						"r": 5,
 						"opacity": opacity,
-						"cx": () => {
-							return this.xScale(this.xtargetArray[i].val) + 3 * this.padding.left;
-						},
-						"cy": (d, i) => {
-							return this.yScale(self.ytargetArray[i].val);
-						}
+						"cx": () => this.xScale(this.xtargetArray[i]) + 3 * this.padding.left,
+						"cy": (d, i) => this.yScale(self.ytargetArray[i]),
 					})
-					.style("fill", this.$store.distributionColor.target)
-					.style("stroke", this.$store.runtimeColor.edgeStrokeColor)
+					.style("fill", this.targetColor)
+					.style("opacity", 0.5)
+					.style("stroke", this.generalColors.darkGrey)
 					.style("stroke-width", 0.5)
 					.on("mouseover", () => {
 						let data = {
 							"callsite": callsite,
 							"QCD": opacity,
-							"value": self.xtargetArray[i].val,
+							"x": self.xtargetArray[i],
+							"y": self.ytargetArray[i],
+							"orientation": self.orientation,
 							"run": run
 						};
 						self.$refs.ToolTip.render(data);
@@ -569,6 +441,7 @@ export default {
 			d3.selectAll(".trend-line").remove();
 			d3.selectAll(".scatterplot-axis-label").remove();
 			d3.selectAll(".text").remove();
+			d3.selectAll(".trendline").remove();
 		},
 	}
 };

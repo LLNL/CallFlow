@@ -5,6 +5,13 @@
 # ------------------------------------------------------------------------------
 import os
 import hatchet as ht
+import datetime
+
+# import arrow
+
+import callflow
+
+LOGGER = callflow.get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
@@ -35,6 +42,35 @@ class Sanitizer:
         elif _type == "loop":
             _file, _line = _["file"], str(_["line"])
             return "Loop@" + Sanitizer.sanitize(_file) + ":" + _line
+
+    @staticmethod
+    def fmt_time(tstamp):
+        """
+        Format according to daniel's data format.
+
+        e.g., laghos_2020-12-04_01-04-11 => 2020-12-04 01:04:11
+        """
+        fmt_from = "%Y-%m-%d_%H-%M-%S"
+        fmt_to = "%Y-%m-%d %H:%M:%S"
+
+        try:
+            dt = datetime.datetime.strptime(tstamp, fmt_from)
+            return datetime.datetime.strftime(dt, fmt_to)
+        except ValueError as e:
+            LOGGER.warn("Not a valid timestamp.")
+            LOGGER.warn(e)
+            return tstamp
+
+
+    def datetime_to_fmt(datetime):
+        fmt_to = "%Y-%m-%d %H:%M:%S"
+        return datetime.strftime(fmt_to)
+
+    @staticmethod
+    def fmt_timestr_to_datetime(string):
+        fmt_to = "%Y-%m-%d %H:%M:%S"
+
+        return datetime.datetime.strptime(string, fmt_to)
 
 
 # ------------------------------------------------------------------------------

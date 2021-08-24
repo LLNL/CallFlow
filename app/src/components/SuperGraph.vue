@@ -7,7 +7,8 @@
 
 <template>
   <div id="inspire">
-    <Toolbar ref="ToolBar" :isSettingsOpen.sync="isSettingsOpen" />
+    <Toolbar ref="ToolBar" :isSettingsOpen.sync="isSettingsOpen"
+    v-if="Object.keys(metricTimeMap).length > 0" />
     <v-navigation-drawer v-model.lazy="isSettingsOpen" fixed>
       <v-card fill-height>
         <v-col>
@@ -26,7 +27,7 @@
 			</v-row>
 		</v-col>
       </v-card>
-	<VisualEncoding ref="VisualEncoding"/>
+	<Settings ref="Settings"/>
     </v-navigation-drawer>
 
     <v-row class="pa-0 ma-0">
@@ -53,6 +54,7 @@
 
 <script>
 // Library imports
+import { mapGetters } from "vuex";
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
@@ -65,8 +67,7 @@ import SingleHistogram from "./singleHistogram/index_sh";
 import CallsiteInformation from "./callsiteInformation/index_ci";
 import Sankey from "./sankey/index_sg";
 import Toolbar from "./general/toolbar";
-
-import VisualEncoding from "./settings/visualEncoding";
+import Settings from "./general/settings/";
 
 export default {
 	name: "SuperGraph",
@@ -79,93 +80,53 @@ export default {
 		SingleScatterplot,
 		SingleHistogram,
 		CallsiteInformation,
-		VisualEncoding,
-	},
-
-	// Not used currently. 
-	props: {
-		aux_data: Object,
+		Settings,
 	},
 
 	data: () => ({
 		isSettingsOpen: false,
-		groupBy: ["Name", "Module", "File"],
-		selectedGroupBy: "Module",
-		filterBy: ["Inclusive", "Exclusive"],
-		filterRange: [0, 100],
-		selectedFilterBy: "Inclusive",
-		selectedIncTime: 0,
-		filterPercRange: [0, 100],
-		selectedFilterPerc: 5,
-		selectedColorMin: null,
-		selectedColorMax: null,
-		selectedColorMinText: "",
-		selectedColorMaxText: "",
-		scatterMode: ["mean", "all"],
-		selectedScatterMode: "all",
-		comparisonMode: false,
-		selectedOutlierBand: 4,
-		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
-		summary: "Super Graph View",
 		info: "",
-		selectedMode: "Single",
 	}),
 
-	watch: {
-		showTarget: function (val) {
-			EventHandler.$emit("show-target-auxiliary");
-		},
+	computed: {
+		...mapGetters({ 
+			summary: "getSummary",
+			metricTimeMap: "getMetricTimeMap",
+		})
+	},
 
-		isSettingsOpen: function (val) {
-			this.$emit("update:isSettingsOpen", val);
-		},
+	beforeCreate() {
+		this.$store.dispatch("fetchSummary");
 	},
 
 	mounted() {
-		this.setupStore();
-
-		// Push to '/' when `this.$store.selectedDatasets` is undefined.
-		if (this.$store.selectedDatasets === undefined) {
-			// this.requestAuxData();  // TODO: Fix the bug here.
-			this.$router.push("/");
-		} else {
-			this.init();
-		}
-
 		let self = this;
-		EventHandler.$on("supergraph-reset", () => {
+		EventHandler.$on("reset-sg", () => {
 			self.reset();
 		});
+	},
 
+	watch: {
+		isSettingsOpen: function (val) {
+			this.$emit("update:isSettingsOpen", val);
+		},
+
+		summary: function (val) {
+			this.isDataReady = true;
+			this.init();
+		},
+
+		selectedMode: function (val) {
+			this.selectedMode = val;
+		}
 	},
 
 	methods: {
 		init() {
+			this.$store.commit("setSelectedMode", "SG");
+
 			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
-			EventHandler.$emit("setup-colors");
 			this.initComponents(this.currentComponents);
-		},
-
-		setupStore() {
-			// Set the mode. (Either single or ensemble).
-			this.$store.selectedMode = this.selectedMode;
-
-			// Comparison mode in histograms.
-			this.$store.comparisonMode = this.comparisonMode;
-
-			// Set this.selectedTargetDataset (need to remove)
-			this.selectedTargetDataset = this.$store.selectedTargetDataset;
-
-			// Set the datasets
-			this.datasets = this.$store.selectedDatasets;
-
-			// Set the metricTimeMap, used by the dropdown to select the dataset.
-			this.metricTimeMap = this.$store.metricTimeMap;
-
-			// Set encoding method.
-			this.$store.encoding = "MEAN";
-		
-			this.$store.selectedFormat = "SuperGraph";
 		},
 
 		// ----------------------------------------------------------------
@@ -177,7 +138,7 @@ export default {
 				this.$refs.SingleScatterplot,
 				this.$refs.Sankey,
 				this.$refs.CallsiteInformation,
-				this.$refs.VisualEncoding,
+				this.$refs.Settings,
 			];
 		},
 
@@ -204,16 +165,6 @@ export default {
 
 		closeSettings() {
 			this.isSettingsOpen = !this.isSettingsOpen;
-		},
-
-		async requestAuxData() {
-			const payload = {
-				datasets: this.$store.selectedDatasets,
-				rankBinCount: this.$store.selectedMPIBinCount,
-				runBinCount: this.$store.selectedRunBinCount,
-				reProcess: true,
-			};
-			return await this.$parent.$parent.fetchData(payload);
 		},
 	},
 };

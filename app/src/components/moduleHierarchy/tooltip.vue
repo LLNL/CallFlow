@@ -85,13 +85,8 @@ export default {
 
 		info() {
 			this.addText("Name: " + utils.truncNames(this.data.data.id, 40));
-			let label = "";
-			if (this.$store.selectedMetric == "Exclusive") {
-				label = "Exc.";
-			} else if (this.$store.selectedMetric == "Inclusive") {
-				label = "Inc.";
-			}
-			this.addText("Target " + label + " time: " + utils.formatRuntimeWithUnits(this.data.data.data[this.$store.selectedMetric]["max_time"]));
+			this.addText("time (inc): " + utils.formatRuntimeWithUnits(this.data.data.attr_dict["time (inc)"]));
+			this.addText("time: " + utils.formatRuntimeWithUnits(this.data.data.attr_dict["time"]));
 		},
 
 		render(data) {
@@ -110,7 +105,7 @@ export default {
 				rx: "10px",
 				"fill-opacity": 1,
 				width: this.width,
-				height: "50",
+				height: 75,
 				x: () => {
 					if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth) {
 						return this.mousePosX - this.width + "px";
