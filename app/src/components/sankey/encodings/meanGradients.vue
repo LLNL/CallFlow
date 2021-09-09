@@ -77,14 +77,14 @@ export default {
 				return "#000";
 			}
 
-			let nid = d.attr_dict.nid;
+			let idx = d.attr_dict.idx;
 
 			const defs = d3.select("#" + this.id)
 				.append("defs");
 
 			const linearGradient = defs
 				.append("linearGradient")
-				.attr("id", "mean-gradient" + nid)
+				.attr("id", "mean-gradient-" + idx)
 				.attr("class", "mean-gradient");
 
 			linearGradient
@@ -104,7 +104,7 @@ export default {
 					.attr("stop-color", color.getColorByValue(val[i]));
 			}
 
-			return "url(#mean-gradient" + nid + ")";
+			return "url(#mean-gradient-" + idx + ")";
 		},
 
 		clear() {

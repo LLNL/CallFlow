@@ -27,13 +27,13 @@ class BoxPlot:
     """
 
     def __init__(
-        self, sg, relative_sg=None, name="", ntype="", iqr_scale=1.5, proxy_columns={}
+        self, sg, rel_sg=None, name="", ntype="", iqr_scale=1.5
     ):
         """
         Boxplot for callsite or module
 
         :param sg: (callflow.SuperGraph)
-        :param relative_sg: (callflow.SuperGraph) Relative supergraph
+        :param rel_sg: (callflow.SuperGraph) Relative supergraph
         :param name: (str) Node name
         :param ntype: (str) Node type (e.g., "callsite" or "module")
         :param proxy_columns: (dict) Proxy for names.
@@ -41,59 +41,63 @@ class BoxPlot:
         assert isinstance(sg, callflow.SuperGraph)
         assert isinstance(name, str)
         assert ntype in ["callsite", "module"]
-        assert isinstance(proxy_columns, dict)
         assert isinstance(iqr_scale, float)
 
-        self.box_types = ["tgt"]
-        if relative_sg is not None:
-            self.box_types = ["tgt", "bkg"]
-
+        self.time_columns = [sg.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
         self.idx = sg.get_idx(name, ntype)
-        node = {"id": self.idx, "type": ntype, "name": name}
 
-        # TODO: Avoid this.
-        self.c_path = None
-        self.rel_c_path = None
-
-        if ntype == "callsite":
-            df = sg.callsite_aux_dict[self.idx]
-            if "component_path" in sg.dataframe.columns:
-                self.c_path = sg.get_component_path(node)
-
-            if relative_sg is not None:
-                rel_df = relative_sg.callsite_aux_dict[self.idx]
-
-                if "component_path" in relative_sg.dataframe.columns:
-                    self.rel_c_path = sg.get_component_path(node)
-
-        elif ntype == "module":
-            df = sg.module_aux_dict[self.idx]
-            if relative_sg is not None:
-                rel_df = relative_sg.module_aux_dict[self.idx]
-
-        if relative_sg is not None and "dataset" in rel_df.columns:
-            self.ndataset = df_count(rel_df, "dataset")
-
-        self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
-        self.result = {}
+        self.result = {
+            "name": name,
+            "type": ntype,
+            "idx": self.idx,
+            "module": "",
+            "tgt": {},
+            "bkg": {}
+        }
         self.ntype = ntype
         self.iqr_scale = iqr_scale
 
-        self.result["name"] = name
         if ntype == "callsite":
             self.result["module"] = sg.get_module(sg.get_idx(name, ntype))
+        
+        self.node = {"id": self.idx, "type": ntype, "name": name}
 
-        if relative_sg is not None:
-            self.result["bkg"] = self.compute(rel_df)
-        self.result["tgt"] = self.compute(df)
+        self.box_types = ["tgt"]
+        df = BoxPlot.get_aux_dict(sg, ntype, self.idx)        
+        self.result["tgt"] = self.compute(sg, df)
 
-    def compute(self, df):
+        self.rel_c_path = None
+        if rel_sg is not None:
+            self.rel_idx = rel_sg.get_idx(name, ntype)
+            rel_df = BoxPlot.get_aux_dict(rel_sg, ntype, self.rel_idx)
+            self.result["bkg"] = self.compute(rel_sg, rel_df)
+            self.box_types = ["tgt", "bkg"]
+
+    @staticmethod
+    def get_aux_dict(sg, ntype, idx):
+        if ntype == "callsite":
+            aux_dict = sg.callsite_aux_dict
+        elif ntype == "module":
+            aux_dict = sg.module_aux_dict
+
+        if idx not in aux_dict:
+            return None
+        
+        return aux_dict[idx]
+
+    def compute(self, sg, df):
         """
         Compute boxplot related information.
 
         :param df: Dataframe to calculate the boxplot information.
         :return:
         """
+
+        if df is None:
+            return
+        
+        if "dataset" in df.columns:
+            self.ndataset = df_count(df, "dataset")
 
         ret = {_: {} for _ in TIME_COLUMNS}
         for tk, tv in zip(TIME_COLUMNS, self.time_columns):
@@ -127,12 +131,8 @@ class BoxPlot:
             if "dataset" in df.columns:
                 ret[tk]["odset"] = df["dataset"].to_numpy()[mask]
 
-            # TODO: Find a better way to send the component_path from data.
-            if self.c_path is not None:
-                ret[tk]["cpath"] = self.c_path
+            ret[tk]["cpath"] = sg.get_component_path(self.node)
 
-            if self.rel_c_path is not None:
-                ret[tk]["rel_cpath"] = self.rel_c_path
 
         return ret
 
@@ -143,6 +143,10 @@ class BoxPlot:
         result = {}
         for box_type in self.box_types:
             result[box_type] = {}
+
+            if not self.result[box_type]:
+                continue
+
             for metric in self.time_columns:
                 box = self.result[box_type][metric]
                 result[box_type][metric] = {
@@ -158,8 +162,8 @@ class BoxPlot:
                     "imb": box["imb"],
                     "kurt": box["ks"][0],
                     "skew": box["ks"][1],
-                    "nid": box["idx"],
-                    "name": self.result["name"],
+                    "nid": self.result["idx"],
+                    "name": self.result["name"]
                 }
                 result["name"] = self.result["name"]
 
@@ -168,9 +172,6 @@ class BoxPlot:
 
                 if "cpath" in box:
                     result[box_type][metric]["cpath"] = box["cpath"]
-
-                if "rel_cpath" in box:
-                    result[box_type][metric]["rel_cpath"] = box["rel_cpath"]
 
         return result
 

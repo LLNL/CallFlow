@@ -22,11 +22,8 @@ export default function Sankey() {
 		minNodeScale = 0,
 		maxLevel = 1,
 		nodeMap = {},
-		// store = {},
-		debug = true,
 		nodesByBreadth = [],
 		max_dy = 0,
-		// fitNodeInWindowHeight = 5,
 		targetDataset = "";
 
 	let widthScale;
@@ -79,12 +76,6 @@ export default function Sankey() {
 		targetDataset = _;
 		return sankey;
 	};
-
-	// sankey.store = function (_) {
-	// 	if (!arguments.length) {return store;}
-	// 	store = _;
-	// 	return sankey;
-	// };
 
 	sankey.layout = function (iterations) {
 		addLinkID();
@@ -620,7 +611,7 @@ export default function Sankey() {
 
 			// Push links having less weight to the bottom.
 			node.sourceLinks.sort(descendingEdgeValue);
-			node.targetLinks.sort(ascendingEdgeValue);
+			node.targetLinks.sort(descendingEdgeValue);
 
 		});
 

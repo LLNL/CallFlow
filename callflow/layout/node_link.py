@@ -48,11 +48,23 @@ class NodeLinkLayout:
         self._add_node_attributes()
         self._add_edge_attributes()
 
+        # print(self.nxg.nodes(data=True))
+
         # # Find cycles in the nxg.
         # with self.timer.phase("Find cycles"):
         #     self.nxg.cycles = NodeLinkLayout._detect_cycle(self.nxg)
 
     # --------------------------------------------------------------------------
+    @staticmethod
+    def _mean(df, metric):
+        import math
+
+        time = df[metric].mean()
+        if math.isnan(time):
+            time = 0
+        return time
+
+
     def _add_node_attributes(self):  # noqa: C901
         """
         Add node attributes to the nxg.
@@ -68,10 +80,10 @@ class NodeLinkLayout:
                 callsite_idx = self.sg.get_idx(callsite, "callsite")
                 _df = self.sg.df_lookup_with_column("name", callsite_idx)
 
-                if column == self.time_inc:
-                    datamap[column][callsite] = _df["time (inc)"].mean()
-                elif column == self.time_exc:
-                    datamap[column][callsite] = _df["time"].mean()
+                if column == "time (inc)":
+                    datamap[column][callsite] = NodeLinkLayout._mean(_df, self.time_inc)
+                elif column == "time":
+                    datamap[column][callsite] = NodeLinkLayout._mean(_df, self.time_exc)
                 elif column == "name":
                     datamap[column][callsite] = callsite
                 elif column == "module":

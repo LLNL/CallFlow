@@ -101,6 +101,7 @@
                   text-xs-center
                   v-on="on"
                   :class="selectClassName[callsite.name]"
+				@click="changeSelectedClassName"
                 >
                   {{ formatNumberOfHops(cpath[callsite.name]) }}
                 </v-row>
@@ -254,8 +255,8 @@ export default {
 
 			this.width = document.getElementById(this.id).clientWidth;
 			this.boxplotWidth = this.width - this.padding.left - this.padding.right;
-			this.height = 0.5 * this.$store.viewHeight;
-			document.getElementById(this.id).style.maxHeight = this.height + "px";
+			this.height = 0.7 * this.$store.viewHeight;
+			document.getElementById(this.id).style.height = this.height + "px";
 		},
 
 		visualize() {
@@ -290,11 +291,16 @@ export default {
 			});
 
 			items = items.sort( (first, second) => {
+				if (first[1][metric] == undefined || second[1][metric] == undefined) {
+					return -1;
+				}
 				return second[1][metric][attribute] - first[1][metric][attribute];
 			});
 
 			callsites = items.reduce(function (map, obj) {
-				map[obj[0]] = obj[1][metric];
+				if (obj[1][metric]){
+					map[obj[0]] = obj[1][metric];
+				}
 				return map;
 			}, {});
 
@@ -333,7 +339,6 @@ export default {
 
 				this.selectClassName[callsite_name] = "unselect-callsite";
 			}
-
 		},
 
 		getStatistics(callsite) {
@@ -372,40 +377,39 @@ export default {
 			return "cc-node-" + callsiteID;
 		},
 
-		// // Code to select the callsite by the component-level button
-		// changeSelectedClassName() {
-		// 	event.stopPropagation();
-		// 	let callsite = event.currentTarget.id;
-		// 	// If it was already selected
-		// 	if (this.selectClassName[callsite] == "select-callsite") {
-		// 		this.revealCallsites.splice(this.revealCallsites.indexOf(callsite), 1);
-		// 		event.target.className = "flex text-xs-center unselect-callsite";
-		// 		this.selectClassName[callsite] = "unselect-callsite";
-		// 	} else {
-		// 		this.selectClassName[callsite] = "select-callsite";
-		// 		event.target.className = "flex text-xs-center select-callsite";
-		// 		this.revealCallsites.push(callsite);
-		// 	}
+		// Code to select the callsite by the component-level button
+		changeSelectedClassName(callsite) {
+			event.stopPropagation();
+			// If it was already selected
+			if (this.selectClassName[callsite] == "select-callsite") {
+				this.revealCallsites.splice(this.revealCallsites.indexOf(callsite), 1);
+				event.target.className = "flex text-xs-center unselect-callsite";
+				this.selectClassName[callsite] = "unselect-callsite";
+			} else {
+				this.selectClassName[callsite] = "select-callsite";
+				event.target.className = "flex text-xs-center select-callsite";
+				this.revealCallsites.push(callsite);
+			}
 
-		// 	if (this.revealCallsites.length == 0) {
-		// 		this.switchIsSelectedCallsite(false);
-		// 	} else {
-		// 		this.switchIsSelectedCallsite(true);
-		// 	}
-		// 	console.debug("Selected callsites: ", this.revealCallsites);
-		// },
+			if (this.revealCallsites.length == 0) {
+				this.switchIsSelectedCallsite(false);
+			} else {
+				this.switchIsSelectedCallsite(true);
+			}
+			console.debug("Selected callsites: ", this.revealCallsites);
+		},
 
-		// switchIsSelectedCallsite(val) {
-		// 	this.isCallsiteSelected = val;
-		// },
+		switchIsSelectedCallsite(val) {
+			this.isCallsiteSelected = val;
+		},
 
-		// switchIsSelectedModule(val) {
-		// 	this.isModuleSelected = val;
-		// },
+		switchIsSelectedModule(val) {
+			this.isModuleSelected = val;
+		},
 
-		// selectedClassName(callsite) {
-		// 	return this.selectClassName[callsite];
-		// },
+		selectedClassName(callsite) {
+			return this.selectClassName[callsite];
+		},
 
 		// Formatting for the html view
 		formatModule(module) {
@@ -497,8 +501,11 @@ export default {
 		},
 
 		clear() {
-			d3.selectAll(".cc-node").remove();
-			EventHandler.$emit("clear-boxplot");
+			// TODO: Need to avoid a forceUpdate on the component. Bad practice.
+			// This is a hacky solution as there is currently no way to refresh
+			// the subcomponents once rendered. D3.remove is very aggressive and
+			// removes all the content.
+			this.$forceUpdate();
 		},
 
 		dataset(idx) {

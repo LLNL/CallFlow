@@ -31,8 +31,30 @@ The first step is to process the "raw datasets" (performance profiles) using `ca
 
 ### Processing data
 
+#### For single dataset:
+`--process` argument processes of the datasets in the provided `--data_path` by
+treating each dataset as an independent SuperGraph.
+
 ```
 callflow --data_path /PATH/TO/DATA/DIRECTORY --process --profile_format {hpctoolkit,caliper_json,caliper}
+```
+
+#### For ensemble of datasets:
+`--ensemble_process` argument processes the datasets in the provided
+`--data_path` after unifying the individual SuperGraphs into an Ensemble SuperGraph.
+```
+callflow --data_path /PATH/TO/DATA/DIRECTORY --process --ensemble_process --profile_format {hpctoolkit,caliper_json,caliper}
+```
+
+#### For re-processing the datasets:
+Once processed, CallFlow would warn the user that the datasets have been
+processed already and subsequently load the processed datasets. 
+
+To re-process the datasets, use --reset option (which will delete the exisiting
+.callflow directory and redo the processing).
+
+```
+callflow --data_path /PATH/TO/DATA/DIRECTORY --process --reset --profile_format {hpctoolkit,caliper_json,caliper}
 ```
 
 The processed data is placed inside `/PATH/TO/DATA/DIRECTORY/.callflow`. To modify the location of the processed data, use the `--save_path` argument.
