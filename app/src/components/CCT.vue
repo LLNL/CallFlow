@@ -31,19 +31,21 @@
     </v-navigation-drawer>
 
     <v-main class="pt-0">
-        <splitpanes id="cct-dashboard">
-          <!-- Left column-->
-		<splitpanes horizontal :splitpanes-size="isComparisonMode ? 50 : 100">
-			<NodeLink ref="CCT1" />
-			<!-- <NodeLink ref="CCT2" /> -->
-		</splitpanes>
+		<splitpanes class="default-theme">
+			<pane>
+				<NodeLink ref="CCT1" />
+			</pane>
+			<!-- Surprise & delight -->
+			<!-- <pane :v-if="!isComparisonMode">
+				<NodeLink ref="CCT2"  />
+			</pane> -->
         </splitpanes>
     </v-main>
   </div>
 </template>
 
 <script>
-import Splitpanes from "splitpanes";
+import { Splitpanes, Pane } from "splitpanes";
 import { mapGetters } from "vuex";
 import "splitpanes/dist/splitpanes.css";
 
@@ -63,6 +65,7 @@ export default {
 	name: "CCT",
 	components: {
 		Splitpanes,
+		Pane,
 		NodeLink,
 		Toolbar,
 		Settings
@@ -97,6 +100,7 @@ export default {
 	},
 
 	mounted() {
+		console.log(this.isComparisonMode);
 		let self = this;
 		EventHandler.$on("reset-cct", () => {
 			self.reset();
@@ -111,7 +115,12 @@ export default {
 		summary: function (val) {
 			this.isDataReady = true;
 			this.init();
-		}
+		},
+
+		isComparisonMode: function(val) {
+			console.log(val);
+		},
+
 	},
 
 	methods: {
@@ -157,6 +166,7 @@ export default {
 		},
 
 		clear() {
+			console.log(this.currentComponents);
 			this.clearComponents(this.currentComponents);
 		},
 

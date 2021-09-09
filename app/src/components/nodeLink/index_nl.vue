@@ -48,6 +48,9 @@ export default {
 	},
 
 	data: () => ({
+		// Surprise & delight.
+		// compareId: "cct-overview-compare",
+		// targetId: "cct-overview-target",
 		id: "cct-overview",
 		margin: {
 			top: 20,
@@ -104,11 +107,20 @@ export default {
 
 		visualize() {
 			this.isDataReady = true;
-			this.width = this.$store.viewWidth - this.margin.right;
+
+			// TODO: Assign the id based on the pane Key or ref.	
+			if (this.isComparisonMode) {
+				this.width = this.$store.viewWidth / 2 - this.margin.right;
+				this.id = "cct-overview-compare";
+			}
+			else {
+				this.width = this.$store.viewWidth - this.margin.right;
+				this.id = "cct-overview";
+			}
+
 			this.height = this.$store.viewHeight - this.margin.bottom;
-
+			
 			this.svg = d3.select("#" + this.id);
-
 			this.info = "Selected metric : " + this.selectedMetric;
 
 			this.g = this.createGraph();

@@ -335,7 +335,6 @@ class BaseProvider:
 
             time_columns = sg.time_columns
 
-
             return {
                 **self.config,
                 "time_columns": time_columns,
