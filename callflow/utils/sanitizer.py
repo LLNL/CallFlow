@@ -26,7 +26,6 @@ class Sanitizer:
 
     @staticmethod
     def from_htframe(_: ht.frame.Frame):
-
         assert isinstance(_, ht.frame.Frame)
 
         _type = _["type"]
