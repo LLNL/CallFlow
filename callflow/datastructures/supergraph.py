@@ -1179,7 +1179,7 @@ class SuperGraph(ht.GraphFrame):
             gf = ht.GraphFrame.from_caliper(data_path, query=query)
 
         elif profile_format == "caliper_json":
-            gf = ht.GraphFrame.from_caliper_json(data_path)
+            gf = ht.GraphFrame.from_caliper(data_path)
 
         elif profile_format == "gprof":
             gf = ht.GraphFrame.from_gprof_dot(data_path)

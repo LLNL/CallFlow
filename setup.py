@@ -106,7 +106,6 @@ deps = [
     "networkx",
     "matplotlib",
     "ipython",
-    "flask_socketio",
     "flask_cors",
     "pyinstrument",
     "psutil",
