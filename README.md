@@ -1,4 +1,4 @@
-# CallFlow
+# CallFlow [![PyPI version](https://badge.fury.io/py/CallFlow.svg)](https://badge.fury.io/py/CallFlow)
 
 CallFlow is an interactive visual analysis tool that provides a high-level overview of CCTs together with semantic refinement operations to progressively explore the CCTs.
 
