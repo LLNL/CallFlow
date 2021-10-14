@@ -17,6 +17,7 @@ from .provider_base import BaseProvider
 from .provider_api import APIProvider
 from .provider_socket import SocketProvider
 from .notebook_server import launch_ipython
+from callflow.operations import Config
 
 LOGGER = callflow.get_logger(__name__)
 
@@ -64,30 +65,33 @@ def main():
     assert endpoint_access in ["REST", "SOCKETS"]
     assert endpoint_env in ["TERMINAL", "JUPYTER"]
 
+    # Get config object.
+    config = Config(args.args).get_config()
+
     # --------------------------------------------------------------------------
     # process and exit
     if process:
         assert endpoint_env == "TERMINAL"
-        cf = BaseProvider(config=args.config)
+        cf = BaseProvider(config=config)
         cf.process(reset)
 
     # --------------------------------------------------------------------------
     # start a server based on endpoint_access = "REST" | "SOCKET"
     elif not process and endpoint_env == "TERMINAL":
         if endpoint_access == "REST":
-            cf = APIProvider(config=args.config)
+            cf = APIProvider(config=config)
         else:
-            cf = SocketProvider(config=args.config)
+            cf = SocketProvider(config=config)
         cf.load()
         cf.start(host=CALLFLOW_APP_HOST, port=CALLFLOW_APP_PORT)
 
     # --------------------------------------------------------------------------
     # launch an ipython instance
     elif not process and endpoint_env == "JUPYTER":
-        _launch_path = os.path.join(args.config["save_path"], "launch-info")
+        _launch_path = os.path.join(config["save_path"], "launch-info")
         launch_ipython(
             args.args,
-            args.config,
+            config,
             host=CALLFLOW_APP_HOST,
             port=CALLFLOW_APP_PORT,
             launch_path=_launch_path,
