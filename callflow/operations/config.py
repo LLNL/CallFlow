@@ -1,3 +1,9 @@
+# Copyright 2017-2021 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
+
 import os
 import callflow
 from callflow.utils.utils import is_valid_json_with_schema, write_json
@@ -18,8 +24,8 @@ JSONSCHEMA_CONFIG = {
         "filter_by": {"type": "string"},
         "group_by": {"type": "string"},
         "module_callsite_map": {"type": "object"},
-        "chunk_idx": {"type": "number"},
-        "chunk_size": {"type": "number"},
+        "chunk_idx": {"type": "integer"},
+        "chunk_size": {"type": "integer"},
         "ensemble_process": {"type": "boolean"},
         "experiment": {"type": "string"},
     },
@@ -46,10 +52,16 @@ class Config:
        'append_path': (str),
        'start_date': (timestamp),
        'end_date': (timestamp),
-       'chunk_idx': int,
-       'chunk_size': int,
+       'chunk_idx': (int),
+       'chunk_size': (int),
        'ensemble_process': (bool)
    }
+    1. Determine the read_mode from the arguments passed.
+    2. Generate the config object containing the dataset information based on
+       the read_mode.
+    3. Create a .callflow directory if not present in the provided save_path.
+    4. Dump the config file.
+    5. Validate the generated or passed config object.
    """
     def __init__(self, properties):
         self.properties = properties
@@ -58,6 +70,7 @@ class Config:
         _READ_MODES = {
             "config": self._read_config,
             "directory": self._read_directory,
+            "gfs": self._read_gfs,
         }
         assert self.read_mode in _READ_MODES.keys()
 
@@ -90,6 +103,7 @@ class Config:
         Determines the read mode for CallFlow based on the properties. 
         If `config` key is provided, read_mode = "config".
         If `data_path` key is provided, read_mode = "directory".
+        If `gfs` key is provided, read_mode = "gfs".
 
         If both are provided, CallFlow chooses "config" as it can contain more
         information. 
@@ -97,30 +111,16 @@ class Config:
         read_mode = ""
         _has_config = self.properties["config"] is not None
         _has_dpath = self.properties["data_path"] is not None
-
-        if not _has_config and not _has_dpath:
-            s = "Please provide a config (or) data_path property."  # (or) graph frames"
-            LOGGER.error(s)
-            exit(1)
+        # _has_gfs = self.properties["gfs"] is not None
 
         if _has_config:
             read_mode = "config"
-            if not os.path.isfile(self.properties["config"]):
-                s = "Config file ({}) not found!".format(self.properties["config"])
-                LOGGER.error(s)
-                exit(1)
 
-        elif self.properties["data_path"]:
+        elif _has_dpath:
             read_mode = "directory"
-            if not os.path.isdir(self.properties["data_path"]):
-                s = "Data directory ({}) not found!".format(self.properties["data_path"])
-                LOGGER.error(s)
-                exit(1)
-
-            if not self.properties["profile_format"]:
-                s = "Provide format using profile_format key."
-                LOGGER.error(s)
-                exit(1)
+        
+        # elif _has_gfs:
+        #     read_mode = "gfs"
 
         return read_mode
 
@@ -153,9 +153,7 @@ class Config:
         """
         _configfile = self.properties["config"]
         json = callflow.utils.utils.read_json(_configfile)
-        callflow.utils.utils.is_valid_json_with_schema(
-            data=json, schema=JSONSCHEMA_CONFIG
-        )
+        callflow.utils.utils.is_valid_json_with_schema(data=json, schema=JSONSCHEMA_CONFIG)
 
         # ----------------------------------------------------------------------
         scheme = {}
@@ -166,6 +164,9 @@ class Config:
 
             elif _ in self.properties:
                 scheme[_] = self.properties[_]
+
+            if _ in scheme:
+                scheme[_] = Config._match_config_type(_, scheme[_])
 
         # Set the data_path, which is data directory.
         if len(scheme["experiment"]) == 0:
@@ -206,8 +207,35 @@ class Config:
 
         return scheme
 
+    @staticmethod
+    def _match_config_type(key, val):
+        """
+        Wrapper function to ensure the scheme properties match their assigned type.
+        """
+        bools = ["ensemble_process"]
+        ints = ["chunk_idx", "chunk_size"]
+        floats = ["filter_perc"]
+
+        if key in bools:
+            val = bool(val)
+        
+        if key in ints:
+            val = int(val)
+
+        if key in floats:
+            val = float(val)
+
+        return val
+
     # --------------------------------------------------------------------------
+    def _read_gfs(self):
+        """
+        GraphFrame mode for Jupyter notebooks.
+        This function creates a config file based on the graphframes passed into the cmd line.
+        """
+        assert False
     # --------------------------------------------------------------------------
+
     @staticmethod
     def _scheme_dataset_map(pformat, data_path: str = "", run_props: dict = None):
         from callflow.utils.utils import list_subdirs, list_files
