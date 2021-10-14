@@ -14,6 +14,14 @@ CallFlow is structured as three components:
 
 The `callflow` (python package) requires [python](https://realpython.com/installing-python/) (>= 3.6) and [pip](https://pip.pypa.io/en/stable/news/) (>= 20.1.1). Other dependencies are checked/installed during the installation of `callflow` using `setup.py`.
 
+To install with `pip`, use
+
+```
+pip install CallFlow
+```
+
+To install the latest version on `develop` branch, use
+
 ```
 python3 setup.py install --prefix /PATH/TO/INSTALL
 ```
