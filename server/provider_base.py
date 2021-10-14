@@ -44,15 +44,13 @@ class BaseProvider:
         chunk_size = int(self.config.get("chunk_size", -1))
 
         # check if we need caliper
-        pfmts = list(set([r['profile_format'] for r in self.config['runs']]))
-        if 'caliper' in pfmts and shutil.which("cali-query") is None:
+        pfmts = list(set([r["profile_format"] for r in self.config["runs"]]))
+        if "caliper" in pfmts and shutil.which("cali-query") is None:
             raise ValueError('Could not find "cali-query" executable in path')
 
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
-        LOGGER.info(
-            f'Detected {len(self.config["runs"])} datasets from config file'
-        )
+        LOGGER.info(f'Detected {len(self.config["runs"])} datasets from config file')
         self.datasets = self.config["runs"]
 
         if start_date and end_date:
@@ -149,9 +147,8 @@ class BaseProvider:
             for f_type in ["df", "nxg", "maps"]:
                 f_path = os.path.join(_path, SuperGraph._FILENAMES[f_type])
                 if not os.path.isfile(f_path):
-                    LOGGER.debug(f'{f_path} not found!!')
+                    LOGGER.debug(f"{f_path} not found!!")
                     process = True
-
 
             if process:
                 ret.append(dataset)
@@ -215,7 +212,9 @@ class BaseProvider:
             name = dataset["name"]
             _prop = run_props[name]
 
-            LOGGER.info(f"Processing dataset [{idx+1}/{len(process_datasets)}] ({name}) (save={save_supergraphs})")
+            LOGGER.info(
+                f"Processing dataset [{idx+1}/{len(process_datasets)}] ({name}) (save={save_supergraphs})"
+            )
             data_path = os.path.join(load_path, _prop[0])
             if _prop[1] == "hpctoolkit" and not os.path.isfile(
                 os.path.join(data_path, "experiment.xml")
@@ -226,12 +225,7 @@ class BaseProvider:
                 continue
 
             sg = SuperGraph(name)
-            sg.create(
-                path=data_path,
-                profile_format=_prop[1],
-                m2c=m2c,
-                m2m=m2m
-            )
+            sg.create(path=data_path, profile_format=_prop[1], m2c=m2c, m2m=m2m)
             LOGGER.info(f"Created supergraph ({name})")
 
             Group(sg, group_by=group_by)
@@ -269,7 +263,7 @@ class BaseProvider:
                 d for d in processed_folders if d is not None
             ]  # Filter the none values
 
-            #self.mp_dataset_load(load_datasets[0] , save_path=save_path)
+            # self.mp_dataset_load(load_datasets[0] , save_path=save_path)
 
             with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
                 load_supergraphs = pool.map(
@@ -335,7 +329,6 @@ class BaseProvider:
 
             time_columns = sg.time_columns
 
-
             return {
                 **self.config,
                 "time_columns": time_columns,
@@ -343,7 +336,7 @@ class BaseProvider:
                     set(map(lambda d: d["profile_format"], self.datasets))
                 ),
                 "module_callsite_map": sg.module2callsite,
-                "callsite_module_map": sg.callsite2module
+                "callsite_module_map": sg.callsite2module,
             }
 
         elif operation_name == "summary":
@@ -355,20 +348,18 @@ class BaseProvider:
             assert isinstance(operation["ncount"], int)
             assert operation["metric"] in ["time", "time (inc)"]
 
-            if(len(self.supergraphs) == 1):
-                supergraph = self.supergraphs[self.datasets[0]['name']]
+            if len(self.supergraphs) == 1:
+                supergraph = self.supergraphs[self.datasets[0]["name"]]
             else:
                 supergraph = self.supergraphs["ensemble"]
 
             # Get the top-n nodes from the "ensemble" based on the ntype.
             top_nodes_idx = supergraph.df_get_top_by_attr(
                 operation["ntype"], operation["ncount"], operation["metric"]
-            
             )
 
             all_nodes_idx = supergraph.df_get_top_by_attr(
                 operation["ntype"], -1, operation["metric"]
-            
             )
 
             # Convert the indexs to the modules.
@@ -376,16 +367,15 @@ class BaseProvider:
                 supergraph.get_name(node_idx, operation["ntype"])
                 for node_idx in top_nodes_idx
             ]
-            all_nodes = [                
+            all_nodes = [
                 supergraph.get_name(node_idx, operation["ntype"])
                 for node_idx in all_nodes_idx
-
             ]
 
             # Construct the per-supergraph timeline data.
             data = {}
             data["d"] = {
-                sg : self.supergraphs[sg].timeline(
+                sg: self.supergraphs[sg].timeline(
                     top_nodes, operation["ntype"], operation["metric"]
                 )
                 for sg in self.supergraphs
@@ -492,9 +482,7 @@ class BaseProvider:
 
             result = {}
             for callsite in callsites:
-                bp = BoxPlot(
-                    sg=sg, name=callsite, ntype=ntype
-                )
+                bp = BoxPlot(sg=sg, name=callsite, ntype=ntype)
                 result[callsite] = bp.unpack()
 
             return result
@@ -529,12 +517,12 @@ class BaseProvider:
         LOGGER.info(f"[Ensemble Mode] {operation}")
 
         operation_name = operation["name"]
-        if ("background" not in operation):
+        if "background" not in operation:
             e_sg = self.supergraphs["ensemble"]
         else:
             e_sg = self.supergraphs[operation["background"]]
-        
-        if 'ntype' in operation:
+
+        if "ntype" in operation:
             ntype = operation["ntype"]
 
         if "dataset" in operation:
@@ -635,9 +623,6 @@ class BaseProvider:
 
             # Gradients are computed only for the ensemble mode.
             esg = self.supergraphs["ensemble"]
-            node = {
-                "id": esg.get_idx(name, ntype),
-                "type": ntype
-            }
+            node = {"id": esg.get_idx(name, ntype), "type": ntype}
 
             return esg.get_gradients(node, nbins)

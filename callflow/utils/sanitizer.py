@@ -60,7 +60,6 @@ class Sanitizer:
             LOGGER.warn(e)
             return tstamp
 
-
     def datetime_to_fmt(datetime):
         fmt_to = "%Y-%m-%d %H:%M:%S"
         return datetime.strftime(fmt_to)

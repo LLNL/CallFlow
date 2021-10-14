@@ -27,15 +27,17 @@ def get_memory_usage(process=None):
     bytes = float(process.memory_info().rss)
     return format_bytes(bytes)
 
+
 def format_bytes(bytes):
-    if bytes < 1024.:
-        return f'{bytes} bytes'
+    if bytes < 1024.0:
+        return f"{bytes} bytes"
 
-    kb = bytes / 1024.
-    if kb < 1024.:
-        return f'{kb} KB'
+    kb = bytes / 1024.0
+    if kb < 1024.0:
+        return f"{kb} KB"
 
-    return f'{kb / 1024.} MB'
+    return f"{kb / 1024.} MB"
+
 
 def get_file_size(filepath):
     stats = os.stat(filepath)

@@ -1,13 +1,15 @@
 import os
 import re
 import math
-import hatchet as ht 
+import hatchet as ht
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
 
 FRAME_KEYS = ["file", "name"]
+
 
 class RegexModuleMatcher:
     def __init__(self, m2c, m2m: dict = {}):
@@ -18,30 +20,33 @@ class RegexModuleMatcher:
                 for pattern in patterns:
                     re_pattern = re.compile(pattern)
                     self.re_map[re_pattern] = m
-                
+
         self.m2c = {m: [] for m in m2c.keys()}
         self.m2m = m2m
         self.m2c["Unknown"] = []
-        
+
         self.assign_unknown = False
-                
+
     def match_frame(self, ht_frame, ht_key):
-        return [m for reg, m in self.re_map.items() if re.search(reg, ht_frame.get(ht_key)) is not None]
-    
+        return [
+            m
+            for reg, m in self.re_map.items()
+            if re.search(reg, ht_frame.get(ht_key)) is not None
+        ]
+
     def _get_percentage(self):
-        return math.floor((self.counter/len(self.nodes)*100))
-    
+        return math.floor((self.counter / len(self.nodes) * 100))
+
     @staticmethod
     def sanitize(_: str):
         return os.path.basename(_) if _ is not None else "Unknown"
-    
+
     @staticmethod
-    def from_htframe(_:  ht.frame.Frame):
+    def from_htframe(_: ht.frame.Frame):
         assert isinstance(_, ht.frame.Frame)
 
         _type = _["type"]
         assert _type in ["function", "statement", "loop", "region"]
-
 
         if _type in ["function", "region"]:
             return RegexModuleMatcher.sanitize(_.get("name", "Unknown"))
@@ -59,17 +64,17 @@ class RegexModuleMatcher:
         if "module" not in df.columns:
             return None
 
-        node_df = df.loc[df['node'] == node]
+        node_df = df.loc[df["node"] == node]
 
         if node_df.empty:
             return None
 
-        module = node_df['module'].unique().tolist()
+        module = node_df["module"].unique().tolist()
 
         if module[0] is None:
             return None
 
-        if (module[0] not in m2m.keys()):
+        if module[0] not in m2m.keys():
             raise Exception(f"{module[0]} not found in m2m mapping.")
 
         if module[0] in m2m.keys():
@@ -77,30 +82,32 @@ class RegexModuleMatcher:
 
     def match(self, gf, nodes=None):
         assert isinstance(gf, ht.GraphFrame)
-       
+
         self.gf = gf
-            
+
         if nodes is None:
             self.nodes = list(self.gf.graph.traverse())
         else:
             self.nodes = nodes
-                        
+
         self.counter = 0
         notfound = 0
         for node in self.nodes:
             node_name = RegexModuleMatcher.from_htframe(node.frame)
 
-            module_in_df = RegexModuleMatcher.module_in_dataframe(gf.dataframe.reset_index(), self.m2m, node)
+            module_in_df = RegexModuleMatcher.module_in_dataframe(
+                gf.dataframe.reset_index(), self.m2m, node
+            )
             if module_in_df is not None:
                 if module_in_df not in self.m2c.keys():
                     self.m2c[module_in_df] = []
-                self.m2c[module_in_df].append(node_name) 
+                self.m2c[module_in_df].append(node_name)
                 continue
 
             for fk in FRAME_KEYS:
                 if node.frame.get(fk) is not None:
                     matches = self.match_frame(node.frame, fk)
-                    
+
                     if len(list(set(matches))) > 1:
                         print(f"Multiple matches found for {node}: {matches}")
                         self._get_input(node_name)
@@ -118,13 +125,12 @@ class RegexModuleMatcher:
 
                     if node_name not in self.m2c[matches[0]]:
                         self.m2c[matches[0]].append(node_name)
-                        
+
             self.counter += 1
-            
+
         LOGGER.info(f"Successfully assigned a module for {self.counter} nodes.")
         LOGGER.debug(f"Failed to assign a module for {notfound} nodes.")
 
-        
         return self.m2c
 
     def print_m2c(self):
@@ -133,26 +139,26 @@ class RegexModuleMatcher:
         print("====================================")
         for k in self.m2c.keys():
             print(k)
-            
+
     def _get_input(self, node_name):
         if self.assign_unknown:
             self.m2c["Unknown"].append(node_name)
             return
-            
+
         print(f"====== {self._get_percentage()}% =======")
         module = input("Enter the module name (0 for Unknown): ")
         if module == "0":
             self.m2c["Unknown"].append(node_name)
-            return 
-        
+            return
+
         if module == "-1":
             self.assign_unknown = True
             self.m2c["Unknown"].append(node_name)
             return
-        
+
         if module not in self.m2c:
             self.m2c[module] = []
-            
+
         self.m2c[module].append(node_name)
         return
 
@@ -161,7 +167,7 @@ class RegexModuleMatcher:
         for k, v in self.m2c.items():
             print(f"Module: {k}, callsites: {len(v)}")
         print("=======================================")
-    
+
     # TODO: Remove this and use the supergraph.df_add_column.
     @staticmethod
     def df_add_column(
@@ -208,28 +214,33 @@ class RegexModuleMatcher:
 
         if has_dict:
             assert isinstance(apply_dict, dict) and isinstance(apply_on, str)
-            LOGGER.debug(f'{action} column "{column_name}" = (dict); default=({dict_default})')
+            LOGGER.debug(
+                f'{action} column "{column_name}" = (dict); default=({dict_default})'
+            )
             df[column_name] = df[apply_on].apply(
                 lambda _: apply_dict.get(_, dict_default)
             )
-            
+
     @staticmethod
     def update_df(df, m2c={}, column_name="module"):
         import pandas as pd
+
         assert isinstance(df, pd.DataFrame)
 
         c2m = {}
         for k, v in m2c.items():
             for cs in v:
                 c2m[cs] = k
-                
+
         # Update the "module" column with the provided callsite_module_map.
-        RegexModuleMatcher.df_add_column(df, column_name, apply_dict=c2m, apply_on="name", update=True)
-    
+        RegexModuleMatcher.df_add_column(
+            df, column_name, apply_dict=c2m, apply_on="name", update=True
+        )
+
     def dump_mapping(self, fname):
         import json
-                
+
         with open(fname, "w") as fptr:
             json.dump(self.m2c, fptr, indent=2)
-        
+
             print(f"Dumped the m2c map to {fname}.")

@@ -22,9 +22,7 @@ class Scatterplot:
     Scatterplot plotting Inclusive vs Exclusive runtime.
     """
 
-    def __init__(
-        self, sg, rel_sg=None, name="", ntype="", orientation=[]
-    ):
+    def __init__(self, sg, rel_sg=None, name="", ntype="", orientation=[]):
         """
         Calculate Scatterplot for the callsite/module dataframe.
 

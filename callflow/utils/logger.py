@@ -10,9 +10,7 @@ from logging import getLogger as get_logger  # noqa
 
 
 # ------------------------------------------------------------------------------
-LOG_FMT = (
-    "%(asctime)s - %(name)s:%(funcName)s:%(lineno)s - %(levelname)s - %(message)s"
-)
+LOG_FMT = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)s - %(levelname)s - %(message)s"
 LOG_COLORS = {
     "DEBUG": "cyan",
     "INFO": "green",
@@ -21,25 +19,33 @@ LOG_COLORS = {
     "CRITICAL": "red",
 }
 
+
 # ------------------------------------------------------------------------------
 def append_mem_usage(message):
     from .utils import get_memory_usage
+
     return f"[{get_memory_usage()}]: {message}"
+
 
 def _log_debug_with_memory(self, message, *args, **kws):
     self._log(logging.DEBUG, append_mem_usage(message), args, **kws)
 
+
 def _log_info_with_memory(self, message, *args, **kws):
     self._log(logging.INFO, append_mem_usage(message), args, **kws)
+
 
 def _log_warning_with_memory(self, message, *args, **kws):
     self._log(logging.WARNING, append_mem_usage(message), args, **kws)
 
+
 def _log_error_with_memory(self, message, *args, **kws):
     self._log(logging.ERROR, append_mem_usage(message), args, **kws)
 
+
 def _log_critical_with_memory(self, message, *args, **kws):
     self._log(logging.CRITICAL, append_mem_usage(message), args, **kws)
+
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -98,7 +104,7 @@ def init_logger(**kwargs):
         logging.Logger.error = _log_error_with_memory
         logging.Logger.critical = _log_critical_with_memory
 
-    return 
+    return
     # --------------------------------------------------------------------------
     # Print the level of logging.
     logger.debug("Enabled")
@@ -106,5 +112,6 @@ def init_logger(**kwargs):
     logger.warning("Enabled")
     logger.error("Enabled")
     logger.critical("Enabled")
+
 
 # ------------------------------------------------------------------------------

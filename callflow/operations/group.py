@@ -77,7 +77,7 @@ class Group:
 
             if debug:
                 for _ in path:
-                    #_m = self.sg.new_callsite2module[_]
+                    # _m = self.sg.new_callsite2module[_]
                     _m = self.sg.callsite_module_map[_]
                     print(
                         "\t:",
@@ -91,7 +91,7 @@ class Group:
                     )
 
             # extract the modules in the path
-            #mod_path = np.array([self.sg.new_callsite2module[_] for _ in path])
+            # mod_path = np.array([self.sg.new_callsite2module[_] for _ in path])
             mod_path = np.array([self.sg.callsite2module[_] for _ in path])
 
             if debug:
@@ -198,7 +198,10 @@ class Group:
             "group_path", apply_dict=group_path, dict_default="", apply_on="name"
         )
         self.sg.df_add_column(
-            "component_path", apply_dict=component_path, dict_default="", apply_on="name"
+            "component_path",
+            apply_dict=component_path,
+            dict_default="",
+            apply_on="name",
         )
 
 
