@@ -38,8 +38,20 @@ class Unify:
         self.eg.supergraphs = supergraphs
 
         # collect all modules and compute a superset
-        self.eg_modules_list = reduce(np.union1d, [self._remove_none(list(v.module2idx.keys())) for k, v in supergraphs.items()])
-        self.eg_callsites_list = reduce(np.union1d, [self._remove_none(list(v.callsite2idx.keys())) for k, v in supergraphs.items()])
+        self.eg_modules_list = reduce(
+            np.union1d,
+            [
+                self._remove_none(list(v.module2idx.keys()))
+                for k, v in supergraphs.items()
+            ],
+        )
+        self.eg_callsites_list = reduce(
+            np.union1d,
+            [
+                self._remove_none(list(v.callsite2idx.keys()))
+                for k, v in supergraphs.items()
+            ],
+        )
 
         self.compute()
         self.eg.add_time_proxies()
@@ -47,7 +59,7 @@ class Unify:
 
     def _remove_none(self, arr):
         """
-        Note: This function is a patch to ensure the np.union1d does not fail. 
+        Note: This function is a patch to ensure the np.union1d does not fail.
 
         Remove None from the list (arr) and convert it to a np.array.
 
@@ -79,19 +91,23 @@ class Unify:
             sg_callsites_list = self._remove_none(list(sg.callsite2idx.keys()))
             _mod_map = create_reindex_map(sg_modules_list, self.eg_modules_list)
             _cs_map = create_reindex_map(sg_callsites_list, self.eg_callsites_list)
-            
+
             if 1:  # edit directly in the supergraph
                 sg.df_add_column("dataset", apply_value=sg.name)
                 sg.df_add_column(
                     "module",
                     update=True,
-                    apply_func=lambda _: self.eg_modules_list[_mod_map[_]] if _ is not -1 else -1,
+                    apply_func=lambda _: self.eg_modules_list[_mod_map[_]]
+                    if _ is not -1
+                    else -1,
                     apply_on="module",
                 )
                 sg.df_add_column(
                     "name",
                     update=True,
-                    apply_func=lambda _: self.eg_callsites_list[_cs_map[_]] if _ is not -1 else -1,
+                    apply_func=lambda _: self.eg_callsites_list[_cs_map[_]]
+                    if _ is not -1
+                    else -1,
                     apply_on="name",
                 )
 
@@ -165,19 +181,27 @@ class Unify:
 
             # ------------------------------------------------------------------
         # Calculate the index maps for the updated ensemble mapping.
-        self.eg.callsite2idx = {cs:idx for idx, cs in enumerate(self.eg_callsites_list)}
+        self.eg.callsite2idx = {
+            cs: idx for idx, cs in enumerate(self.eg_callsites_list)
+        }
         self.eg.module2idx = {m: idx for idx, m in enumerate(self.eg_modules_list)}
-        
-        self.eg.idx2callsite = {idx:cs for cs, idx in self.eg.callsite2idx.items()}
-        self.eg.idx2module = {idx:m for m, idx in self.eg.module2idx.items()}
+
+        self.eg.idx2callsite = {idx: cs for cs, idx in self.eg.callsite2idx.items()}
+        self.eg.idx2module = {idx: m for m, idx in self.eg.module2idx.items()}
 
         self.eg.callsite2idx[None], self.eg.idx2callsite[-1] = -1, None
         self.eg.module2idx[None], self.eg.idx2module[-1] = -1, None
-        
+
         # Calculate the callsite2module mapping for the updated index maps.
-        self.eg.callsite2module, self.eg.module2callsite = self.eg.callsite2module_from_indexmaps(self.eg.callsite2idx, self.eg.module2idx)
-        
+        (
+            self.eg.callsite2module,
+            self.eg.module2callsite,
+        ) = self.eg.callsite2module_from_indexmaps(
+            self.eg.callsite2idx, self.eg.module2idx
+        )
+
         # Update the dataframe with the updated indexes.
         self.eg.factorize_callsites_and_modules()
+
 
 # ------------------------------------------------------------------------------

@@ -47,7 +47,7 @@ def main():
         break
 
     log_level = 1 if "--verbose" in sys.argv else 2
-    mem_usage = "--verbose" in sys.argv     # show mem usage in verbose mode
+    mem_usage = "--verbose" in sys.argv  # show mem usage in verbose mode
     callflow.init_logger(level=log_level, file=log_file, mem_usage=mem_usage)
 
     # --------------------------------------------------------------------------

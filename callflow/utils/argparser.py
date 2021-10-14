@@ -8,16 +8,18 @@ import os
 import argparse
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
 SUPPORTED_PROFILE_FORMATS = ["hpctoolkit", "caliper"]
+
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 class ArgParser:
     """
     Argparser class decodes the arguments passed to the execution of CallFlow.
-    
+
     The class performs the following actions:
     1. Parse the command line arguments.
     2. Verify if the required parameters are provided.
@@ -27,8 +29,6 @@ class ArgParser:
 
         assert isinstance(args_string, list)
 
-        from callflow.utils.utils import is_valid_json_with_schema, write_json
-
         # Parse the arguments passed.
         self.parser = ArgParser._create_parser()
         self.args = vars(self.parser.parse_args())
@@ -37,7 +37,7 @@ class ArgParser:
         # Verify if only valid things are passed.
         # Read mode determines how arguments will be consumed by CallFlow.
         self._verify_parser()
-        
+
     def __str__(self):
         items = ("%s = %r" % (k, v) for k, v in self.__dict__.items())
         return "<%s: {%s}> \n" % (self.__class__.__name__, ", ".join(items))

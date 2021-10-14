@@ -36,36 +36,37 @@ CONFIG_KEYS = list(JSONSCHEMA_CONFIG["properties"].keys())
 
 class Config:
     """
-    e.g., properties = {
-       'config': (str),
-       'data_path': (str),
-       'profile_format': (str),
-       'process': (bool),
-       'production': (bool),
-       'filter_perc': (float),
-       'filter_by': (str),
-       'group_by': (str),
-       'read_parameter': (bool),
-       'save_path': (str),
-       'verbose': (bool),
-       'reset': False,
-       'append_path': (str),
-       'start_date': (timestamp),
-       'end_date': (timestamp),
-       'chunk_idx': (int),
-       'chunk_size': (int),
-       'ensemble_process': (bool)
-   }
-    1. Determine the read_mode from the arguments passed.
-    2. Generate the config object containing the dataset information based on
-       the read_mode.
-    3. Create a .callflow directory if not present in the provided save_path.
-    4. Dump the config file.
-    5. Validate the generated or passed config object.
-   """
+     e.g., properties = {
+        'config': (str),
+        'data_path': (str),
+        'profile_format': (str),
+        'process': (bool),
+        'production': (bool),
+        'filter_perc': (float),
+        'filter_by': (str),
+        'group_by': (str),
+        'read_parameter': (bool),
+        'save_path': (str),
+        'verbose': (bool),
+        'reset': False,
+        'append_path': (str),
+        'start_date': (timestamp),
+        'end_date': (timestamp),
+        'chunk_idx': (int),
+        'chunk_size': (int),
+        'ensemble_process': (bool)
+    }
+     1. Determine the read_mode from the arguments passed.
+     2. Generate the config object containing the dataset information based on
+        the read_mode.
+     3. Create a .callflow directory if not present in the provided save_path.
+     4. Dump the config file.
+     5. Validate the generated or passed config object.
+    """
+
     def __init__(self, properties):
         self.properties = properties
-        self.read_mode = self.get_read_mode()    
+        self.read_mode = self.get_read_mode()
 
         _READ_MODES = {
             "config": self._read_config,
@@ -100,13 +101,13 @@ class Config:
 
     def get_read_mode(self):
         """
-        Determines the read mode for CallFlow based on the properties. 
+        Determines the read mode for CallFlow based on the properties.
         If `config` key is provided, read_mode = "config".
         If `data_path` key is provided, read_mode = "directory".
         If `gfs` key is provided, read_mode = "gfs".
 
         If both are provided, CallFlow chooses "config" as it can contain more
-        information. 
+        information.
         """
         read_mode = ""
         _has_config = self.properties["config"] is not None
@@ -118,7 +119,7 @@ class Config:
 
         elif _has_dpath:
             read_mode = "directory"
-        
+
         # elif _has_gfs:
         #     read_mode = "gfs"
 
@@ -141,7 +142,8 @@ class Config:
 
         # Set the datasets key, according to the format.
         scheme["runs"] = Config._scheme_dataset_map(
-            self.properties.get("profile_format", "default"), os.path.join(scheme["data_path"], scheme["append_path"])
+            self.properties.get("profile_format", "default"),
+            os.path.join(scheme["data_path"], scheme["append_path"]),
         )
 
         return scheme
@@ -153,7 +155,9 @@ class Config:
         """
         _configfile = self.properties["config"]
         json = callflow.utils.utils.read_json(_configfile)
-        callflow.utils.utils.is_valid_json_with_schema(data=json, schema=JSONSCHEMA_CONFIG)
+        callflow.utils.utils.is_valid_json_with_schema(
+            data=json, schema=JSONSCHEMA_CONFIG
+        )
 
         # ----------------------------------------------------------------------
         scheme = {}
@@ -172,8 +176,10 @@ class Config:
         if len(scheme["experiment"]) == 0:
             scheme["experiment"] = os.path.basename(json["data_path"])
 
-        if self.properties.get('save_path') is not "":
-            scheme["save_path"] = os.path.join(os.path.abspath(self.properties.get("save_path")), ".callflow")
+        if self.properties.get("save_path") != "":
+            scheme["save_path"] = os.path.join(
+                os.path.abspath(self.properties.get("save_path")), ".callflow"
+            )
 
         if len(scheme["save_path"]) == 0:
             scheme["save_path"] = os.path.join(scheme["data_path"], ".callflow")
@@ -218,7 +224,7 @@ class Config:
 
         if key in bools:
             val = bool(val)
-        
+
         if key in ints:
             val = int(val)
 
@@ -234,6 +240,7 @@ class Config:
         This function creates a config file based on the graphframes passed into the cmd line.
         """
         assert False
+
     # --------------------------------------------------------------------------
 
     @staticmethod

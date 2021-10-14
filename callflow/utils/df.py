@@ -104,6 +104,7 @@ def df_group_by(df, columns, proxy={}):
         columns = proxy.get(columns, columns)
         return df.groupby([columns])
 
+
 def df_bi_level_group(df, group_attrs, cols, group_by, apply_func, proxy={}):
 
     assert len(group_attrs) in [1, 2]
@@ -120,7 +121,7 @@ def df_bi_level_group(df, group_attrs, cols, group_by, apply_func, proxy={}):
 
     # --------------------------------------------------------------------------
     if not has_rank:
-        _cols = [c for c in _cols if c is not "rank"]
+        _cols = [c for c in _cols if c != "rank"]
         return {_: _df.xs(_)[_cols] for _ in _levels}
 
     elif len(group_attrs) == 1:
@@ -128,20 +129,23 @@ def df_bi_level_group(df, group_attrs, cols, group_by, apply_func, proxy={}):
             _cols = _cols + ["rank"]
             return {_: _df.xs(_)[_cols] for _ in _levels}
         else:
-            return {_: (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index()
-                    for _ in _levels}
+            return {
+                _: (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index()
+                for _ in _levels
+            }
 
     elif len(group_attrs) == 2:
         if len(group_by) == 0:
             _cols = _cols + ["rank"]
-            return {_: _df.xs(_)[_cols] for (_,__) in _levels}
+            return {_: _df.xs(_)[_cols] for (_, __) in _levels}
         else:
-            return {_: (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index()
-                    for (_, __) in _levels
+            return {
+                _: (_df.xs(_)[_cols].groupby(group_by).mean()).reset_index()
+                for (_, __) in _levels
             }
 
     # --------------------------------------------------------------------------
-    assert False, 'Invalid scenario'
+    assert False, "Invalid scenario"
 
 
 def df_column_mean(df, column, proxy={}):
@@ -155,6 +159,7 @@ def df_column_mean(df, column, proxy={}):
     assert isinstance(column, str)
     column = proxy.get(column, column)
     return df[column].mean()
+
 
 def callsites_column_mean(df, column, proxy={}):
     """
@@ -170,4 +175,3 @@ def callsites_column_mean(df, column, proxy={}):
         return df.groupby("name").mean()[column].max()
     elif column == "time":
         return df.groupby("name").mean()[column].sum()
-

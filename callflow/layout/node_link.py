@@ -64,7 +64,6 @@ class NodeLinkLayout:
             time = 0
         return time
 
-
     def _add_node_attributes(self):  # noqa: C901
         """
         Add node attributes to the nxg.

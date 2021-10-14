@@ -46,7 +46,7 @@ class Filter:
         )
 
         # TODO: Since we factorize the name and module column after creating
-        # the CallFlow.dataframe, we need to filter by the callsite indexes. 
+        # the CallFlow.dataframe, we need to filter by the callsite indexes.
         self.callsites = self.sg.callsites_idx
 
         # if 0:
@@ -116,8 +116,8 @@ class Filter:
 
         if filter_by == "time (inc)":
             for edge in self.sg.nxg.edges():
-                edge0_idx = self.sg.get_idx(edge[0], 'callsite')
-                edge1_idx = self.sg.get_idx(edge[1], 'callsite')
+                edge0_idx = self.sg.get_idx(edge[0], "callsite")
+                edge1_idx = self.sg.get_idx(edge[1], "callsite")
                 # If source is present in the callsites list
                 if (edge0_idx in self.callsites) and (edge1_idx in self.callsites):
                     nxg.add_edge(edge[0], edge[1])

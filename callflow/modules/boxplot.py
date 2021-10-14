@@ -26,9 +26,7 @@ class BoxPlot:
     Boxplot computation for a dataframe segment
     """
 
-    def __init__(
-        self, sg, rel_sg=None, name="", ntype="", iqr_scale=1.5
-    ):
+    def __init__(self, sg, rel_sg=None, name="", ntype="", iqr_scale=1.5):
         """
         Boxplot for callsite or module
 
@@ -52,18 +50,18 @@ class BoxPlot:
             "idx": self.idx,
             "module": "",
             "tgt": {},
-            "bkg": {}
+            "bkg": {},
         }
         self.ntype = ntype
         self.iqr_scale = iqr_scale
 
         if ntype == "callsite":
             self.result["module"] = sg.get_module(sg.get_idx(name, ntype))
-        
+
         self.node = {"id": self.idx, "type": ntype, "name": name}
 
         self.box_types = ["tgt"]
-        df = BoxPlot.get_aux_dict(sg, ntype, self.idx)        
+        df = BoxPlot.get_aux_dict(sg, ntype, self.idx)
         self.result["tgt"] = self.compute(sg, df)
 
         self.rel_c_path = None
@@ -82,7 +80,7 @@ class BoxPlot:
 
         if idx not in aux_dict:
             return None
-        
+
         return aux_dict[idx]
 
     def compute(self, sg, df):
@@ -95,7 +93,7 @@ class BoxPlot:
 
         if df is None:
             return
-        
+
         if "dataset" in df.columns:
             self.ndataset = df_count(df, "dataset")
 
@@ -133,7 +131,6 @@ class BoxPlot:
 
             ret[tk]["cpath"] = sg.get_component_path(self.node)
 
-
         return ret
 
     def unpack(self):
@@ -163,7 +160,7 @@ class BoxPlot:
                     "kurt": box["ks"][0],
                     "skew": box["ks"][1],
                     "nid": self.result["idx"],
-                    "name": self.result["name"]
+                    "name": self.result["name"],
                 }
                 result["name"] = self.result["name"]
 

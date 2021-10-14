@@ -7,7 +7,6 @@
 """
 CallFlow operation for the comparing two or more dataset members from an ensemble.
 """
-from os import stat
 import numpy as np
 
 import callflow
@@ -49,7 +48,9 @@ class DiffView:
         modules = esg.df_unique("module").tolist()
         callsites = esg.df_unique("name").tolist()
 
-        self.result = [self.compute(_, "module") for _ in modules] + [self.compute(_, "callsite") for _ in callsites]
+        self.result = [self.compute(_, "module") for _ in modules] + [
+            self.compute(_, "callsite") for _ in callsites
+        ]
 
     # --------------------------------------------------------------------------
     @staticmethod
@@ -134,7 +135,9 @@ class DiffView:
         if ntype == "module":
             mean_diff = DiffView._mean_difference(self.df1, self.df2, nid)
         elif ntype == "callsite":
-            mean_diff = DiffView._mean(self.df2, "name", nid, "time") - DiffView._mean(self.df1, "name", nid, "time")
+            mean_diff = DiffView._mean(self.df2, "name", nid, "time") - DiffView._mean(
+                self.df1, "name", nid, "time"
+            )
         LOGGER.debug(f"Mean differences {mean_diff}")
 
         # now, need to compute the histogram

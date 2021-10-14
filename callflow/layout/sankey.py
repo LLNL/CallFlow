@@ -364,7 +364,7 @@ class SankeyLayout:
         for path in unique_paths.keys():
             if len(path) > 2:
                 path = self._break_cycles_in_paths(cs_idx, path)
-            
+
                 for depth in range(0, len(path) - 1):
                     src = path[depth]
                     tgt = path[depth + 1]
@@ -388,17 +388,24 @@ class SankeyLayout:
                         edge_type = "caller"
 
                     super_edge = (src_name, tgt_name)
-                                        
+
                     if super_edge not in flow_mapping:
                         flow_mapping[super_edge] = {
                             "edge_type": edge_type,
                             "weight": 0,
                         }
-                    
-                    flow_mapping[super_edge]["weight"] += self.sg.get_runtime(tgt, self.time_inc)
 
-                    if not nxg.has_edge(src_name, tgt_name) and flow_mapping[super_edge]["weight"] > 0:
-                        nxg.add_edge(src_name, tgt_name, attr_dict=flow_mapping[super_edge])
+                    flow_mapping[super_edge]["weight"] += self.sg.get_runtime(
+                        tgt, self.time_inc
+                    )
+
+                    if (
+                        not nxg.has_edge(src_name, tgt_name)
+                        and flow_mapping[super_edge]["weight"] > 0
+                    ):
+                        nxg.add_edge(
+                            src_name, tgt_name, attr_dict=flow_mapping[super_edge]
+                        )
 
         return nxg
 
@@ -416,10 +423,10 @@ class SankeyLayout:
             "entry_functions": self.sg.get_entry_functions(node),
             "idx": node.get("id"),
         }
-        
+
         if self.sg.name == "ensemble":
             ret["gradients"] = self.sg.get_gradients(node, self.nbins)
-        
+
         return ret
 
     def _break_cycles_in_paths(self, cs_idx, path):
@@ -440,7 +447,7 @@ class SankeyLayout:
                 module_mapper[elem] = idx
                 data_mapper[elem] = [
                     {
-                        "id": elem.item(), # will be a module_idx
+                        "id": elem.item(),  # will be a module_idx
                         "level": idx,
                         "type": "module",
                     }
@@ -531,7 +538,6 @@ class SankeyLayout:
             exit_functions[edge_tuple].append(edge_dict["source_callsite"])
         return exit_functions
 
-    
     def dfs_visit_recursively(self, g, node, nodes_color, edges_to_be_removed):
 
         nodes_color[node] = 1
@@ -539,18 +545,18 @@ class SankeyLayout:
         nodes_order = np.random.permutation(nodes_order)
         for child in nodes_order:
             if nodes_color[child] == 0:
-                    self.dfs_visit_recursively(g, child, nodes_color, edges_to_be_removed)
+                self.dfs_visit_recursively(g, child, nodes_color, edges_to_be_removed)
             elif nodes_color[child] == 1:
-                edges_to_be_removed.append((node,child))
+                edges_to_be_removed.append((node, child))
 
         nodes_color[node] = 2
 
-    def dfs_remove_back_edges(self, g, nodetype = int):
-        '''
-        0: white, not visited 
+    def dfs_remove_back_edges(self, g, nodetype=int):
+        """
+        0: white, not visited
         1: grey, being visited
         2: black, already visited
-        '''
+        """
 
         nodes_color = {}
         edges_to_be_removed = []
@@ -571,6 +577,5 @@ class SankeyLayout:
 
         for edge in edges_to_be_removed:
             g.remove_edge(edge[0], edge[1])
-        
-        return g
 
+        return g

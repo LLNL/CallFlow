@@ -29,9 +29,7 @@ class Gradients:
     Computes the ensemble gradients for the a given dictionary of dataframes.
     """
 
-    def __init__(
-        self, sg, node, bins: int = 20, proxy_columns={}
-    ):
+    def __init__(self, sg, node, bins: int = 20, proxy_columns={}):
         """
         Constructor function for the class
 
@@ -57,7 +55,7 @@ class Gradients:
 
         # TODO: Could be slow for large datasets!!..
         self.df = sg.dataframe.set_index(indexers)
-    
+
         # # gradient should be computed only for ensemble dataframe
         # # i.e., multiple values in dataframe column
         self.datasets = list(self.df.index.levels[0])
@@ -170,7 +168,7 @@ class Gradients:
             for dataset in dataset_pos:
                 position = dataset_pos[dataset]
                 if dataset not in pos_dataset[position]:
-                   pos_dataset[position].append(dataset)
+                    pos_dataset[position].append(dataset)
 
             results[tk] = {
                 "bins": num_of_bins,
