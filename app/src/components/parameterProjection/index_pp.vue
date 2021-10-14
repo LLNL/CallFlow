@@ -51,7 +51,8 @@ export default {
 			"#4daf4a",
 			"#D62728",
 		],
-		infoSummary: ""
+		infoSummary: "",
+		processed_data: {},
 	}),
 
 	computed: {
@@ -62,7 +63,8 @@ export default {
 			summary: "getSummary",
 			selectedTargetRun: "getSelectedTargetRun",
 			generalColors: "getGeneralColors",
-			targetColor: "getTargetColor"
+			targetColor: "getTargetColor",
+			showTarget: "getShowTarget",
 		})
 	},
 
@@ -249,9 +251,7 @@ export default {
 					height: this.height,
 					transform: "translate(0, 0)",
 				})
-				.style("stroke-width", 1)
-				.style("stroke", this.$store.ensemble)
-				.style("background-color", this.$store.ensemble);
+				.style("stroke-width", 1);
 
 			// set the transition
 			this.t = this.svg.transition().duration(750);
@@ -271,85 +271,62 @@ export default {
 				.style("opacity", 1);
 		},
 
+		_get_dataset_id(d) {
+			if (d[2].includes(".")) {
+				return d[2].split(".")[d[2].split(".").length - 1];
+			}
+			return d[2];
+		},
+
 		drawInnerCircle() {
 			let self = this;
 			this.circles = this.svg
 				.selectAll("circle")
-				.data(this.$store.projection)
+				.data(this.processed_data)
 				.enter()
 				.append("circle")
 				.attrs({
-					class: (d) => {
-						return "dot";
-					},
-					id: (d) => {
-						return "dot-" + d[2];
-					},
+					class: "dot",
+					id: (d) => "dot-" + this._get_dataset_id(d),
 					r:  6.0,
-					fill: (d) => {
-						let color = "";
-						if (
-							d[2] == self.$store.selectedTargetDataset &&
-              self.$store.showTarget
-						) {
-							color = this.colorset[d[4]];
-						} else {
-							color = this.colorset[d[4]];
-						}
-						return color;
-					},
-					cx: (d, i) => {
-						return self.x(d[0]);
-					},
-					cy: (d) => {
-						return self.y(d[1]);
-					},
-				});
+					fill: (d) => this.colorset[d[4]],
+					cx: (d) => this.x(d[0]),
+					cy: (d) => this.y(d[1]),
+				});				
 		},
 
 		drawOuterDisc() {
 			// Outer circle.
+			let self = this;
 			this.outerCircles = this.svg
 				.selectAll(".outer-circle")
-				.data(this.$store.projection)
+				.data(this.processed_data)
 				.enter()
 				.append("circle")
 				.attrs({
-					class: (d) => {
-						return "outer-circle";
-					},
-					id: (d) => {
-						return "outer-circle-" + d[2];
-					},
+					class: "outer-circle",
+					id: (d) => "outer-circle-" + this._get_dataset_id(d),
 					r: 6.0,
-					"stroke-width": 3.0,
-					stroke: (d) => {
-						if (
-							d[2] == self.$store.selectedTargetDataset &&
-              self.$store.showTarget
-						) {
-							return this.colorset[d[4]];
-						} else {
-							return d3.rgb(self.generalColors.intermediate);
+					"stroke-width": (d) => {
+						if (d[2] == self.selectedTargetRun && self.showTarget) {
+							return 4.0;
 						}
+						return 0;
+					},
+					stroke: (d) => {
+						if (d[2] == self.selectedTargetRun && self.showTarget) {
+							return self.generalColors.target;
+						}
+						return "#fff";
 					},
 					"fill-opacity": 0,
-					cx: (d, i) => {
-						return self.x(d[0]);
-					},
-					cy: (d) => {
-						return self.y(d[1]);
-					},
+					cx: (d) => this.x(d[0]),
+					cy: (d) => this.y(d[1]),
 				})
-				.on("mouseover", (d) => {
-					this.mouseover(d);
-				})
-				.on("click", (d) => {
-					// this.click(d)
-				})
-				.on("dblclick", (d) => {
-					// this.dblclick(d)
-				});
+				.on("mouseover", (d) => this.mouseover(d))
+				.on("mouseout", (d) => this.mouseout(d))
+				.on("click", (d) => this.click(d))
+				.on("dblclick", (d) =>  this.dblclick(d));	
 		},
 
 		addLassoFeature() {
@@ -369,7 +346,7 @@ export default {
 		visualize(data) {
 			this.setup();
 
-			this.$store.projection = this.preprocess(data);
+			this.processed_data = this.preprocess(data);
 			this.x.domain([2.0 * this.xMin, 2.0 * this.xMax]);
 			this.y.domain([2.0 * this.yMin, 2.0 * this.yMax]);
 
@@ -378,9 +355,10 @@ export default {
 			this.yAxisSVG.call(this.yAxis);
 
 			this.drawInnerCircle();
+			this.drawOuterDisc();
 			this.addTooltipTextBlock();
 
-			this.addLassoFeature();
+			// this.addLassoFeature();
 			this.highlight(this.selectedTargetRun);
 			this.showDetails(this.selectedTargetRun);
 		},
@@ -402,6 +380,7 @@ export default {
 			let dataset_name = d[2];
 
 			d3.selectAll(".dot").style("opacity", 0.5);
+			d3.select("#dot-" + this._get_dataset_id(dataset_name)).style("opacity", 1);
 
 			this.tooltip
 				.transition()
@@ -411,35 +390,43 @@ export default {
 			this.showDetails(dataset_name);
 		},
 
+		mouseout(d) {
+			d3.selectAll(".dot").style("opacity", 1);
+		},
+
 		click(d) {
-			let self = this;
-			this.selectedRun = d[2];
-			d3.selectAll(".dot")
-				.attr("stroke", self.generalColors.intermediate)
-				.attr("stroke-width", 3);
+			console.log(d);
+			this.$store.commit("setSelectedTargetRun", d[2]);
+			this.$store.dispatch("reset");
 
-			d3.select("#dot-" + this.selectedRun)
-				.attr("stroke", self.generalColors.compare)
-				.attr("stroke-width", 3);
-			d3.select(
-				"#outer-dot" + this.selectedRun
-			)
-				.attr("stroke", this.targetColor)
-				.attr("stroke-width", 3);
+			// let self = this;
+			// this.selectedRun = d[2];
+			// d3.selectAll(".dot")
+			// 	.attr("stroke", self.generalColors.intermediate)
+			// 	.attr("stroke-width", 3);
 
-			// Set the local and global variables for compare dataset
-			this.compareDataset = d[2];
-			this.$store.selectedCompareDataset = this.compareDataset;
+			// d3.select("#dot-" + this._get_dataset_id(this.selectedRun))
+			// 	.attr("stroke", self.generalColors.compare)
+			// 	.attr("stroke-width", 3);
+			// d3.select(
+			// 	"#outer-dot" + this._get_dataset_id(this.selectedRun)
+			// )
+			// 	.attr("stroke", this.targetColor)
+			// 	.attr("stroke-width", 3);
 
-			// Update the UI elements.
-			this.$emit("compare");
+			// // Set the local and global variables for compare dataset
+			// this.compareDataset = d[2];
+			// this.$store.selectedCompareDataset = this.compareDataset;
 
-			// Send a request to the server to send the information.
-			this.$socket.emit("compare", {
-				targetDataset: self.$store.selectedTargetDataset,
-				compareDataset: this.compareDataset,
-				selectedMetric: this.selectedMetric,
-			});
+			// // Update the UI elements.
+			// this.$emit("compare");
+
+			// // Send a request to the server to send the information.
+			// this.$socket.emit("compare", {
+			// 	targetDataset: this.selectedTargetRun,
+			// 	compareDataset: this.compareDataset,
+			// 	selectedMetric: this.selectedMetric,
+			// });
 		},
 
 		dblclick(d) {
@@ -454,11 +441,10 @@ export default {
 				sortBy: this.$store.auxiliarySortBy,
 				module: "all",
 			});
-			this.$store.selectedTargetDataset = dataset_name;
 
 			EventHandler.$emit(
 				"highlight-datasets",
-				this.$store.selectedTargetDataset
+				this.selectedTargetRun
 			);
 		},
 
@@ -620,15 +606,13 @@ export default {
 			this.idleTimeout = null;
 		},
 
-		highlight(dataset) {
-			let datasetID = this.selectedTargetRun;
-
+		highlight() {
 			this.svg.selectAll(".dot").attrs({
 				opacity: 1.0,
 				"stroke-width": 0,
 			});
 			
-			this.svg.selectAll("#dot-" + datasetID).attrs({
+			this.svg.selectAll("#dot-" + this._get_dataset_id(this.selectedTargetRun)).attrs({
 				"stroke-width": 3,
 				stroke: this.generalColors.target,
 			});

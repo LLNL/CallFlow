@@ -76,6 +76,7 @@ class Filter:
 
         self.compute()
         LOGGER.info(f'Filtered graph: "{nxg_info(self.nxg)}"')
+        self.sg.nxg = self.nxg
 
     # --------------------------------------------------------------------------
     def compute(self):

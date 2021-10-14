@@ -10,7 +10,8 @@ from .filter import Filter
 from .group import Group
 from .unify import Unify
 from .config import Config
+from .regex_module_matcher import RegexModuleMatcher
 
-__all__ = ["Filter", "Group", "Unify", "Config"]
+__all__ = ["Filter", "Group", "Unify", "Config", "RegexModuleMatcher"]
 
 # ------------------------------------------------------------------------------

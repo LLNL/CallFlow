@@ -421,6 +421,7 @@ export default new Vuex.Store({
 		},
 
 		reset({state}) {
+			console.debug("Reset triggered");
 			if (state.selectedMode == "CCT") {
 				EventHandler.$emit("reset-cct");
 			}

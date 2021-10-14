@@ -80,8 +80,6 @@ export default {
 		EventHandler.$on("update-node-encoding", function (data) {
 			self.clearEncoding();
 			self.clearTargetLines();
-			// TODO: Move the emitter to the store.js possibly. 
-			EventHandler.$emit("update-ensemble-colors");
 			self.visualize();
 		});
 	},
@@ -136,14 +134,13 @@ export default {
 				this.targetPath();
 			}
 		
-
 			this.$refs.ToolTip.init(this.$parent.id);
 		},
 
 		// Attach the svg into the node object. 
 		postVis() {
 			for (let node of this.graph.nodes) {
-				node.svg = this.containerG.select("#callsite-" + node.attr_dict.nid);
+				node.svg = this.containerG.select("#callsite-" + node.attr_dict.idx);
 			}
 		},
 
@@ -186,14 +183,14 @@ export default {
 				.append("g")
 				.attrs({
 					"class": "callsite",
-					"id": (d) => "callsite-" + d.attr_dict.nid,
+					"id": (d) => "callsite-" + d.attr_dict.idx,
 					"transform": (d) => `translate(${d.x},${d.y + this.$parent.ySpacing})`,
 					"opacity": 1,
 				});
 
 			this.nodesSVG.append("rect")
 				.attrs({
-					"id": (d) => { return "callsite-rect" + d.attr_dict.nid; },
+					"id": (d) => { return "callsite-rect" + d.attr_dict.idx; },
 					"class": "callsite-rect",
 					"height": (d) => d.height,
 					"width": this.nodeWidth,
@@ -220,12 +217,12 @@ export default {
 					type: node.type
 				});
 
-				const nodeSVG = this.containerG.select("#callsite-" + node.id);
+				// const nodeSVG = this.containerG.select("#callsite-" + node.attr_dict.idx);
 
 				// Make appropriate event requests (Single and Ensemble).
 				if (this.selectedMode == "ESG" && !this.isComparisonMode) {
 					if (!this.drawGuidesMap[node.id]) {
-						this.$refs.Guides.visualize(node, "permanent", nodeSVG);
+						this.$refs.Guides.visualize(node, "detailed");
 						this.drawGuidesMap[node.id] = true;
 					}
 					
@@ -245,20 +242,20 @@ export default {
 
 		mouseover(node) {
 			this.$refs.ToolTip.visualize(self.graph, node);
-			if (this.selectedMode === "ESG" && !this.isComparisonMode) {
-				this.$refs.Guides.visualize(node, "temporary");
-			}
+			// if (this.selectedMode === "ESG" && !this.isComparisonMode) {
+			// 	this.$refs.Guides.visualize(node, "detailed");
+			// }
 		},
 
 		mouseout(node) {
 			this.$refs.ToolTip.clear();
-			if (this.selectedMode == "ESG") {
-				this.$refs.Guides.clear(node, "temporary");
-				if (this.permanentGuides == false) {
-					d3.selectAll(".ensemble-edge")
-						.style("opacity", 1.0);
-				}
-			}
+			// if (this.selectedMode == "ESG") {
+			// 	this.$refs.Guides.clear(node, "detailed");
+			// 	if (this.permanentGuides == false) {
+			// 		d3.selectAll(".ensemble-edge")
+			// 			.style("opacity", 1.0);
+			// 	}
+			// }
 		},
 
 		targetPath() {

@@ -74,7 +74,9 @@ export default {
 			generalColors: "getGeneralColors",
 			selectedProp: "getProp",
 			selectedRunBinCount: "getRunBinCount",
-			targetColor: "getTargetColor"
+			targetColor: "getTargetColor",
+			isComparisonMode: "getComparisonMode",
+			selectedCompareRun: "getSelectedCompareRun"
 		})
 	},
 
@@ -90,16 +92,32 @@ export default {
 			self.clear();
 			self.init();
 		});
+
+		EventHandler.$on("update-node-encoding", function() {
+			self.clear();
+			self.init();
+		});
 	},
 
 	methods: {
 		init() {
-			this.$store.dispatch("fetchEnsembleHistogram", {
-				dataset: this.selectedTargetRun,
-				node: this.selectedNode["name"],
-				ntype: this.selectedNode["type"],
-				nbins: this.selectedRunBinCount,
-			});
+			if (this.isComparisonMode) {
+				this.$store.dispatch("fetchEnsembleHistogram", {
+					dataset: this.selectedTargetRun,
+					background: this.selectedCompareRun,
+					node: this.selectedNode["name"],
+					ntype: this.selectedNode["type"],
+					nbins: this.selectedRunBinCount,
+				});
+			} else {
+				this.$store.dispatch("fetchEnsembleHistogram", {
+					dataset: this.selectedTargetRun,
+					node: this.selectedNode["name"],
+					ntype: this.selectedNode["type"],
+					nbins: this.selectedRunBinCount,
+				});
+
+			}
 
 			// Assign the height and width of container
 			this.width = window.innerWidth * 0.25;

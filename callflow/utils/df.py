@@ -155,3 +155,19 @@ def df_column_mean(df, column, proxy={}):
     assert isinstance(column, str)
     column = proxy.get(column, column)
     return df[column].mean()
+
+def callsites_column_mean(df, column, proxy={}):
+    """
+    Apply a function to the df.column
+
+    :param column: column to apply on.
+    :param proxy:
+    :return:
+    """
+    assert isinstance(column, str)
+    column = proxy.get(column, column)
+    if column == "time (inc)":
+        return df.groupby("name").mean()[column].max()
+    elif column == "time":
+        return df.groupby("name").mean()[column].sum()
+

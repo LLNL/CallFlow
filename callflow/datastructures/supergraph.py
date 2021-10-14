@@ -8,6 +8,7 @@ CallFlow's data structure to construct Super Graphs.
 """
 import os
 import json
+import datetime
 import hatchet as ht
 import networkx as nx
 import numpy as np
@@ -22,11 +23,12 @@ from callflow.utils.df import (
     df_lookup_by_column,
     df_as_dict,
     df_bi_level_group,
-    df_column_mean,
+    callsites_column_mean,
 )
 from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
 from callflow.modules import Histogram
 from callflow.utils.utils import get_file_size
+from callflow.operations import RegexModuleMatcher
 
 LOGGER = get_logger(__name__)
 
@@ -66,7 +68,12 @@ class SuperGraph(ht.GraphFrame):
         self.nxg = None
         self.graph = None
 
-        self.name = name  # dataset name
+        self.name = name
+        if name != "ensemble":
+            self.timestamp = Sanitizer.fmt_time(name.split(".")[-1])
+        else: 
+            self.timestamp = Sanitizer.datetime_to_fmt(datetime.datetime.now())
+
         self.profile_format = ""
 
         self.parameters = {}
@@ -137,34 +144,39 @@ class SuperGraph(ht.GraphFrame):
         :return (str): module for a call site
         """
         assert isinstance(callsite_idx, int)
+        if callsite_idx not in self.callsite2module:
+            return "Unknown"
         return self.callsite2module[callsite_idx]
 
-    def get_runtime(self, node_idx, ntype, metric, apply_func=None):
-        """
-        Getter to obtain the runtime as per the node type.
+    def _get_supernode_runtime(self, node, metric):
+        assert node.get("type") == "module"
 
-        :param node_idx (int): node index
-        :param ntype (str): node type (e.g., 'callsite' or 'module')
-        :param metric (str): metric (e.g., 'time' or 'time (inc)')
-        :param apply_func (func): apply function (e.g., mean, min, max)
-        :return (float): runtime of a node
-        """
-        if ntype == "callsite":
-            lk_column = "name"
-        elif ntype == "module":
-            lk_column = "module"
+        callsites = self.get_entry_functions(node)
+        runtimes = [self.get_runtime(cs, metric) for cs in callsites]
+        return max(runtimes) if len(runtimes) > 0 else 0.0
 
-        _df = self.df_lookup_with_column(lk_column, node_idx)
+    def _get_node_runtime(self, node, metric):
+        assert node.get("type") == "callsite"
+
+        _df = self.df_lookup_with_column("name", node.get("id"))
         if _df.empty:
             return 0.0
 
-        if lk_column == "module":
-            callsites = df_unique(_df, "name")
-            runtimes = [self.get_runtime(cs, "callsite", metric) for cs in callsites]
-            return max(runtimes)
-
         assert metric in _df.columns
         return _df[metric].mean()
+
+    def get_runtime(self, node, metric):
+        """
+        Getter to obtain the runtime as per the node type.
+
+        :param node (int): node
+        :param metric (str): metric (e.g., 'time' or 'time (inc)')
+        :return (float): runtime of a node
+        """
+        if node.get("type") == "callsite":
+            return self._get_node_runtime(node, metric)
+        elif node.get("type") == "module":
+            return self._get_supernode_runtime(node, metric)
 
     def get_name_by_nid(self, nid):
         """
@@ -221,15 +233,16 @@ class SuperGraph(ht.GraphFrame):
             return {}
 
         return Histogram(
-            dataframe=aux_dict[nid],
-            relative_to_df=None,
+            sg=self,
+            rel_sg=None,
+            name=self.get_name(nid, node.get("type")),
+            ntype=node.get("type"),
             histo_types=["rank"],
-            node_type=node.get("type"),
             bins=nbins,
-            proxy_columns=self.proxy_columns,
         ).unpack()
 
     def get_entry_functions(self, node):
+        # If the node type is callsite, we return an empty list.
         if node.get("type") == "callsite":
             return []
 
@@ -238,14 +251,13 @@ class SuperGraph(ht.GraphFrame):
         unique_cp = self.get_component_path(node)
         entry_funcs = [list(_)[0] for _ in unique_cp if len(_) == 1]
 
-        for nid in entry_funcs:
-            name = self.get_name(nid, "callsite")
+        for cf_id in entry_funcs:
+            name = self.get_name(cf_id, "callsite")
             ret.append(
                 {
-                    "nid": nid,
+                    "id": cf_id,
                     "name": name,
-                    "time": self.get_runtime(name, "callsite", "time"),
-                    "time (inc)": self.get_runtime(name, "callsite", "time (inc)"),
+                    "type": "callsite"
                 }
             )
         return ret
@@ -253,6 +265,17 @@ class SuperGraph(ht.GraphFrame):
     # TODO: Generalize on what a node is in context of CallFlow.
     def get_node(self, node):
         return {}
+
+    def get_aux_df(self, name, ntype):
+        _idx = self.get_idx(name, ntype)
+        if ntype == "callsite":
+            aux_dict = self.callsite_aux_dict
+        elif ntype == "module":
+            aux_dict = self.module_aux_dict
+        
+        if _idx not in aux_dict:
+            return None
+        return aux_dict[_idx]
 
     # TODO: get_component_path would return list for node.type == "callsite" and
     # returns a list of lists for node.type == "module". Avoid this confusion or
@@ -279,7 +302,8 @@ class SuperGraph(ht.GraphFrame):
         self,
         path,
         profile_format,
-        module_callsite_map: dict = {},
+        m2c: dict = {},
+        m2m: dict = {}
     ) -> None:
         """
         Create SuperGraph from basic information. It does the following:
@@ -314,6 +338,17 @@ class SuperGraph(ht.GraphFrame):
         super().__init__(
             gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics
         )  # Initialize here so that we don't drop index levels.
+
+        
+        if bool(m2c) or bool(m2m):
+            reMatcher = RegexModuleMatcher(m2c=m2c, m2m=m2m)
+            module_callsite_map = reMatcher.match(gf=gf)
+
+            reMatcher.update_df(gf.dataframe, module_callsite_map, "module")
+            reMatcher.print_summary()
+        else:
+            callsites = gf.dataframe['name'].unique()
+            module_callsite_map = {cs:[cs] for cs in callsites}
 
         # Add callsite2idx, module2idx, callsite2module and corresponding
         # mappings.
@@ -429,6 +464,7 @@ class SuperGraph(ht.GraphFrame):
         
         # ----------------------------------------------------------------------
         self.add_time_proxies()
+        self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
         # ----------------------------------------------------------------------
         LOGGER.debug(f"[{self.name}] Calculating callsite and module auxiliary dictionaries")
@@ -438,14 +474,14 @@ class SuperGraph(ht.GraphFrame):
         self.callsite_aux_dict = df_bi_level_group(
             self.dataframe,
             group_attrs=["name"],
-            cols=self.time_columns + ["nid"],
+            cols=self.time_columns,
             group_by=["rank"],
             apply_func=lambda _: _.mean(),
         )
         self.module_aux_dict = df_bi_level_group(
             self.dataframe,
             group_attrs = ["module","name"],
-            cols=self.time_columns + ["nid"],
+            cols=self.time_columns,
             group_by=["rank"],
             apply_func=lambda _: _.mean(),
         )
@@ -545,11 +581,11 @@ class SuperGraph(ht.GraphFrame):
                         callsite_module_map[c] = mname
 
             missing_callsites = [
-                self.get_name_by_nid(c)
+                c
                 for c in unique_callsites
                 if callsite_module_map[c] == -1
             ]
-            assert len(missing_callsites) == 0, f"[{self.name}] Missing callistes: {missing_callsites}"
+            assert len(missing_callsites) == 0, f"[{self.name}] Missing callistes [{len(missing_callsites)}]: {missing_callsites}"
 
             # Update the "module" column with the provided callsite_module_map.
             self.df_add_column("module", apply_dict=callsite_module_map,
@@ -702,6 +738,7 @@ class SuperGraph(ht.GraphFrame):
         cols = list(self.dataframe.columns)
         result = {
             "name": self.name,
+            "timestamp": self.timestamp,
             "meantime": self.df_root_max_mean_runtime(self.roots, "time (inc)"),
             "roots": self.roots,
             "ncallsites": self.df_count("name"),
@@ -721,23 +758,25 @@ class SuperGraph(ht.GraphFrame):
             "timecolumns": TIME_COLUMNS,
         }
 
-        for p in TIME_COLUMNS:
-            result[p] = self.df_minmax(p)
+        for column in ["time", "time (inc)"]:
+            col = self.df_get_proxy(column)
+            result[column] = self.callsites_minmax("name", col)
 
         return result
 
     def timeline(self, nodes, ntype, metric):
         grp_df = self.df_group_by(ntype)
+        supernodes = list(grp_df.groups.keys())
+
         LOGGER.debug(f"[{self.name}] Nodes: {nodes}; ntype: {ntype}; metric: {metric}")
 
         data = {
-            str(node): df_column_mean(
-                grp_df.get_group(self.get_idx(node, ntype)), metric, self.proxy_columns
-            )
-            for node in nodes
+            self.get_name(node_idx, ntype): callsites_column_mean(grp_df.get_group(node_idx), metric, self.proxy_columns)
+            for node_idx in supernodes
         }
         data["root_time_inc"] = self.df_root_max_mean_runtime(self.roots, "time (inc)")
         data["name"] = self.name
+        data["timestamp"] = self.timestamp
         return data
 
     # --------------------------------------------------------------------------
@@ -857,6 +896,11 @@ class SuperGraph(ht.GraphFrame):
         column = self.df_get_proxy(column)
         return self.dataframe[column].min(), self.dataframe[column].max()
 
+    def callsites_minmax(self, groupby, column):
+        column = self.df_get_proxy(column)
+        gdf = self.dataframe.groupby(groupby)
+        return gdf.mean()[column].min(), gdf.mean()[column].max()
+
     def df_filter_by_value(self, column, value):
         """
         Wrapper to filter a column by a threshold value.
@@ -931,11 +975,15 @@ class SuperGraph(ht.GraphFrame):
         :return: (list) top-n values
         """
         assert isinstance(count, int) and isinstance(sort_attr, str)
-        assert count > 0
+        assert count > 0 or count == -1
+
+        column = self.df_get_proxy(column)
+        sort_attr = self.df_get_proxy(sort_attr)
 
         df = self.dataframe.groupby([column]).mean()
         df = df.sort_values(by=[sort_attr], ascending=False)
-        df = df.nlargest(count, sort_attr)
+        if count != -1:
+            df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
 
     def df_factorize_column(self, column, update_df=False):
@@ -1131,7 +1179,7 @@ class SuperGraph(ht.GraphFrame):
             gf = ht.GraphFrame.from_caliper(data_path, query=query)
 
         elif profile_format == "caliper_json":
-            gf = ht.GraphFrame.from_caliper_json(data_path)
+            gf = ht.GraphFrame.from_caliper(data_path)
 
         elif profile_format == "gprof":
             gf = ht.GraphFrame.from_gprof_dot(data_path)

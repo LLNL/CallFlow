@@ -45,8 +45,8 @@ class BaseProvider:
 
         # check if we need caliper
         pfmts = list(set([r['profile_format'] for r in self.config['runs']]))
-        if 'caliper' in pfmts and shutil.which("caliper") is None:
-            raise ValueError('Could not find "caliper" executable in path')
+        if 'caliper' in pfmts and shutil.which("cali-query") is None:
+            raise ValueError('Could not find "cali-query" executable in path')
 
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
@@ -191,7 +191,8 @@ class BaseProvider:
 
         append_path = self.config.get("append_path", "")
         load_path = self.config["data_path"]
-        module_callsite_map = self.config.get("module_callsite_map", {})
+        m2c = self.config.get("m2c", {})
+        m2m = self.config.get("m2m", {})
         group_by = self.config["group_by"]
         filter_by = self.config.get("filter_by", "")
         filter_perc = self.config.get("filter_perc", 0)
@@ -228,7 +229,8 @@ class BaseProvider:
             sg.create(
                 path=data_path,
                 profile_format=_prop[1],
-                module_callsite_map=module_callsite_map
+                m2c=m2c,
+                m2m=m2m
             )
             LOGGER.info(f"Created supergraph ({name})")
 
@@ -310,9 +312,6 @@ class BaseProvider:
         else:
             process_datasets, load_datasets = self.split_process_load_datasets()
 
-        #if ensemble_process:
-        #    process_datasets, load_datasets = [], self.datasets
-
         self.process_single(process_datasets, save_supergraphs=ensemble_process)
         self.load_single(load_datasets)
         self.process_ensemble(save_path)
@@ -332,19 +331,10 @@ class BaseProvider:
             if len(self.datasets) > 1:
                 sg = self.supergraphs["ensemble"]
             else:
-                sg = self.supergraphs[self.datasets[0].name]
+                sg = self.supergraphs[self.datasets[0]["name"]]
 
             time_columns = sg.time_columns
 
-            # if "module_callsite_map" not in self.config.keys():
-            #     module_callsite_map = sg.module_callsite_map
-            # else:
-            #     module_callsite_map = self.config.module_callsite_map
-
-            # if "callsite_module_map" not in self.config.keys():
-            #     callsite_module_map = sg.module_callsite_map
-            # else:
-            #     callsite_module_map = self.config.callsite_module_map
 
             return {
                 **self.config,
@@ -352,8 +342,8 @@ class BaseProvider:
                 "profile_format_summary": list(
                     set(map(lambda d: d["profile_format"], self.datasets))
                 ),
-                # "module_callsite_map": module_callsite_map,
-                # "callsite_module_map": callsite_module_map
+                "module_callsite_map": sg.module2callsite,
+                "callsite_module_map": sg.callsite2module
             }
 
         elif operation_name == "summary":
@@ -373,6 +363,12 @@ class BaseProvider:
             # Get the top-n nodes from the "ensemble" based on the ntype.
             top_nodes_idx = supergraph.df_get_top_by_attr(
                 operation["ntype"], operation["ncount"], operation["metric"]
+            
+            )
+
+            all_nodes_idx = supergraph.df_get_top_by_attr(
+                operation["ntype"], -1, operation["metric"]
+            
             )
 
             # Convert the indexs to the modules.
@@ -380,10 +376,16 @@ class BaseProvider:
                 supergraph.get_name(node_idx, operation["ntype"])
                 for node_idx in top_nodes_idx
             ]
+            all_nodes = [                
+                supergraph.get_name(node_idx, operation["ntype"])
+                for node_idx in all_nodes_idx
+
+            ]
+
             # Construct the per-supergraph timeline data.
             data = {}
             data["d"] = {
-                sg: self.supergraphs[sg].timeline(
+                sg : self.supergraphs[sg].timeline(
                     top_nodes, operation["ntype"], operation["metric"]
                 )
                 for sg in self.supergraphs
@@ -391,7 +393,8 @@ class BaseProvider:
             }
 
             # Attach the keys as the top_nodes
-            data["nodes"] = top_nodes
+            data["top_nodes"] = top_nodes
+            data["all_nodes"] = all_nodes
 
             return data
 
@@ -423,17 +426,6 @@ class BaseProvider:
 
         if "ntype" in operation:
             ntype = operation["ntype"]
-
-            if operation_name in ["histogram", "scatterplot", "boxplots"]:
-                if ntype == "callsite":
-                    aux_dict = sg.callsite_aux_dict
-                elif ntype == "module":
-                    aux_dict = {
-                        sg.get_name(module_idx, "module"): sg.module_aux_dict[
-                            module_idx
-                        ]
-                        for module_idx in sg.module_aux_dict.keys()
-                    }
 
         if operation_name == "supergraph":
             ssg = SankeyLayout(
@@ -471,12 +463,12 @@ class BaseProvider:
             nbins = int(operation.get("nbins", 20))
 
             hist = Histogram(
-                dataframe=aux_dict[node],
-                relative_to_df=None,
+                sg=sg,
+                rel_sg=None,
+                name=node,
+                ntype=ntype,
                 histo_types=["rank"],
-                node_type=ntype,
                 bins=nbins,
-                proxy_columns=sg.proxy_columns,
             )
 
             return hist.unpack()
@@ -486,11 +478,11 @@ class BaseProvider:
             orientation = operation["orientation"]
 
             scatterplot = Scatterplot(
-                df=aux_dict[node],
-                relative_to_df=None,
-                node_type=ntype,
+                sg=sg,
+                rel_sg=None,
+                name=node,
+                ntype=ntype,
                 orientation=orientation,
-                proxy_columns=sg.proxy_columns,
             )
 
             return scatterplot.unpack()
@@ -501,7 +493,7 @@ class BaseProvider:
             result = {}
             for callsite in callsites:
                 bp = BoxPlot(
-                    sg=sg, name=callsite, ntype=ntype, proxy_columns=sg.proxy_columns
+                    sg=sg, name=callsite, ntype=ntype
                 )
                 result[callsite] = bp.unpack()
 
@@ -537,42 +529,16 @@ class BaseProvider:
         LOGGER.info(f"[Ensemble Mode] {operation}")
 
         operation_name = operation["name"]
-        e_sg = self.supergraphs["ensemble"]
+        if ("background" not in operation):
+            e_sg = self.supergraphs["ensemble"]
+        else:
+            e_sg = self.supergraphs[operation["background"]]
+        
+        if 'ntype' in operation:
+            ntype = operation["ntype"]
 
         if "dataset" in operation:
             sg = self.supergraphs[operation["dataset"]]
-
-        e_aux_dict = {}
-
-        if "ntype" in operation:
-            ntype = operation["ntype"]
-
-            if operation_name in ["histogram", "scatterplot", "boxplots"]:
-                if ntype == "callsite":
-                    e_aux_dict = e_sg.callsite_aux_dict
-                elif ntype == "module":
-                    e_aux_dict = {
-                        e_sg.get_name(module_idx, "module"): e_sg.module_aux_dict[
-                            module_idx
-                        ]
-                        for module_idx in e_sg.module_aux_dict.keys()
-                    }
-
-        if "dataset" in operation:
-            t_aux_dict = {}
-            tgt_dataset = operation["dataset"]
-            t_sg = self.supergraphs[tgt_dataset]
-
-            if operation_name in ["histogram", "scatterplot", "boxplots"]:
-                if ntype == "callsite":
-                    t_aux_dict = t_sg.callsite_aux_dict
-                elif ntype == "module":
-                    t_aux_dict = {
-                        t_sg.get_name(module_idx, "module"): t_sg.module_aux_dict[
-                            module_idx
-                        ]
-                        for module_idx in t_sg.module_aux_dict.keys()
-                    }
 
         if operation_name == "supergraph":
             ssg = SankeyLayout(
@@ -621,12 +587,12 @@ class BaseProvider:
             nbins = int(operation.get("nbins", 20))
 
             hist = Histogram(
-                dataframe=t_aux_dict[node],
-                relative_to_df=e_aux_dict[node],
+                sg=sg,
+                rel_sg=e_sg,
+                name=node,
+                ntype=ntype,
                 histo_types=["rank"],
-                node_type=ntype,
                 bins=nbins,
-                proxy_columns=t_sg.proxy_columns,
             )
 
             return hist.unpack()
@@ -636,11 +602,11 @@ class BaseProvider:
             orientation = operation["orientation"]
 
             scatterplot = Scatterplot(
-                df=t_aux_dict[node],
-                relative_to_df=e_aux_dict[node],
-                node_type=ntype,
+                sg=sg,
+                rel_sg=e_sg,
+                name=node,
+                ntype=ntype,
                 orientation=orientation,
-                proxy_columns=t_sg.proxy_columns,
             )
 
             return scatterplot.unpack()
@@ -653,11 +619,10 @@ class BaseProvider:
             for callsite in callsites:
                 bp = BoxPlot(
                     sg=sg,
-                    relative_sg=e_sg,
+                    rel_sg=e_sg,
                     name=callsite,
                     ntype=ntype,
                     iqr_scale=iqr,
-                    proxy_columns=t_sg.proxy_columns,
                 )
                 result[callsite] = bp.unpack()
 
@@ -670,6 +635,9 @@ class BaseProvider:
 
             # Gradients are computed only for the ensemble mode.
             esg = self.supergraphs["ensemble"]
-            esg_nid = esg.get_idx(name, ntype)
+            node = {
+                "id": esg.get_idx(name, ntype),
+                "type": ntype
+            }
 
-            return esg.get_gradients(esg_nid, ntype, nbins)
+            return esg.get_gradients(node, nbins)

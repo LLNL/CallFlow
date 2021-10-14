@@ -34,6 +34,7 @@ import InfoChip from "../general/infoChip";
 import Loader from "../general/loader";
 import ColorMap from "../general/colormap";
 import ToolTip from "./tooltip";
+import d3InputBox from "./d3-inputbox";
 
 import * as utils from "lib/utils";
 
@@ -89,8 +90,8 @@ export default {
 	},
 
 	watch: {
-		data: function (val) {
-			this.visualize(val);
+		data: function () {
+			this.visualize();
 		}
 	},
 
@@ -137,14 +138,26 @@ export default {
 			this.svg.selectAll("g.node").on("click", function (v) {
 				self.node_click_action(v);
 				dagreRender(inner, self.g);
-				self.zoomTranslate();
+				// self.zoomTranslate();
 			});
 
-			this.$refs.ColorMap.init(this.$store.runtimeColor);
+			if(this.selectedMetric !== "module") {
+				this.$refs.ColorMap.init(this.$store.runtimeColor);
+			}
 
 			this.$refs.ToolTip.init(this.id);
 			this.svg.selectAll(".cct-node").on("mouseover", function (v, d) {
 				self.$refs.ToolTip.visualize(self.data.nodes[d]);
+			});
+
+			this.svg.selectAll("g.node").on("click", function (v) {
+				// var inputbox = d3InputBox();
+				// var inputboxes = self.svg.selectAll(".inputbox")
+				// 	.data([{label: "module: ", x: 20, width: 200, height: 36.5, supernode: "aaa" }])
+				// 	.enter()
+				// 	.append("g")
+				// 	.attr("class", "inputbox")
+				// 	.call(inputbox);	
 			});
 
 			// Add tooltip
@@ -195,16 +208,23 @@ export default {
 		 * @return {JSON<{'node': Color, 'text': Color}>} 'node': fill color, 'text': text color
 		 */
 		setCallsiteColor(callsite) {
-			const color = this.$store.runtimeColor.getColor(
-				callsite,
-				this.selectedMetric,
-			);
+			const colorBy = this.selectedMetric;
 
-			// Set node color.
-			const fillColor = this.$store.runtimeColor.rgbArrayToHex(color);
+			let colorMap;
+			if(colorBy == "module") {
+				colorMap = this.$store.moduleColor;
+			}
+			else {
+				colorMap = this.$store.runtimeColor;
+			}
 
+			let fillColor = colorMap.getColor(callsite, colorBy);
+			if(typeof(fillColor) !== "string") {
+				fillColor = colorMap.rgbArrayToHex(fillColor);			
+			}
+			
 			// Set text color (contrast to the fill color).
-			const textColor = this.$store.runtimeColor.setContrast(fillColor);
+			const textColor = colorMap.setContrast(fillColor);
 
 			return {
 				node: fillColor,
@@ -431,11 +451,13 @@ export default {
 .white-text {
   color: white !important;
   text-align: center;
+  font-size: 12px;
 }
 
 .black-text {
   color: black !important;
   text-align: center;
+  font-size: 12px;
 }
 
 .description {
@@ -450,15 +472,43 @@ export default {
 
 .white-text > .description {
   color: rgb(200, 195, 195);
-  font-size: 10pt;
+  font-size: 10px;
 }
 
 .black-text > .description {
   color: rgb(26, 26, 49);
-  font-size: 10pt;
+  font-size: 10px;
 }
 
 .cct-edge {
   fill: gray;
 }
+
+.inputbox rect {
+  fill: #FFFFFF;
+  stroke: #348B6D; 
+  stroke-width: 2px;
+}
+
+.inputbox rect.active {
+  fill: #D9F0E3;
+}
+
+.inputbox text {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 12px;
+  letter-spacing: 3px;
+  fill: #494949;
+  pointer-events: none;
+  text-anchor: start;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+    
+}
+
+.inputbox text.value {  
+  text-anchor: end;
+}
+
 </style>

@@ -45,7 +45,7 @@
 			</splitpanes>
 
 			<!-- Right column-->
-			<splitpanes horizontal splitpanes-size="20" :push-other-panes="true">
+			<splitpanes horizontal splitpanes-size="20">					
 				<GradientView ref="GradientView" />
 				<CallsiteCorrespondence ref="CallsiteCorrespondence" />
 				<ParameterProjection ref="ParameterProjection" />
