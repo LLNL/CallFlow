@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-# import statsmodels.nonparametric.api as smnp
 import hatchet
 import networkx as nx
 
