@@ -62,7 +62,3 @@ jobs:
     - name: Test with pytest
       run: |
         pytest callflow/tests
-
-    - name: Running test (caliper-simple-json)
-      run: |
-        callflow --process --ensemble_process --reset --data_path ./data/caliper-simple-json --profile_format caliper
