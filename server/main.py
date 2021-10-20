@@ -15,7 +15,6 @@ from callflow.utils.argparser import ArgParser
 
 from .provider_base import BaseProvider
 from .provider_api import APIProvider
-from .provider_socket import SocketProvider
 from .notebook_server import launch_ipython
 from callflow.operations import Config
 
@@ -62,7 +61,6 @@ def main():
     endpoint_env = args.args.get("endpoint_env", "TERMINAL")
     reset = args.args["reset"]
 
-    assert endpoint_access in ["REST", "SOCKETS"]
     assert endpoint_env in ["TERMINAL", "JUPYTER"]
 
     # Get config object.
@@ -76,12 +74,9 @@ def main():
         cf.process(reset)
 
     # --------------------------------------------------------------------------
-    # start a server based on endpoint_access = "REST" | "SOCKET"
+    # start a server based on endpoint_access = "REST"
     elif not process and endpoint_env == "TERMINAL":
-        if endpoint_access == "REST":
-            cf = APIProvider(config=config)
-        else:
-            cf = SocketProvider(config=config)
+        cf = APIProvider(config=config)
         cf.load()
         cf.start(host=CALLFLOW_APP_HOST, port=CALLFLOW_APP_PORT)
 
