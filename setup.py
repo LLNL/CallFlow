@@ -99,7 +99,6 @@ deps = [
     "scipy",
     "pandas",
     "hatchet",
-    "statsmodels",
     "scikit_learn",
     "colorlog",
     "jsonschema",
@@ -134,11 +133,7 @@ setup(
     package_data={
         "callflow": data_files + example_files + app_dist_folders + app_dist_index_html
     },
-    entry_points={
-        "console_scripts": [
-            "callflow = server.main:main",
-        ]
-    },
+    entry_points={"console_scripts": ["callflow = server.main:main"]},
     install_requires=deps,
 )
 # ------------------------------------------------------------------------------

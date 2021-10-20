@@ -278,7 +278,7 @@ class BaseProvider:
         if len(self.supergraphs) <= 1:
             return
 
-        LOGGER.info(f"Processing Ensemble supergraph")
+        LOGGER.info("Processing Ensemble supergraph")
         name = "ensemble"
 
         sg = EnsembleGraph(name)
