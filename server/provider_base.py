@@ -249,7 +249,8 @@ class BaseProvider:
 
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
             processed_folders = pool.map(
-                partial(self._mp_saved_data, save_path=save_path), self.config["runs"],
+                partial(self._mp_saved_data, save_path=save_path),
+                self.config["runs"],
             )
 
         if len(load_datasets) > 0:
@@ -467,7 +468,11 @@ class BaseProvider:
             orientation = operation["orientation"]
 
             scatterplot = Scatterplot(
-                sg=sg, rel_sg=None, name=node, ntype=ntype, orientation=orientation,
+                sg=sg,
+                rel_sg=None,
+                name=node,
+                ntype=ntype,
+                orientation=orientation,
             )
 
             return scatterplot.unpack()
@@ -539,7 +544,10 @@ class BaseProvider:
             nbins = int(operation.get("nbins", 20))
             dataset = operation.get("dataset")
             hl = HierarchyLayout(
-                esg=e_sg, dataset=dataset, node=operation.get("node"), nbins=nbins,
+                esg=e_sg,
+                dataset=dataset,
+                node=operation.get("node"),
+                nbins=nbins,
             )
             return hl.nxg
 
@@ -548,7 +556,9 @@ class BaseProvider:
             n_cluster = operation.get("n_cluster", 3)
 
             pp = ParameterProjection(
-                sg=e_sg, selected_runs=selected_runs, n_cluster=n_cluster,
+                sg=e_sg,
+                selected_runs=selected_runs,
+                n_cluster=n_cluster,
             )
             return pp.result.to_json(orient="columns")
 
@@ -580,7 +590,11 @@ class BaseProvider:
             orientation = operation["orientation"]
 
             scatterplot = Scatterplot(
-                sg=sg, rel_sg=e_sg, name=node, ntype=ntype, orientation=orientation,
+                sg=sg,
+                rel_sg=e_sg,
+                name=node,
+                ntype=ntype,
+                orientation=orientation,
             )
 
             return scatterplot.unpack()
@@ -592,7 +606,11 @@ class BaseProvider:
             result = {}
             for callsite in callsites:
                 bp = BoxPlot(
-                    sg=sg, rel_sg=e_sg, name=callsite, ntype=ntype, iqr_scale=iqr,
+                    sg=sg,
+                    rel_sg=e_sg,
+                    name=callsite,
+                    ntype=ntype,
+                    iqr_scale=iqr,
                 )
                 result[callsite] = bp.unpack()
 
