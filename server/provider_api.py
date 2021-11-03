@@ -111,24 +111,14 @@ class APIProvider(BaseProvider):
         @cross_origin()
         def summary():
             data = request.json
-            result = self.request_general(
-                {
-                    "name": "summary",
-                    **data,
-                }
-            )
+            result = self.request_general({"name": "summary", **data})
             return APIProvider.emit_json("summary", result)
 
         @app.route("/timeline", methods=["POST"])
         @cross_origin()
         def time_series():
             data = request.json
-            result = self.request_general(
-                {
-                    "name": "timeline",
-                    **data,
-                }
-            )
+            result = self.request_general({"name": "timeline", **data})
             return APIProvider.emit_json("timeline", result)
 
         @app.route("/single_supergraph", methods=["POST"])
@@ -151,12 +141,7 @@ class APIProvider(BaseProvider):
         @cross_origin()
         def split_mpi_distribution():
             data = request.json
-            result = self.request_single(
-                {
-                    "name": "split_ranks",
-                    **data,
-                }
-            )
+            result = self.request_single({"name": "split_ranks", **data})
             return APIProvider.emit_json("split_mpi_distribution", result)
 
         @app.route("/ensemble_supergraph", methods=["POST"])
@@ -244,6 +229,13 @@ class APIProvider(BaseProvider):
             data = request.json
             result = self.request_ensemble({"name": "gradients", **data})
             return APIProvider.emit_json("gradients", result)
+
+        @app.route("/matrix", methods=["POST"])
+        @cross_origin()
+        def matrix():
+            data = request.json
+            result = self.request_ensemble({"name": "matrix", **data})
+            return APIProvider.emit_json("matrix", result)
 
 
 # ------------------------------------------------------------------------------
