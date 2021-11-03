@@ -19,6 +19,7 @@ import Summary from "./components/Summary";
 import CCT from "./components/CCT";
 import SuperGraph from "./components/SuperGraph";
 import EnsembleSuperGraph from "./components/SuperGraphEnsemble";
+import MatrixCallGraph from "./components/MatrixCallGraph";
 
 // Setup vuetify.
 import Vuetify from "vuetify/lib/framework";
@@ -55,6 +56,12 @@ const router = new Router({
 			path: "/ensemble_super_graph",
 			name: "EnsembleSuperGraph",
 			component: EnsembleSuperGraph,
+			props: true
+		},
+		{
+			path: "/matrix",
+			name: "Matrix Visualization",
+			component: MatrixCallGraph,
 			props: true
 		},
 	]

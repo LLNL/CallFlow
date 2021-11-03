@@ -20,6 +20,12 @@
 			<v-btn class="mr-md-4" v-if="profiles.length > 1">
 				<router-link to="/ensemble_super_graph" replace>Ensemble Super Graph</router-link>
 			</v-btn>
+			<v-btn class="mr-md-4" v-if="profiles.length > 1">
+				<router-link to="/ensemble_super_graph" replace>Ensemble Super Graph</router-link>
+			</v-btn>
+			<v-btn class="mr-md-4" v-if="profiles.length > 1">
+				<router-link to="/matrix" replace>Matrix Call Graph</router-link>
+			</v-btn>
 		</v-app-bar>
 		<v-main>
 			<router-view></router-view>

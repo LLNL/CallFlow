@@ -87,6 +87,9 @@ export default new Vuex.Store({
 		// CCT states
 		CCT: {},
 
+		// Matrix states
+		matrix: [],
+
 		// Projection State
 		parameterProjection: {},
 		numOfClusters: 3,
@@ -240,6 +243,10 @@ export default new Vuex.Store({
 
 		setDistributionColorMap(state, payload) {
 			state.distributionColorMap = payload;
+		},
+
+		setMatrix(state, payload) {
+			state.matrix = payload;
 		}
 	},
 	
@@ -354,6 +361,18 @@ export default new Vuex.Store({
 			commit("setCompareData", comp);
 		},
 
+		async fetchMatrix({ commit, state }, payload) {
+			const matrix = await APIService.POSTRequest("matrix", {
+				run: state.runs,
+				targetRun: state.selectedTargetRun,
+				compareRun: state.selectedCompareRun,
+				selectedMetric: state.selectedMetric,
+			});
+			console.log("[Data] Matrix", matrix);
+			commit("setMatrix", matrix);
+
+		},
+
 		updateSelectedMetric({ state, dispatch }, payload) {
 			state.selectedMetric = payload;
 			dispatch("reset");
@@ -449,6 +468,7 @@ export default new Vuex.Store({
 		getTimeline: state => state.timeline,
 
 		getCCT: state => state.CCT,
+		getMatrix: state => state.matrix,
 
 		getRankBinCount: state => state.rankBinCount,
 		getRunBinCount: state => state.runBinCount,
