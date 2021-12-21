@@ -35,6 +35,7 @@ import Loader from "../general/loader";
 import ColorMap from "../general/colormap";
 import ToolTip from "./tooltip";
 
+import adjacencyMatrixLayout from './d3-adjacency-matrix-layout'
 
 export default {
 	name: "Matrix",
@@ -42,7 +43,7 @@ export default {
 		InfoChip,
 		Loader,
 		ColorMap, 
-		ToolTip
+		ToolTip,
 	},
 
 	data: () => ({
@@ -103,6 +104,11 @@ export default {
 
 			this.info = "Selected metric : " + this.selectedMetric;
 			this.$refs.ColorMap.init(this.$store.runtimeColor);
+
+			this.adjacencyMatrix = adjacencyMatrixLayout()
+                .size([this.matrixWidth, this.matrixHeight])
+                .useadj(true)
+                .adj(this.matrix);
 		},
 
 		/**

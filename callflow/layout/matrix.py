@@ -19,7 +19,7 @@ class MatrixLayout:
     Node link layout computation
     """
 
-    _COLUMNS = ["time (inc)", "time", "name", "module"]
+    _COLUMNS = ["time (inc)", "time", "name", "group"]
 
     def __init__(self, sg, selected_runs=None):
         """
@@ -48,7 +48,8 @@ class MatrixLayout:
         self._add_node_attributes()
         self._add_edge_attributes()
 
-        # print(self.nxg.nodes(data=True))
+        print(self.nxg.nodes(data=True))
+        print(self.nxg.edges(data=True))
 
     # --------------------------------------------------------------------------
     @staticmethod
@@ -81,7 +82,7 @@ class MatrixLayout:
                     datamap[column][callsite] = MatrixLayout._mean(_df, self.time_exc)
                 elif column == "name":
                     datamap[column][callsite] = callsite
-                elif column == "module":
+                elif column == "group":
                     datamap["group"][callsite] = self.sg.get_module(callsite_idx)
 
         # ----------------------------------------------------------------------

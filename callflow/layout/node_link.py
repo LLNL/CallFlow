@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 """
-CallFlow's layout API.
+CallFlow's Node-link layout API.
 """
 import networkx as nx
 
