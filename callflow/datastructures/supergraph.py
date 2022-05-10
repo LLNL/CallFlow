@@ -326,6 +326,9 @@ class SuperGraph(ht.GraphFrame):
             gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics
         )  # Initialize here so that we don't drop index levels.
 
+        self.generate_exclusive_columns()
+        self.dataframe = self.gf.dataframe
+
         if bool(m2c) or bool(m2m):
             reMatcher = RegexModuleMatcher(m2c=m2c, m2m=m2m)
             module_callsite_map = reMatcher.match(gf=gf)
@@ -377,7 +380,7 @@ class SuperGraph(ht.GraphFrame):
             node_name = Sanitizer.from_htframe(node.frame)
             cs_idx = _csidx(node_name)
             self.paths[cs_idx] = [
-                _csidx(Sanitizer.from_htframe(_)) for _ in node.paths()[0]
+                _csidx(Sanitizer.from_htframe(_.frame)) for _ in node.paths()[0]
             ]
             self.callers[cs_idx] = [
                 _csidx(Sanitizer.from_htframe(_.frame)) for _ in node.parents
@@ -712,6 +715,7 @@ class SuperGraph(ht.GraphFrame):
         :return: None
         """
         for key, proxies in METRIC_PROXIES.items():
+            print(key)
             if key in self.dataframe.columns:
                 continue
             for _ in proxies:
@@ -722,6 +726,91 @@ class SuperGraph(ht.GraphFrame):
 
         if len(self.proxy_columns) > 0:
             LOGGER.info(f"[{self.name}] Created column proxies: {self.proxy_columns}")
+
+    def generate_exclusive_columns(self):
+        """
+        Generates exclusive columns for a GraphFrame.
+        Copied from LLNL/hatchet and modified to work with an example.
+        Note: there is a bug when the exclusive times are calculated.
+        There are cases when the value is -ve which is wrong.
+        """
+        # TODO Change how exclusive-inclusive pairs are determined when inc_metrics and exc_metrics are changed
+        # Iterate over inclusive metrics and collect tuples of (new exclusive metrics name, inclusive metric name)
+        generation_pairs = []
+        for inc in self.gf.inc_metrics:
+            # If the metric isn't numeric, it is really categorical. This means the inclusive/exclusive thing doesn't really apply.
+            if not pd.api.types.is_numeric_dtype(self.gf.dataframe[inc]):
+                continue
+            # Assume that metrics ending in "(inc)" are generated
+            if inc.endswith("(inc)"):
+                possible_exc = inc[: -len("(inc)")].strip()
+                # If a metric with the same name as the inclusive metrics minus the "(inc)" does not exist in exc_metrics,
+                # assume that there is not a corresponding exclusive metric. So, add this new exclusive metric to the generation list.
+                if possible_exc not in self.gf.exc_metrics:
+                    generation_pairs.append((possible_exc, inc))
+            # If there is an inclusive metric without the "(inc)" suffix,
+            # assume that there is no corresponding exclusive metric. So, add this new exclusive metrics (with the "(exc)"
+            # suffix) to the generation list.
+            else:
+                generation_pairs.append((inc + " (exc)", inc))
+
+        # Consider each new exclusive metric and its corresponding inclusive metric
+        for exc, inc in generation_pairs:
+            # Process of obtaining inclusive data for a node differs if the DataFrame has an Index vs a MultiIndex
+            if isinstance(self.gf.dataframe.index, pd.MultiIndex):
+                new_data = {}
+                # Traverse every node in the Graph
+                for node in self.gf.graph.traverse():
+                    # Consider each unique portion of the MultiIndex corresponding to the current node
+                    for non_node_idx in self.gf.dataframe.loc[(node)].index.unique():
+                        # If there's only 1 index level besides "node", add it to a 1-element list to ensure consistent typing
+                        if not isinstance(non_node_idx, tuple) and not isinstance(
+                            non_node_idx, list
+                        ):
+                            non_node_idx = [non_node_idx]
+                        # Build the full index
+                        # TODO: Replace the full_idx assignment with the following when 2.7 support
+                        # is dropped:
+                        # full_idx = (node, *non_node_idx)
+                        full_idx = tuple([node]) + tuple(non_node_idx)
+                        # Iterate over the children of the current node and add up
+                        # their values for the inclusive metric
+                        inc_sum = 0
+                        for child in node.children:
+                            # TODO: See note about full_idx above
+                            child_idx = tuple([child]) + tuple(non_node_idx)
+                            inc_sum += self.gf.dataframe.loc[child_idx, inc]
+                        # Subtract the current node's inclusive metric from the previously calculated sum to
+                        # get the exclusive metric value for the node
+
+                        new_data[full_idx] = abs(
+                            self.gf.dataframe.loc[full_idx, inc] - inc_sum
+                        )
+                # Add the exclusive metric as a new column in the DataFrame
+                self.gf.dataframe = self.gf.dataframe.assign(
+                    **{exc: pd.Series(data=new_data)}
+                )
+            else:
+                # Create a basic Node-metric dict for the new exclusive metric
+                new_data = {n: -1 for n in self.gf.dataframe.index.values}
+                # Traverse the graph
+                for node in self.gf.graph.traverse():
+                    # Sum up the inclusive metric values of the current node's children
+                    inc_sum = 0
+                    for child in node.children:
+                        inc_sum += self.gf.dataframe.loc[child, inc]
+                    # Subtract the current node's inclusive metric from the previously calculated sum to
+                    # get the exclusive metric value for the node
+                    new_data[node] = self.gf.dataframe.loc[node, inc] - inc_sum
+                # Add the exclusive metric as a new column in the DataFrame
+                self.gf.dataframe = self.gf.dataframe.assign(
+                    **{exc: pd.Series(data=new_data)}
+                )
+        # Add the newly created metrics to self.exc_metrics
+        self.gf.exc_metrics.extend(
+            [metric_tuple[0] for metric_tuple in generation_pairs]
+        )
+        self.gf.exc_metrics = list(set(self.gf.exc_metrics))
 
     # --------------------------------------------------------------------------
     def write(
@@ -1118,8 +1207,8 @@ class SuperGraph(ht.GraphFrame):
                     # Loop through all the node paths.
                     for node_path in node_paths:
                         if len(node_path) >= 2:
-                            src_name = Sanitizer.from_htframe(node_path[-2])
-                            trg_name = Sanitizer.from_htframe(node_path[-1])
+                            src_name = Sanitizer.from_htframe(node_path[-2].frame)
+                            trg_name = Sanitizer.from_htframe(node_path[-1].frame)
                             nxg.add_edge(src_name, trg_name)
                     node = next(node_gen)
 
@@ -1210,16 +1299,16 @@ class SuperGraph(ht.GraphFrame):
         if profile_format == "hpctoolkit":
             gf = ht.GraphFrame.from_hpctoolkit(data_path)
 
-        elif profile_format == "caliper":
-            grouping_attribute = "function"
-            default_metric = "sum(sum#time.duration), inclusive_sum(sum#time.duration)"
-            query = "select function,%s group by %s format json-split" % (
-                default_metric,
-                grouping_attribute,
-            )
-            gf = ht.GraphFrame.from_caliper(data_path, query=query)
+        # elif profile_format == "caliper":
+        #     grouping_attribute = "function"
+        #     default_metric = "sum(sum#time.duration), inclusive_sum(sum#time.duration)"
+        #     query = "select function,%s group by %s format json-split" % (
+        #         default_metric,
+        #         grouping_attribute,
+        #     )
+        #     gf = ht.GraphFrame.from_caliper(data_path, query=query)
 
-        elif profile_format == "caliper_json":
+        elif profile_format == "caliper":
             gf = ht.GraphFrame.from_caliper(data_path)
 
         elif profile_format == "gprof":
