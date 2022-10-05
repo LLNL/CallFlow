@@ -98,7 +98,7 @@ deps = [
     "numpy",
     "scipy",
     "pandas",
-    "hatchet",
+    "llnl-hatchet",
     "scikit_learn",
     "colorlog",
     "jsonschema",
